@@ -7,7 +7,7 @@ NORMAL_OUTPUT='\033[0m'
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
-./compile_script
+./compile_script Release
 cd ..
 conan export-pkg .
 conan create .

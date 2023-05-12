@@ -1,0 +1,21 @@
+build/
+
+# text editor metadata
+compile_commands.json
+tags
+.vscode/*
+*.swp
+
+### CMake ###
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+CMakeUserPresets.json
+
+.env
+.antlr
+.venv
+
+# MACOS
+.DS_Store

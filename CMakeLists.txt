@@ -4,7 +4,11 @@ project (core CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include_directories(src/)
+
 find_package(antlr4-runtime REQUIRED)
+find_package(cereal REQUIRED)
+find_package(ZeroMQ REQUIRED)
 
 # Target in Makefile for generation of grammar from .g4 file.
 add_custom_target(
@@ -14,7 +18,7 @@ add_custom_target(
 )
 
 file(GLOB_RECURSE SHARED_FILES
-     src/catalog/*.cpp
+     src/shared/*.cpp
 )
 
 file(GLOB_RECURSE CLIENT_FILES
@@ -35,7 +39,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core antlr4_static -pthread )
+target_link_libraries(core antlr4_static cereal ${ZeroMQ_LIBRARIES} -pthread )
 
 set_target_properties(core PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
@@ -59,8 +63,16 @@ find_package(Catch2 REQUIRED)
 file(GLOB_RECURSE UNIT_TESTING_FILES
      src/unit_tests/*.cpp
 )
+
+file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
+     src/third_party_tests/*.cpp
+)
+
 add_executable(tests ${UNIT_TESTING_FILES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain core)
+
+add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
+target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
 
 # These tests need their own main (None at the moment)
 #add_executable(custom-main-tests test.cpp test-main.cpp)

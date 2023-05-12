@@ -78,6 +78,8 @@ class CORE(ConanFile):
     # Specific versions of the used code
     ANTLR4_VERSION = "4.12.0"
     CATCH2_VERSION = "3.3.2"
+    ZEROMQ_VERSION = "4.3.4"
+    CEREAL_VERSION = "1.3.2"
 
     def layout(self):
         cmake_layout(self)
@@ -94,6 +96,8 @@ class CORE(ConanFile):
         self.requires("antlr4-cppruntime/" + CORE.ANTLR4_VERSION)
         create_antlr_autogeneration_scripts(CORE.ANTLR4_VERSION)
         self.requires("catch2/" + CORE.CATCH2_VERSION)
+        self.requires("zeromq/" + CORE.ZEROMQ_VERSION)
+        self.requires("cereal/" + CORE.CEREAL_VERSION)
 
     def build(self):
         cmake = CMake(self)

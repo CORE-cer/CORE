@@ -7,5 +7,5 @@ UseTab: Never
 TabWidth: 2
 ContinuationIndentWidth: 2
 ColumnLimit: 75
-AlwaysBreakAfterDefinitionReturnType: TopLevel
+#AlwaysBreakAfterDefinitionReturnType: TopLevel
 SeparateDefinitionBlocks: Always
