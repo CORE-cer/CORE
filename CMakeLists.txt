@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR )
+cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project (core CXX)
 
@@ -41,10 +44,15 @@ add_library(core STATIC
 
 target_link_libraries(core antlr4_static cereal ${ZeroMQ_LIBRARIES} -pthread )
 
-set_target_properties(core PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
 # executable target
-add_executable(simulation src/targets/main.cpp)
+
+file(GLOB_RECURSE ALL_HDR_FILES
+     src/*.hpp
+)
+
+add_executable(simulation src/targets/main.cpp ${ALL_HDR_FILES})
 
 target_link_libraries(simulation core)
 
