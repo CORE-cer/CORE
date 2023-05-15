@@ -9,3 +9,4 @@ ContinuationIndentWidth: 2
 ColumnLimit: 75
 #AlwaysBreakAfterDefinitionReturnType: TopLevel
 SeparateDefinitionBlocks: Always
+CommentPragmas: '^'
