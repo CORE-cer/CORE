@@ -7,7 +7,8 @@ NORMAL_OUTPUT='\033[0m'
 cd "$(dirname "$0")/.."
 
 # Compile the project under "Debug"
-scripts/compile_script.sh Debug
+./scripts/install_dependencies.sh Debug
+./scripts/build.sh Debug
 
 # Remove existing compile_commands.json and tags if they exist
 [ -L "compile_commands.json" ] && rm "compile_commands.json"

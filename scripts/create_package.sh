@@ -7,7 +7,8 @@ NORMAL_OUTPUT='\033[0m'
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
-./compile_script Release
+./install_dependencies.sh Release
+./build.sh Release
 cd ..
 conan export-pkg .
-conan create .
+conan create build_type=${BUILD_TYPE} -s:b compiler=gcc -s:b compiler.cppstd=gnu20 -s:b compiler.version=12.2 --build missing .
