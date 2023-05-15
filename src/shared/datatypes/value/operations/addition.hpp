@@ -1,0 +1,49 @@
+#pragma once
+
+#include "shared/datatypes/value/value.hpp"
+
+namespace CORETypes {
+struct Addition final : Value {
+  std::unique_ptr<Value> left;
+  std::unique_ptr<Value> right;
+
+  Addition() noexcept {}
+
+  Addition(const Addition& addition) noexcept
+      : left(addition.clone()), right(addition.clone()) {}
+
+  Addition(std::unique_ptr<Value> left,
+           std::unique_ptr<Value> right) noexcept
+      : left(std::move(left)), right(std::move(right)) {}
+
+  Addition(Value*&& left, Value*&& right) noexcept
+      : left(left), right(right) {}
+
+  std::string to_string() const override {
+    return left->to_string() + "+" + right->to_string();
+  }
+
+  bool operator==(const Addition& other) const noexcept {
+    return left->check_if_equals(other.left.get()) &&
+           right->check_if_equals(other.right.get());
+  }
+
+  bool check_if_equals(Value* val) const noexcept override {
+    if (Addition* addition = dynamic_cast<Addition*>(val)) {
+      return *this == *addition;
+    } else
+      return false;
+  }
+
+  std::unique_ptr<Value> clone() const noexcept override {
+    return std::make_unique<Addition>(left->clone(), right->clone());
+  }
+
+  ~Addition() noexcept override {}
+
+  template <class Archive>
+  void serialize(Archive& archive) {
+    archive(left, right);
+  }
+};
+}  // namespace CORETypes
