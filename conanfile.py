@@ -1,7 +1,7 @@
 from os import path
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
-
+from conan.tools.build import check_min_cppstd
 def create_script(grammar_name, antlr4_version):
     script = f"""#!/bin/bash
 
@@ -83,6 +83,9 @@ class CORE(ConanFile):
 
     def layout(self):
         cmake_layout(self)
+
+    def validate(self):
+        check_min_cppstd(self, "20")
 
     def package_info(self):
         # self.cpp_info.system_libs = ["dl", "rt", "pthread"]
