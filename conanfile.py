@@ -2,8 +2,6 @@ from os import path
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import check_min_cppstd
-import os
-import multiprocessing
 def create_script(grammar_name, antlr4_version):
     script = f"""#!/bin/bash
 
@@ -107,5 +105,4 @@ class CORE(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.configure()
-        num_cores = max(multiprocessing.cpu_count() - 1, 1)
         cmake.build()
