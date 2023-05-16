@@ -1,6 +1,6 @@
 #include <zmq.hpp>
 
-#include "shared/message_receiver/message_receiver.hpp"
+#include "shared/networking/message_receiver/message_receiver.hpp"
 
 namespace InternalCORE {
 class ZMQMessageReceiver : MessageReceiver {
@@ -9,9 +9,9 @@ class ZMQMessageReceiver : MessageReceiver {
   zmq::socket_t socket;
 
  public:
-  ZMQMessageReceiver(const std::string address)
+  ZMQMessageReceiver(const std::string& address)
       : context(1), socket(context, ZMQ_PULL) {
-    socket.connect(address);
+    socket.bind(address);
   }
 
   std::string receive() {

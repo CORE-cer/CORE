@@ -1,6 +1,6 @@
 #include <zmq.hpp>
 
-#include "shared/message_sender/message_sender.hpp"
+#include "shared/networking/message_sender/message_sender.hpp"
 
 namespace InternalCORE {
 class ZMQMessageSender : MessageSender {
@@ -9,9 +9,9 @@ class ZMQMessageSender : MessageSender {
   zmq::socket_t socket;
 
  public:
-  ZMQMessageSender(const std::string binding_address)
+  ZMQMessageSender(const std::string& connect_address)
       : context(1), socket(context, ZMQ_PUSH) {
-    socket.bind(binding_address);
+    socket.connect(connect_address);
   }
 
   void send(const std::string& message) {
@@ -21,3 +21,4 @@ class ZMQMessageSender : MessageSender {
   }
 };
 }  // namespace InternalCORE
+

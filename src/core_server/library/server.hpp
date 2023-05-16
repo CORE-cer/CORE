@@ -1,20 +1,24 @@
 #pragma once
 
+#include <string>
+
+#include <cwchar>
 namespace CORE {
 
 template <typename... Ts>
 class Server {};
 
-template <>
-class Server<> {
+template <typename MsgReceiver, typename MsgSender>
+class Server<MsgReceiver, MsgSender> {
  public:
-  int a;
-
   Server() {}
 
   ~Server() {}
 
-  void start() {}
+  MessageReceiver receiver;
+
+  void start(const std::string address) {
+  }
 
   void stop() {}
 };
