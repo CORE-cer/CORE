@@ -39,7 +39,7 @@ class ZMQMessageRouter : MessageRouter {
     zmq::message_t identity;
     zmq::message_t request;
 
-    socket.set(zmq::sockopt::rcvtimeo, 100);
+    socket.set(zmq::sockopt::rcvtimeo, 300);
 
     try {
       auto got_identity = socket.recv(identity);

@@ -36,7 +36,10 @@ TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
   REQUIRE(received_messages[1] == sent_message2);
 }
 
-TEST_CASE("MessageRouterRequesterTest - RequestReplyTest", "[zmq]") {
+TEST_CASE(
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener",
+  "[zmq]") {
   const std::string address = "inproc://test";
   const std::string test_message1 = "ping1";
   const std::string test_message2 = "ping2";
@@ -52,14 +55,14 @@ TEST_CASE("MessageRouterRequesterTest - RequestReplyTest", "[zmq]") {
   std::string received_message1;
   std::string received_message2;
 
-  ZMQMessageDealer dealer1("tcp://localhost:5555", "DEALER 1");
+  ZMQMessageDealer dealer1("tcp://localhost:5555");
   std::thread dealer1_thread([&dealer1]() {
     std::string reply = dealer1.send_and_receive("ping1");
     INFO("DEALER 1 received reply: " + reply);
     REQUIRE(reply == "Transformed: ping1");
   });
 
-  ZMQMessageDealer dealer2("tcp://localhost:5555", "DEALER 2");
+  ZMQMessageDealer dealer2("tcp://localhost:5555");
   std::thread dealer2_thread([&dealer2]() {
     std::string reply = dealer2.send_and_receive("ping2");
     INFO("DEALER 2 received reply: " + reply);
@@ -68,6 +71,56 @@ TEST_CASE("MessageRouterRequesterTest - RequestReplyTest", "[zmq]") {
 
   dealer1_thread.join();
   dealer2_thread.join();
+
+  INFO("Shutting down...");
+
+  router.stop();
+  router_thread.join();
+}
+
+TEST_CASE(
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener: 100 listeners 1 router",
+  "[zmq]") {
+  const std::string address = "inproc://test";
+  const std::string test_message1 = "ping1";
+  const std::string test_message2 = "ping2";
+
+  auto transformer = [](const std::string& message) {
+    return "Transformed: " + message;
+  };
+
+  ZMQMessageRouter router("tcp://*:5555", transformer);
+
+  std::thread router_thread([&router]() { router.start(); });
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::unique_ptr<std::thread> threads[200];
+  // make an atomic int
+  std::atomic<int> counter = 0;
+  for (int i = 0; i < 100; i++) {
+    //std::cout << "i = " << i << std::endl;
+    threads[i] = std::make_unique<std::thread>([&]() {
+      int j = counter.fetch_add(1);
+      std::string to_send = "ping" + std::to_string(j);
+      //std::cout << "DEALER thread started" << std::endl;
+      ZMQMessageDealer dealer("tcp://localhost:5555");
+      std::string reply;
+      try {
+        reply = dealer.send_and_receive(to_send);
+      } catch (std::runtime_error err) {
+        REQUIRE(false);
+      }
+      //std::cout << "DEALER thread received reply" << reply << std::endl;
+      REQUIRE(reply == "Transformed: " + to_send);
+    });
+  }
+
+  for (int i = 0; i < 100; i++) {
+    // join only if it is possible to join
+    if (threads[i] && threads[i]->joinable())
+      threads[i]->join();
+  }
 
   INFO("Shutting down...");
 
