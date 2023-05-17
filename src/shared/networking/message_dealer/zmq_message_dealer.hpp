@@ -29,7 +29,6 @@ class ZMQMessageDealer {
     memcpy(request.data(), message.c_str(), message.size());
 
     do {
-      socket.set(zmq::sockopt::rcvtimeo, 100);
       socket.send(request, zmq::send_flags::none);
       reception = socket.recv(reply);
       if (reception) {

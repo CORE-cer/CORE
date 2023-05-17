@@ -95,10 +95,12 @@ TEST_CASE(
   std::thread router_thread([&router]() { router.start(); });
 
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  std::unique_ptr<std::thread> threads[200];
+  static const int amount_of_threads = 100;
+  std::unique_ptr<std::thread> threads[amount_of_threads];
   // make an atomic int
   std::atomic<int> counter = 0;
-  for (int i = 0; i < 100; i++) {
+  bool results[amount_of_threads];
+  for (int i = 0; i < amount_of_threads; i++) {
     //std::cout << "i = " << i << std::endl;
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);
@@ -109,23 +111,25 @@ TEST_CASE(
       try {
         reply = dealer.send_and_receive(to_send);
       } catch (std::runtime_error err) {
-        REQUIRE(false);
+        results[j] = false;
       }
       //std::cout << "DEALER thread received reply" << reply << std::endl;
-      REQUIRE(reply == "Transformed: " + to_send);
+      results[j] = reply == "Transformed: " + to_send;
     });
   }
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < amount_of_threads; i++) {
     // join only if it is possible to join
-    if (threads[i] && threads[i]->joinable())
-      threads[i]->join();
+    if (threads[i] && threads[i]->joinable()) threads[i]->join();
   }
 
   INFO("Shutting down...");
 
   router.stop();
   router_thread.join();
+  for (int i = 0; i < amount_of_threads; i++) {
+    REQUIRE(results[i]);
+  }
 }
 
 TEST_CASE("A broadcast message is received exactly as it was sent.",
