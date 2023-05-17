@@ -1,5 +1,6 @@
 #include <atomic>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
 #include <thread>
 #include <vector>
 
@@ -78,6 +79,35 @@ TEST_CASE(
   router_thread.join();
 }
 
+TEST_CASE("A broadcast message is received exactly as it was sent.",
+          "[zmq]") {
+  std::string sent_message1 = "Hello World 1";
+  std::vector<std::string> received_messages;
+
+  ZMQMessageBroadcaster message_sender("tcp://*:5555");
+  std::thread publisher_thread([&]() {
+    // Receive all messages from 5555
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    message_sender.broadcast(sent_message1);
+  });
+
+  std::thread receiver_thread1([&]() {
+    // Receive all messages from 5555
+    ZMQMessageSubscriber receiver("tcp://localhost:5555");
+    REQUIRE(receiver.receive() == sent_message1);
+  });
+
+  std::thread receiver_thread2([&]() {
+    // Receive all messages from 5555
+    ZMQMessageSubscriber receiver("tcp://localhost:5555");
+    REQUIRE(receiver.receive() == sent_message1);
+  });
+
+  publisher_thread.join();
+  receiver_thread1.join();
+  receiver_thread2.join();
+}
+
 TEST_CASE(
   "MessageRouterRequesterTest - messages are sent specifically to each "
   "listener: 100 listeners 1 router",
@@ -132,33 +162,88 @@ TEST_CASE(
   }
 }
 
-TEST_CASE("A broadcast message is received exactly as it was sent.",
-          "[zmq]") {
-  std::string sent_message1 = "Hello World 1";
+TEST_CASE(
+  "A broadcast message is received exactly as it was sent. 100 receivers",
+  "[zmq]") {
+  std::string sent_message = "Hello World 1";
   std::vector<std::string> received_messages;
 
-  std::thread publisher_thread([&]() {
+  ZMQMessageBroadcaster message_sender("tcp://*:5555");
+
+  static const int amount_of_threads = 100;
+  bool results[amount_of_threads];
+  std::unique_ptr<std::thread> threads[amount_of_threads];
+  std::atomic<int> counter = 0;
+
+  for (int i = 0; i < amount_of_threads; i++) {
+    //std::cout << "i = " << i << std::endl;
+    threads[i] = std::make_unique<std::thread>([&]() {
+      int j = counter.fetch_add(1);
+      ZMQMessageSubscriber receiver("tcp://localhost:5555");
+      std::string reply;
+      try {
+        reply = receiver.receive();
+      } catch (std::runtime_error err) {
+        results[j] = false;
+      }
+      results[j] = reply == sent_message;
+    });
+  }
+  // Rerun the publisher_thread
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  message_sender.broadcast(sent_message);
+
+  for (int i = 0; i < amount_of_threads; i++) {
+    // join only if it is possible to join
+    if (threads[i] && threads[i]->joinable()) threads[i]->join();
+  }
+
+  INFO("Shutting down...");
+
+  for (int i = 0; i < amount_of_threads; i++) {
+    REQUIRE(results[i]);
+  }
+}
+
+TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
+          "[zmq]") {
+  static const int amount_of_threads = 100;
+  std::string sent_message = "Hello World";
+  std::vector<std::string> received_messages;
+  std::vector<std::string> sent_messages;
+  ZMQMessageReceiver receiver("tcp://*:5555");
+
+  std::thread receiver_thread([&]() {
     // Receive all messages from 5555
-    ZMQMessageBroadcaster message_sender("tcp://*:5555");
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    message_sender.broadcast(sent_message1);
+    for (int i = 0; i < amount_of_threads; i++) {
+      received_messages.push_back(receiver.receive());
+    }
   });
 
-  std::thread receiver_thread1([&]() {
-    // Receive all messages from 5555
-    ZMQMessageSubscriber receiver("tcp://localhost:5555");
-    REQUIRE(receiver.receive() == sent_message1);
-  });
+  bool results[amount_of_threads];
+  std::unique_ptr<std::thread> threads[amount_of_threads];
+  std::atomic<int> counter = 0;
 
-  std::thread receiver_thread2([&]() {
-    // Receive all messages from 5555
-    ZMQMessageSubscriber receiver("tcp://localhost:5555");
-    REQUIRE(receiver.receive() == sent_message1);
-  });
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  for (int i = 0; i < amount_of_threads; i++) {
+    threads[i] = std::make_unique<std::thread>([&]() {
+      int j = counter.fetch_add(1);
+      ZMQMessageSender message_sender("tcp://localhost:5555");
+      std::string message_to_send = sent_message + std::to_string(j);
+      message_sender.send(message_to_send);
+    });
+  }
 
-  publisher_thread.join();
-  receiver_thread1.join();
-  receiver_thread2.join();
+  receiver_thread.join();
+  for (int i = 0; i < amount_of_threads; i++) {
+    // join only if it is possible to join
+    if (threads[i] && threads[i]->joinable()) threads[i]->join();
+    std::string message_to_send = sent_message + std::to_string(i);
+    sent_messages.push_back(message_to_send);
+  }
+
+  REQUIRE_THAT(sent_messages,
+               Catch::Matchers::UnorderedEquals(received_messages));
 }
 
 }  // namespace CerealThirdPartyTesting
