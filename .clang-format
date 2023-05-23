@@ -5,7 +5,7 @@ PointerAlignment: Left
 IndentWidth: 2
 UseTab: Never
 TabWidth: 2
-ContinuationIndentWidth: 2
+ContinuationIndentWidth: 4
 ColumnLimit: 75
 #AlwaysBreakAfterDefinitionReturnType: TopLevel
 SeparateDefinitionBlocks: Always
