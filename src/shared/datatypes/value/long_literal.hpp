@@ -23,7 +23,7 @@ struct LongLiteral final : public Value {
     return value == other.value;
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (LongLiteral* long_literal = dynamic_cast<LongLiteral*>(val)) {
       return *this == *long_literal;
     } else

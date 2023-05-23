@@ -18,10 +18,10 @@ struct Negation final : public Value {
   std::string to_string() const override { return "-" + val->to_string(); }
 
   bool operator==(const Negation& other) const noexcept {
-    return val->check_if_equals(other.val.get());
+    return val->equals(other.val.get());
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (Negation* negation = dynamic_cast<Negation*>(val)) {
       return *this == *negation;
     } else

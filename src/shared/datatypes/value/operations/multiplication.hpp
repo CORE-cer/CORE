@@ -25,11 +25,11 @@ struct Multiplication final : Value {
   }
 
   bool operator==(const Multiplication& other) const noexcept {
-    return left->check_if_equals(other.left.get()) &&
-           right->check_if_equals(other.right.get());
+    return left->equals(other.left.get()) &&
+           right->equals(other.right.get());
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (Multiplication* multiplication =
           dynamic_cast<Multiplication*>(val)) {
       return *this == *multiplication;

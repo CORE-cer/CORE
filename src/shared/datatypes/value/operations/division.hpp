@@ -24,11 +24,11 @@ struct Division final : public Value {
   }
 
   bool operator==(const Division& other) const noexcept {
-    return left->check_if_equals(other.left.get()) &&
-           right->check_if_equals(other.right.get());
+    return left->equals(other.left.get()) &&
+           right->equals(other.right.get());
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (Division* division = dynamic_cast<Division*>(val)) {
       return *this == *division;
     } else

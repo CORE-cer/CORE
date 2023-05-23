@@ -20,7 +20,7 @@ struct Attribute final : public Value {
     return value == other.value;
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (Attribute* attribute = dynamic_cast<Attribute*>(val)) {
       return *this == *attribute;
     } else

@@ -20,7 +20,7 @@ struct DoubleLiteral final : public Value {
     return value == other.value;
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (DoubleLiteral* double_lit = dynamic_cast<DoubleLiteral*>(val)) {
       return *this == *double_lit;
     } else

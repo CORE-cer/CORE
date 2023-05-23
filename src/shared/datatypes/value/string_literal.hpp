@@ -20,7 +20,7 @@ struct StringLiteral final : public Value {
     return value == other.value;
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (StringLiteral* string_literal =
           dynamic_cast<StringLiteral*>(val)) {
       return *this == *string_literal;

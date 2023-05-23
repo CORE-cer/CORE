@@ -15,7 +15,7 @@ struct Value {
   /// dereference and may eventually have exceptions.
   virtual std::string to_string() const = 0;
 
-  virtual bool check_if_equals(Value* val) const noexcept = 0;
+  virtual bool equals(Value* val) const noexcept = 0;
 
   virtual std::unique_ptr<Value> clone() const noexcept = 0;
 

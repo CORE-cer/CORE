@@ -25,11 +25,11 @@ struct Subtraction final : Value {
   }
 
   bool operator==(const Subtraction& other) const noexcept {
-    return left->check_if_equals(other.left.get()) &&
-           right->check_if_equals(other.right.get());
+    return left->equals(other.left.get()) &&
+           right->equals(other.right.get());
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (Subtraction* subtraction = dynamic_cast<Subtraction*>(val)) {
       return *this == *subtraction;
     } else

@@ -22,7 +22,7 @@ struct IntegerLiteral final : public Value {
     return value == other.value;
   }
 
-  bool check_if_equals(Value* val) const noexcept override {
+  bool equals(Value* val) const noexcept override {
     if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(val)) {
       return *this == *integer_literal;
     } else
