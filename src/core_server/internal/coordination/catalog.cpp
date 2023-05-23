@@ -59,7 +59,6 @@ EventInfo Catalog::get_event_info(
 EventInfo Catalog::get_event_info(std::string event_name) const noexcept {
   auto got = event_name_to_id.find(event_name);
   if (got != event_name_to_id.end()) {
-    //std::cout << "got id:" << got->second << std::endl;
     return events_info[got->second];
   } else {
     std::cout << "WARNING: Event name not found, this shoult not happend"
@@ -101,7 +100,6 @@ const std::vector<EventInfo>& Catalog::get_all_events_info()
     // validated elsewhere
     stream_events_info.push_back(get_event_info(id));
   }
-  //std::cout << "Stream name: " << stream_name << std::endl;
   streams_info.push_back(StreamInfo(streams_info.size(), stream_name,
                                     std::move(stream_events_info)));
   return streams_info.size() - 1;
@@ -127,10 +125,8 @@ StreamInfo Catalog::get_stream_info(
 
 StreamInfo Catalog::get_stream_info(
     std::string stream_name) const noexcept {
-  //std::cout << "Get stream info from name:" << stream_name << std::endl;
   auto got = stream_name_to_id.find(stream_name);
   if (got != stream_name_to_id.end()) {
-    //std::cout << "got stream id:" << got->second << std::endl;
     return streams_info[got->second];
   } else {
     std::cout << "WARNING: stream name not found, this shoult not happend"

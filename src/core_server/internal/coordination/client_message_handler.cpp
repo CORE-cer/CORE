@@ -68,11 +68,8 @@ ServerResponse ClientMessageHandler::event_info_from_id(
 
 ServerResponse ClientMessageHandler::event_info_from_name(
     std::string s_event_name) {
-  //std::cout << "Getting event info from name" << std::endl;
   auto name = CerealSerializer<std::string>::deserialize(s_event_name);
-  //std::cout << "Deserialized name" << std::endl;
   EventInfo info = catalog.get_event_info(name);
-  //std::cout << "Got event info" << std::endl;
   return ServerResponse(CerealSerializer<EventInfo>::serialize(info),
                         ServerResponseType::EventInfo);
 }
@@ -107,7 +104,6 @@ ServerResponse ClientMessageHandler::stream_info_from_id(
   auto stream_id =
       CerealSerializer<StreamTypeId>::deserialize(s_stream_id);
   StreamInfo info = catalog.get_stream_info(stream_id);
-  //std::cout << "Stream name: " << info.name << std::endl;
   return ServerResponse(CerealSerializer<StreamInfo>::serialize(info),
                         ServerResponseType::StreamInfo);
 }

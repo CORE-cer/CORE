@@ -31,13 +31,9 @@ class ComplexEventStreamer {
 
   void start() {
     worker_thread = std::thread([&]() {
-      //std::cout << "Inside worker thread" << std::endl;
       while (!stop_condition) {
-        //std::cout << "Inside inner while" << std::endl;
         std::string serialized_message = receiver.receive();
-        //std::cout << "Received message, broadcasting" << std::endl;
         broadcaster.broadcast(handle_message(serialized_message));
-        //std::cout << "Finished broadcasting" << std::endl;
       }
     });
   }
@@ -46,10 +42,8 @@ class ComplexEventStreamer {
     ZMQMessageSender sender(inner_thread_address, receiver.get_context());
     // TODO: Change message send to a message that stops the inner loop
     stop_condition.store(true);
-    //std::cout << "Sending message (ComplexEventStreamer)" << std::endl;
     sender.send("TODO: Change This Message To a NOP");
     worker_thread.join();
-    //std::cout << "Worker thread joined" << std::endl;
   }
 
   zmq::context_t& get_inner_thread_context() {
