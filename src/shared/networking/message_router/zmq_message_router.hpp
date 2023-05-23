@@ -1,3 +1,4 @@
+#pragma once
 #include <atomic>
 #include <functional>
 #include <iostream>
@@ -6,9 +7,8 @@
 #include "shared/networking/message_router/message_router.hpp"
 
 namespace InternalCORE {
+template <typename TransformFunc>
 class ZMQMessageRouter : MessageRouter {
-  using TransformFunc = std::function<std::string(const std::string&)>;
-
  private:
   zmq::context_t context;
   zmq::socket_t socket;
@@ -16,10 +16,10 @@ class ZMQMessageRouter : MessageRouter {
   std::atomic<bool> stop_router;
 
  public:
-  ZMQMessageRouter(const std::string& address, TransformFunc transformer)
+  ZMQMessageRouter(const std::string& address, TransformFunc&& transformer)
       : context(1),
         socket(context, zmq::socket_type::router),
-        transformer(std::move(transformer)),
+        transformer(transformer),
         stop_router(false) {
     socket.bind(address);
     socket.set(zmq::sockopt::rcvtimeo, 2000);
@@ -33,7 +33,8 @@ class ZMQMessageRouter : MessageRouter {
     }
   }
 
-  void stop() { stop_router.store(true); }
+  void stop() {
+    stop_router.store(true); }
 
  private:
   void receive_and_process() {
@@ -47,13 +48,13 @@ class ZMQMessageRouter : MessageRouter {
       }
       auto got_request = socket.recv(request);
       if (!got_request) {
-        std::cout << "Did not get request after identity?" << std::endl;
+        //std::cout << "Did not get request after identity?" << std::endl;
         return;
       }
-      std::string identityString =
-        std::string(static_cast<char*>(identity.data()), identity.size());
+      std::string identityString = std::string(
+          static_cast<char*>(identity.data()), identity.size());
       std::string requestString =
-        std::string(static_cast<char*>(request.data()), request.size());
+          std::string(static_cast<char*>(request.data()), request.size());
 
       std::string replyString = transformer(requestString);
       zmq::message_t reply(replyString.size());

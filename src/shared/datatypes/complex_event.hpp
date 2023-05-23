@@ -6,14 +6,14 @@
 #include "shared/datatypes/event.hpp"
 
 namespace CORETypes {
+/**
+ * Formally a complex event is a pair C = ([i,j], D) where i <= j and D
+ * is a subset of {i,...j} representing the data-tuples that are relevant
+ * for C. This class represents the complex event but instead, given
+ * the corresponding stream S = ti...tj, it returns C[S]
+ */
 struct ComplexEvent {
-  /**
-   * Formally a complex event is a pair C = ([i,j], D) where i <= j and D
-   * is a subset of {i,...j} representing the data-tuples that are relevant
-   * for C. This class represents the complex event but instead, given
-   * the corresponding stream S = ti...tj, it returns C[S]
-   */
-
+  uint64_t id;
   std::vector<Event> events;
 
   ComplexEvent() noexcept = default;
@@ -28,7 +28,7 @@ struct ComplexEvent {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(events);
+    archive(id, events);
   }
 };
 }  // namespace CORETypes

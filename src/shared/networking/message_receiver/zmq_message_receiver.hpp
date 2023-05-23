@@ -1,3 +1,5 @@
+#pragma once
+
 #include <zmq.hpp>
 
 #include "shared/networking/message_receiver/message_receiver.hpp"
@@ -24,6 +26,10 @@ class ZMQMessageReceiver : MessageReceiver {
 
     return std::string(static_cast<char*>(zmq_message.data()),
                        zmq_message.size());
+  }
+
+  zmq::context_t& get_context() {
+    return context;
   }
 };
 }  // namespace InternalCORE

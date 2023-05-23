@@ -48,13 +48,13 @@ set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
 # executable target
 
-file(GLOB_RECURSE ALL_HDR_FILES
-     src/*.hpp
-)
-
-add_executable(simulation src/targets/main.cpp ${ALL_HDR_FILES})
+add_executable(simulation src/targets/main.cpp)
+add_executable(client src/targets/client.cpp)
+add_executable(server src/targets/server.cpp)
 
 target_link_libraries(simulation core)
+target_link_libraries(client core)
+target_link_libraries(server core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:

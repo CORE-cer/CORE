@@ -1,26 +1,27 @@
+#pragma once
+
 #include <vector>
 
-#include "shared/catalog/event_type_id.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/value/value.hpp"
 
 namespace CORETypes {
 
+/**
+ * An Event is what the base CORE paper defines as a data-tuple. Formally
+ * a data-tuple is a partial mapping from attribute names to values. In
+ * this case, the attribute names are not shown directly here, instead,
+ * event_types_id's are given here, and through the schema the mapping
+ * from attribute names to values can be obtained.
+ */
 struct Event {
-  /**
-   * An Event is what the base CORE paper defines as a data-tuple.
-   * Formally a data-tuple is a partial mapping from attribute names
-   * to values. In this case, the attribute names are not shown directly
-   * here, instead, event_types are given here, and through the schema
-   * the mapping from attribute names to values can be obtained.
-   */
-
   time_t event_date;
   /**
    * An EventType is an id that is used to know what each index in the
    * attributes vector represent. To obtain this, it needs to be requested
    * to the Schema
    */
-  CORECatalog::EventTypeId event_type_id;
+  EventTypeId event_type_id;
   /**
    * Shared pointers are used because it can be exploited in serialization,
    * officially from cereal (our current serialization provider):
@@ -36,7 +37,7 @@ struct Event {
 
   Event() noexcept {}
 
-  Event(time_t event_date, CORECatalog::EventTypeId event_type_id,
+  Event(time_t event_date, EventTypeId event_type_id,
         std::vector<std::shared_ptr<Value>> attributes) noexcept
       : event_date(event_date),
         event_type_id(event_type_id),

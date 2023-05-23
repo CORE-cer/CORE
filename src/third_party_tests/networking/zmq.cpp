@@ -41,7 +41,6 @@ TEST_CASE(
   "MessageRouterRequesterTest - messages are sent specifically to each "
   "listener",
   "[zmq]") {
-  const std::string address = "inproc://test";
   const std::string test_message1 = "ping1";
   const std::string test_message2 = "ping2";
 
@@ -49,7 +48,8 @@ TEST_CASE(
     return "Transformed: " + message;
   };
 
-  ZMQMessageRouter router("tcp://*:5555", transformer);
+  using TransformFunc = std::function<std::string(const std::string&)>;
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
@@ -112,7 +112,6 @@ TEST_CASE(
   "MessageRouterRequesterTest - messages are sent specifically to each "
   "listener: 100 listeners 1 router",
   "[zmq]") {
-  const std::string address = "inproc://test";
   const std::string test_message1 = "ping1";
   const std::string test_message2 = "ping2";
 
@@ -120,7 +119,8 @@ TEST_CASE(
     return "Transformed: " + message;
   };
 
-  ZMQMessageRouter router("tcp://*:5555", transformer);
+  using TransformFunc = std::function<std::string(const std::string&)>;
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
