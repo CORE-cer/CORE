@@ -30,19 +30,45 @@ sudo apt install cmake -y
 source ~/.profile # Or reboot your terminal
 ```
 
+If you are using WSL, you might need to reboot your terminal for this to work.
+
 ## Setup conan with autodetected configs of your computer
 
 `conan profile detect`
 
-## Run the project
+## Compile the project
 
-There are multiple scrips to run the project:
+First we need to install the third party dependencies:
 
-1. `./scripts/install_dependencies.sh`
-2. `./scripts/build.sh`
-3. `./scripts/compile_and_test.sh`
+```
+mkdir -p build
+mkdir -p build/Debug
+conan source .
+conan install . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+                -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
+                --build missing -vquiet
+```
 
-Run `./scripts/install_dependencies.sh` before any other. Once compiled,
-there are two demo main files: server and client, that model a very simple
-communication between a server and a client. More detailed versions can
-be seen in test cases inside `src/unit_tests/core_server`
+Next, we need to compile the projects code:
+
+```
+conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+              -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
+              --build missing -vquiet
+```
+
+If changes were done to the grammar it can be rebuilt using:
+
+```
+cd build/${BUILD_TYPE}
+make grammar
+cd ../../
+conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+              -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
+              --build missing -vquiet
+```
+
+There are multiple scripts with self explanatory names in the `./scripts`
+directory.  If you are planning on modifying the code, it is recommended
+to use the compile_and_test.sh script to make sure the unit tests are
+working correctly.

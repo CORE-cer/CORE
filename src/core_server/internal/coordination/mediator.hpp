@@ -24,7 +24,6 @@ class Mediator {
 
   public:
     Mediator(PortNumber port);
-    // TODO: Create dummy complex event stream
     void start();
     void stop();
     PortNumber create_complex_event_stream(std::string ecs);

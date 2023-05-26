@@ -38,6 +38,7 @@ class ClientMessageHandler {
   ServerResponse stream_info_from_name(std::string s_stream_name);
   ServerResponse list_all_streams();
   ServerResponse add_query(std::string s_query_info);
+  // TODO: all queries and port numbers
 };
 
 }  // namespace InternalCORE

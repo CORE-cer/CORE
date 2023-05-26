@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,6 +12,7 @@ include_directories(src/)
 find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(ZeroMQ REQUIRED)
+find_package(libpqxx REQUIRED)
 
 # Target in Makefile for generation of grammar from .g4 file.
 add_custom_target(
@@ -42,7 +43,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core antlr4_static cereal ${ZeroMQ_LIBRARIES} -pthread )
+target_link_libraries(core antlr4_static cereal ${ZeroMQ_LIBRARIES} ${libpqxx_LIBRARIES} -pthread )
 
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 

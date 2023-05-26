@@ -113,8 +113,8 @@ EventTypeId declare_and_check_for_stream(std::string name,
 
 TEST_CASE(
     "Creating dummy query sent to mediator, mediator creates dummy "
-    "complex event stream, listener receives a message and sends it tot "
-    "he complex event stream and it is sent back."
+    "complex event stream, listener receives a message and sends it to"
+    "the complex event stream and it is sent back."
     "[server coordination]") {
   // This will fail once events are sent to specific streams
   // This will also fail once the streamer sends complex events.

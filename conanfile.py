@@ -80,6 +80,7 @@ class CORE(ConanFile):
     CATCH2_VERSION = "3.3.2"
     ZEROMQ_VERSION = "4.3.4"
     CEREAL_VERSION = "1.3.2"
+    LIBPQXX_VERSION = "7.7.5"
 
     def layout(self):
         cmake_layout(self)
@@ -101,6 +102,7 @@ class CORE(ConanFile):
         self.requires("catch2/" + CORE.CATCH2_VERSION)
         self.requires("zeromq/" + CORE.ZEROMQ_VERSION)
         self.requires("cereal/" + CORE.CEREAL_VERSION)
+        self.requires("libpqxx/" + CORE.LIBPQXX_VERSION)
 
     def build(self):
         cmake = CMake(self)
