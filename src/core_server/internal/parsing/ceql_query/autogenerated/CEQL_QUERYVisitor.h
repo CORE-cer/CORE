@@ -23,22 +23,6 @@ public:
 
     virtual std::any visitError(CEQL_QUERYParser::ErrorContext *context) = 0;
 
-    virtual std::any visitCore_stmt(CEQL_QUERYParser::Core_stmtContext *context) = 0;
-
-    virtual std::any visitCore_declaration(CEQL_QUERYParser::Core_declarationContext *context) = 0;
-
-    virtual std::any visitEvent_declaration(CEQL_QUERYParser::Event_declarationContext *context) = 0;
-
-    virtual std::any visitAttribute_dec_list(CEQL_QUERYParser::Attribute_dec_listContext *context) = 0;
-
-    virtual std::any visitAttribute_declaration(CEQL_QUERYParser::Attribute_declarationContext *context) = 0;
-
-    virtual std::any visitDatatype(CEQL_QUERYParser::DatatypeContext *context) = 0;
-
-    virtual std::any visitStream_declaration(CEQL_QUERYParser::Stream_declarationContext *context) = 0;
-
-    virtual std::any visitEvent_list(CEQL_QUERYParser::Event_listContext *context) = 0;
-
     virtual std::any visitCore_query(CEQL_QUERYParser::Core_queryContext *context) = 0;
 
     virtual std::any visitSs_all(CEQL_QUERYParser::Ss_allContext *context) = 0;

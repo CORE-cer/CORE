@@ -13,32 +13,29 @@ class  CEQL_QUERYParser : public antlr4::Parser {
 public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
-    T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, K_ALL = 14, 
-    K_AND = 15, K_ANY = 16, K_AS = 17, K_BY = 18, K_CONSUME = 19, K_DECLARE = 20, 
-    K_DISTINCT = 21, K_EVENT = 22, K_EVENTS = 23, K_FILTER = 24, K_FROM = 25, 
-    K_HOURS = 26, K_IN = 27, K_LAST = 28, K_LIKE = 29, K_MAX = 30, K_MINUTES = 31, 
-    K_NEXT = 32, K_NONE = 33, K_NOT = 34, K_OR = 35, K_PARTITION = 36, K_SECONDS = 37, 
-    K_SELECT = 38, K_STREAM = 39, K_STRICT = 40, K_UNLESS = 41, K_WHERE = 42, 
-    K_WITHIN = 43, PERCENT = 44, PLUS = 45, MINUS = 46, STAR = 47, SLASH = 48, 
-    LE = 49, LEQ = 50, GE = 51, GEQ = 52, EQ = 53, NEQ = 54, SEMICOLON = 55, 
-    IDENTIFIER = 56, FLOAT_LITERAL = 57, INTEGER_LITERAL = 58, NUMERICAL_EXPONENT = 59, 
-    STRING_LITERAL = 60, REGEXP = 61, SINGLE_LINE_COMMENT = 62, MULTILINE_COMMENT = 63, 
-    SPACES = 64, UNEXPECTED_CHAR = 65
+    T__7 = 8, K_ALL = 9, K_AND = 10, K_ANY = 11, K_AS = 12, K_BY = 13, K_CONSUME = 14, 
+    K_DISTINCT = 15, K_EVENT = 16, K_EVENTS = 17, K_FILTER = 18, K_FROM = 19, 
+    K_HOURS = 20, K_IN = 21, K_LAST = 22, K_LIKE = 23, K_MAX = 24, K_MINUTES = 25, 
+    K_NEXT = 26, K_NONE = 27, K_NOT = 28, K_OR = 29, K_PARTITION = 30, K_SECONDS = 31, 
+    K_SELECT = 32, K_STREAM = 33, K_STRICT = 34, K_UNLESS = 35, K_WHERE = 36, 
+    K_WITHIN = 37, PERCENT = 38, PLUS = 39, MINUS = 40, STAR = 41, SLASH = 42, 
+    LE = 43, LEQ = 44, GE = 45, GEQ = 46, EQ = 47, NEQ = 48, SEMICOLON = 49, 
+    IDENTIFIER = 50, FLOAT_LITERAL = 51, INTEGER_LITERAL = 52, NUMERICAL_EXPONENT = 53, 
+    STRING_LITERAL = 54, REGEXP = 55, SINGLE_LINE_COMMENT = 56, MULTILINE_COMMENT = 57, 
+    SPACES = 58, UNEXPECTED_CHAR = 59
   };
 
   enum {
-    RuleParse = 0, RuleError = 1, RuleCore_stmt = 2, RuleCore_declaration = 3, 
-    RuleEvent_declaration = 4, RuleAttribute_dec_list = 5, RuleAttribute_declaration = 6, 
-    RuleDatatype = 7, RuleStream_declaration = 8, RuleEvent_list = 9, RuleCore_query = 10, 
-    RuleSelection_strategy = 11, RuleResult_values = 12, RuleCore_pattern = 13, 
-    RulePartition_list = 14, RuleAttribute_list = 15, RuleConsumption_policy = 16, 
-    RuleFilter = 17, RuleBool_expr = 18, RuleString_literal = 19, RuleString_literal_or_regexp = 20, 
-    RuleMath_expr = 21, RuleValue_seq = 22, RuleNumber_seq = 23, RuleString_seq = 24, 
-    RuleTime_window = 25, RuleEvent_span = 26, RuleTime_span = 27, RuleHour_span = 28, 
-    RuleMinute_span = 29, RuleSecond_span = 30, RuleCustom_span = 31, RuleNamed_event = 32, 
-    RuleS_event_name = 33, RuleEvent_name = 34, RuleStream_name = 35, RuleAttribute_name = 36, 
-    RuleInteger = 37, RuleNumber = 38, RuleString = 39, RuleAny_name = 40, 
-    RuleKeyword = 41
+    RuleParse = 0, RuleError = 1, RuleCore_query = 2, RuleSelection_strategy = 3, 
+    RuleResult_values = 4, RuleCore_pattern = 5, RulePartition_list = 6, 
+    RuleAttribute_list = 7, RuleConsumption_policy = 8, RuleFilter = 9, 
+    RuleBool_expr = 10, RuleString_literal = 11, RuleString_literal_or_regexp = 12, 
+    RuleMath_expr = 13, RuleValue_seq = 14, RuleNumber_seq = 15, RuleString_seq = 16, 
+    RuleTime_window = 17, RuleEvent_span = 18, RuleTime_span = 19, RuleHour_span = 20, 
+    RuleMinute_span = 21, RuleSecond_span = 22, RuleCustom_span = 23, RuleNamed_event = 24, 
+    RuleS_event_name = 25, RuleEvent_name = 26, RuleStream_name = 27, RuleAttribute_name = 28, 
+    RuleInteger = 29, RuleNumber = 30, RuleString = 31, RuleAny_name = 32, 
+    RuleKeyword = 33
   };
 
   explicit CEQL_QUERYParser(antlr4::TokenStream *input);
@@ -60,14 +57,6 @@ public:
 
   class ParseContext;
   class ErrorContext;
-  class Core_stmtContext;
-  class Core_declarationContext;
-  class Event_declarationContext;
-  class Attribute_dec_listContext;
-  class Attribute_declarationContext;
-  class DatatypeContext;
-  class Stream_declarationContext;
-  class Event_listContext;
   class Core_queryContext;
   class Selection_strategyContext;
   class Result_valuesContext;
@@ -106,8 +95,8 @@ public:
     ParseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *EOF();
-    std::vector<Core_stmtContext *> core_stmt();
-    Core_stmtContext* core_stmt(size_t i);
+    std::vector<Core_queryContext *> core_query();
+    Core_queryContext* core_query(size_t i);
     std::vector<ErrorContext *> error();
     ErrorContext* error(size_t i);
 
@@ -131,121 +120,6 @@ public:
   };
 
   ErrorContext* error();
-
-  class  Core_stmtContext : public antlr4::ParserRuleContext {
-  public:
-    Core_stmtContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Core_queryContext *core_query();
-    Core_declarationContext *core_declaration();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Core_stmtContext* core_stmt();
-
-  class  Core_declarationContext : public antlr4::ParserRuleContext {
-  public:
-    Core_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Event_declarationContext *event_declaration();
-    Stream_declarationContext *stream_declaration();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Core_declarationContext* core_declaration();
-
-  class  Event_declarationContext : public antlr4::ParserRuleContext {
-  public:
-    Event_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *K_DECLARE();
-    antlr4::tree::TerminalNode *K_EVENT();
-    Event_nameContext *event_name();
-    Attribute_dec_listContext *attribute_dec_list();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Event_declarationContext* event_declaration();
-
-  class  Attribute_dec_listContext : public antlr4::ParserRuleContext {
-  public:
-    Attribute_dec_listContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    std::vector<Attribute_declarationContext *> attribute_declaration();
-    Attribute_declarationContext* attribute_declaration(size_t i);
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Attribute_dec_listContext* attribute_dec_list();
-
-  class  Attribute_declarationContext : public antlr4::ParserRuleContext {
-  public:
-    Attribute_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Attribute_nameContext *attribute_name();
-    DatatypeContext *datatype();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Attribute_declarationContext* attribute_declaration();
-
-  class  DatatypeContext : public antlr4::ParserRuleContext {
-  public:
-    DatatypeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *IDENTIFIER();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  DatatypeContext* datatype();
-
-  class  Stream_declarationContext : public antlr4::ParserRuleContext {
-  public:
-    Stream_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *K_DECLARE();
-    antlr4::tree::TerminalNode *K_STREAM();
-    Stream_nameContext *stream_name();
-    Event_listContext *event_list();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Stream_declarationContext* stream_declaration();
-
-  class  Event_listContext : public antlr4::ParserRuleContext {
-  public:
-    Event_listContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    std::vector<Event_nameContext *> event_name();
-    Event_nameContext* event_name(size_t i);
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  Event_listContext* event_list();
 
   class  Core_queryContext : public antlr4::ParserRuleContext {
   public:
@@ -1099,7 +973,6 @@ public:
     antlr4::tree::TerminalNode *K_AS();
     antlr4::tree::TerminalNode *K_BY();
     antlr4::tree::TerminalNode *K_CONSUME();
-    antlr4::tree::TerminalNode *K_DECLARE();
     antlr4::tree::TerminalNode *K_DISTINCT();
     antlr4::tree::TerminalNode *K_EVENT();
     antlr4::tree::TerminalNode *K_EVENTS();

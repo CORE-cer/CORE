@@ -1,0 +1,42 @@
+#pragma once
+
+#include <memory>
+
+#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
+#include "filter.hpp"
+
+namespace InternalCORECEQL {
+class AtomicFilter : public Filter {
+  /**
+   * The atomic filter is the filter of type X[P]
+   */
+ private:
+  std::string variable_name;
+  std::unique_ptr<Predicate> predicate;
+
+ public:
+  AtomicFilter(std::string variable_name,
+               std::unique_ptr<Predicate>&& predicate)
+      : variable_name(variable_name), predicate(std::move(predicate)) {}
+
+  ~AtomicFilter() override = default;
+
+  std::unique_ptr<Filter> clone() const override {
+    return std::make_unique<AtomicFilter>(variable_name, predicate->clone());
+  }
+
+  void accept_visitor(FilterVisitor& visitor) override {
+    visitor.visit(*this);
+  }
+
+  std::string get_label() const { return variable_name; }
+
+  const std::unique_ptr<Predicate>& get_predicate() const {
+    return predicate;
+  }
+
+  std::string to_string() const override {
+    return variable_name + "[" + predicate->to_string() + "]";
+  }
+};
+}  // namespace InternalCORECEQL

@@ -1,11 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "shared/datatypes/value/all_value_headers.hpp"
+#include "core_server/internal/ceql/value/all_value_headers.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CerealThirdPartyTesting {
 using namespace InternalCORE;
-using namespace CORETypes;
+using namespace InternalCORECEQL;
 
 template <typename Object, typename ArgumentType>
 void check_serialization_of(ArgumentType arg) {

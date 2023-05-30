@@ -4,18 +4,18 @@
 
 #include <string>
 
-#include "shared/datatypes/value/value_types.hpp"
+#include "core_server/internal/ceql/value/value_types.hpp"
 
 namespace CORETypes {
 
 struct AttributeInfo {
   std::string name;
-  CORETypes::ValueTypes value_type;
+  InternalCORECEQL::ValueTypes value_type;
 
   AttributeInfo() noexcept {}
 
   AttributeInfo(std::string name,
-                CORETypes::ValueTypes value_type) noexcept
+                InternalCORECEQL::ValueTypes value_type) noexcept
       : name(name), value_type(value_type) {}
 
   bool operator==(AttributeInfo other) {

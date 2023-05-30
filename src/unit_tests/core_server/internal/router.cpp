@@ -12,6 +12,7 @@
 #include "shared/serializer/cereal_serializer.hpp"
 
 using namespace InternalCORE;
+using namespace InternalCORECEQL;
 
 namespace CORERouterCoordinationTests {
 ServerResponse send_request(ZMQMessageDealer& dealer,

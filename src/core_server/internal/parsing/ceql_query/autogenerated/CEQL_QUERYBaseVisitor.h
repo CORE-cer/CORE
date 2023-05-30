@@ -23,38 +23,6 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitCore_stmt(CEQL_QUERYParser::Core_stmtContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCore_declaration(CEQL_QUERYParser::Core_declarationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitEvent_declaration(CEQL_QUERYParser::Event_declarationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitAttribute_dec_list(CEQL_QUERYParser::Attribute_dec_listContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitAttribute_declaration(CEQL_QUERYParser::Attribute_declarationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitDatatype(CEQL_QUERYParser::DatatypeContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitStream_declaration(CEQL_QUERYParser::Stream_declarationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitEvent_list(CEQL_QUERYParser::Event_listContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitCore_query(CEQL_QUERYParser::Core_queryContext *ctx) override {
     return visitChildren(ctx);
   }

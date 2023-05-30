@@ -1,7 +1,7 @@
 grammar CEQL_QUERY;
 
 parse
- : (core_stmt | error )* EOF
+ : (core_query | error )* EOF
  ;
 
 error
@@ -9,46 +9,6 @@ error
    {
      throw new RuntimeException("UNEXPECTED_CHAR=" + $UNEXPECTED_CHAR.text);
    }
- ;
-
-core_stmt
- : core_query
- | core_declaration
- ;
-
-core_declaration
- : event_declaration
- | stream_declaration
- ;
-
-event_declaration
- : K_DECLARE K_EVENT event_name '(' attribute_dec_list ')'
- ;
-
-attribute_dec_list
- :
- | attribute_declaration ( ',' attribute_declaration )*
- ;
-
-attribute_declaration
- : attribute_name datatype
- ;
-
-datatype
- : 'int'
- | 'string'
- | 'double'
- | 'long'
- | 'boolean'
- | IDENTIFIER
- ;
-
-stream_declaration
- : K_DECLARE K_STREAM stream_name '(' event_list? ')'
- ;
-
-event_list
- : event_name ( ',' event_name )*
  ;
 
 core_query
@@ -227,7 +187,6 @@ keyword
  | K_AS
  | K_BY
  | K_CONSUME
- | K_DECLARE
  | K_DISTINCT
  | K_EVENT
  | K_EVENTS
@@ -260,7 +219,6 @@ K_ANY       : A N Y;
 K_AS        : A S;
 K_BY        : B Y;
 K_CONSUME   : C O N S U M E;
-K_DECLARE   : D E C L A R E;
 K_DISTINCT  : D I S T I N C T;
 K_EVENT     : E V E N T;
 K_EVENTS    : E V E N T S;

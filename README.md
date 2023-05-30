@@ -44,7 +44,7 @@ First we need to install the third party dependencies:
 mkdir -p build
 mkdir -p build/Debug
 conan source .
-conan install . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+conan install . -s build_type=Debug -s:h compiler=gcc \
                 -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
                 --build missing -vquiet
 ```
@@ -52,7 +52,7 @@ conan install . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
 Next, we need to compile the projects code:
 
 ```
-conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+conan build . -s build_type=Debug -s:h compiler=gcc \
               -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
               --build missing -vquiet
 ```
@@ -60,7 +60,7 @@ conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
 If changes were done to the grammar it can be rebuilt using:
 
 ```
-cd build/${BUILD_TYPE}
+cd build/Debug
 make grammar
 cd ../../
 conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \

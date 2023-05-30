@@ -10,7 +10,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "shared/datatypes/value/value_types.hpp"
+#include "core_server/internal/ceql/value/value_types.hpp"
 
 using namespace CORETypes;
 
