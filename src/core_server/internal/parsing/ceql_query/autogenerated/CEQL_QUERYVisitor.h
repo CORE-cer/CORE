@@ -37,7 +37,9 @@ public:
 
     virtual std::any visitSs_strict(CEQL_QUERYParser::Ss_strictContext *context) = 0;
 
-    virtual std::any visitResult_values(CEQL_QUERYParser::Result_valuesContext *context) = 0;
+    virtual std::any visitS_star(CEQL_QUERYParser::S_starContext *context) = 0;
+
+    virtual std::any visitS_list_of_variables(CEQL_QUERYParser::S_list_of_variablesContext *context) = 0;
 
     virtual std::any visitEvent_core_pattern(CEQL_QUERYParser::Event_core_patternContext *context) = 0;
 

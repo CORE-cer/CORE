@@ -12,7 +12,7 @@ error
  ;
 
 core_query
- : K_SELECT selection_strategy? result_values
+ : K_SELECT selection_strategy? list_of_variables
    ( K_FROM stream_name ( ',' stream_name )* )?
    K_WHERE core_pattern
    ( K_PARTITION K_BY partition_list )?
@@ -29,9 +29,9 @@ selection_strategy
  | K_STRICT                     # ss_strict
  ;
 
-result_values
- : STAR
- | s_event_name ( ',' s_event_name )*
+list_of_variables
+ : STAR                         # s_star
+ | any_name ( ',' any_name )*   # s_list_of_variables
  ;
 
 

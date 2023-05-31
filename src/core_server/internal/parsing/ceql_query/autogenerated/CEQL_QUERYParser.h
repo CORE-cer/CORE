@@ -27,7 +27,7 @@ public:
 
   enum {
     RuleParse = 0, RuleError = 1, RuleCore_query = 2, RuleSelection_strategy = 3, 
-    RuleResult_values = 4, RuleCore_pattern = 5, RulePartition_list = 6, 
+    RuleList_of_variables = 4, RuleCore_pattern = 5, RulePartition_list = 6, 
     RuleAttribute_list = 7, RuleConsumption_policy = 8, RuleFilter = 9, 
     RuleBool_expr = 10, RuleString_literal = 11, RuleString_literal_or_regexp = 12, 
     RuleMath_expr = 13, RuleValue_seq = 14, RuleNumber_seq = 15, RuleString_seq = 16, 
@@ -59,7 +59,7 @@ public:
   class ErrorContext;
   class Core_queryContext;
   class Selection_strategyContext;
-  class Result_valuesContext;
+  class List_of_variablesContext;
   class Core_patternContext;
   class Partition_listContext;
   class Attribute_listContext;
@@ -126,7 +126,7 @@ public:
     Core_queryContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *K_SELECT();
-    Result_valuesContext *result_values();
+    List_of_variablesContext *list_of_variables();
     antlr4::tree::TerminalNode *K_WHERE();
     Core_patternContext *core_pattern();
     Selection_strategyContext *selection_strategy();
@@ -218,20 +218,39 @@ public:
 
   Selection_strategyContext* selection_strategy();
 
-  class  Result_valuesContext : public antlr4::ParserRuleContext {
+  class  List_of_variablesContext : public antlr4::ParserRuleContext {
   public:
-    Result_valuesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    List_of_variablesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    List_of_variablesContext() = default;
+    void copyFrom(List_of_variablesContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
+
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *STAR();
-    std::vector<S_event_nameContext *> s_event_name();
-    S_event_nameContext* s_event_name(size_t i);
 
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
    
   };
 
-  Result_valuesContext* result_values();
+  class  S_starContext : public List_of_variablesContext {
+  public:
+    S_starContext(List_of_variablesContext *ctx);
+
+    antlr4::tree::TerminalNode *STAR();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  S_list_of_variablesContext : public List_of_variablesContext {
+  public:
+    S_list_of_variablesContext(List_of_variablesContext *ctx);
+
+    std::vector<Any_nameContext *> any_name();
+    Any_nameContext* any_name(size_t i);
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  List_of_variablesContext* list_of_variables();
 
   class  Core_patternContext : public antlr4::ParserRuleContext {
   public:

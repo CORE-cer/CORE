@@ -51,7 +51,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitResult_values(CEQL_QUERYParser::Result_valuesContext *ctx) override {
+  virtual std::any visitS_star(CEQL_QUERYParser::S_starContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitS_list_of_variables(CEQL_QUERYParser::S_list_of_variablesContext *ctx) override {
     return visitChildren(ctx);
   }
 

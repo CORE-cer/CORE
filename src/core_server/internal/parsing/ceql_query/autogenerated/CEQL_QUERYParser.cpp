@@ -43,7 +43,7 @@ void ceql_queryParserInitialize() {
   assert(ceql_queryParserStaticData == nullptr);
   auto staticData = std::make_unique<CEQL_QUERYParserStaticData>(
     std::vector<std::string>{
-      "parse", "error", "core_query", "selection_strategy", "result_values", 
+      "parse", "error", "core_query", "selection_strategy", "list_of_variables", 
       "core_pattern", "partition_list", "attribute_list", "consumption_policy", 
       "filter", "bool_expr", "string_literal", "string_literal_or_regexp", 
       "math_expr", "value_seq", "number_seq", "string_seq", "time_window", 
@@ -122,7 +122,7 @@ void ceql_queryParserInitialize() {
   	5,11,0,0,114,119,5,22,0,0,115,119,5,24,0,0,116,119,5,26,0,0,117,119,5,
   	34,0,0,118,112,1,0,0,0,118,113,1,0,0,0,118,114,1,0,0,0,118,115,1,0,0,
   	0,118,116,1,0,0,0,118,117,1,0,0,0,119,7,1,0,0,0,120,130,5,41,0,0,121,
-  	126,3,50,25,0,122,123,5,1,0,0,123,125,3,50,25,0,124,122,1,0,0,0,125,128,
+  	126,3,64,32,0,122,123,5,1,0,0,123,125,3,64,32,0,124,122,1,0,0,0,125,128,
   	1,0,0,0,126,124,1,0,0,0,126,127,1,0,0,0,127,130,1,0,0,0,128,126,1,0,0,
   	0,129,120,1,0,0,0,129,121,1,0,0,0,130,9,1,0,0,0,131,132,6,5,-1,0,132,
   	133,5,2,0,0,133,134,3,10,5,0,134,135,5,3,0,0,135,138,1,0,0,0,136,138,
@@ -398,8 +398,8 @@ tree::TerminalNode* CEQL_QUERYParser::Core_queryContext::K_SELECT() {
   return getToken(CEQL_QUERYParser::K_SELECT, 0);
 }
 
-CEQL_QUERYParser::Result_valuesContext* CEQL_QUERYParser::Core_queryContext::result_values() {
-  return getRuleContext<CEQL_QUERYParser::Result_valuesContext>(0);
+CEQL_QUERYParser::List_of_variablesContext* CEQL_QUERYParser::Core_queryContext::list_of_variables() {
+  return getRuleContext<CEQL_QUERYParser::List_of_variablesContext>(0);
 }
 
 tree::TerminalNode* CEQL_QUERYParser::Core_queryContext::K_WHERE() {
@@ -497,7 +497,7 @@ CEQL_QUERYParser::Core_queryContext* CEQL_QUERYParser::core_query() {
       selection_strategy();
     }
     setState(84);
-    result_values();
+    list_of_variables();
     setState(94);
     _errHandler->sync(this);
 
@@ -751,40 +751,58 @@ CEQL_QUERYParser::Selection_strategyContext* CEQL_QUERYParser::selection_strateg
   return _localctx;
 }
 
-//----------------- Result_valuesContext ------------------------------------------------------------------
+//----------------- List_of_variablesContext ------------------------------------------------------------------
 
-CEQL_QUERYParser::Result_valuesContext::Result_valuesContext(ParserRuleContext *parent, size_t invokingState)
+CEQL_QUERYParser::List_of_variablesContext::List_of_variablesContext(ParserRuleContext *parent, size_t invokingState)
   : ParserRuleContext(parent, invokingState) {
 }
 
-tree::TerminalNode* CEQL_QUERYParser::Result_valuesContext::STAR() {
+
+size_t CEQL_QUERYParser::List_of_variablesContext::getRuleIndex() const {
+  return CEQL_QUERYParser::RuleList_of_variables;
+}
+
+void CEQL_QUERYParser::List_of_variablesContext::copyFrom(List_of_variablesContext *ctx) {
+  ParserRuleContext::copyFrom(ctx);
+}
+
+//----------------- S_starContext ------------------------------------------------------------------
+
+tree::TerminalNode* CEQL_QUERYParser::S_starContext::STAR() {
   return getToken(CEQL_QUERYParser::STAR, 0);
 }
 
-std::vector<CEQL_QUERYParser::S_event_nameContext *> CEQL_QUERYParser::Result_valuesContext::s_event_name() {
-  return getRuleContexts<CEQL_QUERYParser::S_event_nameContext>();
-}
-
-CEQL_QUERYParser::S_event_nameContext* CEQL_QUERYParser::Result_valuesContext::s_event_name(size_t i) {
-  return getRuleContext<CEQL_QUERYParser::S_event_nameContext>(i);
-}
+CEQL_QUERYParser::S_starContext::S_starContext(List_of_variablesContext *ctx) { copyFrom(ctx); }
 
 
-size_t CEQL_QUERYParser::Result_valuesContext::getRuleIndex() const {
-  return CEQL_QUERYParser::RuleResult_values;
-}
-
-
-std::any CEQL_QUERYParser::Result_valuesContext::accept(tree::ParseTreeVisitor *visitor) {
+std::any CEQL_QUERYParser::S_starContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<CEQL_QUERYVisitor*>(visitor))
-    return parserVisitor->visitResult_values(this);
+    return parserVisitor->visitS_star(this);
   else
     return visitor->visitChildren(this);
 }
+//----------------- S_list_of_variablesContext ------------------------------------------------------------------
 
-CEQL_QUERYParser::Result_valuesContext* CEQL_QUERYParser::result_values() {
-  Result_valuesContext *_localctx = _tracker.createInstance<Result_valuesContext>(_ctx, getState());
-  enterRule(_localctx, 8, CEQL_QUERYParser::RuleResult_values);
+std::vector<CEQL_QUERYParser::Any_nameContext *> CEQL_QUERYParser::S_list_of_variablesContext::any_name() {
+  return getRuleContexts<CEQL_QUERYParser::Any_nameContext>();
+}
+
+CEQL_QUERYParser::Any_nameContext* CEQL_QUERYParser::S_list_of_variablesContext::any_name(size_t i) {
+  return getRuleContext<CEQL_QUERYParser::Any_nameContext>(i);
+}
+
+CEQL_QUERYParser::S_list_of_variablesContext::S_list_of_variablesContext(List_of_variablesContext *ctx) { copyFrom(ctx); }
+
+
+std::any CEQL_QUERYParser::S_list_of_variablesContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<CEQL_QUERYVisitor*>(visitor))
+    return parserVisitor->visitS_list_of_variables(this);
+  else
+    return visitor->visitChildren(this);
+}
+CEQL_QUERYParser::List_of_variablesContext* CEQL_QUERYParser::list_of_variables() {
+  List_of_variablesContext *_localctx = _tracker.createInstance<List_of_variablesContext>(_ctx, getState());
+  enterRule(_localctx, 8, CEQL_QUERYParser::RuleList_of_variables);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -799,6 +817,7 @@ CEQL_QUERYParser::Result_valuesContext* CEQL_QUERYParser::result_values() {
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case CEQL_QUERYParser::STAR: {
+        _localctx = _tracker.createInstance<CEQL_QUERYParser::S_starContext>(_localctx);
         enterOuterAlt(_localctx, 1);
         setState(120);
         match(CEQL_QUERYParser::STAR);
@@ -806,9 +825,10 @@ CEQL_QUERYParser::Result_valuesContext* CEQL_QUERYParser::result_values() {
       }
 
       case CEQL_QUERYParser::IDENTIFIER: {
+        _localctx = _tracker.createInstance<CEQL_QUERYParser::S_list_of_variablesContext>(_localctx);
         enterOuterAlt(_localctx, 2);
         setState(121);
-        s_event_name();
+        any_name();
         setState(126);
         _errHandler->sync(this);
         _la = _input->LA(1);
@@ -816,7 +836,7 @@ CEQL_QUERYParser::Result_valuesContext* CEQL_QUERYParser::result_values() {
           setState(122);
           match(CEQL_QUERYParser::T__0);
           setState(123);
-          s_event_name();
+          any_name();
           setState(128);
           _errHandler->sync(this);
           _la = _input->LA(1);
