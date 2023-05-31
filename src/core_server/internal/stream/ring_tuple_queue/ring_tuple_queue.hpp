@@ -7,7 +7,7 @@
 #include <atomic>
 #include <type_traits>
 
-#include "tuple_schema.hpp"
+#include "tuple.hpp"
 
 namespace RingTupleQueue {
 

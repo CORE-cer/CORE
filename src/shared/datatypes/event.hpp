@@ -1,9 +1,10 @@
 #pragma once
 
+#include <chrono>
 #include <vector>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "core_server/internal/ceql/value/value.hpp"
+#include "value.hpp"
 
 namespace CORETypes {
 
@@ -33,12 +34,13 @@ struct Event {
    *   from an archive, cereal will not allocate extraneous data."
    *   https://uscilab.github.io/cereal/pointers.html
    */
-  std::vector<std::shared_ptr<InternalCORECEQL::Value>> attributes;
+  std::vector<std::shared_ptr<CORETypes::Value>> attributes;
 
   Event() noexcept {}
 
-  Event(time_t event_date, EventTypeId event_type_id,
-        std::vector<std::shared_ptr<InternalCORECEQL::Value>> attributes) noexcept
+  Event(time_t event_date,
+        EventTypeId event_type_id,
+        std::vector<std::shared_ptr<CORETypes::Value>> attributes) noexcept
       : event_date(event_date),
         event_type_id(event_type_id),
         attributes(attributes) {}
