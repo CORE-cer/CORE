@@ -11,6 +11,7 @@ TEST_CASE("Serialization works for a simple structure", "[cereal]") {
   SimpleStruct initial_struct{5};
   std::string serialized_struct =
     CerealSerializer<SimpleStruct>::serialize(initial_struct);
+  INFO(serialized_struct);
   SimpleStruct final_struct =
     CerealSerializer<SimpleStruct>::deserialize(serialized_struct);
   REQUIRE(initial_struct.x == final_struct.x);

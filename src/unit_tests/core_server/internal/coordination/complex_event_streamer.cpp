@@ -35,7 +35,7 @@ TEST_CASE("A sent event is read back by dummy EventStreamer",
     received_message = receiver.receive();
   });
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  Event event = Event(0, 0, {});
+  Event event = Event(0, {});
   std::string message =
       send(5001, event, streamer.get_inner_thread_context());
   receiver_thread.join();

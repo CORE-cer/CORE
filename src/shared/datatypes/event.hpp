@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cereal/archives/json.hpp>
 #include <chrono>
 #include <vector>
 
@@ -16,7 +17,6 @@ namespace CORETypes {
  * from attribute names to values can be obtained.
  */
 struct Event {
-  time_t event_date;
   /**
    * An EventType is an id that is used to know what each index in the
    * attributes vector represent. To obtain this, it needs to be requested
@@ -38,16 +38,34 @@ struct Event {
 
   Event() noexcept {}
 
-  Event(time_t event_date,
-        EventTypeId event_type_id,
+  Event(EventTypeId event_type_id,
         std::vector<std::shared_ptr<CORETypes::Value>> attributes) noexcept
-      : event_date(event_date),
-        event_type_id(event_type_id),
-        attributes(attributes) {}
+      : event_type_id(event_type_id), attributes(attributes) {}
+
+  std::string to_string() const {
+    std::string out =
+        "Event type: " + std::to_string(event_type_id) + ": [ ";
+    for (auto& val : attributes) {
+      out += val->to_string() + " ";
+    }
+    return out + "]";
+  }
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(event_date, event_type_id, attributes);
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
+    archive(event_type_id, attributes);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("event_type_id", event_type_id),
+            cereal::make_nvp("attributes", attributes));
   }
 };
 

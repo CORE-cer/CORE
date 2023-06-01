@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cereal/archives/json.hpp>
 #include <chrono>
 #include <string>
 
@@ -22,7 +23,19 @@ struct StringValue final : public Value {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive,
+                   std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(val);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("val", val));
   }
 };
 
@@ -39,7 +52,19 @@ struct IntValue final : public Value {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive,
+                   std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(val);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("val", val));
   }
 };
 
@@ -56,7 +81,19 @@ struct DoubleValue final : public Value {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive,
+                   std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(val);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("val", val));
   }
 };
 
@@ -73,7 +110,19 @@ struct BoolValue final : public Value {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive,
+                   std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(val);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("val", val));
   }
 };
 
@@ -90,7 +139,19 @@ struct DateValue final : public Value {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive,
+                   std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(val);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("val", val));
   }
 };
 }  // namespace CORETypes

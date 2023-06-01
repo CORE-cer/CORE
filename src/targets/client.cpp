@@ -71,16 +71,17 @@ int main(int argc, char** argv) {
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   for (int i = 0; i < 10; i++) {
-    Event event_to_send(i, 0, {});
+    Event event_to_send(i, {});
+    std::cout << "Sending event: " << event_to_send.to_string() << std::endl;
     ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
     sender.send(
         CerealSerializer<Stream>::serialize(Stream(0, {event_to_send})));
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
   }
   subscriber_thread.join();
   for (int i = 0; i < 10; i++) {
     Event event = CerealSerializer<Event>::deserialize(messages[i]);
-    std::cout << "Received Empty Event with date: " << event.event_date
-              << std::endl;
+    std::cout << "Received event: " << event.to_string() << std::endl;
   }
   return 0;
 }

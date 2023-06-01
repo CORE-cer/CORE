@@ -1,5 +1,6 @@
 #pragma once
-#include <cereal/archives/binary.hpp>
+//#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
 
 #include "shared/serializer/serializer.hpp"
 
@@ -38,7 +39,7 @@ class CerealSerializer : Serializer<StructName> {
  public:
   static std::string serialize(const StructName& data) {
     std::stringstream ss;
-    cereal::BinaryOutputArchive oarchive(ss);
+    cereal::JSONOutputArchive oarchive(ss);
     oarchive(data);
     return ss.str();
   }
@@ -46,7 +47,7 @@ class CerealSerializer : Serializer<StructName> {
   static StructName deserialize(const std::string& message) {
     std::stringstream ss(message);
     StructName data;
-    cereal::BinaryInputArchive iarchive(ss);
+    cereal::JSONInputArchive iarchive(ss);
     iarchive(data);
     return data;
   }

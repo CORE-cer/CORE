@@ -1,3 +1,4 @@
+#include <cereal/archives/json.hpp>
 #include <memory>
 #include <vector>
 
@@ -9,7 +10,18 @@ struct SimpleStruct {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(x);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("SimpleStruct", *this));
   }
 };
 
@@ -22,7 +34,18 @@ struct VectorStruct {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(values);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("values", values));
   }
 };
 
@@ -30,7 +53,16 @@ struct AbstractClass {
   virtual ~AbstractClass() = default;
 
   template <class Archive>
-  void serialize(Archive& archive) {}
+  void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {}
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {}
 };
 
 struct ConcreteClass1 : AbstractClass {
@@ -42,7 +74,18 @@ struct ConcreteClass1 : AbstractClass {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(values);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("values", values));
   }
 };
 
@@ -55,7 +98,18 @@ struct ConcreteClass2 : AbstractClass {
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(value);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("value", value));
   }
 };
 
@@ -65,12 +119,23 @@ struct ClassWithAbstractClassSharedPtr {
   ClassWithAbstractClassSharedPtr() {}
 
   ClassWithAbstractClassSharedPtr(
-    std::initializer_list<std::shared_ptr<AbstractClass>> vals)
+      std::initializer_list<std::shared_ptr<AbstractClass>> vals)
       : objects(vals) {}
 
   template <class Archive>
   void serialize(Archive& archive) {
+    serialize(archive, std::is_same<Archive, cereal::JSONOutputArchive>{});
+  }
+
+ private:
+  template <class Archive>
+  void serialize(Archive& archive, std::false_type) {
     archive(objects);
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive, std::true_type) {
+    archive(cereal::make_nvp("objects", objects));
   }
 };
 }  // namespace CerealThirdPartyTesting
@@ -82,8 +147,8 @@ struct ClassWithAbstractClassSharedPtr {
 CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass1);
 CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass2);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass1);
+    CerealThirdPartyTesting::AbstractClass,
+    CerealThirdPartyTesting::ConcreteClass1);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass2);
+    CerealThirdPartyTesting::AbstractClass,
+    CerealThirdPartyTesting::ConcreteClass2);

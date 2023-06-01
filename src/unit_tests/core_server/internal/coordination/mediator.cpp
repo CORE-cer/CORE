@@ -139,7 +139,7 @@ TEST_CASE(
       std::thread([&]() { message = subscriber.receive(); });
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-  Event event_to_send(0, 0, {});
+  Event event_to_send(0, {});
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
   sender.send(
       CerealSerializer<Stream>::serialize(Stream(0, {event_to_send})));
