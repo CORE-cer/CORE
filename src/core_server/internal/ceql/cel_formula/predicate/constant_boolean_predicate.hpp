@@ -10,30 +10,30 @@
 
 namespace InternalCORECEQL {
 
-class NotPredicate : public Predicate {
+class ConstantBooleanPredicate : public Predicate {
  private:
-  std::unique_ptr<Predicate> predicate;
+   bool val;
 
  public:
-  NotPredicate(std::unique_ptr<Predicate>&& predicate)
-      : predicate(std::move(predicate)) {}
+  ConstantBooleanPredicate(bool val)
+      : val(val) {}
 
   std::unique_ptr<Predicate> clone() const override {
-    return std::make_unique<NotPredicate>(predicate->clone());
+    return std::make_unique<ConstantBooleanPredicate>(val);
   }
 
-  ~NotPredicate() {}
+  ~ConstantBooleanPredicate() {}
 
-  std::unique_ptr<Predicate> negate() const override {
-    return predicate->clone();
+  virtual std::unique_ptr<Predicate> negate() const override {
+    return std::make_unique<ConstantBooleanPredicate>(!val);
   }
 
-  bool operator==(const NotPredicate& other) const {
-    return predicate->equals(other.predicate.get());
+  bool operator==(const ConstantBooleanPredicate& other) const {
+    return val == other.val;
   }
 
   bool equals(Predicate* other) const override {
-    if (auto other_predicate = dynamic_cast<NotPredicate*>(other)) {
+    if (auto other_predicate = dynamic_cast<ConstantBooleanPredicate*>(other)) {
       return *this == *other_predicate;
     }
     return false;
@@ -42,7 +42,7 @@ class NotPredicate : public Predicate {
   bool is_constant() const override { return false; }
 
   std::string to_string() const override {
-    return "not(" + predicate->to_string() + ")";
+    return val? "TRUE" : "FALSE";
   }
 
   void accept_visitor(PredicateVisitor& visitor) override {

@@ -23,9 +23,24 @@ class OrPredicate : public Predicate {
     return std::make_unique<OrPredicate>(std::move(copied_predicates));
   }
 
-  ~OrPredicate();
+  ~OrPredicate() {}
 
   std::unique_ptr<Predicate> negate() const override;
+
+  bool operator==(const OrPredicate& other) const {
+    if (predicates.size() != other.predicates.size()) return false;
+    for (size_t i = 0; i < predicates.size(); i++) {
+      if (!predicates[i]->equals(other.predicates[i].get())) return false;
+    }
+    return true;
+  }
+
+  bool equals(Predicate* other) const override {
+    if (auto other_predicate = dynamic_cast<OrPredicate*>(other)) {
+      return *this == *other_predicate;
+    }
+    return false;
+  }
 
   bool is_constant() const override {
     for (auto& predicate : predicates) {

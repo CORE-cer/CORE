@@ -59,27 +59,35 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitEvent_core_pattern(CEQL_QUERYParser::Event_core_patternContext *ctx) override {
+  virtual std::any visitFrom_clause(CEQL_QUERYParser::From_clauseContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitKleene_core_pattern(CEQL_QUERYParser::Kleene_core_patternContext *ctx) override {
+  virtual std::any visitEvent_type_cel_formula(CEQL_QUERYParser::Event_type_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitAssign_core_pattern(CEQL_QUERYParser::Assign_core_patternContext *ctx) override {
+  virtual std::any visitPar_cel_formula(CEQL_QUERYParser::Par_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitBinary_core_pattern(CEQL_QUERYParser::Binary_core_patternContext *ctx) override {
+  virtual std::any visitSequencing_cel_formula(CEQL_QUERYParser::Sequencing_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitPar_core_pattern(CEQL_QUERYParser::Par_core_patternContext *ctx) override {
+  virtual std::any visitKleene_cel_formula(CEQL_QUERYParser::Kleene_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitFilter_core_pattern(CEQL_QUERYParser::Filter_core_patternContext *ctx) override {
+  virtual std::any visitFilter_cel_formula(CEQL_QUERYParser::Filter_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitOr_cel_formula(CEQL_QUERYParser::Or_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitAs_cel_formula(CEQL_QUERYParser::As_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -111,7 +119,7 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitEvent_filter(CEQL_QUERYParser::Event_filterContext *ctx) override {
+  virtual std::any visitAtomic_filter(CEQL_QUERYParser::Atomic_filterContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -119,39 +127,35 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitNot_expr(CEQL_QUERYParser::Not_exprContext *ctx) override {
+  virtual std::any visitRegex_predicate(CEQL_QUERYParser::Regex_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitEquality_string_expr(CEQL_QUERYParser::Equality_string_exprContext *ctx) override {
+  virtual std::any visitIn_predicate(CEQL_QUERYParser::In_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitAnd_expr(CEQL_QUERYParser::And_exprContext *ctx) override {
+  virtual std::any visitNot_predicate(CEQL_QUERYParser::Not_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitPar_bool_expr(CEQL_QUERYParser::Par_bool_exprContext *ctx) override {
+  virtual std::any visitPar_predicate(CEQL_QUERYParser::Par_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitContainment_expr(CEQL_QUERYParser::Containment_exprContext *ctx) override {
+  virtual std::any visitAnd_predicate(CEQL_QUERYParser::And_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitInequality_expr(CEQL_QUERYParser::Inequality_exprContext *ctx) override {
+  virtual std::any visitEquality_string_predicate(CEQL_QUERYParser::Equality_string_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitOr_expr(CEQL_QUERYParser::Or_exprContext *ctx) override {
+  virtual std::any visitInequality_predicate(CEQL_QUERYParser::Inequality_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitEquality_math_expr(CEQL_QUERYParser::Equality_math_exprContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegex_expr(CEQL_QUERYParser::Regex_exprContext *ctx) override {
+  virtual std::any visitOr_predicate(CEQL_QUERYParser::Or_predicateContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -160,6 +164,10 @@ public:
   }
 
   virtual std::any visitString_literal_or_regexp(CEQL_QUERYParser::String_literal_or_regexpContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitRegexp(CEQL_QUERYParser::RegexpContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -195,7 +203,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitNumber_range(CEQL_QUERYParser::Number_rangeContext *ctx) override {
+  virtual std::any visitInteger_range(CEQL_QUERYParser::Integer_rangeContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDouble_range(CEQL_QUERYParser::Double_rangeContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -260,6 +272,10 @@ public:
   }
 
   virtual std::any visitInteger(CEQL_QUERYParser::IntegerContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDouble(CEQL_QUERYParser::DoubleContext *ctx) override {
     return visitChildren(ctx);
   }
 

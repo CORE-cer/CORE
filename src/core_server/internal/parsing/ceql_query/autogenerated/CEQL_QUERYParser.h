@@ -20,22 +20,22 @@ public:
     K_SELECT = 32, K_STREAM = 33, K_STRICT = 34, K_UNLESS = 35, K_WHERE = 36, 
     K_WITHIN = 37, PERCENT = 38, PLUS = 39, MINUS = 40, STAR = 41, SLASH = 42, 
     LE = 43, LEQ = 44, GE = 45, GEQ = 46, EQ = 47, NEQ = 48, SEMICOLON = 49, 
-    IDENTIFIER = 50, FLOAT_LITERAL = 51, INTEGER_LITERAL = 52, NUMERICAL_EXPONENT = 53, 
-    STRING_LITERAL = 54, REGEXP = 55, SINGLE_LINE_COMMENT = 56, MULTILINE_COMMENT = 57, 
-    SPACES = 58, UNEXPECTED_CHAR = 59
+    IDENTIFIER = 50, DOUBLE_LITERAL = 51, INTEGER_LITERAL = 52, NUMERICAL_EXPONENT = 53, 
+    STRING_LITERAL = 54, SINGLE_LINE_COMMENT = 55, MULTILINE_COMMENT = 56, 
+    SPACES = 57, UNEXPECTED_CHAR = 58
   };
 
   enum {
     RuleParse = 0, RuleError = 1, RuleCore_query = 2, RuleSelection_strategy = 3, 
-    RuleList_of_variables = 4, RuleCore_pattern = 5, RulePartition_list = 6, 
-    RuleAttribute_list = 7, RuleConsumption_policy = 8, RuleFilter = 9, 
-    RuleBool_expr = 10, RuleString_literal = 11, RuleString_literal_or_regexp = 12, 
-    RuleMath_expr = 13, RuleValue_seq = 14, RuleNumber_seq = 15, RuleString_seq = 16, 
-    RuleTime_window = 17, RuleEvent_span = 18, RuleTime_span = 19, RuleHour_span = 20, 
-    RuleMinute_span = 21, RuleSecond_span = 22, RuleCustom_span = 23, RuleNamed_event = 24, 
-    RuleS_event_name = 25, RuleEvent_name = 26, RuleStream_name = 27, RuleAttribute_name = 28, 
-    RuleInteger = 29, RuleNumber = 30, RuleString = 31, RuleAny_name = 32, 
-    RuleKeyword = 33
+    RuleList_of_variables = 4, RuleFrom_clause = 5, RuleCel_formula = 6, 
+    RulePartition_list = 7, RuleAttribute_list = 8, RuleConsumption_policy = 9, 
+    RuleFilter = 10, RulePredicate = 11, RuleString_literal = 12, RuleString_literal_or_regexp = 13, 
+    RuleRegexp = 14, RuleMath_expr = 15, RuleValue_seq = 16, RuleNumber_seq = 17, 
+    RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, RuleTime_span = 21, 
+    RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, RuleCustom_span = 25, 
+    RuleNamed_event = 26, RuleS_event_name = 27, RuleEvent_name = 28, RuleStream_name = 29, 
+    RuleAttribute_name = 30, RuleInteger = 31, RuleDouble = 32, RuleNumber = 33, 
+    RuleString = 34, RuleAny_name = 35, RuleKeyword = 36
   };
 
   explicit CEQL_QUERYParser(antlr4::TokenStream *input);
@@ -60,14 +60,16 @@ public:
   class Core_queryContext;
   class Selection_strategyContext;
   class List_of_variablesContext;
-  class Core_patternContext;
+  class From_clauseContext;
+  class Cel_formulaContext;
   class Partition_listContext;
   class Attribute_listContext;
   class Consumption_policyContext;
   class FilterContext;
-  class Bool_exprContext;
+  class PredicateContext;
   class String_literalContext;
   class String_literal_or_regexpContext;
+  class RegexpContext;
   class Math_exprContext;
   class Value_seqContext;
   class Number_seqContext;
@@ -85,6 +87,7 @@ public:
   class Stream_nameContext;
   class Attribute_nameContext;
   class IntegerContext;
+  class DoubleContext;
   class NumberContext;
   class StringContext;
   class Any_nameContext;
@@ -127,12 +130,10 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *K_SELECT();
     List_of_variablesContext *list_of_variables();
+    From_clauseContext *from_clause();
     antlr4::tree::TerminalNode *K_WHERE();
-    Core_patternContext *core_pattern();
+    Cel_formulaContext *cel_formula();
     Selection_strategyContext *selection_strategy();
-    antlr4::tree::TerminalNode *K_FROM();
-    std::vector<Stream_nameContext *> stream_name();
-    Stream_nameContext* stream_name(size_t i);
     antlr4::tree::TerminalNode *K_PARTITION();
     std::vector<antlr4::tree::TerminalNode *> K_BY();
     antlr4::tree::TerminalNode* K_BY(size_t i);
@@ -252,12 +253,27 @@ public:
 
   List_of_variablesContext* list_of_variables();
 
-  class  Core_patternContext : public antlr4::ParserRuleContext {
+  class  From_clauseContext : public antlr4::ParserRuleContext {
   public:
-    Core_patternContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    From_clauseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_FROM();
+    std::vector<Stream_nameContext *> stream_name();
+    Stream_nameContext* stream_name(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
    
-    Core_patternContext() = default;
-    void copyFrom(Core_patternContext *context);
+  };
+
+  From_clauseContext* from_clause();
+
+  class  Cel_formulaContext : public antlr4::ParserRuleContext {
+  public:
+    Cel_formulaContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    Cel_formulaContext() = default;
+    void copyFrom(Cel_formulaContext *context);
     using antlr4::ParserRuleContext::copyFrom;
 
     virtual size_t getRuleIndex() const override;
@@ -265,70 +281,80 @@ public:
    
   };
 
-  class  Event_core_patternContext : public Core_patternContext {
+  class  Event_type_cel_formulaContext : public Cel_formulaContext {
   public:
-    Event_core_patternContext(Core_patternContext *ctx);
+    Event_type_cel_formulaContext(Cel_formulaContext *ctx);
 
     S_event_nameContext *s_event_name();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Kleene_core_patternContext : public Core_patternContext {
+  class  Par_cel_formulaContext : public Cel_formulaContext {
   public:
-    Kleene_core_patternContext(Core_patternContext *ctx);
+    Par_cel_formulaContext(Cel_formulaContext *ctx);
 
-    Core_patternContext *core_pattern();
-    antlr4::tree::TerminalNode *PLUS();
+    Cel_formulaContext *cel_formula();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Assign_core_patternContext : public Core_patternContext {
+  class  Sequencing_cel_formulaContext : public Cel_formulaContext {
   public:
-    Assign_core_patternContext(Core_patternContext *ctx);
+    Sequencing_cel_formulaContext(Cel_formulaContext *ctx);
 
-    Core_patternContext *core_pattern();
-    antlr4::tree::TerminalNode *K_AS();
-    Event_nameContext *event_name();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Binary_core_patternContext : public Core_patternContext {
-  public:
-    Binary_core_patternContext(Core_patternContext *ctx);
-
-    std::vector<Core_patternContext *> core_pattern();
-    Core_patternContext* core_pattern(size_t i);
-    antlr4::tree::TerminalNode *K_OR();
+    std::vector<Cel_formulaContext *> cel_formula();
+    Cel_formulaContext* cel_formula(size_t i);
     antlr4::tree::TerminalNode *SEMICOLON();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Par_core_patternContext : public Core_patternContext {
+  class  Kleene_cel_formulaContext : public Cel_formulaContext {
   public:
-    Par_core_patternContext(Core_patternContext *ctx);
+    Kleene_cel_formulaContext(Cel_formulaContext *ctx);
 
-    Core_patternContext *core_pattern();
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *PLUS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Filter_core_patternContext : public Core_patternContext {
+  class  Filter_cel_formulaContext : public Cel_formulaContext {
   public:
-    Filter_core_patternContext(Core_patternContext *ctx);
+    Filter_cel_formulaContext(Cel_formulaContext *ctx);
 
-    Core_patternContext *core_pattern();
+    Cel_formulaContext *cel_formula();
     antlr4::tree::TerminalNode *K_FILTER();
     FilterContext *filter();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  Core_patternContext* core_pattern();
-  Core_patternContext* core_pattern(int precedence);
+  class  Or_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Or_cel_formulaContext(Cel_formulaContext *ctx);
+
+    std::vector<Cel_formulaContext *> cel_formula();
+    Cel_formulaContext* cel_formula(size_t i);
+    antlr4::tree::TerminalNode *K_OR();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  As_cel_formulaContext : public Cel_formulaContext {
+  public:
+    As_cel_formulaContext(Cel_formulaContext *ctx);
+
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *K_AS();
+    Event_nameContext *event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  Cel_formulaContext* cel_formula();
+  Cel_formulaContext* cel_formula(int precedence);
   class  Partition_listContext : public antlr4::ParserRuleContext {
   public:
     Partition_listContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -432,12 +458,12 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Event_filterContext : public FilterContext {
+  class  Atomic_filterContext : public FilterContext {
   public:
-    Event_filterContext(FilterContext *ctx);
+    Atomic_filterContext(FilterContext *ctx);
 
     Event_nameContext *event_name();
-    Bool_exprContext *bool_expr();
+    PredicateContext *predicate();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -455,12 +481,12 @@ public:
 
   FilterContext* filter();
   FilterContext* filter(int precedence);
-  class  Bool_exprContext : public antlr4::ParserRuleContext {
+  class  PredicateContext : public antlr4::ParserRuleContext {
   public:
-    Bool_exprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    PredicateContext(antlr4::ParserRuleContext *parent, size_t invokingState);
    
-    Bool_exprContext() = default;
-    void copyFrom(Bool_exprContext *context);
+    PredicateContext() = default;
+    void copyFrom(PredicateContext *context);
     using antlr4::ParserRuleContext::copyFrom;
 
     virtual size_t getRuleIndex() const override;
@@ -468,51 +494,20 @@ public:
    
   };
 
-  class  Not_exprContext : public Bool_exprContext {
+  class  Regex_predicateContext : public PredicateContext {
   public:
-    Not_exprContext(Bool_exprContext *ctx);
+    Regex_predicateContext(PredicateContext *ctx);
 
-    antlr4::tree::TerminalNode *K_NOT();
-    Bool_exprContext *bool_expr();
+    Attribute_nameContext *attribute_name();
+    antlr4::tree::TerminalNode *K_LIKE();
+    RegexpContext *regexp();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Equality_string_exprContext : public Bool_exprContext {
+  class  In_predicateContext : public PredicateContext {
   public:
-    Equality_string_exprContext(Bool_exprContext *ctx);
-
-    String_literalContext *string_literal();
-    String_literal_or_regexpContext *string_literal_or_regexp();
-    antlr4::tree::TerminalNode *EQ();
-    antlr4::tree::TerminalNode *NEQ();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  And_exprContext : public Bool_exprContext {
-  public:
-    And_exprContext(Bool_exprContext *ctx);
-
-    std::vector<Bool_exprContext *> bool_expr();
-    Bool_exprContext* bool_expr(size_t i);
-    antlr4::tree::TerminalNode *K_AND();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Par_bool_exprContext : public Bool_exprContext {
-  public:
-    Par_bool_exprContext(Bool_exprContext *ctx);
-
-    Bool_exprContext *bool_expr();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Containment_exprContext : public Bool_exprContext {
-  public:
-    Containment_exprContext(Bool_exprContext *ctx);
+    In_predicateContext(PredicateContext *ctx);
 
     Attribute_nameContext *attribute_name();
     Value_seqContext *value_seq();
@@ -522,9 +517,51 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Inequality_exprContext : public Bool_exprContext {
+  class  Not_predicateContext : public PredicateContext {
   public:
-    Inequality_exprContext(Bool_exprContext *ctx);
+    Not_predicateContext(PredicateContext *ctx);
+
+    antlr4::tree::TerminalNode *K_NOT();
+    PredicateContext *predicate();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Par_predicateContext : public PredicateContext {
+  public:
+    Par_predicateContext(PredicateContext *ctx);
+
+    PredicateContext *predicate();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  And_predicateContext : public PredicateContext {
+  public:
+    And_predicateContext(PredicateContext *ctx);
+
+    std::vector<PredicateContext *> predicate();
+    PredicateContext* predicate(size_t i);
+    antlr4::tree::TerminalNode *K_AND();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Equality_string_predicateContext : public PredicateContext {
+  public:
+    Equality_string_predicateContext(PredicateContext *ctx);
+
+    String_literalContext *string_literal();
+    String_literal_or_regexpContext *string_literal_or_regexp();
+    antlr4::tree::TerminalNode *EQ();
+    antlr4::tree::TerminalNode *NEQ();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Inequality_predicateContext : public PredicateContext {
+  public:
+    Inequality_predicateContext(PredicateContext *ctx);
 
     std::vector<Math_exprContext *> math_expr();
     Math_exprContext* math_expr(size_t i);
@@ -532,46 +569,25 @@ public:
     antlr4::tree::TerminalNode *LEQ();
     antlr4::tree::TerminalNode *GE();
     antlr4::tree::TerminalNode *GEQ();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Or_exprContext : public Bool_exprContext {
-  public:
-    Or_exprContext(Bool_exprContext *ctx);
-
-    std::vector<Bool_exprContext *> bool_expr();
-    Bool_exprContext* bool_expr(size_t i);
-    antlr4::tree::TerminalNode *K_OR();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Equality_math_exprContext : public Bool_exprContext {
-  public:
-    Equality_math_exprContext(Bool_exprContext *ctx);
-
-    std::vector<Math_exprContext *> math_expr();
-    Math_exprContext* math_expr(size_t i);
     antlr4::tree::TerminalNode *EQ();
     antlr4::tree::TerminalNode *NEQ();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Regex_exprContext : public Bool_exprContext {
+  class  Or_predicateContext : public PredicateContext {
   public:
-    Regex_exprContext(Bool_exprContext *ctx);
+    Or_predicateContext(PredicateContext *ctx);
 
-    Attribute_nameContext *attribute_name();
-    antlr4::tree::TerminalNode *K_LIKE();
-    antlr4::tree::TerminalNode *REGEXP();
+    std::vector<PredicateContext *> predicate();
+    PredicateContext* predicate(size_t i);
+    antlr4::tree::TerminalNode *K_OR();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  Bool_exprContext* bool_expr();
-  Bool_exprContext* bool_expr(int precedence);
+  PredicateContext* predicate();
+  PredicateContext* predicate(int precedence);
   class  String_literalContext : public antlr4::ParserRuleContext {
   public:
     String_literalContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -592,7 +608,7 @@ public:
     virtual size_t getRuleIndex() const override;
     StringContext *string();
     Attribute_nameContext *attribute_name();
-    antlr4::tree::TerminalNode *REGEXP();
+    RegexpContext *regexp();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -600,6 +616,19 @@ public:
   };
 
   String_literal_or_regexpContext* string_literal_or_regexp();
+
+  class  RegexpContext : public antlr4::ParserRuleContext {
+  public:
+    RegexpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *STRING_LITERAL();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  RegexpContext* regexp();
 
   class  Math_exprContext : public antlr4::ParserRuleContext {
   public:
@@ -716,12 +745,12 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  Number_rangeContext : public Number_seqContext {
+  class  Double_rangeContext : public Number_seqContext {
   public:
-    Number_rangeContext(Number_seqContext *ctx);
+    Double_rangeContext(Number_seqContext *ctx);
 
-    std::vector<NumberContext *> number();
-    NumberContext* number(size_t i);
+    std::vector<DoubleContext *> double_();
+    DoubleContext* double_(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -740,6 +769,16 @@ public:
     Number_range_upperContext(Number_seqContext *ctx);
 
     NumberContext *number();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Integer_rangeContext : public Number_seqContext {
+  public:
+    Integer_rangeContext(Number_seqContext *ctx);
+
+    std::vector<IntegerContext *> integer();
+    IntegerContext* integer(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -942,12 +981,25 @@ public:
 
   IntegerContext* integer();
 
+  class  DoubleContext : public antlr4::ParserRuleContext {
+  public:
+    DoubleContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *DOUBLE_LITERAL();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  DoubleContext* double_();
+
   class  NumberContext : public antlr4::ParserRuleContext {
   public:
     NumberContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *FLOAT_LITERAL();
-    antlr4::tree::TerminalNode *INTEGER_LITERAL();
+    IntegerContext *integer();
+    DoubleContext *double_();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -1026,9 +1078,9 @@ public:
 
   bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;
 
-  bool core_patternSempred(Core_patternContext *_localctx, size_t predicateIndex);
+  bool cel_formulaSempred(Cel_formulaContext *_localctx, size_t predicateIndex);
   bool filterSempred(FilterContext *_localctx, size_t predicateIndex);
-  bool bool_exprSempred(Bool_exprContext *_localctx, size_t predicateIndex);
+  bool predicateSempred(PredicateContext *_localctx, size_t predicateIndex);
   bool math_exprSempred(Math_exprContext *_localctx, size_t predicateIndex);
 
   // By default the static state used to implement the parser is lazily initialized during the first

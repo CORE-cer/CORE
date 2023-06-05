@@ -38,45 +38,55 @@ TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
 }
 
 TEST_CASE(
-  "MessageRouterRequesterTest - messages are sent specifically to each "
-  "listener",
-  "[zmq]") {
-  const std::string test_message1 = "ping1";
-  const std::string test_message2 = "ping2";
-
+    "MessageRouterRequesterTest - messages are sent specifically to each "
+    "listener",
+    "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
 
   using TransformFunc = std::function<std::string(const std::string&)>;
-  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555",
+                                         std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
-  std::string received_message1;
-  std::string received_message2;
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  static const int amount_of_threads = 2;
+  std::unique_ptr<std::thread> threads[amount_of_threads];
+  // make an atomic int
+  std::atomic<int> counter = 0;
+  bool results[amount_of_threads];
+  for (int i = 0; i < amount_of_threads; i++) {
+    //std::cout << "i = " << i << std::endl;
+    threads[i] = std::make_unique<std::thread>([&]() {
+      int j = counter.fetch_add(1);
+      std::string to_send = "ping" + std::to_string(j);
+      //std::cout << "DEALER thread started" << std::endl;
+      ZMQMessageDealer dealer("tcp://localhost:5555");
+      std::string reply;
+      try {
+        reply = dealer.send_and_receive(to_send);
+      } catch (std::runtime_error err) {
+        results[j] = false;
+      }
+      //std::cout << "DEALER thread received reply" << reply << std::endl;
+      results[j] = reply == "Transformed: " + to_send;
+    });
+  }
 
-  ZMQMessageDealer dealer1("tcp://localhost:5555");
-  std::thread dealer1_thread([&dealer1]() {
-    std::string reply = dealer1.send_and_receive("ping1");
-    INFO("DEALER 1 received reply: " + reply);
-    REQUIRE(reply == "Transformed: ping1");
-  });
-
-  ZMQMessageDealer dealer2("tcp://localhost:5555");
-  std::thread dealer2_thread([&dealer2]() {
-    std::string reply = dealer2.send_and_receive("ping2");
-    INFO("DEALER 2 received reply: " + reply);
-    REQUIRE(reply == "Transformed: ping2");
-  });
-
-  dealer1_thread.join();
-  dealer2_thread.join();
+  for (int i = 0; i < amount_of_threads; i++) {
+    // join only if it is possible to join
+    if (threads[i] && threads[i]->joinable()) threads[i]->join();
+  }
 
   INFO("Shutting down...");
 
   router.stop();
   router_thread.join();
+  for (int i = 0; i < amount_of_threads; i++) {
+    REQUIRE(results[i]);
+  }
 }
 
 TEST_CASE("A broadcast message is received exactly as it was sent.",
@@ -109,18 +119,16 @@ TEST_CASE("A broadcast message is received exactly as it was sent.",
 }
 
 TEST_CASE(
-  "MessageRouterRequesterTest - messages are sent specifically to each "
-  "listener: 100 listeners 1 router",
-  "[zmq]") {
-  const std::string test_message1 = "ping1";
-  const std::string test_message2 = "ping2";
-
+    "MessageRouterRequesterTest - messages are sent specifically to each "
+    "listener: 100 listeners 1 router",
+    "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
 
   using TransformFunc = std::function<std::string(const std::string&)>;
-  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555",
+                                         std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
@@ -163,8 +171,9 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "A broadcast message is received exactly as it was sent. 100 receivers",
-  "[zmq]") {
+    "A broadcast message is received exactly as it was sent. 100 "
+    "receivers",
+    "[zmq]") {
   std::string sent_message = "Hello World 1";
   std::vector<std::string> received_messages;
 

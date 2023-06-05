@@ -6,11 +6,11 @@
 
 namespace InternalCORECEQL {
 struct IntegerLiteral final : public Value {
-  int value;
+  int64_t value;
 
   IntegerLiteral() noexcept {}
 
-  IntegerLiteral(int value) noexcept : value(value) {}
+  IntegerLiteral(int64_t value) noexcept : value(value) {}
 
   ~IntegerLiteral() noexcept {}
 

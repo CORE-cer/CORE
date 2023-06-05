@@ -27,6 +27,21 @@ class AndPredicate : public Predicate {
 
   std::unique_ptr<Predicate> negate() const override;
 
+  bool operator==(const AndPredicate& other) const {
+    if (predicates.size() != other.predicates.size()) return false;
+    for (size_t i = 0; i < predicates.size(); i++) {
+      if (!predicates[i]->equals(other.predicates[i].get())) return false;
+    }
+    return true;
+  }
+
+  bool equals(Predicate* other) const override {
+    if (auto other_predicate = dynamic_cast<AndPredicate*>(other)) {
+      return *this == *other_predicate;
+    }
+    return false;
+  }
+
   bool is_constant() const override {
     for (auto& predicate : predicates) {
       if (!predicate->is_constant()) {

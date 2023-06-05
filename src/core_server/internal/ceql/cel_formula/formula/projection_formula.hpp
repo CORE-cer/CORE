@@ -26,13 +26,24 @@ class ProjectionFormula : public Formula {
                                                std::move(new_variables));
   }
 
+  bool operator==(const ProjectionFormula& other) const {
+    return formula->equals(other.formula.get()) &&
+           variables == other.variables;
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<ProjectionFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
   std::string to_string() const override {
     std::string variables_str = "";
     for (auto& var : variables) {
       if (variables_str.size() == 0) {
         variables_str = var;
-      }
-      else {
+      } else {
         variables_str += "," + var;
       }
     }

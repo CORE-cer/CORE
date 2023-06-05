@@ -7,18 +7,29 @@
 
 namespace InternalCORECEQL {
 
-class SequencingFormula : public Formula {
+class IterationFormula : public Formula {
  private:
   std::unique_ptr<Formula> formula;
 
  public:
-  SequencingFormula(std::unique_ptr<Formula>&& formula)
+  IterationFormula(std::unique_ptr<Formula>&& formula)
       : formula(std::move(formula)) {}
 
-  ~SequencingFormula() override = default;
+  ~IterationFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<SequencingFormula>(formula->clone());
+    return std::make_unique<IterationFormula>(formula->clone());
+  }
+
+  bool operator==(const IterationFormula& other) const {
+    return formula->equals(other.formula.get());
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<IterationFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
   }
 
   std::string to_string() const override {

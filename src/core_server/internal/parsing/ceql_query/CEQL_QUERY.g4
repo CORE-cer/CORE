@@ -13,8 +13,8 @@ error
 
 core_query
  : K_SELECT selection_strategy? list_of_variables
-   ( K_FROM stream_name ( ',' stream_name )* )?
-   K_WHERE core_pattern
+   from_clause
+   K_WHERE cel_formula
    ( K_PARTITION K_BY partition_list )?
    ( K_WITHIN time_window )?
    ( K_CONSUME K_BY consumption_policy )?
@@ -34,14 +34,19 @@ list_of_variables
  | any_name ( ',' any_name )*   # s_list_of_variables
  ;
 
+from_clause
+ : ( K_FROM stream_name ( ',' stream_name )* )?
+ ;
 
-core_pattern
- : '(' core_pattern ')'                                 # par_core_pattern
- | s_event_name                                         # event_core_pattern
- | core_pattern K_AS event_name                         # assign_core_pattern
- | core_pattern '+'                                     # kleene_core_pattern
- | core_pattern ( K_OR | SEMICOLON ) core_pattern       # binary_core_pattern
- | core_pattern K_FILTER filter                         # filter_core_pattern
+
+cel_formula
+ : '(' cel_formula ')'                                # par_cel_formula
+ | s_event_name                                       # event_type_cel_formula
+ | cel_formula K_AS event_name                        # as_cel_formula
+ | cel_formula '+'                                    # kleene_cel_formula
+ | cel_formula SEMICOLON cel_formula                  # sequencing_cel_formula
+ | cel_formula K_OR cel_formula                       # or_cel_formula
+ | cel_formula K_FILTER filter                        # filter_cel_formula
  ;
 
 partition_list
@@ -60,21 +65,20 @@ consumption_policy
 
 filter
  : '(' filter ')'                                       # par_filter
- | event_name '[' bool_expr ']'                         # event_filter
+ | event_name '[' predicate ']'                         # atomic_filter
  | filter K_AND filter                                  # and_filter
  | filter K_OR filter                                   # or_filter
  ;
 
-bool_expr
- : '(' bool_expr ')'                                           # par_bool_expr
- | K_NOT bool_expr                                             # not_expr
- | math_expr ( LE | LEQ | GE | GEQ ) math_expr                 # inequality_expr
- | math_expr ( EQ | NEQ ) math_expr                            # equality_math_expr
- | bool_expr K_AND bool_expr                                   # and_expr
- | bool_expr K_OR bool_expr                                    # or_expr
- | attribute_name K_LIKE REGEXP                                # regex_expr
- | attribute_name ( K_IN | K_NOT K_IN ) value_seq              # containment_expr
- | string_literal ( EQ | NEQ ) string_literal_or_regexp        # equality_string_expr
+predicate
+ : '(' predicate ')'                                           # par_predicate
+ | K_NOT predicate                                             # not_predicate
+ | math_expr ( LE | LEQ | GE | GEQ | EQ | NEQ) math_expr       # inequality_predicate
+ | string_literal ( EQ | NEQ ) string_literal_or_regexp        # equality_string_predicate
+ | predicate K_AND predicate                                   # and_predicate
+ | predicate K_OR predicate                                    # or_predicate
+ | attribute_name K_LIKE regexp                                # regex_predicate
+ | attribute_name ( K_IN | K_NOT K_IN ) value_seq              # in_predicate
  ;
 
 string_literal
@@ -85,7 +89,11 @@ string_literal
 string_literal_or_regexp
  : string
  | attribute_name
- | REGEXP
+ | regexp
+ ;
+
+regexp
+ : STRING_LITERAL
  ;
 
 math_expr
@@ -104,7 +112,8 @@ value_seq
 
 number_seq
  : number (',' number)*            # number_list
- | number '..' number              # number_range
+ | integer '..' integer            # integer_range
+ | double '..' double              # double_range
  | number '..'                     # number_range_lower
  | '..' number                     # number_range_upper
  ;
@@ -167,9 +176,13 @@ integer
  : INTEGER_LITERAL
  ;
 
+double
+ : DOUBLE_LITERAL
+ ;
+
 number
- : FLOAT_LITERAL
- | INTEGER_LITERAL
+ : integer
+ | double
  ;
 
 string
@@ -263,7 +276,7 @@ IDENTIFIER
  | [a-zA-Z_] [a-zA-Z_0-9]*
  ;
 
-FLOAT_LITERAL
+DOUBLE_LITERAL
  : INTEGER_LITERAL '.' NUMERICAL_EXPONENT
  | INTEGER_LITERAL? '.' DIGIT+
  | INTEGER_LITERAL? '.' DIGIT+ NUMERICAL_EXPONENT
@@ -279,10 +292,6 @@ NUMERICAL_EXPONENT
 
 STRING_LITERAL
  : '\'' ( ~'\'' | '\'\'' )* '\''
- ;
-
-REGEXP
- : STRING_LITERAL
  ;
 
 SINGLE_LINE_COMMENT

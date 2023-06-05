@@ -22,6 +22,17 @@ class AsFormula : public Formula {
     return std::make_unique<AsFormula>(formula->clone(), variable_name);
   }
 
+  bool operator==(const AsFormula& other) const {
+    return formula->equals(other.formula.get());
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<AsFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
   std::string to_string() const override {
     return formula->to_string() + " AS " + variable_name;
   }

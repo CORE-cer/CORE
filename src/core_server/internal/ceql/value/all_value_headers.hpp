@@ -7,6 +7,8 @@
 #include "core_server/internal/ceql/value/integer_literal.hpp"
 #include "core_server/internal/ceql/value/long_literal.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
+#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/value/sequence.hpp"
 #include "core_server/internal/ceql/value/undefined.hpp"
 #include "core_server/internal/ceql/value/operations/addition.hpp"
 #include "core_server/internal/ceql/value/operations/division.hpp"
@@ -14,3 +16,4 @@
 #include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/ceql/value/operations/negation.hpp"
 #include "core_server/internal/ceql/value/operations/subtraction.hpp"
+#include "core_server/internal/ceql/value/value_types.hpp"

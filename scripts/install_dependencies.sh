@@ -22,5 +22,5 @@ mkdir -p build/${BUILD_TYPE}
 conan source .
 conan install . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
                 -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
-                --build missing -vquiet
+                --build missing
 

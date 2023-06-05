@@ -24,6 +24,18 @@ class OrFormula : public Formula {
     return std::make_unique<OrFormula>(left->clone(), right->clone());
   }
 
+  bool operator==(const OrFormula& other) const {
+    return left->equals(other.left.get()) &&
+           right->equals(other.right.get());
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<OrFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
   std::string to_string() const override {
     return left->to_string() + " OR " + right->to_string();
   }

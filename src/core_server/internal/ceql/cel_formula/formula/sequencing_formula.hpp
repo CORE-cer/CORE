@@ -25,8 +25,20 @@ class SequencingFormula : public Formula {
                                                right->clone());
   }
 
+  bool operator==(const SequencingFormula& other) const {
+    return left->equals(other.left.get()) &&
+           right->equals(other.right.get());
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<SequencingFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
   std::string to_string() const override {
-    return left->to_string() + ";" + right->to_string();
+    return "(" + left->to_string() + ";" + right->to_string() + ")";
   }
 
   void accept_visitor(FormulaVisitor& visitor) override {

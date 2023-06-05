@@ -41,17 +41,21 @@ public:
 
     virtual std::any visitS_list_of_variables(CEQL_QUERYParser::S_list_of_variablesContext *context) = 0;
 
-    virtual std::any visitEvent_core_pattern(CEQL_QUERYParser::Event_core_patternContext *context) = 0;
+    virtual std::any visitFrom_clause(CEQL_QUERYParser::From_clauseContext *context) = 0;
 
-    virtual std::any visitKleene_core_pattern(CEQL_QUERYParser::Kleene_core_patternContext *context) = 0;
+    virtual std::any visitEvent_type_cel_formula(CEQL_QUERYParser::Event_type_cel_formulaContext *context) = 0;
 
-    virtual std::any visitAssign_core_pattern(CEQL_QUERYParser::Assign_core_patternContext *context) = 0;
+    virtual std::any visitPar_cel_formula(CEQL_QUERYParser::Par_cel_formulaContext *context) = 0;
 
-    virtual std::any visitBinary_core_pattern(CEQL_QUERYParser::Binary_core_patternContext *context) = 0;
+    virtual std::any visitSequencing_cel_formula(CEQL_QUERYParser::Sequencing_cel_formulaContext *context) = 0;
 
-    virtual std::any visitPar_core_pattern(CEQL_QUERYParser::Par_core_patternContext *context) = 0;
+    virtual std::any visitKleene_cel_formula(CEQL_QUERYParser::Kleene_cel_formulaContext *context) = 0;
 
-    virtual std::any visitFilter_core_pattern(CEQL_QUERYParser::Filter_core_patternContext *context) = 0;
+    virtual std::any visitFilter_cel_formula(CEQL_QUERYParser::Filter_cel_formulaContext *context) = 0;
+
+    virtual std::any visitOr_cel_formula(CEQL_QUERYParser::Or_cel_formulaContext *context) = 0;
+
+    virtual std::any visitAs_cel_formula(CEQL_QUERYParser::As_cel_formulaContext *context) = 0;
 
     virtual std::any visitPartition_list(CEQL_QUERYParser::Partition_listContext *context) = 0;
 
@@ -67,31 +71,31 @@ public:
 
     virtual std::any visitAnd_filter(CEQL_QUERYParser::And_filterContext *context) = 0;
 
-    virtual std::any visitEvent_filter(CEQL_QUERYParser::Event_filterContext *context) = 0;
+    virtual std::any visitAtomic_filter(CEQL_QUERYParser::Atomic_filterContext *context) = 0;
 
     virtual std::any visitOr_filter(CEQL_QUERYParser::Or_filterContext *context) = 0;
 
-    virtual std::any visitNot_expr(CEQL_QUERYParser::Not_exprContext *context) = 0;
+    virtual std::any visitRegex_predicate(CEQL_QUERYParser::Regex_predicateContext *context) = 0;
 
-    virtual std::any visitEquality_string_expr(CEQL_QUERYParser::Equality_string_exprContext *context) = 0;
+    virtual std::any visitIn_predicate(CEQL_QUERYParser::In_predicateContext *context) = 0;
 
-    virtual std::any visitAnd_expr(CEQL_QUERYParser::And_exprContext *context) = 0;
+    virtual std::any visitNot_predicate(CEQL_QUERYParser::Not_predicateContext *context) = 0;
 
-    virtual std::any visitPar_bool_expr(CEQL_QUERYParser::Par_bool_exprContext *context) = 0;
+    virtual std::any visitPar_predicate(CEQL_QUERYParser::Par_predicateContext *context) = 0;
 
-    virtual std::any visitContainment_expr(CEQL_QUERYParser::Containment_exprContext *context) = 0;
+    virtual std::any visitAnd_predicate(CEQL_QUERYParser::And_predicateContext *context) = 0;
 
-    virtual std::any visitInequality_expr(CEQL_QUERYParser::Inequality_exprContext *context) = 0;
+    virtual std::any visitEquality_string_predicate(CEQL_QUERYParser::Equality_string_predicateContext *context) = 0;
 
-    virtual std::any visitOr_expr(CEQL_QUERYParser::Or_exprContext *context) = 0;
+    virtual std::any visitInequality_predicate(CEQL_QUERYParser::Inequality_predicateContext *context) = 0;
 
-    virtual std::any visitEquality_math_expr(CEQL_QUERYParser::Equality_math_exprContext *context) = 0;
-
-    virtual std::any visitRegex_expr(CEQL_QUERYParser::Regex_exprContext *context) = 0;
+    virtual std::any visitOr_predicate(CEQL_QUERYParser::Or_predicateContext *context) = 0;
 
     virtual std::any visitString_literal(CEQL_QUERYParser::String_literalContext *context) = 0;
 
     virtual std::any visitString_literal_or_regexp(CEQL_QUERYParser::String_literal_or_regexpContext *context) = 0;
+
+    virtual std::any visitRegexp(CEQL_QUERYParser::RegexpContext *context) = 0;
 
     virtual std::any visitMul_math_expr(CEQL_QUERYParser::Mul_math_exprContext *context) = 0;
 
@@ -109,7 +113,9 @@ public:
 
     virtual std::any visitNumber_list(CEQL_QUERYParser::Number_listContext *context) = 0;
 
-    virtual std::any visitNumber_range(CEQL_QUERYParser::Number_rangeContext *context) = 0;
+    virtual std::any visitInteger_range(CEQL_QUERYParser::Integer_rangeContext *context) = 0;
+
+    virtual std::any visitDouble_range(CEQL_QUERYParser::Double_rangeContext *context) = 0;
 
     virtual std::any visitNumber_range_lower(CEQL_QUERYParser::Number_range_lowerContext *context) = 0;
 
@@ -142,6 +148,8 @@ public:
     virtual std::any visitAttribute_name(CEQL_QUERYParser::Attribute_nameContext *context) = 0;
 
     virtual std::any visitInteger(CEQL_QUERYParser::IntegerContext *context) = 0;
+
+    virtual std::any visitDouble(CEQL_QUERYParser::DoubleContext *context) = 0;
 
     virtual std::any visitNumber(CEQL_QUERYParser::NumberContext *context) = 0;
 

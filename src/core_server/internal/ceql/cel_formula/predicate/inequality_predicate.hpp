@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <string>
+#include <cassert>
+#include <iostream>
 
 #include "core_server/internal/ceql/value/value.hpp"
 #include "predicate.hpp"
@@ -9,15 +11,14 @@
 namespace InternalCORECEQL {
 
 class InequalityPredicate : public Predicate {
+ public:
   enum class LogicalOperation {
     EQUALS,
     GREATER,
     GREATER_EQUALS,
-    IN,
     LESS_EQUALS,
     LESS,
     NOT_EQUALS,
-    NOT_IN,
   };  // TODO: Probably remove things like: like.
 
  private:
@@ -38,7 +39,7 @@ class InequalityPredicate : public Predicate {
                                                  right->clone());
   }
 
-  ~InequalityPredicate();
+  ~InequalityPredicate() {}
 
   bool is_constant() const override {
     return false;  // TODO, maybe a value visitor.
@@ -47,6 +48,20 @@ class InequalityPredicate : public Predicate {
   std::unique_ptr<Predicate> negate() const override {
     return std::make_unique<InequalityPredicate>(
         left->clone(), negate(logical_op), right->clone());
+  }
+
+  bool operator==(const InequalityPredicate& other) const {
+    assert(other.left && other.right);
+    return left->equals(other.left.get()) &&
+           logical_op == other.logical_op &&
+           right->equals(other.right.get());
+  }
+
+  bool equals(Predicate* other) const override {
+    if (auto other_predicate = dynamic_cast<InequalityPredicate*>(other)) {
+      return *this == *other_predicate;
+    }
+    return false;
   }
 
   std::string to_string() const override {
@@ -72,16 +87,15 @@ class InequalityPredicate : public Predicate {
         return LogicalOperation::LESS_EQUALS;
       case LogicalOperation::GREATER_EQUALS:
         return LogicalOperation::LESS;
-      case LogicalOperation::IN:
-        return LogicalOperation::NOT_IN;
       case LogicalOperation::LESS_EQUALS:
         return LogicalOperation::GREATER;
       case LogicalOperation::LESS:
         return LogicalOperation::GREATER_EQUALS;
       case LogicalOperation::NOT_EQUALS:
         return LogicalOperation::EQUALS;
-      case LogicalOperation::NOT_IN:
-        return LogicalOperation::IN;
+      default:
+        assert(false && "this switch should cover all LogicalOperations.");
+        return {};
     }
   }
 
@@ -93,16 +107,15 @@ class InequalityPredicate : public Predicate {
         return ">";
       case LogicalOperation::GREATER_EQUALS:
         return ">= EQUALS";
-      case LogicalOperation::IN:
-        return "In";
       case LogicalOperation::LESS_EQUALS:
         return "<=";
       case LogicalOperation::LESS:
         return "<";
       case LogicalOperation::NOT_EQUALS:
         return "!=";
-      case LogicalOperation::NOT_IN:
-        return "Not In";
+      default:
+        assert(false && "this switch should cover all LogicalOperations.");
+        return {};
     }
   }
 };

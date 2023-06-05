@@ -3,6 +3,7 @@
 namespace InternalCORECEQL {
 enum struct ValueTypes {
   Undefined,
+  Attribute,
   BooleanLiteral,
   DoubleLiteral,
   IntegerLiteral,

@@ -21,9 +21,18 @@ class EventTypeFormula : public Formula {
     return std::make_unique<EventTypeFormula>(event_type_name);
   }
 
-  std::string to_string() const override {
-    return event_type_name;
+  bool operator==(const EventTypeFormula& other) const {
+    return event_type_name == other.event_type_name;
   }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<EventTypeFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
+  std::string to_string() const override { return event_type_name; }
 
   void accept_visitor(FormulaVisitor& visitor) override {
     visitor.visit(*this);

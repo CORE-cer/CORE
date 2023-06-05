@@ -3,6 +3,7 @@
 
 using namespace InternalCORECEQL;
 
+namespace InternalCORECEQLParsing {
 class SelectVisitor : public CEQL_QUERYBaseVisitor {
  private:
   Select::Strategy strategy = Select::Strategy::DEFAULT;
@@ -17,15 +18,11 @@ class SelectVisitor : public CEQL_QUERYBaseVisitor {
 
   virtual std::any visitCore_query(
       CEQL_QUERYParser::Core_queryContext* ctx) override {
-    std::string selectionStrategy;
-    std::vector<std::string> eventNames;
-
     // Visiting Selection Strategy will update the strategy.
     auto selection_strategy_ctx = ctx->selection_strategy();
     if (selection_strategy_ctx) {
       visit(selection_strategy_ctx);
     }
-
     // Visiting result_values will add all variable_names
     visit(ctx->list_of_variables());
 
@@ -80,3 +77,4 @@ class SelectVisitor : public CEQL_QUERYBaseVisitor {
     return {};
   }
 };
+}

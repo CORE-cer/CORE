@@ -22,7 +22,20 @@ class AtomicFilter : public Filter {
   ~AtomicFilter() override = default;
 
   std::unique_ptr<Filter> clone() const override {
-    return std::make_unique<AtomicFilter>(variable_name, predicate->clone());
+    return std::make_unique<AtomicFilter>(variable_name,
+                                          predicate->clone());
+  }
+
+  bool operator==(const AtomicFilter& other) const {
+    return variable_name == other.variable_name &&
+           predicate->equals(other.predicate.get());
+  }
+
+  bool equals(Filter* other) const override {
+    if (auto other_filter = dynamic_cast<AtomicFilter*>(other)) {
+      return *this == *other_filter;
+    }
+    return false;
   }
 
   void accept_visitor(FilterVisitor& visitor) override {

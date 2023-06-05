@@ -25,6 +25,22 @@ class FilterFormula : public Formula {
                                            filter->clone());
   }
 
+  const std::unique_ptr<Filter>& get_filter() const {
+    return filter;
+  }
+
+  bool operator==(const FilterFormula& other) const {
+    return formula->equals(other.formula.get()) &&
+           filter->equals(other.filter.get());
+  }
+
+  bool equals(Formula* other) const override {
+    if (auto other_formula = dynamic_cast<FilterFormula*>(other)) {
+      return *this == *other_formula;
+    } else
+      return false;
+  }
+
   std::string to_string() const override {
     return formula->to_string() + " FILTER " + filter->to_string();
   }

@@ -10,6 +10,8 @@ class DoubleLiteral;
 class IntegerLiteral;
 class LongLiteral;
 class StringLiteral;
+class RegexLiteral;
+class Sequence;
 class Undefined;
 class Addition;
 class Division;
@@ -29,6 +31,8 @@ class ValueVisitor {
   virtual void visit(IntegerLiteral&)  {throw std::logic_error("visit IntegerLiteral not implemented.");}
   virtual void visit(LongLiteral&)     {throw std::logic_error("visit LongLiteral not implemented.");}
   virtual void visit(StringLiteral&)   {throw std::logic_error("visit StringLiteral not implemented.");}
+  virtual void visit(RegexLiteral&)    {throw std::logic_error("visit RegexLiteral not implemented.");}
+  virtual void visit(Sequence&)        {throw std::logic_error("visit Sequence not implemented.");}
   virtual void visit(Undefined&)       {throw std::logic_error("visit Undefined not implemented.");}
   virtual void visit(Addition&)        {throw std::logic_error("visit Addition not implemented.");}
   virtual void visit(Division&)        {throw std::logic_error("visit Division not implemented.");}
