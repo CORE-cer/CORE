@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "core_server/internal/ceql/value/value_types.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
@@ -10,7 +11,6 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "core_server/internal/ceql/value/value_types.hpp"
 
 using namespace CORETypes;
 

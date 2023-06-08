@@ -1,16 +1,16 @@
 #pragma once
 
-#include <memory>
-#include <string>
 #include <cassert>
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "core_server/internal/ceql/value/value.hpp"
 #include "predicate.hpp"
 
 namespace InternalCORECEQL {
 
-class InequalityPredicate : public Predicate {
+struct InequalityPredicate : public Predicate {
  public:
   enum class LogicalOperation {
     EQUALS,
@@ -21,12 +21,10 @@ class InequalityPredicate : public Predicate {
     NOT_EQUALS,
   };  // TODO: Probably remove things like: like.
 
- private:
   std::unique_ptr<Value> left;
   LogicalOperation logical_op;
   std::unique_ptr<Value> right;
 
- public:
   InequalityPredicate(std::unique_ptr<Value>&& left,
                       LogicalOperation logical_op,
                       std::unique_ptr<Value>&& right)
@@ -34,12 +32,12 @@ class InequalityPredicate : public Predicate {
         logical_op(logical_op),
         right(std::move(right)) {}
 
+  ~InequalityPredicate() override = default;
+
   std::unique_ptr<Predicate> clone() const override {
     return std::make_unique<InequalityPredicate>(left->clone(), logical_op,
                                                  right->clone());
   }
-
-  ~InequalityPredicate() {}
 
   bool is_constant() const override {
     return false;  // TODO, maybe a value visitor.
@@ -73,12 +71,7 @@ class InequalityPredicate : public Predicate {
     visitor.visit(*this);
   }
 
-  LogicalOperation get_logical_op() const { return logical_op; }
-
-  const std::unique_ptr<Value>& get_left() const { return left; }
-
-  const std::unique_ptr<Value>& get_right() const { return right; }
-
+ private:
   static LogicalOperation negate(LogicalOperation op) {
     switch (op) {
       case LogicalOperation::EQUALS:

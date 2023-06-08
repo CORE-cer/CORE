@@ -6,8 +6,9 @@
 
 namespace InternalCORECEQL {
 
-class Predicate {
+struct Predicate {
   public:
+    virtual ~Predicate() = default;
     virtual std::unique_ptr<Predicate> clone() const = 0;
     virtual std::unique_ptr<Predicate> negate() const = 0;
     virtual bool is_constant() const = 0;

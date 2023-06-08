@@ -51,7 +51,7 @@ TEST_CASE(
 
   std::thread router_thread([&router]() { router.start(); });
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
   static const int amount_of_threads = 2;
   std::unique_ptr<std::thread> threads[amount_of_threads];
   // make an atomic int
@@ -97,7 +97,7 @@ TEST_CASE("A broadcast message is received exactly as it was sent.",
   ZMQMessageBroadcaster message_sender("tcp://*:5555");
   std::thread publisher_thread([&]() {
     // Receive all messages from 5555
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     message_sender.broadcast(sent_message1);
   });
 
@@ -132,7 +132,7 @@ TEST_CASE(
 
   std::thread router_thread([&router]() { router.start(); });
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
   static const int amount_of_threads = 100;
   std::unique_ptr<std::thread> threads[amount_of_threads];
   // make an atomic int
@@ -199,7 +199,7 @@ TEST_CASE(
     });
   }
   // Rerun the publisher_thread
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
   message_sender.broadcast(sent_message);
 
   for (int i = 0; i < amount_of_threads; i++) {
@@ -233,7 +233,7 @@ TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
   std::unique_ptr<std::thread> threads[amount_of_threads];
   std::atomic<int> counter = 0;
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
   for (int i = 0; i < amount_of_threads; i++) {
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);

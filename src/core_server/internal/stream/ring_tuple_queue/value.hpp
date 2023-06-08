@@ -2,27 +2,29 @@
 #define VALUE_HPP
 
 #include <cstdint>
+#include <iostream>
 #include <type_traits>
 
 namespace RingTupleQueue {
-template <typename T> class Value {
-private:
-  uint64_t *const val_ptr;
+template <typename T>
+class Value {
+ private:
+  uint64_t* const val_ptr;
 
-public:
-  explicit Value(uint64_t *val_ptr) : val_ptr(val_ptr) {}
+ public:
+  explicit Value(uint64_t* val_ptr) : val_ptr(val_ptr) {}
 
   T get() const {
-    if constexpr (std::is_trivially_copyable_v<T>) {
-      return *reinterpret_cast<const T *>(val_ptr);
+    // Currently only supports string_view and other trivially_copiable classes
+    if constexpr (!std::is_same_v<std::string_view, T>) {
+      return *reinterpret_cast<const T*>(val_ptr);
     } else {
-      // Note: This assumes that T can be constructed from a uint64_t* and a
-      // uint64_t*
-      return T(reinterpret_cast<const char *>(*val_ptr),
-               reinterpret_cast<const char *>(*(val_ptr + 1)));
+      auto first_pos = reinterpret_cast<char*>(val_ptr[0]);
+      auto second_pos = reinterpret_cast<char*>(val_ptr[1]);
+      return T(first_pos, second_pos - first_pos);
     }
   }
 };
-} // namespace RingTupleQueue
+}  // namespace RingTupleQueue
 
-#endif // VALUE_HPP
+#endif  // VALUE_HPP

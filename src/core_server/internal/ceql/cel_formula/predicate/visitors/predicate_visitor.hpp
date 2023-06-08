@@ -4,9 +4,6 @@
 
 namespace InternalCORECEQL {
 
-class AndFilter;
-class AtomicFilter;
-class OrFilter;
 class AndPredicate;
 class InPredicate;
 class InequalityPredicate;
@@ -20,9 +17,6 @@ class PredicateVisitor {
   virtual ~PredicateVisitor() = default;
 
   // clang-format off
-  virtual void visit(AndFilter&)                        {throw std::logic_error("visit AndFilter not implemented.");}
-  virtual void visit(AtomicFilter&)                     {throw std::logic_error("visit AtomicFilter not implemented.");}
-  virtual void visit(OrFilter&)                         {throw std::logic_error("visit OrFilter not implemented.");}
   virtual void visit(AndPredicate&)                     {throw std::logic_error("visit AndPredicate not implemented.");}
   virtual void visit(InPredicate&)                      {throw std::logic_error("visit InPredicate not implemented.");}
   virtual void visit(InequalityPredicate&)              {throw std::logic_error("visit InequalityPredicate not implemented.");}
