@@ -199,7 +199,7 @@ TEST_CASE(
     });
   }
   // Rerun the publisher_thread
-  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
   message_sender.broadcast(sent_message);
 
   for (int i = 0; i < amount_of_threads; i++) {

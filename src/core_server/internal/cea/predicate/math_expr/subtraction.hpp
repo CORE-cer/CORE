@@ -16,12 +16,16 @@ class Subtraction : public MathExpr<Type> {
               std::unique_ptr<MathExpr<Type>>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
-  virtual Type eval(RingTupleQueue::Tuple& tuple) {
+  std::unique_ptr<MathExpr<Type>> clone() const override {
+    return std::make_unique<Subtraction<Type>>(left->clone(), right->clone());
+  }
+
+  Type eval(RingTupleQueue::Tuple& tuple) override {
     return left->eval(tuple) - right->eval(tuple);
   }
 
   std::string to_string() const override {
-    return left->to_string() + " - " + right->to_string();
+    return "(" + left->to_string() + " - " + right->to_string() + ")";
   }
 };
 }  // namespace InternalCORECEA

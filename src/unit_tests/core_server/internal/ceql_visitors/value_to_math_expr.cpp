@@ -68,5 +68,40 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
     math_expr = std::move(value_to_double_math_expr.math_expr);
     REQUIRE(math_expr->eval(tuple) == 1.0);
   }
+
+  SECTION("literal", "ValueToMathExpr") {
+    InternalCORECEQL::IntegerLiteral value(2);
+    value.accept_visitor(value_to_int_math_expr);
+    auto math_expr = std::move(value_to_int_math_expr.math_expr);
+    REQUIRE(math_expr->eval(tuple) == 2);
+  }
+
+  SECTION("addition", "ValueToMathExpr") {
+    InternalCORECEQL::Addition value(
+        std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
+        std::make_unique<InternalCORECEQL::Attribute>("Integer1"));
+    value.accept_visitor(value_to_int_math_expr);
+    auto math_expr = std::move(value_to_int_math_expr.math_expr);
+    REQUIRE(math_expr->eval(tuple) == 1);
+  }
+
+  SECTION("Combination of exprs", "ValueToMathExpr") {
+    InternalCORECEQL::Addition value(
+        std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
+        std::make_unique<InternalCORECEQL::Multiplication>(
+            std::make_unique<InternalCORECEQL::Subtraction>(
+                std::make_unique<InternalCORECEQL::Division>(
+                    std::make_unique<InternalCORECEQL::IntegerLiteral>(10),
+                    std::make_unique<InternalCORECEQL::IntegerLiteral>(3)),
+                std::make_unique<InternalCORECEQL::Attribute>("Integer1")),
+            std::make_unique<InternalCORECEQL::Modulo>(
+                std::make_unique<InternalCORECEQL::Attribute>("Integer2"),
+                std::make_unique<InternalCORECEQL::IntegerLiteral>(7))));
+    // 2 + ((10/3 - -1)) * (1 % 7))
+    value.accept_visitor(value_to_int_math_expr);
+    auto math_expr = std::move(value_to_int_math_expr.math_expr);
+    INFO("Math_expr: " + math_expr->to_string());
+    REQUIRE(math_expr->eval(tuple) == 6);
+  }
 }
 }  // namespace COREQueryParsingTestsValueToMathExpr

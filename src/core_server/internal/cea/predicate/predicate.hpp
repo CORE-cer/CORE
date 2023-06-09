@@ -3,6 +3,7 @@
 
 namespace InternalCORECEA {
 class Predicate {
+ public:
   virtual ~Predicate() = default;
   virtual bool operator()(RingTupleQueue::Tuple& tuple) = 0;
 };

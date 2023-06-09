@@ -18,7 +18,9 @@ class CompareWithConstant : public Predicate {
   CompareWithConstant(size_t pos_to_compare, ValueType constant_val)
       : pos_to_compare(pos_to_compare), constant_val(constant_val) {}
 
-  bool operator()(RingTupleQueue::Tuple& tuple) {
+  ~CompareWithConstant() override = default;
+
+  bool operator()(RingTupleQueue::Tuple& tuple) override {
     uint64_t* pos = tuple[pos_to_compare];
     RingTupleQueue::Value<ValueType> attribute_val(pos);
     if constexpr (Comp == ComparisonType::EQUALS)

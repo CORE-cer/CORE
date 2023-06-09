@@ -12,6 +12,10 @@ class Attribute : public MathExpr<Type> {
 
   Attribute(size_t pos) : pos(pos) {}
 
+  std::unique_ptr<MathExpr<Type>> clone() const override {
+    return std::make_unique<Attribute<Type>>(pos);
+  }
+
   ~Attribute() override = default;
 
   Type eval(RingTupleQueue::Tuple& tuple) override {

@@ -16,6 +16,10 @@ class Modulo : public MathExpr<Type> {
          std::unique_ptr<MathExpr<Type>>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
+  std::unique_ptr<MathExpr<Type>> clone() const override {
+    return std::make_unique<Modulo<Type>>(left->clone(), right->clone());
+  }
+
   virtual Type eval(RingTupleQueue::Tuple& tuple) {
     if constexpr (std::is_same_v<Type, double>) {
       throw std::runtime_error("Cannot eval a modulo on double types");
@@ -25,7 +29,7 @@ class Modulo : public MathExpr<Type> {
   }
 
   std::string to_string() const override {
-    return left->to_string() + " % " + right->to_string();
+    return "(" + left->to_string() + " % " + right->to_string() + ")";
   }
 };
 }  // namespace InternalCORECEA

@@ -15,6 +15,10 @@ class Addition : public MathExpr<Type> {
            std::unique_ptr<MathExpr<Type>>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
+  std::unique_ptr<MathExpr<Type>> clone() const override {
+    return std::make_unique<Addition<Type>>(left->clone(), right->clone());
+  }
+
   ~Addition() override = default;
 
   Type eval(RingTupleQueue::Tuple& tuple) override {
@@ -22,7 +26,7 @@ class Addition : public MathExpr<Type> {
   }
 
   std::string to_string() const override {
-    return left->to_string() + " + " + right->to_string();
+    return "(" + left->to_string() + " + " + right->to_string() + ")";
   }
 };
 }  // namespace InternalCORECEA

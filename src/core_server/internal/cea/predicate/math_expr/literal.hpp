@@ -13,7 +13,11 @@ class Literal : public MathExpr<Type> {
 
   Literal(Type val) : val(val) {}
 
-  virtual Type eval(RingTupleQueue::Tuple& tuple) override { return val; }
+  std::unique_ptr<MathExpr<Type>> clone() const override {
+    return std::make_unique<Literal<Type>>(val);
+  }
+
+  Type eval(RingTupleQueue::Tuple& tuple) override { return val; }
 
   std::string to_string() const override { return std::to_string(val); }
 };

@@ -25,6 +25,7 @@ class CEQLPredicateToCEQPredicate final : public PredicateVisitor {
     auto first_val_type = value_type_visitor.value_type;
     inequality_predicate.right->accept_visitor(value_type_visitor);
     auto second_val_type = value_type_visitor.value_type;
+    // TODO: Cases where they are not math_expr (general case)
     // math_expr
     // attribute y literal
     // const_expr <- simplifica
