@@ -114,7 +114,8 @@ TEST_CASE("A declared event is stored in the router.",
   Router router(nullptr, 5000);
   router.start();
   declare_and_check_for_event(
-      "SomeEvent", {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      "SomeEvent",
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   router.stop();
 }
 
@@ -125,10 +126,10 @@ TEST_CASE(
   router.start();
   EventTypeId first_event = declare_and_check_for_event(
       "SomeEvent1",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::DOUBLE)});
   EventTypeId second_event = declare_and_check_for_event(
       "SomeEvent2",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::STRING_VIEW)});
   ZMQMessageDealer dealer("tcp://localhost:5000");
   auto request = ClientRequest("", ClientRequestType::ListEvents);
   ServerResponse response = send_request(dealer, request);
@@ -156,7 +157,7 @@ TEST_CASE(
   router.start();
   const std::string event_name = "SomeEvent";
   auto attribute_info = std::vector<AttributeInfo>(
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   declare_and_check_for_event(event_name, attribute_info);
 
   ZMQMessageDealer dealer("tcp://localhost:5000");
@@ -178,10 +179,10 @@ TEST_CASE("A declared stream is stored in the router.",
   router.start();
   auto id1 = declare_and_check_for_event(
       "SomeEvent1",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   auto id2 = declare_and_check_for_event(
       "SomeEvent2",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   declare_and_check_for_stream("SomeStream", {id1, id2});
   router.stop();
 }
@@ -193,10 +194,10 @@ TEST_CASE(
   router.start();
   auto id1 = declare_and_check_for_event(
       "SomeEvent1",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   auto id2 = declare_and_check_for_event(
       "SomeEvent2",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   StreamTypeId first_stream =
       declare_and_check_for_stream("SomeStream1", {id1, id2});
   StreamTypeId second_stream =
@@ -229,10 +230,10 @@ TEST_CASE(
   const std::string stream_name = "SomeStream";
   auto id1 = declare_and_check_for_event(
       "SomeEvent1",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   auto id2 = declare_and_check_for_event(
       "SomeEvent2",
-      {AttributeInfo("SomeAttribute", ValueTypes::Addition)});
+      {AttributeInfo("SomeAttribute", CORETypes::ValueTypes::INT64)});
   auto events_info = std::vector<EventTypeId>({id1, id2});
   declare_and_check_for_stream(stream_name, events_info);
 
@@ -247,4 +248,4 @@ TEST_CASE(
   REQUIRE(id_response.response_type == ServerResponseType::Error);
   router.stop();
 }
-}  // namespace CORECoordinationTests
+}  // namespace CORERouterCoordinationTests
