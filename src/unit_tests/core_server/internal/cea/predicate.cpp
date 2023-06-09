@@ -16,11 +16,12 @@ namespace COREQueryParsingTestsValueToMathExpr {
 
 TEST_CASE("CEQL predicate to CEA predicate", "[ValueToMathExpr]") {
   std::vector<AttributeInfo> attributes_info;
-  attributes_info.emplace_back("String", ValueTypes::StringLiteral);
-  attributes_info.emplace_back("Integer1", ValueTypes::IntegerLiteral);
-  attributes_info.emplace_back("Integer2", ValueTypes::IntegerLiteral);
-  attributes_info.emplace_back("Double1", ValueTypes::DoubleLiteral);
-  attributes_info.emplace_back("Double2", ValueTypes::DoubleLiteral);
+  attributes_info.emplace_back("String",
+                               CORETypes::ValueTypes::STRING_VIEW);
+  attributes_info.emplace_back("Integer1", CORETypes::ValueTypes::INT64);
+  attributes_info.emplace_back("Integer2", CORETypes::ValueTypes::INT64);
+  attributes_info.emplace_back("Double1", CORETypes::ValueTypes::DOUBLE);
+  attributes_info.emplace_back("Double2", CORETypes::ValueTypes::DOUBLE);
   EventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   TupleSchemas schemas;
