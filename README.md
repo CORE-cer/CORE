@@ -63,7 +63,7 @@ If changes were done to the grammar it can be rebuilt using:
 cd build/Debug
 make grammar
 cd ../../
-conan build . -s build_type=${BUILD_TYPE} -s:h compiler=gcc \
+conan build . -s build_type=Debug -s:h compiler=gcc \
               -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
               --build missing -vquiet
 ```
