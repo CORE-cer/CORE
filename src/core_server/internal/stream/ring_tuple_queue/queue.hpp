@@ -127,6 +127,8 @@ class Queue {
  private:
   int64_t compute_available_space() {
     // TODO
+    throw std::logic_error(
+        "compute_available_space not implemented in queue.hpp");
   }
 
   // Other methods...

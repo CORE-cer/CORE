@@ -148,8 +148,12 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
-        throw std::runtime_error("Invalid mix of types in value");
+      default:
+        throw std::logic_error(
+            "Non implemented combined_type in "
+            "ceql_predicate_to_cea_predicate.hpp");
     }
+    return {};
   }
 
   template <typename ValueType>
@@ -178,6 +182,10 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<CEA::CompareWithAttribute<
             CEAComparison::NOT_EQUALS, ValueType>>(left, right);
+      default:
+        throw std::logic_error(
+            "Non implemented op in ceql_predicate_to_cea_predicate.hpp");
+        return {};
     }
   }
 
@@ -211,7 +219,12 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
         throw std::runtime_error("Invalid mix of types in value");
+      default:
+        throw std::logic_error(
+            "Non implemented combined_type in "
+            "ceql_predicate_to_cea_predicate.hpp");
     }
+    return {};
   }
 
   template <typename ValueType>
@@ -245,6 +258,7 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
           assert(false &&
                  "Some non constant value was passed to "
                  "get_val_from_literal");
+          return {};
       }
     }
   }
@@ -278,6 +292,11 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<CEA::CompareWithConstant<
             CEAComparison::NOT_EQUALS, ValueType>>(left_pos, right_val);
+      default:
+        throw std::logic_error(
+            "Non implemented op in ceql_predicate_to_cea_predicate.hpp "
+            "compare_with_constant");
+        return {};
     }
   }
 
@@ -321,7 +340,12 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
         throw std::runtime_error("Invalid mix of types in value");
+      default:
+        throw std::logic_error(
+            "Non implemented Type in ceql_predicate_to_cea_predicate.hpp "
+            "compare_math_exprs");
     }
+    return {};
   }
 
   template <typename ValueType>
@@ -364,6 +388,12 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
             std::move(left_expr), std::move(right_expr));
+      default:
+        throw std::logic_error(
+            "Non implemented Comparison Type in "
+            "ceql_predicate_to_cea_predicate.hpp "
+            "compare_math_exprs");
+        return {};
     }
   }
 
@@ -385,6 +415,12 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
                        : CEAComparison::LESS;
       case CEQLComparison::NOT_EQUALS:
         return reverse ? CEAComparison::EQUALS : CEAComparison::NOT_EQUALS;
+      default:
+        throw std::logic_error(
+            "Non implemented Comparison Type in "
+            "ceql_predicate_to_cea_predicate.hpp "
+            "compare_math_exprs");
+        return {};
     }
   }
 };

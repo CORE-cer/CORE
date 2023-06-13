@@ -7,7 +7,7 @@
 
 namespace InternalCORECEQL {
 class DetermineFinalValueDataType : public ValueVisitor {
-  public:
+ public:
   enum DataType {
     Integer,
     Double,
@@ -105,6 +105,11 @@ class DetermineFinalValueDataType : public ValueVisitor {
         return String;
       case CORETypes::ValueTypes::DATE:
         return Date;
+      default:
+        throw std::logic_error(
+            "A COREType is not considered inside of "
+            "attribute_info_type_convertor at "
+            "determine_final_value_data_type.hpp");
     }
   }
 
