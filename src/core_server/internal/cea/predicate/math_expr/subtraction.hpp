@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
@@ -17,11 +19,15 @@ class Subtraction : public MathExpr<Type> {
       : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {
-    return std::make_unique<Subtraction<Type>>(left->clone(), right->clone());
+    return std::make_unique<Subtraction<Type>>(left->clone(),
+                                               right->clone());
   }
 
   Type eval(RingTupleQueue::Tuple& tuple) override {
-    return left->eval(tuple) - right->eval(tuple);
+    if constexpr (!std::is_arithmetic<Type>::value) {
+      assert(false && "Minus is only valid for arithmetic vals");
+    } else
+      return left->eval(tuple) - right->eval(tuple);
   }
 
   std::string to_string() const override {

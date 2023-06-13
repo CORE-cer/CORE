@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
@@ -21,7 +23,9 @@ class Modulo : public MathExpr<Type> {
   }
 
   virtual Type eval(RingTupleQueue::Tuple& tuple) {
-    if constexpr (std::is_same_v<Type, double>) {
+    if constexpr (!std::is_arithmetic<Type>::value) {
+      assert(false && "Modulo is only valid for arithmetic vals");
+    } else if constexpr (std::is_same_v<Type, double>) {
       throw std::runtime_error("Cannot eval a modulo on double types");
     } else {
       return left->eval(tuple) % right->eval(tuple);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
@@ -21,7 +23,10 @@ class Division : public MathExpr<Type> {
   }
 
   Type eval(RingTupleQueue::Tuple& tuple) override {
-    return left->eval(tuple) / right->eval(tuple);
+    if constexpr (!std::is_arithmetic<Type>::value) {
+      assert(false && "Division is only valid for arithmetic vals");
+    } else
+      return left->eval(tuple) / right->eval(tuple);
   }
 
   std::string to_string() const override {

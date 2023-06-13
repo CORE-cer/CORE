@@ -5,8 +5,11 @@
 
 namespace InternalCORECEQL {
 class DetermineValueType : public ValueVisitor {
- public:
+ private:
   ValueTypes value_type;
+
+ public:
+  ValueTypes get_value_type() { return value_type; }
 
   // clang-format off
   void visit(Attribute&)      override {value_type = ValueTypes::Attribute;}
