@@ -10,12 +10,10 @@
 
 namespace InternalCORECEQL {
 
-class LikePredicate : public Predicate {
- private:
+struct LikePredicate : public Predicate {
   Attribute attribute;
   RegexLiteral regex_literal;
 
- public:
   LikePredicate(Attribute attribute, RegexLiteral regex_literal)
       : attribute(attribute), regex_literal(regex_literal) {}
 
@@ -31,8 +29,8 @@ class LikePredicate : public Predicate {
   }
 
   bool operator==(const LikePredicate& other) const {
-    return attribute == other.attribute &&
-           regex_literal == other.regex_literal;
+    return attribute == other.attribute
+           && regex_literal == other.regex_literal;
   }
 
   bool equals(Predicate* other) const override {

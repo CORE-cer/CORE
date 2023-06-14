@@ -8,12 +8,10 @@
 
 namespace InternalCORECEQL {
 
-class SequencingFormula : public Formula {
- private:
+struct SequencingFormula : public Formula {
   std::unique_ptr<Formula> left;
   std::unique_ptr<Formula> right;
 
- public:
   SequencingFormula(std::unique_ptr<Formula>&& left,
                     std::unique_ptr<Formula>&& right)
       : left(std::move(left)), right(std::move(right)) {}
@@ -26,8 +24,8 @@ class SequencingFormula : public Formula {
   }
 
   bool operator==(const SequencingFormula& other) const {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Formula* other) const override {

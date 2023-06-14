@@ -8,12 +8,10 @@
 
 namespace InternalCORECEQL {
 
-class OrFormula : public Formula {
- private:
+struct OrFormula : public Formula {
   std::unique_ptr<Formula> left;
   std::unique_ptr<Formula> right;
 
- public:
   OrFormula(std::unique_ptr<Formula>&& left,
             std::unique_ptr<Formula>&& right)
       : left(std::move(left)), right(std::move(right)) {}
@@ -25,8 +23,8 @@ class OrFormula : public Formula {
   }
 
   bool operator==(const OrFormula& other) const {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Formula* other) const override {

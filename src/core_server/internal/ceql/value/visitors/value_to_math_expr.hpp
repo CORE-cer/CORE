@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "core_server/internal/cea/predicate/math_expr/math_expr_headers.hpp"
+#include "core_server/internal/cea/physical_predicate/math_expr/math_expr_headers.hpp"
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "value_visitor.hpp"

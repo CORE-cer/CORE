@@ -10,11 +10,9 @@
 
 namespace InternalCORECEQL {
 
-class NotPredicate : public Predicate {
- private:
+struct NotPredicate : public Predicate {
   std::unique_ptr<Predicate> predicate;
 
- public:
   NotPredicate(std::unique_ptr<Predicate>&& predicate)
       : predicate(std::move(predicate)) {}
 

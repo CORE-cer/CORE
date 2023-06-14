@@ -7,12 +7,10 @@
 
 namespace InternalCORECEQL {
 
-class AsFormula : public Formula {
- private:
+struct AsFormula : public Formula {
   std::unique_ptr<Formula> formula;
   std::string variable_name;
 
- public:
   AsFormula(std::unique_ptr<Formula>&& formula, std::string variable_name)
       : formula(std::move(formula)), variable_name(variable_name) {}
 

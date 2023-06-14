@@ -7,11 +7,9 @@
 
 namespace InternalCORECEQL {
 
-class EventTypeFormula : public Formula {
- private:
+struct EventTypeFormula : public Formula {
   std::string event_type_name;
 
- public:
   EventTypeFormula(std::string event_type_name)
       : event_type_name(event_type_name) {}
 

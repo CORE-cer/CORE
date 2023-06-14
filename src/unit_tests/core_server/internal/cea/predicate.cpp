@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-#include "core_server/internal/cea/predicate/compare_math_exprs.hpp"
-#include "core_server/internal/cea/predicate/compare_with_attribute.hpp"
-#include "core_server/internal/cea/predicate/compare_with_constant.hpp"
+#include "core_server/internal/cea/physical_predicate/compare_math_exprs.hpp"
+#include "core_server/internal/cea/physical_predicate/compare_with_attribute.hpp"
+#include "core_server/internal/cea/physical_predicate/compare_with_constant.hpp"
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
@@ -14,7 +14,7 @@ using namespace InternalCORECEA;
 
 namespace COREQueryParsingTestsValueToMathExpr {
 
-TEST_CASE("CEQL predicate to CEA predicate", "[ValueToMathExpr]") {
+TEST_CASE("CEQL physical_predicate to CEA physical_predicate", "[ValueToMathExpr]") {
   std::vector<AttributeInfo> attributes_info;
   attributes_info.emplace_back("String",
                                CORETypes::ValueTypes::STRING_VIEW);

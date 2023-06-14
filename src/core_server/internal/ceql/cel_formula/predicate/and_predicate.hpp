@@ -7,11 +7,9 @@
 
 namespace InternalCORECEQL {
 
-class AndPredicate : public Predicate {
- private:
+struct AndPredicate : public Predicate {
   std::vector<std::unique_ptr<Predicate>> predicates;
 
- public:
   AndPredicate(std::vector<std::unique_ptr<Predicate>>&& predicates)
       : predicates(std::move(predicates)) {}
 

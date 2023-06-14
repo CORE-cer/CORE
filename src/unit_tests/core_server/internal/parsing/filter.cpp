@@ -60,8 +60,7 @@ std::unique_ptr<Filter> parse_filter(std::string query) {
   REQUIRE(formula != nullptr);
   auto filter_formula = cast_to<FilterFormula>(std::move(formula));
   REQUIRE(filter_formula != nullptr);
-  auto filter = cast_to<Filter>(std::move(
-      const_cast<std::unique_ptr<Filter>&>(filter_formula->get_filter())));
+  auto filter = std::move(filter_formula->filter);
   return std::move(filter);
 }
 

@@ -7,11 +7,10 @@
 #include "predicate.hpp"
 
 namespace InternalCORECEQL {
-class OrPredicate : public Predicate {
- private:
+struct OrPredicate : public Predicate {
+ public:
   std::vector<std::unique_ptr<Predicate>> predicates;
 
- public:
   OrPredicate(std::vector<std::unique_ptr<Predicate>> predicates)
       : predicates(std::move(predicates)) {}
 

@@ -6,15 +6,13 @@
 #include "filter.hpp"
 
 namespace InternalCORECEQL {
-class AtomicFilter : public Filter {
-  /**
-   * The atomic filter is the filter of type X[P]
-   */
- private:
+/**
+ * The atomic filter is the filter of type X[P]
+ */
+struct AtomicFilter : public Filter {
   std::string variable_name;
   std::unique_ptr<Predicate> predicate;
 
- public:
   AtomicFilter(std::string variable_name,
                std::unique_ptr<Predicate>&& predicate)
       : variable_name(variable_name), predicate(std::move(predicate)) {}
@@ -27,8 +25,8 @@ class AtomicFilter : public Filter {
   }
 
   bool operator==(const AtomicFilter& other) const {
-    return variable_name == other.variable_name &&
-           predicate->equals(other.predicate.get());
+    return variable_name == other.variable_name
+           && predicate->equals(other.predicate.get());
   }
 
   bool equals(Filter* other) const override {
@@ -40,12 +38,6 @@ class AtomicFilter : public Filter {
 
   void accept_visitor(FilterVisitor& visitor) override {
     visitor.visit(*this);
-  }
-
-  std::string get_label() const { return variable_name; }
-
-  const std::unique_ptr<Predicate>& get_predicate() const {
-    return predicate;
   }
 
   std::string to_string() const override {

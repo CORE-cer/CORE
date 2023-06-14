@@ -1,47 +1,44 @@
 #pragma once
 
-#include <cwchar>
-
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
-#include "predicate.hpp"
+#include "physical_predicate.hpp"
 
 namespace InternalCORECEA {
 
 template <ComparisonType Comp, typename ValueType>
-class CompareWithAttribute : public Predicate {
+class CompareWithConstant : public PhysicalPredicate {
  private:
-  size_t first_pos;
-  size_t second_pos;
+  size_t pos_to_compare;
+  ValueType constant_val;
 
  public:
-  CompareWithAttribute(size_t first_pos, size_t second_pos)
-      : first_pos(first_pos), second_pos(second_pos) {}
+  CompareWithConstant(size_t pos_to_compare, ValueType constant_val)
+      : pos_to_compare(pos_to_compare), constant_val(constant_val) {}
 
-  ~CompareWithAttribute() override = default;
+  ~CompareWithConstant() override = default;
 
   bool operator()(RingTupleQueue::Tuple& tuple) override {
-    uint64_t* pos1 = tuple[first_pos];
-    uint64_t* pos2 = tuple[second_pos];
-    RingTupleQueue::Value<ValueType> first_val(pos1);
-    RingTupleQueue::Value<ValueType> second_val(pos2);
+    uint64_t* pos = tuple[pos_to_compare];
+    RingTupleQueue::Value<ValueType> attribute_val(pos);
     if constexpr (Comp == ComparisonType::EQUALS)
-      return first_val.get() == second_val.get();
+      return attribute_val.get() == constant_val;
     else if constexpr (Comp == ComparisonType::GREATER)
-      return first_val.get() > second_val.get();
+      return attribute_val.get() > constant_val;
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return first_val.get() >= second_val.get();
+      return attribute_val.get() >= constant_val;
     else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return first_val.get() <= second_val.get();
+      return attribute_val.get() <= constant_val;
     else if constexpr (Comp == ComparisonType::LESS)
-      return first_val.get() < second_val.get();
+      return attribute_val.get() < constant_val;
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return first_val.get() != second_val.get();
+      return attribute_val.get() != constant_val;
     else
       assert(false &&
              "Operator() not implemented for some ComparisonType");
   }
 };
+
 }  // namespace InternalCORECEA

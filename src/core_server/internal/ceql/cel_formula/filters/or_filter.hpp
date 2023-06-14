@@ -5,12 +5,10 @@
 #include "filter.hpp"
 
 namespace InternalCORECEQL {
-class OrFilter : public Filter {
- private:
+struct OrFilter : public Filter {
   std::unique_ptr<Filter> left;
   std::unique_ptr<Filter> right;
 
- public:
   OrFilter(std::unique_ptr<Filter>&& left, std::unique_ptr<Filter>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
@@ -21,8 +19,8 @@ class OrFilter : public Filter {
   }
 
   bool operator==(const OrFilter& other) const {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Filter* other) const override {

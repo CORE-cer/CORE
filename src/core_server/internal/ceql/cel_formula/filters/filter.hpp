@@ -5,7 +5,7 @@
 #include "visitors/filter_visitor.hpp"
 
 namespace InternalCORECEQL {
-class Filter {
+struct Filter {
  public:
   virtual ~Filter() = default;
   virtual std::unique_ptr<Filter> clone() const = 0;

@@ -11,8 +11,7 @@
 namespace InternalCORECEQL {
 
 struct InequalityPredicate : public Predicate {
- public:
-  enum class LogicalOperation {
+  enum struct LogicalOperation {
     EQUALS,
     GREATER,
     GREATER_EQUALS,

@@ -7,11 +7,9 @@
 
 namespace InternalCORECEQL {
 
-class IterationFormula : public Formula {
- private:
+struct IterationFormula : public Formula {
   std::unique_ptr<Formula> formula;
 
- public:
   IterationFormula(std::unique_ptr<Formula>&& formula)
       : formula(std::move(formula)) {}
 

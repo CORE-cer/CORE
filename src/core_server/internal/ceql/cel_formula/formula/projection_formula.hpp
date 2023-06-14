@@ -8,12 +8,10 @@
 
 namespace InternalCORECEQL {
 
-class ProjectionFormula : public Formula {
- private:
+struct ProjectionFormula : public Formula {
   std::unique_ptr<Formula> formula;
   std::set<std::string> variables;
 
- public:
   ProjectionFormula(std::unique_ptr<Formula>&& formula,
                     std::set<std::string>&& variables)
       : formula(std::move(formula)), variables(variables) {}
@@ -27,8 +25,8 @@ class ProjectionFormula : public Formula {
   }
 
   bool operator==(const ProjectionFormula& other) const {
-    return formula->equals(other.formula.get()) &&
-           variables == other.variables;
+    return formula->equals(other.formula.get())
+           && variables == other.variables;
   }
 
   bool equals(Formula* other) const override {

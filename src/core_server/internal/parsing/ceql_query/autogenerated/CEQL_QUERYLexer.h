@@ -53,7 +53,7 @@ private:
 
   // Individual action functions triggered by action() above.
 
-  // Individual semantic predicate functions triggered by sempred() above.
+  // Individual semantic physical_predicate functions triggered by sempred() above.
 
 };
 

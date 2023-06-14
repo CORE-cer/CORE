@@ -8,12 +8,10 @@
 
 namespace InternalCORECEQL {
 
-class FilterFormula : public Formula {
- private:
+struct FilterFormula : public Formula {
   std::unique_ptr<Formula> formula;
   std::unique_ptr<Filter> filter;
 
- public:
   FilterFormula(std::unique_ptr<Formula>&& formula,
                 std::unique_ptr<Filter>&& filter)
       : formula(std::move(formula)), filter(std::move(filter)) {}
@@ -23,10 +21,6 @@ class FilterFormula : public Formula {
   std::unique_ptr<Formula> clone() const override {
     return std::make_unique<FilterFormula>(formula->clone(),
                                            filter->clone());
-  }
-
-  const std::unique_ptr<Filter>& get_filter() const {
-    return filter;
   }
 
   bool operator==(const FilterFormula& other) const {

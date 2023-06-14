@@ -6,8 +6,7 @@
 
 namespace InternalCORECEQL {
 
-class Formula {
-  public:
+struct Formula {
     virtual ~Formula() = default;
     virtual std::unique_ptr<Formula> clone() const = 0;
     virtual bool equals(Formula* other) const = 0;

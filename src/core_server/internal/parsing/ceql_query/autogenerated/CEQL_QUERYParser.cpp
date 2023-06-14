@@ -45,7 +45,7 @@ void ceql_queryParserInitialize() {
     std::vector<std::string>{
       "parse", "error", "core_query", "selection_strategy", "list_of_variables", 
       "from_clause", "cel_formula", "partition_list", "attribute_list", 
-      "consumption_policy", "filter", "predicate", "string_literal", "string_literal_or_regexp", 
+      "consumption_policy", "filter", "physical_predicate", "string_literal", "string_literal_or_regexp",
       "regexp", "math_expr", "value_seq", "number_seq", "string_seq", "time_window", 
       "event_span", "time_span", "hour_span", "minute_span", "second_span", 
       "custom_span", "named_event", "s_event_name", "event_name", "stream_name", 

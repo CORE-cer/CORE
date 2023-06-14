@@ -10,13 +10,10 @@
 
 namespace InternalCORECEQL {
 
-class ConstantBooleanPredicate : public Predicate {
- private:
-   bool val;
+struct ConstantBooleanPredicate : public Predicate {
+  bool val;
 
- public:
-  ConstantBooleanPredicate(bool val)
-      : val(val) {}
+  ConstantBooleanPredicate(bool val) : val(val) {}
 
   std::unique_ptr<Predicate> clone() const override {
     return std::make_unique<ConstantBooleanPredicate>(val);
@@ -33,7 +30,8 @@ class ConstantBooleanPredicate : public Predicate {
   }
 
   bool equals(Predicate* other) const override {
-    if (auto other_predicate = dynamic_cast<ConstantBooleanPredicate*>(other)) {
+    if (auto other_predicate =
+            dynamic_cast<ConstantBooleanPredicate*>(other)) {
       return *this == *other_predicate;
     }
     return false;
@@ -41,9 +39,7 @@ class ConstantBooleanPredicate : public Predicate {
 
   bool is_constant() const override { return false; }
 
-  std::string to_string() const override {
-    return val? "TRUE" : "FALSE";
-  }
+  std::string to_string() const override { return val ? "TRUE" : "FALSE"; }
 
   void accept_visitor(PredicateVisitor& visitor) override {
     visitor.visit(*this);

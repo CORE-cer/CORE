@@ -10,12 +10,10 @@
 
 namespace InternalCORECEQL {
 
-class InPredicate : public Predicate {
- private:
+struct InPredicate : public Predicate {
   std::unique_ptr<Value> left;
   Sequence right;
 
- public:
   InPredicate(std::unique_ptr<Value>&& left, Sequence&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
@@ -54,9 +52,5 @@ class InPredicate : public Predicate {
   void accept_visitor(PredicateVisitor& visitor) override {
     visitor.visit(*this);
   }
-
-  const std::unique_ptr<Value>& get_left() const { return left; }
-
-  const Sequence& get_right() const { return right; }
 };
 }  // namespace InternalCORECEQL

@@ -52,13 +52,11 @@ std::unique_ptr<Predicate> parse_predicate(std::string query) {
   REQUIRE(formula != nullptr);
   auto filter_formula = cast_to<FilterFormula>(std::move(formula));
   REQUIRE(filter_formula != nullptr);
-  auto filter = cast_to<Filter>(std::move(
-      const_cast<std::unique_ptr<Filter>&>(filter_formula->get_filter())));
+  auto filter = std::move(filter_formula->filter);
   REQUIRE(filter != nullptr);
   auto atomic_filter = cast_to<AtomicFilter>(std::move(filter));
   REQUIRE(atomic_filter != nullptr);
-  auto predicate = std::move(const_cast<std::unique_ptr<Predicate>&>(
-      atomic_filter->get_predicate()));
+  auto predicate = std::move(atomic_filter->predicate);
   REQUIRE(predicate != nullptr);
   return std::move(predicate);
 }
@@ -73,7 +71,7 @@ using std::make_unique;
 /* Inequality Predicates */
 /*************************/
 
-TEST_CASE("== predicate work", "[Predicate, Inequality]") {
+TEST_CASE("== physical_predicate work", "[Predicate, Inequality]") {
   auto query = create_query("t2[temp == 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -85,7 +83,7 @@ TEST_CASE("== predicate work", "[Predicate, Inequality]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("= predicate work", "[Predicate, Inequality]") {
+TEST_CASE("= physical_predicate work", "[Predicate, Inequality]") {
   auto query = create_query("t2[temp = 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -97,7 +95,7 @@ TEST_CASE("= predicate work", "[Predicate, Inequality]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("> predicate works", "[Predicate]") {
+TEST_CASE("> physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp > 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -109,7 +107,7 @@ TEST_CASE("> predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE(">= predicate works", "[Predicate]") {
+TEST_CASE(">= physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp >= 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -121,7 +119,7 @@ TEST_CASE(">= predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("<= predicate works", "[Predicate]") {
+TEST_CASE("<= physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp <= 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -133,7 +131,7 @@ TEST_CASE("<= predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("< predicate works", "[Predicate]") {
+TEST_CASE("< physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp < 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -145,7 +143,7 @@ TEST_CASE("< predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("!= predicate works", "[Predicate]") {
+TEST_CASE("!= physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp != 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -157,7 +155,7 @@ TEST_CASE("!= predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("<> predicate works", "[Predicate]") {
+TEST_CASE("<> physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[temp <> 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -173,7 +171,7 @@ TEST_CASE("<> predicate works", "[Predicate]") {
 /* InequalityPredicate negative */
 /********************************/
 
-TEST_CASE("not == predicate work", "[Predicate, Inequality]") {
+TEST_CASE("not == physical_predicate work", "[Predicate, Inequality]") {
   auto query = create_query("t2[not temp == 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -185,7 +183,7 @@ TEST_CASE("not == predicate work", "[Predicate, Inequality]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not = predicate work", "[Predicate, Inequality]") {
+TEST_CASE("not = physical_predicate work", "[Predicate, Inequality]") {
   auto query = create_query("t2[not temp = 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -197,7 +195,7 @@ TEST_CASE("not = predicate work", "[Predicate, Inequality]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not > predicate works", "[Predicate]") {
+TEST_CASE("not > physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp > 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -209,7 +207,7 @@ TEST_CASE("not > predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not >= predicate works", "[Predicate]") {
+TEST_CASE("not >= physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp >= 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -221,7 +219,7 @@ TEST_CASE("not >= predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not <= predicate works", "[Predicate]") {
+TEST_CASE("not <= physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp <= 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -233,7 +231,7 @@ TEST_CASE("not <= predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not < predicate works", "[Predicate]") {
+TEST_CASE("not < physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp < 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -245,7 +243,7 @@ TEST_CASE("not < predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not != predicate works", "[Predicate]") {
+TEST_CASE("not != physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp != 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -257,7 +255,7 @@ TEST_CASE("not != predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("not <> predicate works", "[Predicate]") {
+TEST_CASE("not <> physical_predicate works", "[Predicate]") {
   auto query = create_query("t2[not temp <> 50]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<InequalityPredicate>(
@@ -269,7 +267,7 @@ TEST_CASE("not <> predicate works", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("In {num_list} predicate", "[Predicate]") {
+TEST_CASE("In {num_list} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp IN {1, 2, 3}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -283,7 +281,7 @@ TEST_CASE("In {num_list} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("In {...Upper Bound} predicate", "[Predicate]") {
+TEST_CASE("In {...Upper Bound} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp IN {..3}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -296,7 +294,7 @@ TEST_CASE("In {...Upper Bound} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("In {Lower Bound...} predicate", "[Predicate]") {
+TEST_CASE("In {Lower Bound...} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp IN {3..}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -309,7 +307,8 @@ TEST_CASE("In {Lower Bound...} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("In {Lower Bound... Upper Bound} predicate", "[Predicate]") {
+TEST_CASE("In {Lower Bound... Upper Bound} physical_predicate",
+          "[Predicate]") {
   auto query = create_query("t2[temp IN {3..999999999999}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -322,22 +321,22 @@ TEST_CASE("In {Lower Bound... Upper Bound} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("NOT IN {num_list} predicate", "[Predicate]") {
+TEST_CASE("NOT IN {num_list} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp NOT IN {1, 2, 3}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
   for (int64_t i = 1; i <= 3; i++) {
     number_seq.push_back(make_unique<IntegerLiteral>(i));
   }
-  auto expected_predicate = make_unique<NotPredicate>(
-      make_unique<InPredicate>(make_unique<Attribute>("temp"),
-                               Sequence(std::move(number_seq))));
+  auto expected_predicate =
+      make_unique<NotPredicate>(make_unique<InPredicate>(
+          make_unique<Attribute>("temp"), Sequence(std::move(number_seq))));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("NOT IN {...Upper Bound} predicate", "[Predicate]") {
+TEST_CASE("NOT IN {...Upper Bound} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp NOT IN {..3}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -350,7 +349,7 @@ TEST_CASE("NOT IN {...Upper Bound} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("NOT IN {Lower Bound...} predicate", "[Predicate]") {
+TEST_CASE("NOT IN {Lower Bound...} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp NOT IN {3..}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -363,7 +362,8 @@ TEST_CASE("NOT IN {Lower Bound...} predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("NOT IN {Lower Bound... Upper Bound} predicate", "[Predicate]") {
+TEST_CASE("NOT IN {Lower Bound... Upper Bound} physical_predicate",
+          "[Predicate]") {
   auto query = create_query("t2[temp NOT IN {3..999999999999}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
@@ -420,8 +420,7 @@ TEST_CASE("NOT (P1 AND P2) = NOT P1 OR NOT P2", "[Predicate]") {
       make_unique<Attribute>("temp"),
       InequalityPredicate::LogicalOperation::LESS_EQUALS,
       make_unique<IntegerLiteral>(40)));
-  auto expected_predicate =
-      make_unique<OrPredicate>(std::move(predicates));
+  auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -439,8 +438,7 @@ TEST_CASE("P1 OR P2", "[Predicate]") {
       make_unique<Attribute>("temp"),
       InequalityPredicate::LogicalOperation::GREATER,
       make_unique<IntegerLiteral>(40)));
-  auto expected_predicate =
-      make_unique<OrPredicate>(std::move(predicates));
+  auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -458,8 +456,7 @@ TEST_CASE("NOT (P1 OR P2) = NOT P1 AND NOT P2", "[Predicate]") {
       make_unique<Attribute>("temp"),
       InequalityPredicate::LogicalOperation::LESS_EQUALS,
       make_unique<IntegerLiteral>(40)));
-  auto expected_predicate =
-      make_unique<OrPredicate>(std::move(predicates));
+  auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
