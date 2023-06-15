@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <vector>
+#include <memory>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"

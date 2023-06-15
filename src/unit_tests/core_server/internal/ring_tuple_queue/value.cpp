@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+#include <array>
 
 TEST_CASE( "Get method returns correct value for constant sized type", "[Value]" ) {
     uint64_t data = 1234567890;

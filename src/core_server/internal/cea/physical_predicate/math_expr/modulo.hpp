@@ -22,7 +22,7 @@ class Modulo : public MathExpr<Type> {
     return std::make_unique<Modulo<Type>>(left->clone(), right->clone());
   }
 
-  virtual Type eval(RingTupleQueue::Tuple& tuple) {
+  Type eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Modulo is only valid for arithmetic vals");
     } else if constexpr (std::is_same_v<Type, double>) {
