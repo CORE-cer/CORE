@@ -31,6 +31,11 @@ struct ConditionSet {
     return combined;
     // clang-format on
   }
+
+  bool is_satisfied_by(const mpz_class& predicate_evaluation) const {
+    mpz_class conflicts = (predicate_evaluation ^ predicates) & mask;
+    return conflicts == 0;
+  }
 };
 
 }  // namespace InternalCORECEA
