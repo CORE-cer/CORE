@@ -34,8 +34,8 @@ struct InequalityPredicate : public Predicate {
   ~InequalityPredicate() override = default;
 
   std::unique_ptr<Predicate> clone() const override {
-    return std::make_unique<InequalityPredicate>(left->clone(), logical_op,
-                                                 right->clone());
+    return std::make_unique<InequalityPredicate>(
+        left->clone(), logical_op, right->clone());
   }
 
   bool is_constant() const override {
@@ -49,9 +49,8 @@ struct InequalityPredicate : public Predicate {
 
   bool operator==(const InequalityPredicate& other) const {
     assert(other.left && other.right);
-    return left->equals(other.left.get()) &&
-           logical_op == other.logical_op &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get()) && logical_op == other.logical_op
+           && right->equals(other.right.get());
   }
 
   bool equals(Predicate* other) const override {
@@ -62,8 +61,8 @@ struct InequalityPredicate : public Predicate {
   }
 
   std::string to_string() const override {
-    return left->to_string() + " " + to_string(logical_op) + " " +
-           left->to_string();
+    return left->to_string() + " " + to_string(logical_op) + " "
+           + right->to_string();
   }
 
   void accept_visitor(PredicateVisitor& visitor) override {

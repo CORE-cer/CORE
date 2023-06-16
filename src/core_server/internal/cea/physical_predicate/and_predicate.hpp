@@ -13,14 +13,16 @@ class AndPredicate : public PhysicalPredicate {
   std::vector<std::unique_ptr<PhysicalPredicate>> predicates;
 
  public:
-  AndPredicate(std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
-      : predicates(std::move(predicates)) {}
+  AndPredicate(int64_t event_type_id,
+               std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
+      : PhysicalPredicate(event_type_id),
+        predicates(std::move(predicates)) {}
 
   ~AndPredicate() override = default;
 
-  bool operator()(RingTupleQueue::Tuple& tuple) override {
+  bool eval(RingTupleQueue::Tuple& tuple) override {
     for (auto& predicate : predicates) {
-      if (!(*predicate)(tuple)) {
+      if (!(predicate->eval(tuple))) {
         return false;
       }
     }

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
+#include <iostream>
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_predicate_to_cea_predicate.hpp"
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
 #include "core_server/internal/coordination/catalog.hpp"

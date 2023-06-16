@@ -81,6 +81,7 @@ class CORE(ConanFile):
     CPPZMQ_VERSION = "4.9.0"
     CEREAL_VERSION = "1.3.2"
     LIBPQXX_VERSION = "7.7.5"
+    GMP_VERSION = "6.2.1"
 
     def layout(self):
         cmake_layout(self)
@@ -103,6 +104,7 @@ class CORE(ConanFile):
         self.requires("cppzmq/" + CORE.CPPZMQ_VERSION)
         self.requires("cereal/" + CORE.CEREAL_VERSION)
         self.requires("libpqxx/" + CORE.LIBPQXX_VERSION)
+        self.requires("gmp/" + CORE.GMP_VERSION)
 
     def build(self):
         cmake = CMake(self)

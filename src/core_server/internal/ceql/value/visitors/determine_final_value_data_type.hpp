@@ -20,11 +20,11 @@ class DetermineFinalValueDataType : public ValueVisitor {
  public:
   DataType final_value_datatype = Undetermined;
 
-  DetermineFinalValueDataType(CORETypes::EventInfo& event_info)
+  DetermineFinalValueDataType(CORETypes::EventInfo event_info)
       : event_info(event_info) {}
 
  private:
-  CORETypes::EventInfo& event_info;
+  CORETypes::EventInfo event_info;
 
  public:
   DataType get_final_data_type() {

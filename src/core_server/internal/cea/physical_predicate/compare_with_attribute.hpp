@@ -17,12 +17,16 @@ class CompareWithAttribute : public PhysicalPredicate {
   size_t second_pos;
 
  public:
-  CompareWithAttribute(size_t first_pos, size_t second_pos)
-      : first_pos(first_pos), second_pos(second_pos) {}
+  CompareWithAttribute(uint64_t event_type_id,
+                       size_t first_pos,
+                       size_t second_pos)
+      : PhysicalPredicate(event_type_id),
+        first_pos(first_pos),
+        second_pos(second_pos) {}
 
   ~CompareWithAttribute() override = default;
 
-  bool operator()(RingTupleQueue::Tuple& tuple) override {
+  bool eval(RingTupleQueue::Tuple& tuple) override {
     uint64_t* pos1 = tuple[first_pos];
     uint64_t* pos2 = tuple[second_pos];
     RingTupleQueue::Value<ValueType> first_val(pos1);
@@ -40,8 +44,7 @@ class CompareWithAttribute : public PhysicalPredicate {
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
       return first_val.get() != second_val.get();
     else
-      assert(false &&
-             "Operator() not implemented for some ComparisonType");
+      assert(false && "Operator() not implemented for some ComparisonType");
   }
 };
 }  // namespace InternalCORECEA

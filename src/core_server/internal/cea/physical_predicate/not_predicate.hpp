@@ -13,13 +13,14 @@ class NotPredicate : public PhysicalPredicate {
   std::unique_ptr<PhysicalPredicate> predicate;
 
  public:
-  NotPredicate(std::unique_ptr<PhysicalPredicate> predicate)
-      : predicate(std::move(predicate)) {}
+  NotPredicate(int64_t event_type_id,
+               std::unique_ptr<PhysicalPredicate> predicate)
+      : PhysicalPredicate(event_type_id), predicate(std::move(predicate)) {}
 
   ~NotPredicate() override = default;
 
-  bool operator()(RingTupleQueue::Tuple& tuple) override {
-    return !(*predicate)(tuple);
+  bool eval(RingTupleQueue::Tuple& tuple) override {
+    return !predicate->eval(tuple);
   }
 };
 

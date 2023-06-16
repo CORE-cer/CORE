@@ -17,7 +17,7 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
  private:
   DetermineValueType value_type_visitor;
   DetermineFinalValueDataType final_data_type_visitor;
-  EventInfo& event_info;
+  EventInfo event_info;
 
   using CEQLComparison = CEQL::InequalityPredicate::LogicalOperation;
   using CEAComparison = CEA::ComparisonType;
@@ -26,7 +26,7 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
  public:
   std::unique_ptr<CEA::PhysicalPredicate> predicate;
 
-  CEQLPredicateToCEAPredicate(EventInfo& event_info)
+  CEQLPredicateToCEAPredicate(EventInfo event_info)
       : event_info(event_info), final_data_type_visitor(event_info) {}
 
   void visit(InPredicate& in_predicate) override {
@@ -109,7 +109,8 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
 
   void visit(NotPredicate& not_predicate) override {
     not_predicate.predicate->accept_visitor(*this);
-    predicate = std::make_unique<CEA::NotPredicate>(std::move(predicate));
+    predicate = std::make_unique<CEA::NotPredicate>(event_info.id,
+                                                    std::move(predicate));
   }
 
   void visit(OrPredicate& or_predicate) override {
@@ -118,7 +119,8 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       predicate_->accept_visitor(*this);
       predicates.push_back(std::move(predicate));
     }
-    predicate = std::make_unique<CEA::OrPredicate>(std::move(predicates));
+    predicate = std::make_unique<CEA::OrPredicate>(event_info.id,
+                                                   std::move(predicates));
   }
 
   void visit(AndPredicate& and_predicate) override {
@@ -127,7 +129,8 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       predicate_->accept_visitor(*this);
       predicates.push_back(std::move(predicate));
     }
-    predicate = std::make_unique<CEA::AndPredicate>(std::move(predicates));
+    predicate = std::make_unique<CEA::AndPredicate>(event_info.id,
+                                                    std::move(predicates));
   }
 
   void visit(
@@ -184,27 +187,30 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case CEAComparison::EQUALS:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::EQUALS, ValueType>>(
-            left, right);
+            event_info.id, left, right);
       case CEAComparison::GREATER:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::GREATER, ValueType>>(
-            left, right);
+            event_info.id, left, right);
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::GREATER_EQUALS,
-                                      ValueType>>(left, right);
+                                      ValueType>>(
+            event_info.id, left, right);
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::LESS_EQUALS,
-                                      ValueType>>(left, right);
+                                      ValueType>>(
+            event_info.id, left, right);
       case CEAComparison::LESS:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::LESS, ValueType>>(
-            left, right);
+            event_info.id, left, right);
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
             CEA::CompareWithAttribute<CEAComparison::NOT_EQUALS,
-                                      ValueType>>(left, right);
+                                      ValueType>>(
+            event_info.id, left, right);
       default:
         throw std::logic_error(
             "Non implemented op in ceql_predicate_to_cea_predicate.hpp");
@@ -296,27 +302,29 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case CEAComparison::EQUALS:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::EQUALS, ValueType>>(
-            left_pos, right_val);
+            event_info.id, left_pos, right_val);
       case CEAComparison::GREATER:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::GREATER, ValueType>>(
-            left_pos, right_val);
+            event_info.id, left_pos, right_val);
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::GREATER_EQUALS,
-                                     ValueType>>(left_pos, right_val);
+                                     ValueType>>(
+            event_info.id, left_pos, right_val);
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::LESS_EQUALS,
-                                     ValueType>>(left_pos, right_val);
+                                     ValueType>>(
+            event_info.id, left_pos, right_val);
       case CEAComparison::LESS:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::LESS, ValueType>>(
-            left_pos, right_val);
+            event_info.id, left_pos, right_val);
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
             CEA::CompareWithConstant<CEAComparison::NOT_EQUALS, ValueType>>(
-            left_pos, right_val);
+            event_info.id, left_pos, right_val);
       default:
         throw std::logic_error(
             "Non implemented op in ceql_predicate_to_cea_predicate.hpp "
@@ -396,28 +404,28 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
       case CEAComparison::EQUALS:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
-            std::move(left_expr), std::move(right_expr));
+            event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
-            std::move(left_expr), std::move(right_expr));
+            event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS,
-                                  ValueType>>(std::move(left_expr),
-                                              std::move(right_expr));
+                                  ValueType>>(
+            event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
-            std::move(left_expr), std::move(right_expr));
+            event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::LESS:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
-            std::move(left_expr), std::move(right_expr));
+            event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
             CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
-            std::move(left_expr), std::move(right_expr));
+            event_info.id, std::move(left_expr), std::move(right_expr));
       default:
         throw std::logic_error(
             "Non implemented Comparison Type in "

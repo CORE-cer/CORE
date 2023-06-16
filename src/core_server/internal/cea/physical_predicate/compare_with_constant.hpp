@@ -15,12 +15,16 @@ class CompareWithConstant : public PhysicalPredicate {
   ValueType constant_val;
 
  public:
-  CompareWithConstant(size_t pos_to_compare, ValueType constant_val)
-      : pos_to_compare(pos_to_compare), constant_val(constant_val) {}
+  CompareWithConstant(int64_t event_type_id,
+                      size_t pos_to_compare,
+                      ValueType constant_val)
+      : PhysicalPredicate(event_type_id),
+        pos_to_compare(pos_to_compare),
+        constant_val(constant_val) {}
 
   ~CompareWithConstant() override = default;
 
-  bool operator()(RingTupleQueue::Tuple& tuple) override {
+  bool eval(RingTupleQueue::Tuple& tuple) override {
     uint64_t* pos = tuple[pos_to_compare];
     RingTupleQueue::Value<ValueType> attribute_val(pos);
     if constexpr (Comp == ComparisonType::EQUALS)
@@ -36,8 +40,7 @@ class CompareWithConstant : public PhysicalPredicate {
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
       return attribute_val.get() != constant_val;
     else
-      assert(false &&
-             "Operator() not implemented for some ComparisonType");
+      assert(false && "Operator() not implemented for some ComparisonType");
   }
 };
 

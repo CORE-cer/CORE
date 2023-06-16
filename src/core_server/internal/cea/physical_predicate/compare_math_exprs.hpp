@@ -18,13 +18,16 @@ class CompareMathExprs : public PhysicalPredicate {
   std::unique_ptr<MathExpr<ValueType>> right;
 
  public:
-  CompareMathExprs(std::unique_ptr<MathExpr<ValueType>>&& left,
+  CompareMathExprs(int64_t event_type_id,
+                   std::unique_ptr<MathExpr<ValueType>>&& left,
                    std::unique_ptr<MathExpr<ValueType>>&& right)
-      : left(std::move(left)), right(std::move(right)) {}
+      : PhysicalPredicate(event_type_id),
+        left(std::move(left)),
+        right(std::move(right)) {}
 
   ~CompareMathExprs() override = default;
 
-  bool operator()(RingTupleQueue::Tuple& tuple) override {
+  bool eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (Comp == ComparisonType::EQUALS)
       return left->eval(tuple) == right->eval(tuple);
     else if constexpr (Comp == ComparisonType::GREATER)
@@ -38,8 +41,7 @@ class CompareMathExprs : public PhysicalPredicate {
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
       return left->eval(tuple) != right->eval(tuple);
     else
-      assert(false &&
-             "Operator() not implemented for some ComparisonType");
+      assert(false && "Operator() not implemented for some ComparisonType");
   }
 };
 }  // namespace InternalCORECEA

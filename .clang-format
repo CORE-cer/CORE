@@ -6,7 +6,12 @@ IndentWidth: 2
 UseTab: Never
 TabWidth: 2
 ContinuationIndentWidth: 4
-ColumnLimit: 75
+ColumnLimit: 76
 #AlwaysBreakAfterDefinitionReturnType: TopLevel
 SeparateDefinitionBlocks: Always
 CommentPragmas: '^'
+BreakBeforeBinaryOperators: NonAssignment
+AllowAllArgumentsOnNextLine: true
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: Align

@@ -9,17 +9,17 @@
 
 namespace InternalCORECEQL {
 
-class AppendAllPredicates : public FilterVisitor {
+class AppendAllAtomicFilters : public FilterVisitor {
  public:
-  std::vector<Predicate*>& predicates;
+  std::vector<AtomicFilter*>& atomic_filters;
 
-  AppendAllPredicates(std::vector<Predicate*>& predicates)
-      : predicates(predicates) {}
+  AppendAllAtomicFilters(std::vector<AtomicFilter*>& atomic_filters)
+      : atomic_filters(atomic_filters) {}
 
-  ~AppendAllPredicates() override = default;
+  ~AppendAllAtomicFilters() override = default;
 
   void visit(AtomicFilter& filter) override {
-    predicates.push_back(filter.predicate.get());
+    atomic_filters.push_back(&filter);
   }
 
   // clang-format off

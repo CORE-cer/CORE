@@ -6,8 +6,7 @@
 #include "within.hpp"
 
 namespace InternalCORECEQL {
-class Query {
- private:
+struct Query {
   Select select;
   From from;
   Where where;
@@ -15,9 +14,11 @@ class Query {
   Within within;
   ConsumeBy consume_by;
 
- public:
-  Query(Select&& select, From&& from, Where&& where,
-        PartitionBy&& partition_by, Within&& within,
+  Query(Select&& select,
+        From&& from,
+        Where&& where,
+        PartitionBy&& partition_by,
+        Within&& within,
         ConsumeBy&& consume_by)
       : select(std::move(select)),
         from(std::move(from)),

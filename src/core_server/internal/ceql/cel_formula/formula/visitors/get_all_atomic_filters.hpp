@@ -1,21 +1,20 @@
 #pragma once
 
-#include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_predicates.hpp"
+#include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_atomic_filters.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "formula_visitor.hpp"
 
 namespace InternalCORECEQL {
 
-class GetAllCEQLPredicates : public FormulaVisitor {
-  std::vector<Predicate*> predicates;
-
+class GetAllAtomicFilters : public FormulaVisitor {
  public:
-  ~GetAllCEQLPredicates() override = default;
+  std::vector<AtomicFilter*> atomic_filters;
+  ~GetAllAtomicFilters() override = default;
 
   void visit(FilterFormula& formula) override {
     formula.formula->accept_visitor(*this);
-    auto visitor = AppendAllPredicates(predicates);
+    auto visitor = AppendAllAtomicFilters(atomic_filters);
     formula.filter->accept_visitor(visitor);
   }
 
