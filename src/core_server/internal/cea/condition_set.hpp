@@ -33,7 +33,18 @@ struct ConditionSet {
   }
 
   bool is_satisfied_by(const mpz_class& predicate_evaluation) const {
-    mpz_class conflicts = (predicate_evaluation ^ predicates) & mask;
+    if (is_satisfiable) {
+      mpz_class conflicts = (predicate_evaluation ^ predicates) & mask;
+      return conflicts == 0;
+    }
+    return false;
+  }
+
+  bool operator==(const ConditionSet other) const {
+    if (is_satisfiable != other.is_satisfiable || mask != other.mask)
+      return false;
+    if (!is_satisfiable) return true;
+    auto conflicts = (predicates ^ other.predicates) & mask;
     return conflicts == 0;
   }
 };
