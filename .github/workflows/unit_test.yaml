@@ -16,6 +16,10 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Install Conan
+        id: conan
+        uses: turtlebrowser/get-conan@main
+
       - name: base build
         run: ./scripts/build.sh
 
