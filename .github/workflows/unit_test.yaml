@@ -16,16 +16,14 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      - name: add sudo
+        run: apt update && apt install sudo
+
+      - name: Install python and pip
+        run: apt install python3 && apt install python3-pip
 
       - name: test pip conan
         run: pip install conan
-
-      - name: add sudo
-        run: apt update && apt install sudo
 
       - name: setup env
         run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
