@@ -19,6 +19,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3.1.4
 
+      - name: test pip conan
+        run: pip install conan
+
       - name: add sudo
         run: apt update && apt install sudo
 
