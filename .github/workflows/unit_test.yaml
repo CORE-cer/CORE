@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
 
       - name: setup env
-        run: ./scripts/setup_in_ubuntu.sh
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
 
       - name: install dependencies conan
         run: ./scripts/install_dependencies.sh
