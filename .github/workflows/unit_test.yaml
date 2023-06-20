@@ -21,6 +21,9 @@ jobs:
         with: 
           python-version: '3.10'
 
+      - name: add sudo
+        run: apt update && apt install sudo
+
       - name: setup env
         run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
 
