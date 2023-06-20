@@ -1,0 +1,23 @@
+name: Run all unit test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  create-db-and-test:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: node:10.18-buster
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: build with grammar
+        run: ./scripts/build_grammar.sh
+
+      - name: run tests
+        run: ./scripts/compile_and_test.sh
