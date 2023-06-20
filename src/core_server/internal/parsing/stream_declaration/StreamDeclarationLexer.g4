@@ -44,7 +44,22 @@ GEQ : '>=' ;
 EQ  : '==' | '='  ;
 NEQ : '!=' | '<>' ;
 
+INT : 'int' ;
+STRING: 'string' ;
+DOUBLE : 'double' ;
+LONG : 'long' ;
+BOOLEAN : 'boolean' ;
+
+
 SEMICOLON : ';' ;
+COMMA : ',' ;
+DOUBLE_DOT : '..';
+LEFT_PARENTHESIS : '(' ;
+RIGHT_PARENTHESIS : ')' ;
+LEFT_SQUARE_BRACKET : '[' ;
+RIGHT_SQUARE_BRACKET : ']' ;
+LEFT_CURLY_BRACKET : '{' ;
+RIGHT_CURLY_BRACKET : '}' ;
 
 IDENTIFIER
  :  '`' (~'`' | '``')* '`'
