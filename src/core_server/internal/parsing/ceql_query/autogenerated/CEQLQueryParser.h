@@ -1,5 +1,5 @@
 
-// Generated from CEQL_QUERY.g4 by ANTLR 4.12.0
+// Generated from CEQLQueryParser.g4 by ANTLR 4.12.0
 
 #pragma once
 
@@ -9,20 +9,21 @@
 
 
 
-class  CEQL_QUERYParser : public antlr4::Parser {
+class  CEQLQueryParser : public antlr4::Parser {
 public:
   enum {
-    T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
-    T__7 = 8, K_ALL = 9, K_AND = 10, K_ANY = 11, K_AS = 12, K_BY = 13, K_CONSUME = 14, 
-    K_DISTINCT = 15, K_EVENT = 16, K_EVENTS = 17, K_FILTER = 18, K_FROM = 19, 
-    K_HOURS = 20, K_IN = 21, K_LAST = 22, K_LIKE = 23, K_MAX = 24, K_MINUTES = 25, 
-    K_NEXT = 26, K_NONE = 27, K_NOT = 28, K_OR = 29, K_PARTITION = 30, K_SECONDS = 31, 
-    K_SELECT = 32, K_STREAM = 33, K_STRICT = 34, K_UNLESS = 35, K_WHERE = 36, 
-    K_WITHIN = 37, PERCENT = 38, PLUS = 39, MINUS = 40, STAR = 41, SLASH = 42, 
-    LE = 43, LEQ = 44, GE = 45, GEQ = 46, EQ = 47, NEQ = 48, SEMICOLON = 49, 
-    IDENTIFIER = 50, DOUBLE_LITERAL = 51, INTEGER_LITERAL = 52, NUMERICAL_EXPONENT = 53, 
-    STRING_LITERAL = 54, SINGLE_LINE_COMMENT = 55, MULTILINE_COMMENT = 56, 
-    SPACES = 57, UNEXPECTED_CHAR = 58
+    K_ALL = 1, K_AND = 2, K_ANY = 3, K_AS = 4, K_BY = 5, K_CONSUME = 6, 
+    K_DISTINCT = 7, K_EVENT = 8, K_EVENTS = 9, K_FILTER = 10, K_FROM = 11, 
+    K_HOURS = 12, K_IN = 13, K_LAST = 14, K_LIKE = 15, K_MAX = 16, K_MINUTES = 17, 
+    K_NEXT = 18, K_NONE = 19, K_NOT = 20, K_OR = 21, K_PARTITION = 22, K_SECONDS = 23, 
+    K_SELECT = 24, K_STREAM = 25, K_STRICT = 26, K_UNLESS = 27, K_WHERE = 28, 
+    K_WITHIN = 29, PERCENT = 30, PLUS = 31, MINUS = 32, STAR = 33, SLASH = 34, 
+    LE = 35, LEQ = 36, GE = 37, GEQ = 38, EQ = 39, NEQ = 40, SEMICOLON = 41, 
+    COMMA = 42, DOUBLE_DOT = 43, LEFT_PARENTHESIS = 44, RIGHT_PARENTHESIS = 45, 
+    LEFT_SQUARE_BRACKET = 46, RIGHT_SQUARE_BRACKET = 47, LEFT_CURLY_BRACKET = 48, 
+    RIGHT_CURLY_BRACKET = 49, IDENTIFIER = 50, DOUBLE_LITERAL = 51, INTEGER_LITERAL = 52, 
+    NUMERICAL_EXPONENT = 53, STRING_LITERAL = 54, SINGLE_LINE_COMMENT = 55, 
+    MULTILINE_COMMENT = 56, SPACES = 57, UNEXPECTED_CHAR = 58
   };
 
   enum {
@@ -38,11 +39,11 @@ public:
     RuleString = 34, RuleAny_name = 35, RuleKeyword = 36
   };
 
-  explicit CEQL_QUERYParser(antlr4::TokenStream *input);
+  explicit CEQLQueryParser(antlr4::TokenStream *input);
 
-  CEQL_QUERYParser(antlr4::TokenStream *input, const antlr4::atn::ParserATNSimulatorOptions &options);
+  CEQLQueryParser(antlr4::TokenStream *input, const antlr4::atn::ParserATNSimulatorOptions &options);
 
-  ~CEQL_QUERYParser() override;
+  ~CEQLQueryParser() override;
 
   std::string getGrammarFileName() const override;
 
@@ -247,6 +248,8 @@ public:
 
     std::vector<Any_nameContext *> any_name();
     Any_nameContext* any_name(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -260,6 +263,8 @@ public:
     antlr4::tree::TerminalNode *K_FROM();
     std::vector<Stream_nameContext *> stream_name();
     Stream_nameContext* stream_name(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -294,7 +299,9 @@ public:
   public:
     Par_cel_formulaContext(Cel_formulaContext *ctx);
 
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
     Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -359,8 +366,13 @@ public:
   public:
     Partition_listContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> LEFT_SQUARE_BRACKET();
+    antlr4::tree::TerminalNode* LEFT_SQUARE_BRACKET(size_t i);
     std::vector<Attribute_listContext *> attribute_list();
     Attribute_listContext* attribute_list(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> RIGHT_SQUARE_BRACKET();
+    antlr4::tree::TerminalNode* RIGHT_SQUARE_BRACKET(size_t i);
+    antlr4::tree::TerminalNode *COMMA();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -375,6 +387,8 @@ public:
     virtual size_t getRuleIndex() const override;
     std::vector<Attribute_nameContext *> attribute_name();
     Attribute_nameContext* attribute_name(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -442,7 +456,9 @@ public:
   public:
     Par_filterContext(FilterContext *ctx);
 
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
     FilterContext *filter();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -463,7 +479,9 @@ public:
     Atomic_filterContext(FilterContext *ctx);
 
     Event_nameContext *event_name();
+    antlr4::tree::TerminalNode *LEFT_SQUARE_BRACKET();
     PredicateContext *predicate();
+    antlr4::tree::TerminalNode *RIGHT_SQUARE_BRACKET();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -531,7 +549,9 @@ public:
   public:
     Par_predicateContext(PredicateContext *ctx);
 
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
     PredicateContext *predicate();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -701,7 +721,9 @@ public:
   public:
     Par_math_exprContext(Math_exprContext *ctx);
 
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
     Math_exprContext *math_expr();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -712,7 +734,9 @@ public:
   public:
     Value_seqContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
     Number_seqContext *number_seq();
+    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
     String_seqContext *string_seq();
 
 
@@ -741,6 +765,8 @@ public:
 
     std::vector<NumberContext *> number();
     NumberContext* number(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -751,6 +777,7 @@ public:
 
     std::vector<DoubleContext *> double_();
     DoubleContext* double_(size_t i);
+    antlr4::tree::TerminalNode *DOUBLE_DOT();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -760,6 +787,7 @@ public:
     Number_range_lowerContext(Number_seqContext *ctx);
 
     NumberContext *number();
+    antlr4::tree::TerminalNode *DOUBLE_DOT();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -768,6 +796,7 @@ public:
   public:
     Number_range_upperContext(Number_seqContext *ctx);
 
+    antlr4::tree::TerminalNode *DOUBLE_DOT();
     NumberContext *number();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -779,6 +808,7 @@ public:
 
     std::vector<IntegerContext *> integer();
     IntegerContext* integer(size_t i);
+    antlr4::tree::TerminalNode *DOUBLE_DOT();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -791,6 +821,8 @@ public:
     virtual size_t getRuleIndex() const override;
     std::vector<StringContext *> string();
     StringContext* string(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -890,7 +922,9 @@ public:
     Custom_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     IntegerContext *integer();
+    antlr4::tree::TerminalNode *LEFT_SQUARE_BRACKET();
     Any_nameContext *any_name();
+    antlr4::tree::TerminalNode *RIGHT_SQUARE_BRACKET();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
