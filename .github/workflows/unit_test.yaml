@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  create-db-and-test:
+  run-unit-tests:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
@@ -15,6 +15,9 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
+
+      - name: base build
+        run: ./scripts/build.sh
 
       - name: build with grammar
         run: ./scripts/build_grammar.sh
