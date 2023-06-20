@@ -11,9 +11,11 @@
 
 namespace InternalCORECEA {
 class DCEA {
-  using EndNodeId = int64_t;
+  using PredicatesToSatisfy = mpz_class;
   using IsMarked = bool;
-  using Transition = std::tuple<PredicateSet, IsMarked, EndNodeId>;
+  using EndNodeId = int64_t;
+  using Transition = std::tuple<PredicatesToSatisfy, IsMarked, EndNodeId>;
+
   using States = mpz_class;
   using PredicateEvaluation = mpz_class;
   using UnmarkedStates = mpz_class;
@@ -21,7 +23,7 @@ class DCEA {
   using IsFinalState = bool;
 
   int64_t amount_of_states;
-  std::vector<Transition> transitions;
+  std::vector<std::vector<Transition>> transitions;
   std::map<std::pair<States, PredicateEvaluation>,
            std::tuple<UnmarkedStates, MarkedStates>>
       precomputed_transitions;
@@ -35,14 +37,21 @@ class DCEA {
         initial_states(ndcea.initial_states),
         current_states(ndcea.initial_states),
         final_states(ndcea.final_states) {
-    for (std::tuple<PredicateSet, mpz_class, EndNodeId> nd_transition :
-         ndcea.transitions) {
-      if (std::get<1>(nd_transition) == 0) {
-        transitions.push_back(std::make_tuple(
-            std::get<0>(nd_transition), false, std::get<2>(nd_transition)));
-      } else {
-        transitions.push_back(std::make_tuple(
-            std::get<0>(nd_transition), true, std::get<2>(nd_transition)));
+    for (auto& state_transitions : ndcea.transitions) {
+      for (std::tuple<PredicatesToSatisfy, mpz_class, EndNodeId>
+               nd_transition : state_transitions) {
+        std::vector<Transition> new_state_transitions;
+        if (std::get<1>(nd_transition) == 0) {
+          new_state_transitions.push_back(
+              std::make_tuple(std::get<0>(nd_transition),
+                              false,
+                              std::get<2>(nd_transition)));
+        } else {
+          new_state_transitions.push_back(
+              std::make_tuple(std::get<0>(nd_transition),
+                              true,
+                              std::get<2>(nd_transition)));
+        }
       }
     }
   }

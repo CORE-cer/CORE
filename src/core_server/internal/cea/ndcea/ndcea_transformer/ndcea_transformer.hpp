@@ -34,15 +34,18 @@ class NDCEATransformer {
 
   static NDCEA union_of(NDCEA& left, NDCEA& right) {
     NDCEA out = NDCEA(left);
-    out.amount_of_states += right.amount_of_states;
+    out.add_n_states(right.amount_of_states);
     out.initial_states |= right.initial_states << left.amount_of_states;
     out.final_states |= right.final_states << left.amount_of_states;
-    for (std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>
-             transition : right.transitions) {
-      out.transitions.push_back(
-          std::make_tuple(std::get<0>(transition),
-                          std::get<1>(transition),
-                          std::get<2>(transition) + left.amount_of_states));
+    for (int i = 0; i < right.amount_of_states; i++) {
+      auto& transitions = right.transitions[i];
+      for (std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>
+               transition : transitions) {
+        out.transitions[i].push_back(std::make_tuple(
+            std::get<0>(transition),
+            std::get<1>(transition),
+            std::get<2>(transition) + left.amount_of_states));
+      }
     }
     return out;
   }
