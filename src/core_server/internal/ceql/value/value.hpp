@@ -19,13 +19,5 @@ struct Value {
   virtual bool equals(Value* val) const noexcept = 0;
   virtual std::unique_ptr<Value> clone() const noexcept = 0;
   virtual void accept_visitor(ValueVisitor&) = 0;
-
-  /**
-   * IMPORTANT:
-   * Note that all concrete classes of Value should include the function
-   * serialize so that cereal works correctly. And, this polymorphic
-   * relationship should be added to the cereal_serializer.hpp file if it
-   * is not already.
-   */
 };
 }  // namespace InternalCORECEQL
