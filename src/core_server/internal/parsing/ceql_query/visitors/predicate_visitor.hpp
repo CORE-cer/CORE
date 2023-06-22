@@ -99,7 +99,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any visitRegex_predicate(
       CEQLQueryParser::Regex_predicateContext* ctx) override {
     auto left = Attribute(ctx->attribute_name()->getText());
-    auto right = RegexLiteral(ctx->regexp()->getText());
+    auto right = RegexLiteral(ctx->regexp()->regexp_alternation()->getText());
     predicate =
         std::make_unique<LikePredicate>(std::move(left), std::move(right));
     return {};
