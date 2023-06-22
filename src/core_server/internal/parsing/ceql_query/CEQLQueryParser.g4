@@ -35,30 +35,30 @@ selection_strategy
 
 list_of_variables
  : STAR                         # s_star
- | any_name ( ',' any_name )*   # s_list_of_variables
+ | any_name ( COMMA any_name )*   # s_list_of_variables
  ;
 
 from_clause
- : ( K_FROM stream_name ( ',' stream_name )* )?
+ : ( K_FROM stream_name ( COMMA stream_name )* )?
  ;
 
 
 cel_formula
- : '(' cel_formula ')'                                # par_cel_formula
+ : LEFT_PARENTHESIS cel_formula RIGHT_PARENTHESIS     # par_cel_formula
  | s_event_name                                       # event_type_cel_formula
  | cel_formula K_AS event_name                        # as_cel_formula
- | cel_formula '+'                                    # kleene_cel_formula
+ | cel_formula PLUS                                   # kleene_cel_formula
  | cel_formula SEMICOLON cel_formula                  # sequencing_cel_formula
  | cel_formula K_OR cel_formula                       # or_cel_formula
  | cel_formula K_FILTER filter                        # filter_cel_formula
  ;
 
 partition_list
- : '[' attribute_list ']' (',' '[' attribute_list ']')?
+ : LEFT_SQUARE_BRACKET attribute_list RIGHT_SQUARE_BRACKET (COMMA LEFT_SQUARE_BRACKET attribute_list RIGHT_SQUARE_BRACKET)?
  ;
 
 attribute_list
- :  attribute_name ( ',' attribute_name )*
+ :  attribute_name ( COMMA attribute_name )*
  ;
 
 consumption_policy
@@ -68,14 +68,14 @@ consumption_policy
  ;
 
 filter
- : '(' filter ')'                                       # par_filter
- | event_name '[' predicate ']'                         # atomic_filter
+ : LEFT_PARENTHESIS filter RIGHT_PARENTHESIS            # par_filter
+ | event_name LEFT_SQUARE_BRACKET predicate RIGHT_SQUARE_BRACKET             # atomic_filter
  | filter K_AND filter                                  # and_filter
  | filter K_OR filter                                   # or_filter
  ;
 
 predicate
- : '(' predicate ')'                                           # par_predicate
+ : LEFT_PARENTHESIS predicate RIGHT_PARENTHESIS                # par_predicate
  | K_NOT predicate                                             # not_predicate
  | math_expr ( LE | LEQ | GE | GEQ | EQ | NEQ) math_expr       # inequality_predicate
  | string_literal ( EQ | NEQ ) string_literal_or_regexp        # equality_string_predicate
@@ -96,12 +96,8 @@ string_literal_or_regexp
  | regexp
  ;
 
-regexp
- : STRING_LITERAL
- ;
-
 math_expr
- : '(' math_expr ')'                                        # par_math_expr
+ : LEFT_PARENTHESIS math_expr RIGHT_PARENTHESIS             # par_math_expr
  | number                                                   # number_math_expr
  | attribute_name                                           # attribute_math_expr
  | ( PLUS | MINUS ) math_expr                               # unary_math_expr
@@ -110,20 +106,20 @@ math_expr
  ;
 
 value_seq
- : '{' number_seq '}'
- | '{' string_seq '}'
+ : LEFT_CURLY_BRACKET number_seq RIGHT_CURLY_BRACKET
+ | LEFT_CURLY_BRACKET string_seq RIGHT_CURLY_BRACKET
  ;
 
 number_seq
- : number (',' number)*            # number_list
- | integer '..' integer            # integer_range
- | double '..' double              # double_range
- | number '..'                     # number_range_lower
- | '..' number                     # number_range_upper
+ : number (COMMA number)*                # number_list
+ | integer DOUBLE_DOT integer            # integer_range
+ | double DOUBLE_DOT double              # double_range
+ | number DOUBLE_DOT                     # number_range_lower
+ | DOUBLE_DOT number                     # number_range_upper
  ;
 
 string_seq
- : string (',' string)*
+ : string (COMMA string)*
  ;
 
 time_window
@@ -153,7 +149,7 @@ second_span
  ;
 
 custom_span
- : integer '[' any_name ']'
+ : integer LEFT_SQUARE_BRACKET any_name RIGHT_SQUARE_BRACKET
  ;
 
 named_event
@@ -229,3 +225,102 @@ keyword
  | K_WITHIN
  ;
 
+// regexp parser
+regexp
+ : '<<' regexp_alternation '>>'
+ ;
+ 
+regexp_alternation
+ : regexp_exp ( '|' regexp_exp )*
+ ;
+ 
+regexp_exp
+ : regexp_element+
+ ;
+ 
+regexp_element
+ : regexp_group quantifier?
+ ;
+ 
+regexp_group
+ : parenthesis
+ | atom
+ ;
+ 
+parenthesis
+ : REGEX_L_PAR regexp_alternation REGEX_R_PAR
+ ;
+ 
+quantifier: REGEX_QUESTION | REGEX_PLUS | REGEX_STAR | REGEX_L_CURLY quantity REGEX_R_CURLY;
+quantity: quantExact | quantRange | quantMin | quantMax;
+quantExact: regexp_number;
+quantRange: regexp_number REGEX_COMMA regexp_number;
+quantMin: regexp_number REGEX_COMMA;
+quantMax: REGEX_COMMA regexp_number;
+ 
+atom: characterClass | sharedAtom | literal;
+ 
+characterClass: REGEX_L_BRACK '^'? ccAtom+ REGEX_R_BRACK;
+ 
+ccAtom
+ : ccRange
+ | sharedAtom
+ | ccSingle;
+ 
+ccRange: ccLiteral REGEX_HYPHEN ccLiteral;
+ 
+ccSingle: ccLiteral;
+ 
+ccLiteral
+ : ccEscapes
+ | ccOther;
+ 
+ccEscapes: '\\' (REGEX_HAT | REGEX_HYPHEN | REGEX_R_BRACK | '\\');
+ 
+ccOther: ~(REGEX_HAT | REGEX_HYPHEN | REGEX_R_BRACK | '\\');
+ 
+literal: escapes | REGEX_DOT | other;
+ 
+escapes:
+  '\\' (
+    REGEX_L_BRACK
+    | REGEX_R_BRACK
+    | REGEX_L_PAR
+    | REGEX_R_PAR
+    | REGEX_L_CURLY
+    | REGEX_R_CURLY
+    | REGEX_STAR
+    | REGEX_PLUS
+    | REGEX_QUESTION
+    | '|'
+    | '.'
+    | '\\'
+  );
+ 
+ other:
+  ~(
+    REGEX_L_BRACK
+    | REGEX_R_BRACK
+    | REGEX_L_PAR
+    | REGEX_R_PAR
+    | REGEX_L_CURLY
+    | REGEX_R_CURLY
+    | REGEX_STAR
+    | REGEX_PLUS
+    | REGEX_QUESTION
+    | '|'
+    | '\\'
+  );
+ 
+sharedAtom
+ : REGEX_DECIMAL_DIGIT
+ | REGEX_NOT_DECIMAL_DIGIT
+ | REGEX_WHITESPACE
+ | REGEX_NOT_WHITESPACE
+ | REGEX_ALPHANUMERIC
+ | REGEX_NOT_ALPHANUMERIC
+ ;
+ 
+regexp_number
+ : REGEX_DIGIT+
+ ; 
