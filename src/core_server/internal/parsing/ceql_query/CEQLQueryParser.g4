@@ -8,10 +8,6 @@ parse
  : (core_query | error )* EOF
  ;
 
-parse2
- : (core_query | error )* EOF
- ;
-
 error
  : UNEXPECTED_CHAR
    {
