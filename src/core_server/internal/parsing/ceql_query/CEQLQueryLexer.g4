@@ -163,12 +163,3 @@ REGEX_NOT_ALPHANUMERIC: '\\W';
  
 // Single Tokens
 REGEX_DIGIT: [0-9];
- 
-// 
-// // Regex Fragments
-// fragment UNDERSCOREALPHANUMERICS : ('_' | AlphaNumeric)+;
-// fragment ALPHANUMERICS           : AlphaNumeric+;
-// fragment ALPHANUMERIC            : [a-zA-Z0-9];
-// fragment NONALPHANUMERIC         : ~[a-zA-Z0-9];
-// fragment HEXDIGIT                : [0-9a-fA-F];
-// fragment ASCII                   : [\u0000-\u007F];
