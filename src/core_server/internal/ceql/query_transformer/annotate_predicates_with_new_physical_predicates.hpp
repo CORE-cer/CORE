@@ -1,12 +1,14 @@
 #pragma once
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include "core_server/internal/cea/physical_predicate/check_type_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/visitors/get_all_atomic_filters.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_predicate_to_cea_predicate.hpp"
 #include "query_transformer.hpp"
 
 namespace InternalCORECEQL {
+using InternalCORECEA::CheckTypePredicate;
 using InternalCORECEA::PhysicalPredicate;
 
 /**
@@ -40,17 +42,23 @@ class AnnotatePredicatesWithNewPhysicalPredicates
 
  private:
   void create_naive_mapping(std::vector<AtomicFilter*>& filters) {
-    for (int predicate_id = 0; predicate_id < filters.size();
-         predicate_id++) {
-      std::string event_name = filters[predicate_id]->variable_name;
+    for (int64_t event_type_id = 0;
+         event_type_id < catalog.number_of_events();
+         event_type_id++) {
+      physical_predicates.push_back(
+          std::make_unique<CheckTypePredicate>(event_type_id));
+    }
+    for (int64_t i = 0, predicate_id = physical_predicates.size();
+         i < filters.size();
+         i++, predicate_id++) {
+      std::string event_name = filters[i]->variable_name;
       if (!catalog.event_name_is_taken(event_name))
         throw std::runtime_error("The event of the query is not valid");
       CEQLPredicateToCEAPredicate visitor(
           catalog.get_event_info(event_name));
-      filters[predicate_id]->predicate->accept_visitor(visitor);
+      filters[i]->predicate->accept_visitor(visitor);
       physical_predicates.push_back(std::move(visitor.predicate));
-      filters[predicate_id]->predicate->physical_predicate_id =
-          predicate_id;
+      filters[i]->predicate->physical_predicate_id = predicate_id;
     }
   }
 };

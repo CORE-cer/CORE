@@ -51,6 +51,8 @@ class Catalog {
   QueryInfoId add_query(QueryInfo query_info) noexcept;
   QueryInfo get_query_info(QueryInfoId query_info_id) const noexcept;
   const std::vector<QueryInfo>& get_all_query_infos() const noexcept;
+
+  int64_t number_of_events() const { return events_info.size(); }
 };
 
 }  // namespace InternalCORE

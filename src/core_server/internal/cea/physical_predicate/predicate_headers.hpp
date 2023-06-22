@@ -6,3 +6,4 @@
 #include "not_predicate.hpp"
 #include "or_predicate.hpp"
 #include "and_predicate.hpp"
+#include "check_type_predicate.hpp"
