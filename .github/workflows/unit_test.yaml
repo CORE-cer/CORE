@@ -30,7 +30,7 @@ jobs:
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh
 
       - name: build with grammar
-        run: chmox +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: run tests
         run: chmox +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh
