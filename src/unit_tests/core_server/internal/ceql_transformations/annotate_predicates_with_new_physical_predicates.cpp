@@ -14,10 +14,6 @@ namespace COREFormulaTransformationsPredicates{
 std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
-         "FROM S, S2\n"
-         "WHERE S>T \n"
-         "--WHERE H+ OR H+\n"
-         "FILTER\n"
          + filter_clause + "\n"
          "WITHIN 4 EVENTS\n";
   // clang-format on
