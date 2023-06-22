@@ -8,12 +8,12 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
  private:
   Select::Strategy strategy = Select::Strategy::DEFAULT;
   std::set<std::string> variable_names;
-  bool is_star;
+  bool is_star = false;
 
  public:
   Select get_parsed_select() {
-    return Select(std::move(strategy), std::move(variable_names),
-                  std::move(is_star));
+    return Select(
+        std::move(strategy), std::move(variable_names), std::move(is_star));
   }
 
   virtual std::any visitCore_query(
@@ -77,4 +77,4 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 };
-}
+}  // namespace InternalCORECEQLParsing
