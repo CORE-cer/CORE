@@ -17,6 +17,10 @@ struct LikePredicate : public Predicate {
   LikePredicate(Attribute attribute, RegexLiteral regex_literal)
       : attribute(attribute), regex_literal(regex_literal) {}
 
+  LikePredicate(std::unique_ptr<Attribute>&& attribute,
+                std::unique_ptr<RegexLiteral>&& regex_literal)
+      : attribute(std::move(*attribute)), regex_literal(std::move(*regex_literal)) {}
+
   std::unique_ptr<Predicate> clone() const override {
     return std::make_unique<LikePredicate>(attribute, regex_literal);
   }
