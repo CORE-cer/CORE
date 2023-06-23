@@ -1,12 +1,12 @@
 #pragma once
 
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
+#include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "shared/datatypes/catalog/event_info.hpp"
 #include "value_visitor.hpp"
 
 namespace InternalCORECEQL {
-class DetermineFinalValueDataType : public ValueVisitor {
+class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
  public:
   enum DataType {
     Integer,
@@ -21,11 +21,11 @@ class DetermineFinalValueDataType : public ValueVisitor {
   DataType final_value_datatype = Undetermined;
 
  private:
-  CORETypes::EventInfo event_info;
+  InternalCORE::Catalog& catalog;
 
  public:
-  DetermineFinalValueDataType(CORETypes::EventInfo event_info)
-      : event_info(event_info) {}
+  DetermineFinalValueDataTypeWithCatalog(InternalCORE::Catalog& catalog)
+      : catalog(catalog) {}
 
   DataType get_final_data_type() {
     auto out = final_value_datatype;
@@ -34,18 +34,15 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto attribute_id =
-        event_info.attribute_names_to_ids.find(attribute.value);
-    if (attribute_id == event_info.attribute_names_to_ids.end()) {
-      throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event "
-                               + event_info.name);
+    auto value_types =
+        catalog.get_possible_attribute_types(attribute.value);
+    if (value_types.size() == 0) {
+      final_value_datatype = Invalid;
     }
-    size_t id = attribute_id->second;
-    auto info = event_info.attributes_info[id];
-
-    DataType event_type = attribute_info_type_convertor(info.value_type);
-    update_final_data_type(event_type);
+    for (auto type : value_types) {
+      DataType event_type = attribute_info_type_convertor(type);
+      update_final_data_type(event_type);
+    }
   }
 
   // clang-format off

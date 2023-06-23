@@ -13,10 +13,18 @@ class AndPredicate : public PhysicalPredicate {
   std::vector<std::unique_ptr<PhysicalPredicate>> predicates;
 
  public:
-  AndPredicate(int64_t event_type_id,
+  AndPredicate(uint64_t event_type_id,
                std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
       : PhysicalPredicate(event_type_id),
         predicates(std::move(predicates)) {}
+
+  AndPredicate(std::set<uint64_t> admissible_event_types,
+               std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
+      : PhysicalPredicate(admissible_event_types),
+        predicates(std::move(predicates)) {}
+
+  AndPredicate(std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
+      : PhysicalPredicate(), predicates(std::move(predicates)) {}
 
   ~AndPredicate() override = default;
 

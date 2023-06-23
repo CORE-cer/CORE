@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -23,6 +24,8 @@ class Catalog {
   std::vector<StreamInfo> streams_info;
   std::map<std::string, StreamTypeId> stream_name_to_id;
   std::vector<QueryInfo> queries_info;
+  std::map<std::string, std::set<ValueTypes>> possible_attribute_types;
+  std::map<std::string, std::set<EventTypeId>> event_types_with_attribute;
 
  public:
   // Events
@@ -53,6 +56,12 @@ class Catalog {
   const std::vector<QueryInfo>& get_all_query_infos() const noexcept;
 
   int64_t number_of_events() const { return events_info.size(); }
+
+  std::set<ValueTypes> get_possible_attribute_types(
+      std::string attribute_name) const noexcept;
+
+  std::set<EventTypeId> get_compatible_event_types(
+      std::string attribute_name) const noexcept;
 };
 
 }  // namespace InternalCORE

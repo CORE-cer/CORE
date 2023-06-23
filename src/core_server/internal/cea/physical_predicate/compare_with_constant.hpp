@@ -15,10 +15,17 @@ class CompareWithConstant : public PhysicalPredicate {
   ValueType constant_val;
 
  public:
-  CompareWithConstant(int64_t event_type_id,
+  CompareWithConstant(uint64_t event_type_id,
                       size_t pos_to_compare,
                       ValueType constant_val)
       : PhysicalPredicate(event_type_id),
+        pos_to_compare(pos_to_compare),
+        constant_val(constant_val) {}
+
+  CompareWithConstant(std::set<uint64_t> admissible_event_types,
+                      size_t pos_to_compare,
+                      ValueType constant_val)
+      : PhysicalPredicate(admissible_event_types),
         pos_to_compare(pos_to_compare),
         constant_val(constant_val) {}
 

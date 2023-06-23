@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "core_server/internal/ceql/value/value_types.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
@@ -12,7 +13,6 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "core_server/internal/ceql/value/value_types.hpp"
 
 using namespace CORETypes;
 
@@ -35,6 +35,15 @@ namespace InternalCORE {
     std::string&& event_name,
     std::vector<AttributeInfo>&& event_attributes) noexcept {
   event_name_to_id.insert(std::make_pair(event_name, events_info.size()));
+  for (auto& attribute : event_attributes) {
+    if (possible_attribute_types.contains(attribute.name)) {
+      possible_attribute_types[attribute.name].insert(attribute.value_type);
+      event_types_with_attribute[attribute.name].insert(events_info.size());
+    } else {
+      possible_attribute_types[attribute.name] = {attribute.value_type};
+      event_types_with_attribute[attribute.name] = {events_info.size()};
+    }
+  }
   events_info.push_back(EventInfo(events_info.size(),
                                   std::move(event_name),
                                   std::move(event_attributes)));
@@ -100,13 +109,12 @@ const std::vector<EventInfo>& Catalog::get_all_events_info()
     // validated elsewhere
     stream_events_info.push_back(get_event_info(id));
   }
-  streams_info.push_back(StreamInfo(streams_info.size(), stream_name,
-                                    std::move(stream_events_info)));
+  streams_info.push_back(StreamInfo(
+      streams_info.size(), stream_name, std::move(stream_events_info)));
   return streams_info.size() - 1;
 }
 
-bool Catalog::stream_name_is_taken(
-    std::string stream_name) const noexcept {
+bool Catalog::stream_name_is_taken(std::string stream_name) const noexcept {
   return stream_name_to_id.contains(stream_name);
 }
 
@@ -175,5 +183,25 @@ QueryInfo Catalog::get_query_info(
 const std::vector<QueryInfo>& Catalog::get_all_query_infos()
     const noexcept {
   return queries_info;
+}
+
+std::set<ValueTypes> Catalog::get_possible_attribute_types(
+    std::string attribute_name) const noexcept {
+  auto iter = possible_attribute_types.find(attribute_name);
+  if (iter != possible_attribute_types.end()) {
+    return iter->second;
+  } else {
+    return {};
+  }
+}
+
+std::set<EventTypeId> Catalog::get_compatible_event_types(
+    std::string attribute_name) const noexcept {
+  auto iter = event_types_with_attribute.find(attribute_name);
+  if (iter != event_types_with_attribute.end()) {
+    return iter->second;
+  } else {
+    return {};
+  }
 }
 }  // namespace InternalCORE

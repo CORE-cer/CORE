@@ -13,7 +13,8 @@ namespace InternalCORECEQL {
 namespace CEQL = InternalCORECEQL;
 namespace CEA = InternalCORECEA;
 
-class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
+class CEQLStrongTypedPredicateToPhysicalPredicate final
+    : public PredicateVisitor {
  private:
   DetermineValueType value_type_visitor;
   DetermineFinalValueDataType final_data_type_visitor;
@@ -26,7 +27,7 @@ class CEQLPredicateToCEAPredicate final : public PredicateVisitor {
  public:
   std::unique_ptr<CEA::PhysicalPredicate> predicate;
 
-  CEQLPredicateToCEAPredicate(EventInfo event_info)
+  CEQLStrongTypedPredicateToPhysicalPredicate(EventInfo event_info)
       : event_info(event_info), final_data_type_visitor(event_info) {}
 
   void visit(InPredicate& in_predicate) override {

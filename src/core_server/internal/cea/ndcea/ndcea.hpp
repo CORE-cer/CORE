@@ -9,11 +9,9 @@
 namespace InternalCORECEA {
 struct NDCEA {
  public:
-  using PredicatesToSatisfy = mpz_class;
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
-  using Transition =
-      std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>;
+  using Transition = std::tuple<PredicateSet, VariablesToMark, EndNodeId>;
   using States = mpz_class;
 
   // transitions[i] = all transitions of node i.
@@ -66,6 +64,29 @@ struct NDCEA {
       }
       final_states_copy <<= 1;
       current_pos++;
+    }
+    return out;
+  }
+
+  //using Transition = std::tuple<PredicateSet, VariablesToMark, EndNodeId>;
+  std::string to_string() const {
+    // clang-format off
+    std::string out =
+      "NDCEA{\n"
+      "Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
+      "I = (bitset) " + initial_states.get_str(2) + "\n"
+      "F = (bitset) " + final_states.get_str(2) + "\n"
+      "Δ : [PredicateSet × (bitset) VariablesToMark → FinalState]" + "\n";
+    // clang-format on
+    for (size_t i = 0; i < transitions.size(); i++) {
+      if (transitions[i].size() != 0)
+        out += "Δ[" + std::to_string(i) + "]\n";
+      for (const std::tuple<PredicateSet, VariablesToMark, EndNodeId>&
+             transition : transitions[i]) {
+        out += std::get<0>(transition).to_string() + ","
+               + std::get<1>(transition).get_str(2) + ","
+               + std::to_string(std::get<2>(transition)) + "\n";
+      }
     }
     return out;
   }

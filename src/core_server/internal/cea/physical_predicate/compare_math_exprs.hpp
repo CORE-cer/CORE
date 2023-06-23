@@ -18,10 +18,17 @@ class CompareMathExprs : public PhysicalPredicate {
   std::unique_ptr<MathExpr<ValueType>> right;
 
  public:
-  CompareMathExprs(int64_t event_type_id,
+  CompareMathExprs(uint64_t event_type_id,
                    std::unique_ptr<MathExpr<ValueType>>&& left,
                    std::unique_ptr<MathExpr<ValueType>>&& right)
       : PhysicalPredicate(event_type_id),
+        left(std::move(left)),
+        right(std::move(right)) {}
+
+  CompareMathExprs(std::set<uint64_t> admissible_event_types,
+                   std::unique_ptr<MathExpr<ValueType>>&& left,
+                   std::unique_ptr<MathExpr<ValueType>>&& right)
+      : PhysicalPredicate(admissible_event_types),
         left(std::move(left)),
         right(std::move(right)) {}
 

@@ -12,16 +12,19 @@
 namespace InternalCORECEQL {
 
 class FormulaToNDCEA : public FormulaVisitor {
-  using PredicatesToSatisfy = mpz_class;
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
   using NDCEA = InternalCORECEA::NDCEA;
+  using PredicateSet = InternalCORECEA::PredicateSet;
 
  private:
-  InternalCORE::Catalog catalog;
+  InternalCORE::Catalog& catalog;
 
  public:
-  NDCEA current_cea;
+  NDCEA current_cea{0};
+
+  FormulaToNDCEA(InternalCORE::Catalog& catalog) : catalog(catalog) {}
+
   ~FormulaToNDCEA() override = default;
 
   void visit(FilterFormula& formula) override {}
@@ -29,13 +32,17 @@ class FormulaToNDCEA : public FormulaVisitor {
   void visit(EventTypeFormula& formula) override {
     current_cea = NDCEA(2);
     if (!catalog.event_name_is_taken(formula.event_type_name)) {
-      throw std::runtime_error("Invalid event name is given");
+      throw std::runtime_error("The event_name: " + formula.event_type_name +
+                               " is not in the catalog, and base cases "
+                               "that are variables are not allowed.");
     }
-    int64_t event_type_id =
-        catalog.get_event_info(formula.event_type_name).id;
+    int64_t event_type_id = catalog.get_event_info(formula.event_type_name).id;
     mpz_class position_of_event = (mpz_class)1 << event_type_id;
+    mpz_class predicate_mask = (mpz_class)1 << event_type_id;
     current_cea.transitions[0].push_back(
-        std::make_tuple(position_of_event, position_of_event, 1));
+      std::make_tuple(PredicateSet(position_of_event, predicate_mask),
+                      position_of_event,
+                      1));
     current_cea.initial_states = 1 << 0;
     current_cea.final_states = 1 << 1;
   }
@@ -63,19 +70,18 @@ class FormulaToNDCEA : public FormulaVisitor {
                                << left_cea.amount_of_states;
 
     // Make the transition from the left_cea to the right_cea.
-    std::vector<int64_t> right_initial_states =
-        right_cea.get_initial_states();
+    std::vector<int64_t> right_initial_states = right_cea.get_initial_states();
     for (size_t i = 0; i < left_cea.transitions.size(); i++) {
       auto& transitions = left_cea.transitions[i];
-      for (std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>
-               transition : transitions) {
+      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
+           transitions) {
         mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
         if ((end_node & left_cea.final_states) != 0) {
           for (int64_t destination : right_initial_states) {
             current_cea.transitions[i].push_back(
-                std::make_tuple(std::get<0>(transition),
-                                std::get<1>(transition),
-                                destination + left_cea.amount_of_states));
+              std::make_tuple(std::get<0>(transition),
+                              std::get<1>(transition),
+                              destination + left_cea.amount_of_states));
           }
         }
       }
@@ -88,20 +94,20 @@ class FormulaToNDCEA : public FormulaVisitor {
     // Copy the transitions from all initial states to the new state
     for (int64_t state : current_cea.get_initial_states()) {
       auto& transitions = current_cea.transitions[state];
-      for (std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>
-               transition : transitions) {
+      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
+           transitions) {
         current_cea.transitions.back().push_back(
-            std::make_tuple(std::get<0>(transition),
-                            std::get<1>(transition),
-                            std::get<2>(transition)));
+          std::make_tuple(std::get<0>(transition),
+                          std::get<1>(transition),
+                          std::get<2>(transition)));
       }
     }
 
     // Copy the transitions to a final state to the new initial state.
     for (size_t i = 0; i < current_cea.amount_of_states - 1; i++) {
       auto& transitions = current_cea.transitions[i];
-      for (std::tuple<PredicatesToSatisfy, VariablesToMark, EndNodeId>
-               transition : transitions) {
+      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
+           transitions) {
         mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
         if ((end_node & current_cea.final_states) != 0) {
           std::make_tuple(std::get<0>(transition),

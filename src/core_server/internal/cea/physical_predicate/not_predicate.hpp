@@ -13,9 +13,18 @@ class NotPredicate : public PhysicalPredicate {
   std::unique_ptr<PhysicalPredicate> predicate;
 
  public:
-  NotPredicate(int64_t event_type_id,
+  NotPredicate(uint64_t event_type_id,
                std::unique_ptr<PhysicalPredicate> predicate)
       : PhysicalPredicate(event_type_id), predicate(std::move(predicate)) {}
+
+  NotPredicate(std::set<uint64_t> admissible_event_types,
+               std::unique_ptr<PhysicalPredicate> predicate)
+      : PhysicalPredicate(admissible_event_types),
+        predicate(std::move(predicate)) {}
+
+  NotPredicate(std::unique_ptr<PhysicalPredicate> predicate)
+      : PhysicalPredicate(),
+        predicate(std::move(predicate)) {}
 
   ~NotPredicate() override = default;
 

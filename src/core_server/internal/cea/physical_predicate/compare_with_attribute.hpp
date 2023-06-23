@@ -24,6 +24,13 @@ class CompareWithAttribute : public PhysicalPredicate {
         first_pos(first_pos),
         second_pos(second_pos) {}
 
+  CompareWithAttribute(std::set<uint64_t> admissible_event_types,
+                       size_t first_pos,
+                       size_t second_pos)
+      : PhysicalPredicate(admissible_event_types),
+        first_pos(first_pos),
+        second_pos(second_pos) {}
+
   ~CompareWithAttribute() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
