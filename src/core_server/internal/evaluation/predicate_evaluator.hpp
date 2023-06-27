@@ -3,6 +3,7 @@
 #include <gmpxx.h>
 
 #include <vector>
+#include <memory>
 
 #include "core_server/internal/cea/physical_predicate/physical_predicate.hpp"
 
