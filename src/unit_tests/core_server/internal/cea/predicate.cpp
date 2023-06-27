@@ -12,13 +12,12 @@ using namespace RingTupleQueue;
 using namespace InternalCORECEQL;
 using namespace InternalCORECEA;
 
-namespace COREQueryParsingTestsValueToMathExpr {
+namespace InternalCORECEAPredicateTests {
 
 TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
           "[ValueToMathExpr]") {
   std::vector<AttributeInfo> attributes_info;
-  attributes_info.emplace_back("String",
-                               CORETypes::ValueTypes::STRING_VIEW);
+  attributes_info.emplace_back("String", CORETypes::ValueTypes::STRING_VIEW);
   attributes_info.emplace_back("Integer1", CORETypes::ValueTypes::INT64);
   attributes_info.emplace_back("Integer2", CORETypes::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", CORETypes::ValueTypes::DOUBLE);
@@ -26,6 +25,7 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
   EventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   TupleSchemas schemas;
+
   Queue ring_tuple_queue(100, &schemas);
   auto id = schemas.add_schema({SupportedTypes::STRING_VIEW,
                                 SupportedTypes::INT64,
@@ -154,4 +154,4 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
     // clang-format on
   }
 }
-}  // namespace COREQueryParsingTestsValueToMathExpr
+}  // namespace InternalCORECEAPredicateTests

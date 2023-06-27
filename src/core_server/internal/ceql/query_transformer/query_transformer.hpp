@@ -11,7 +11,10 @@ namespace InternalCORECEQL {
  */
 template <class Derived>
 class QueryTransformer {
-  Query operator()(Query&& query) { static_cast<Derived*>(this)->eval(query); }
+ public:
+  Query operator()(Query&& query) {
+    return static_cast<Derived*>(this)->eval(std::move(query));
+  }
 
   Query eval(Query&& query) {
     throw std::logic_error("eval not implemented");

@@ -1,3 +1,4 @@
+#pragma once
 #include "consume_by.hpp"
 #include "from.hpp"
 #include "partition_by.hpp"

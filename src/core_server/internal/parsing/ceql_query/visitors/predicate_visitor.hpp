@@ -109,6 +109,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
       CEQLQueryParser::In_predicateContext* ctx) override {
     value_visitor.visit(ctx->attribute_name());
     auto left = value_visitor.get_parsed_value();
+
     value_visitor.visit(ctx->value_seq());
     Sequence* right_ptr =
         static_cast<Sequence*>(value_visitor.get_parsed_value().release());

@@ -5,9 +5,8 @@ PointerAlignment: Left
 IndentWidth: 2
 UseTab: Never
 TabWidth: 2
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 2
 ColumnLimit: 76
-#AlwaysBreakAfterDefinitionReturnType: TopLevel
 SeparateDefinitionBlocks: Always
 CommentPragmas: '^'
 BreakBeforeBinaryOperators: NonAssignment
@@ -15,3 +14,15 @@ AllowAllArgumentsOnNextLine: true
 BinPackArguments: false
 BinPackParameters: false
 AlignAfterOpenBracket: Align
+AlwaysBreakTemplateDeclarations: Yes
+
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+PenaltyReturnTypeOnItsOwnLine: 20
+PenaltyBreakBeforeFirstCallParameter: 188
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 60
+PenaltyBreakString: 60
+PenaltyExcessCharacter: 30
+PenaltyBreakAssignment: 200000

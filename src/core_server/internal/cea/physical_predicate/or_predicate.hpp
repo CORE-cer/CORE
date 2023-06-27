@@ -13,20 +13,37 @@ class OrPredicate : public PhysicalPredicate {
   std::vector<std::unique_ptr<PhysicalPredicate>> predicates;
 
  public:
-  OrPredicate(int64_t event_type_id,
+  OrPredicate(uint64_t event_type_id,
               std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
       : PhysicalPredicate(event_type_id),
-          predicates(std::move(predicates)) {}
+        predicates(std::move(predicates)) {}
+
+  OrPredicate(std::set<uint64_t> admissible_event_types,
+              std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
+      : PhysicalPredicate(admissible_event_types),
+        predicates(std::move(predicates)) {}
+
+  OrPredicate(std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
+      : PhysicalPredicate(), predicates(std::move(predicates)) {}
 
   ~OrPredicate() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
     for (auto& predicate : predicates) {
-      if (predicate->eval(tuple)) {
+      // We want to check for event_types individually inside the or.
+      if ((*predicate)(tuple)) {
         return true;
       }
     }
     return false;
+  }
+
+  std::string to_string() const override {
+    std::string out = predicates[0]->to_string();
+    for (int i = 1; i < predicates.size(); i++) {
+      out += " OR " + predicates[i]->to_string();
+    }
+    return out;
   }
 };
 

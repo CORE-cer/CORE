@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <iostream>
 #include <string>
 
 #include "value.hpp"
-#include <iostream>
 
 namespace InternalCORECEQL {
 struct Sequence final : public Value {
@@ -98,8 +98,8 @@ struct Sequence final : public Value {
       case LOWER_BOUND:
         return lower_bound->equals(other.lower_bound.get());
       case RANGE:
-        return upper_bound->equals(other.upper_bound.get()) &&
-               lower_bound->equals(other.lower_bound.get());
+        return upper_bound->equals(other.upper_bound.get())
+               && lower_bound->equals(other.lower_bound.get());
       default:
         assert(false && "switch should cover all cases.");
       case SEQUENCE:

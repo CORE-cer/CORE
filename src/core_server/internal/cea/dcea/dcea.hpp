@@ -23,11 +23,14 @@ class DCEA {
   using IsFinalState = bool;
 
   int64_t amount_of_states;
+  // transitions of each state.
   std::vector<std::vector<Transition>> transitions;
   std::map<std::pair<States, PredicateEvaluation>,
            std::tuple<UnmarkedStates, MarkedStates>>
       precomputed_transitions;
+  // Maybe change to a single initial state id.
   States initial_states;
+  // Maybe change to a single final state id.
   States final_states;
   States current_states;
 

@@ -24,6 +24,13 @@ class CompareWithAttribute : public PhysicalPredicate {
         first_pos(first_pos),
         second_pos(second_pos) {}
 
+  CompareWithAttribute(std::set<uint64_t> admissible_event_types,
+                       size_t first_pos,
+                       size_t second_pos)
+      : PhysicalPredicate(admissible_event_types),
+        first_pos(first_pos),
+        second_pos(second_pos) {}
+
   ~CompareWithAttribute() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
@@ -45,6 +52,29 @@ class CompareWithAttribute : public PhysicalPredicate {
       return first_val.get() != second_val.get();
     else
       assert(false && "Operator() not implemented for some ComparisonType");
+  }
+
+  std::string to_string() const override {
+    if constexpr (Comp == ComparisonType::EQUALS)
+      return "Event[" + std::to_string(first_pos) + "] == Event["
+             + std::to_string(second_pos) + "]";
+    else if constexpr (Comp == ComparisonType::GREATER)
+      return "Event[" + std::to_string(first_pos) + "] > Event["
+             + std::to_string(second_pos) + "]";
+    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+      return "Event[" + std::to_string(first_pos) + "] >= Event["
+             + std::to_string(second_pos) + "]";
+    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+      return "Event[" + std::to_string(first_pos) + "] <= Event["
+             + std::to_string(second_pos) + "]";
+    else if constexpr (Comp == ComparisonType::LESS)
+      return "Event[" + std::to_string(first_pos) + "] < Event["
+             + std::to_string(second_pos) + "]";
+    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+      return "Event[" + std::to_string(first_pos) + "] != Event["
+             + std::to_string(second_pos) + "]";
+    else
+      assert(false && "to_string() not implemented for some ComparisonType");
   }
 };
 }  // namespace InternalCORECEA

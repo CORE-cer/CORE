@@ -15,10 +15,17 @@ class CompareWithConstant : public PhysicalPredicate {
   ValueType constant_val;
 
  public:
-  CompareWithConstant(int64_t event_type_id,
+  CompareWithConstant(uint64_t event_type_id,
                       size_t pos_to_compare,
                       ValueType constant_val)
       : PhysicalPredicate(event_type_id),
+        pos_to_compare(pos_to_compare),
+        constant_val(constant_val) {}
+
+  CompareWithConstant(std::set<uint64_t> admissible_event_types,
+                      size_t pos_to_compare,
+                      ValueType constant_val)
+      : PhysicalPredicate(admissible_event_types),
         pos_to_compare(pos_to_compare),
         constant_val(constant_val) {}
 
@@ -41,6 +48,65 @@ class CompareWithConstant : public PhysicalPredicate {
       return attribute_val.get() != constant_val;
     else
       assert(false && "Operator() not implemented for some ComparisonType");
+  }
+
+  template <typename T, typename = std::void_t<>>
+  struct has_to_string : std::false_type {};
+
+  template <typename T>
+  struct has_to_string<T,
+                       std::void_t<decltype(std::to_string(std::declval<T>()))>>
+      : std::true_type {};
+
+  template <typename T>
+  inline static constexpr bool has_to_string_v = has_to_string<T>::value;
+
+  std::string to_string() const override {
+    if constexpr (!has_to_string_v<ValueType>) {
+      if constexpr (Comp == ComparisonType::EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] == some chrono";
+      else if constexpr (Comp == ComparisonType::GREATER)
+        return "Event[" + std::to_string(pos_to_compare) + "] > "
+               + "some chrono";
+      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] >= some chrono";
+      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] <= some chrono";
+      else if constexpr (Comp == ComparisonType::LESS)
+        return "Event[" + std::to_string(pos_to_compare) + "] < "
+               + "some chrono";
+      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] != some chrono ";
+      else
+        assert(false
+               && "to_string() not implemented for some ComparisonType");
+    } else {
+      if constexpr (Comp == ComparisonType::EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] == " + std::to_string(constant_val);
+      else if constexpr (Comp == ComparisonType::GREATER)
+        return "Event[" + std::to_string(pos_to_compare) + "] > "
+               + std::to_string(constant_val);
+      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] >= " + std::to_string(constant_val);
+      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] <= " + std::to_string(constant_val);
+      else if constexpr (Comp == ComparisonType::LESS)
+        return "Event[" + std::to_string(pos_to_compare) + "] < "
+               + std::to_string(constant_val);
+      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+        return "Event[" + std::to_string(pos_to_compare)
+               + "] != " + std::to_string(constant_val);
+      else
+        assert(false
+               && "to_string() not implemented for some ComparisonType");
+    }
   }
 };
 

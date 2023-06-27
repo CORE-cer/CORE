@@ -4,7 +4,8 @@
 
 #include "core_server/internal/cea/physical_predicate/check_type_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/visitors/get_all_atomic_filters.hpp"
-#include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_predicate_to_cea_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_strong_typed_predicate_to_physical_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_weakly_typed_predicate_to_physical_predicate.hpp"
 #include "query_transformer.hpp"
 
 namespace InternalCORECEQL {
@@ -16,7 +17,7 @@ using InternalCORECEA::PhysicalPredicate;
  * and annotates the logical query with them.
  */
 class AnnotatePredicatesWithNewPhysicalPredicates
-    : QueryTransformer<AnnotatePredicatesWithNewPhysicalPredicates> {
+    : public QueryTransformer<AnnotatePredicatesWithNewPhysicalPredicates> {
  public:
   std::vector<std::unique_ptr<PhysicalPredicate>> physical_predicates;
 
@@ -25,8 +26,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
   InternalCORE::Catalog& catalog;
 
  public:
-  AnnotatePredicatesWithNewPhysicalPredicates(
-      InternalCORE::Catalog& catalog)
+  AnnotatePredicatesWithNewPhysicalPredicates(InternalCORE::Catalog& catalog)
       : catalog(catalog) {}
 
   Query eval(Query&& query) {
@@ -37,7 +37,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
     // are equivalent to others, etc. Maybe transformations to the query
     // itself can be made before doing a naive mapping too, all of these
     // topics could be considered.
-    return query;
+    return std::move(query);
   }
 
  private:
@@ -46,19 +46,24 @@ class AnnotatePredicatesWithNewPhysicalPredicates
          event_type_id < catalog.number_of_events();
          event_type_id++) {
       physical_predicates.push_back(
-          std::make_unique<CheckTypePredicate>(event_type_id));
+        std::make_unique<CheckTypePredicate>(event_type_id));
     }
     for (int64_t i = 0, predicate_id = physical_predicates.size();
          i < filters.size();
          i++, predicate_id++) {
       std::string event_name = filters[i]->variable_name;
-      if (!catalog.event_name_is_taken(event_name))
-        throw std::runtime_error("The event of the query is not valid");
-      CEQLPredicateToCEAPredicate visitor(
+      if (!catalog.event_name_is_taken(event_name)) {
+        CEQLWeaklyTypedPredicateToCEAPredicate visitor(catalog);
+        filters[i]->predicate->accept_visitor(visitor);
+        physical_predicates.push_back(std::move(visitor.predicate));
+        filters[i]->predicate->physical_predicate_id = predicate_id;
+      } else {
+        CEQLStrongTypedPredicateToPhysicalPredicate visitor(
           catalog.get_event_info(event_name));
-      filters[i]->predicate->accept_visitor(visitor);
-      physical_predicates.push_back(std::move(visitor.predicate));
-      filters[i]->predicate->physical_predicate_id = predicate_id;
+        filters[i]->predicate->accept_visitor(visitor);
+        physical_predicates.push_back(std::move(visitor.predicate));
+        filters[i]->predicate->physical_predicate_id = predicate_id;
+      }
     }
   }
 };
