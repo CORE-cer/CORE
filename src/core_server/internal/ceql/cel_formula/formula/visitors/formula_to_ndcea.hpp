@@ -27,7 +27,9 @@ class FormulaToNDCEA : public FormulaVisitor {
 
   ~FormulaToNDCEA() override = default;
 
-  void visit(FilterFormula& formula) override {}
+  void visit(FilterFormula& formula) override {
+    // TODO
+  }
 
   void visit(EventTypeFormula& formula) override {
     current_cea = NDCEA(2);
@@ -119,8 +121,12 @@ class FormulaToNDCEA : public FormulaVisitor {
   }
 
   // clang-format off
-  void visit(ProjectionFormula& formula) override {formula.formula->accept_visitor(*this);}
-  void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
+  void visit(ProjectionFormula& formula) override {
+    // TODO
+  }
+  void visit(AsFormula& formula)         override {
+    // TODO
+  }
 
   // clang-format on
 };

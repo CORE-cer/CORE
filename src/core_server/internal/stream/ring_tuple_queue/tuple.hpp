@@ -39,8 +39,8 @@ struct _Type {
       default:
         throw std::invalid_argument("Unsupported type");
     }
-    return (size_in_bytes + sizeof(uint64_t) - 1) /
-           sizeof(uint64_t);  // Ceiling division
+    return (size_in_bytes + sizeof(uint64_t) - 1)
+           / sizeof(uint64_t);  // Ceiling division
   }
 };
 
@@ -60,8 +60,14 @@ class TupleSchemas {
  public:
   TupleSchemas() {}
 
-  uint64_t add_schema(const std::vector<SupportedTypes>& schema) {
+  uint64_t add_schema(std::vector<SupportedTypes>& schema) {
     schemas.push_back(schema);
+    relative_positions.push_back(get_positions(schemas.size() - 1));
+    return schemas.size() - 1;
+  }
+
+  uint64_t add_schema(std::vector<SupportedTypes>&& schema) {
+    schemas.push_back(std::move(schema));
     relative_positions.push_back(get_positions(schemas.size() - 1));
     return schemas.size() - 1;
   }
@@ -69,9 +75,8 @@ class TupleSchemas {
   const std::vector<SupportedTypes>& get_schema(uint64_t id) const {
     if (id >= schemas.size()) {
       throw std::out_of_range(
-          "TupleSchemas::get_schema: id: " + std::to_string(id) +
-          " out of range. (size = " + std::to_string(schemas.size()) +
-          ")");
+        "TupleSchemas::get_schema: id: " + std::to_string(id)
+        + " out of range. (size = " + std::to_string(schemas.size()) + ")");
     }  // In the future we just return the id, no checks to increase efficiency.
     return schemas[id];
   }
@@ -81,9 +86,8 @@ class TupleSchemas {
   const std::vector<uint64_t>& get_relative_positions(uint64_t id) const {
     if (id >= schemas.size()) {
       throw std::out_of_range(
-          "TupleSchemas::get_relative_positions: id: " +
-          std::to_string(id) + " out of range. (size = " +
-          std::to_string(schemas.size()) + ")");
+        "TupleSchemas::get_relative_positions: id: " + std::to_string(id)
+        + " out of range. (size = " + std::to_string(schemas.size()) + ")");
     }  // In the future we just return the id, no checks to increase efficiency.
     return relative_positions[id];
   }
@@ -100,7 +104,7 @@ class TupleSchemas {
   std::vector<uint64_t> get_positions(uint64_t id) const {
     if (id >= schemas.size()) {
       throw std::out_of_range(
-          "TupleSchemas::get_positions: id out of range");
+        "TupleSchemas::get_positions: id out of range");
     }
 
     // First transform the types to their respective sizes
@@ -116,9 +120,9 @@ class TupleSchemas {
 
     std::vector<uint64_t> positions;
     positions.reserve(sizes.size());
-    positions.push_back(2); // Offset from id and time
+    positions.push_back(2);  // Offset from id and time
     for (int i = 1; i < sizes.size(); i++) {
-      positions.push_back(2 + sizes[i - 1]); // Offset from previous sizes.
+      positions.push_back(2 + sizes[i - 1]);  // Offset from previous sizes.
     }
     return positions;
   }
@@ -140,7 +144,7 @@ class Tuple {
   std::chrono::system_clock::time_point timestamp() const {
     // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
-        std::chrono::system_clock::duration(data[1]));
+      std::chrono::system_clock::duration(data[1]));
   }
 
   uint64_t* operator[](uint64_t index) {

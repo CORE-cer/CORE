@@ -36,5 +36,13 @@ class AndPredicate : public PhysicalPredicate {
     }
     return true;
   }
+
+  std::string to_string() const override {
+    std::string out = predicates[0]->to_string();
+    for (int i = 1; i < predicates.size(); i++) {
+      out += " AND " + predicates[i]->to_string();
+    }
+    return out;
+  }
 };
 }  // namespace InternalCORECEA

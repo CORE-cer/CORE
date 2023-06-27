@@ -20,15 +20,15 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
   std::unique_ptr<InternalCORECEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
-    math_expr =
-        std::make_unique<InternalCORECEA::NonStronglyTypedAttribute<Type>>(
-            attribute.value, catalog);
+    math_expr = std::make_unique<
+      InternalCORECEA::NonStronglyTypedAttribute<Type>>(attribute.value,
+                                                        catalog);
   }
 
   void visit(DoubleLiteral& literal) override {
     if constexpr (std::is_same_v<Type, double>) {
-      math_expr =
-          std::make_unique<InternalCORECEA::Literal<double>>(literal.value);
+      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
+        literal.value);
     } else {
       assert(false && "Type is not double");
     }
@@ -37,18 +37,26 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
   void visit(IntegerLiteral& literal) override {
     if constexpr (std::is_same_v<Type, int64_t>) {
       math_expr = std::make_unique<InternalCORECEA::Literal<int64_t>>(
-          literal.value);
+        literal.value);
+    } else if constexpr (std::is_same_v<Type, double>) {
+      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
+        static_cast<double>(literal.value));
     } else {
-      assert(false && "Type is not double");
+      assert(false
+             && "IntegerLiteral cannot be casted to a non supported type");
     }
   }
 
   void visit(LongLiteral& literal) override {
     if constexpr (std::is_same_v<Type, int64_t>) {
       math_expr = std::make_unique<InternalCORECEA::Literal<int64_t>>(
-          literal.value);
+        literal.value);
+    } else if constexpr (std::is_same_v<Type, double>) {
+      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
+        static_cast<double>(literal.value));
     } else {
-      assert(false && "Type is not double");
+      assert(false
+             && "LongLiteral cannot be casted to a non supported type");
     }
   }
 
@@ -58,7 +66,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     addition.right->accept_visitor(*this);
     auto right = std::move(math_expr);
     math_expr = std::make_unique<InternalCORECEA::Addition<Type>>(
-        std::move(left), std::move(right));
+      std::move(left), std::move(right));
   }
 
   void visit(Division& division) override {
@@ -67,7 +75,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     division.right->accept_visitor(*this);
     auto right = std::move(math_expr);
     math_expr = std::make_unique<InternalCORECEA::Division<Type>>(
-        std::move(left), std::move(right));
+      std::move(left), std::move(right));
   }
 
   void visit(Modulo& modulo) override {
@@ -76,7 +84,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     modulo.right->accept_visitor(*this);
     auto right = std::move(math_expr);
     math_expr = std::make_unique<InternalCORECEA::Modulo<Type>>(
-        std::move(left), std::move(right));
+      std::move(left), std::move(right));
   }
 
   void visit(Multiplication& multiplication) override {
@@ -85,7 +93,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     multiplication.right->accept_visitor(*this);
     auto right = std::move(math_expr);
     math_expr = std::make_unique<InternalCORECEA::Multiplication<Type>>(
-        std::move(left), std::move(right));
+      std::move(left), std::move(right));
   }
 
   void visit(Subtraction& subtraction) override {
@@ -94,7 +102,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     subtraction.right->accept_visitor(*this);
     auto right = std::move(math_expr);
     math_expr = std::make_unique<InternalCORECEA::Subtraction<Type>>(
-        std::move(left), std::move(right));
+      std::move(left), std::move(right));
   }
 };
 }  // namespace InternalCORECEQL

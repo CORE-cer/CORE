@@ -37,6 +37,14 @@ class OrPredicate : public PhysicalPredicate {
     }
     return false;
   }
+
+  std::string to_string() const override {
+    std::string out = predicates[0]->to_string();
+    for (int i = 1; i < predicates.size(); i++) {
+      out += " OR " + predicates[i]->to_string();
+    }
+    return out;
+  }
 };
 
 }  // namespace InternalCORECEA

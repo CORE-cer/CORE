@@ -27,7 +27,11 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
 
  public:
   ObtainCompatibleEventTypes(InternalCORE::Catalog& catalog)
-      : catalog(catalog) {}
+      : catalog(catalog) {
+    for (EventTypeId i = 0; i < catalog.number_of_events(); i++) {
+      compatible_event_types.insert(i);
+    }
+  }
 
   std::set<uint64_t> get_compatible_event_types() const {
     return compatible_event_types;
@@ -73,8 +77,8 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   }
 
  private:
-  static std::set<EventTypeId> intersect(std::set<EventTypeId> left,
-                                         std::set<EventTypeId> right) {
+  static std::set<EventTypeId>
+  intersect(std::set<EventTypeId> left, std::set<EventTypeId> right) {
     std::set<EventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);

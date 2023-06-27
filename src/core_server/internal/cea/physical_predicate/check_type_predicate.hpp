@@ -22,6 +22,14 @@ class CheckTypePredicate : public PhysicalPredicate {
     // The Base class checks for the type.
     return true;
   }
+
+  std::string to_string() const override {
+    std::string out = "IS ";
+    for (auto id : admissible_event_types) {
+      out += std::to_string(id) + " ";
+    }
+    return out;
+  }
 };
 
 }  // namespace InternalCORECEA

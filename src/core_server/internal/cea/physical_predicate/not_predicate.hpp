@@ -31,6 +31,10 @@ class NotPredicate : public PhysicalPredicate {
   bool eval(RingTupleQueue::Tuple& tuple) override {
     return !predicate->eval(tuple);
   }
+
+  std::string to_string() const override {
+    return "NOT " + predicate->to_string();
+  }
 };
 
 }  // namespace InternalCORECEA

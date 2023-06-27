@@ -51,6 +51,9 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
     auto combined_type = final_data_type_visitor.get_final_data_type();
 
     /**
+     * This double switch case basically determines what type of comparison
+     * is going to be used.
+     *
      * Since special formatting is used for this double switch case that
      * determines which physical plan to use, clang-format is disabled.
      */
@@ -79,9 +82,9 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case ValueTypes::BooleanLiteral: switch (second_val_type) {
         case ValueTypes::Attribute:
           predicate = compare_with_constant(
-              inequality_predicate.left,
+              inequality_predicate.right,
               convert_op(inequality_predicate.logical_op, true),
-              inequality_predicate.right);
+              inequality_predicate.left);
           return;
         case ValueTypes::IntegerLiteral:
         case ValueTypes::DoubleLiteral:
@@ -134,17 +137,16 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
                                                     std::move(predicates));
   }
 
-  void visit(
-      ConstantBooleanPredicate& constant_boolean_predicate) override {
+  void visit(ConstantBooleanPredicate& constant_boolean_predicate) override {
     throw std::logic_error(
-        "visit ConstantBooleanPredicate not implemented.");
+      "visit ConstantBooleanPredicate not implemented.");
   }
 
  private:
-  std::unique_ptr<CEA::PhysicalPredicate> compare_attributes(
-      std::unique_ptr<CEQL::Value>& left,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_attributes(std::unique_ptr<CEQL::Value>& left,
+                     CEAComparison op,
+                     std::unique_ptr<CEQL::Value>& right) {
     left->accept_visitor(final_data_type_visitor);
     right->accept_visitor(final_data_type_visitor);
     auto combined_type = final_data_type_visitor.get_final_data_type();
@@ -163,58 +165,57 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case FinalType::Double:
         return compare_attributes<double>(left_pos, op, right_pos);
       case FinalType::String:
-        return compare_attributes<std::string_view>(
-            left_pos, op, right_pos);
+        return compare_attributes<std::string_view>(left_pos, op, right_pos);
       case FinalType::Date:
         return compare_attributes<
-            std::chrono::time_point<std::chrono::system_clock,
-                                    std::chrono::nanoseconds>>(
-            left_pos, op, right_pos);
+          std::chrono::time_point<std::chrono::system_clock,
+                                  std::chrono::nanoseconds>>(left_pos,
+                                                             op,
+                                                             right_pos);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
       default:
         throw std::logic_error(
-            "Non implemented combined_type in "
-            "ceql_predicate_to_cea_predicate.hpp");
+          "Non implemented combined_type in "
+          "ceql_predicate_to_cea_predicate.hpp");
     }
     return {};
   }
 
   template <typename ValueType>
-  std::unique_ptr<CEA::PhysicalPredicate> compare_attributes(
-      size_t left, CEAComparison op, size_t right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_attributes(size_t left, CEAComparison op, size_t right) {
     switch (op) {
       case CEAComparison::EQUALS:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::EQUALS, ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::EQUALS,
+                                    ValueType>>(event_info.id, left, right);
       case CEAComparison::GREATER:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::GREATER, ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::GREATER,
+                                    ValueType>>(event_info.id, left, right);
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::GREATER_EQUALS,
-                                      ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::GREATER_EQUALS,
+                                    ValueType>>(event_info.id, left, right);
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::LESS_EQUALS,
-                                      ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::LESS_EQUALS,
+                                    ValueType>>(event_info.id, left, right);
       case CEAComparison::LESS:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::LESS, ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::LESS, ValueType>>(event_info
+                                                                       .id,
+                                                                     left,
+                                                                     right);
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
-            CEA::CompareWithAttribute<CEAComparison::NOT_EQUALS,
-                                      ValueType>>(
-            event_info.id, left, right);
+          CEA::CompareWithAttribute<CEAComparison::NOT_EQUALS,
+                                    ValueType>>(event_info.id, left, right);
       default:
         throw std::logic_error(
-            "Non implemented op in ceql_predicate_to_cea_predicate.hpp");
+          "Non implemented op in ceql_predicate_to_cea_predicate.hpp");
         return {};
     }
   }
@@ -222,10 +223,10 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   /**
    * For this function the left value MUST be an Attribute.
    */
-  std::unique_ptr<CEA::PhysicalPredicate> compare_with_constant(
-      std::unique_ptr<CEQL::Value>& left,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_with_constant(std::unique_ptr<CEQL::Value>& left,
+                        CEAComparison op,
+                        std::unique_ptr<CEQL::Value>& right) {
     left->accept_visitor(final_data_type_visitor);
     right->accept_visitor(final_data_type_visitor);
     auto combined_type = final_data_type_visitor.get_final_data_type();
@@ -243,17 +244,18 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
         return compare_with_constant<std::string_view>(left_pos, op, right);
       case FinalType::Date:
         return compare_with_constant<
-            std::chrono::time_point<std::chrono::system_clock,
-                                    std::chrono::nanoseconds>>(
-            left_pos, op, right);
+          std::chrono::time_point<std::chrono::system_clock,
+                                  std::chrono::nanoseconds>>(left_pos,
+                                                             op,
+                                                             right);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
         throw std::runtime_error("Invalid mix of types in value");
       default:
         throw std::logic_error(
-            "Non implemented combined_type in "
-            "ceql_predicate_to_cea_predicate.hpp");
+          "Non implemented combined_type in "
+          "ceql_predicate_to_cea_predicate.hpp");
     }
     return {};
   }
@@ -264,12 +266,12 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       assert(dynamic_cast<CEQL::StringLiteral*>(ptr.get()) != nullptr);
       auto casted_ptr = static_cast<CEQL::StringLiteral*>(ptr.get());
       return casted_ptr->value;
-    } else if constexpr (std::is_same_v<ValueType,
-                                        std::chrono::time_point<
-                                            std::chrono::system_clock,
-                                            std::chrono::nanoseconds>>) {
+    } else if constexpr (std::is_same_v<
+                           ValueType,
+                           std::chrono::time_point<std::chrono::system_clock,
+                                                   std::chrono::nanoseconds>>) {
       throw std::logic_error(
-          "TimePoint Val not implemented yet, nor its transformation");
+        "TimePoint Val not implemented yet, nor its transformation");
     } else {
       ptr->accept_visitor(value_type_visitor);
       auto right_value_type = value_type_visitor.get_value_type();
@@ -293,43 +295,43 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   }
 
   template <typename ValueType>
-  std::unique_ptr<CEA::PhysicalPredicate> compare_with_constant(
-      size_t left_pos,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_with_constant(size_t left_pos,
+                        CEAComparison op,
+                        std::unique_ptr<CEQL::Value>& right) {
     ValueType right_val = get_val_from_literal<ValueType>(right);
 
     switch (op) {
       case CEAComparison::EQUALS:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::EQUALS, ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::EQUALS, ValueType>>(
+          event_info.id, left_pos, right_val);
       case CEAComparison::GREATER:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::GREATER, ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::GREATER, ValueType>>(
+          event_info.id, left_pos, right_val);
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::GREATER_EQUALS,
-                                     ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::GREATER_EQUALS,
+                                   ValueType>>(event_info.id,
+                                               left_pos,
+                                               right_val);
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::LESS_EQUALS,
-                                     ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::LESS_EQUALS, ValueType>>(
+          event_info.id, left_pos, right_val);
       case CEAComparison::LESS:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::LESS, ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::LESS, ValueType>>(
+          event_info.id, left_pos, right_val);
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
-            CEA::CompareWithConstant<CEAComparison::NOT_EQUALS, ValueType>>(
-            event_info.id, left_pos, right_val);
+          CEA::CompareWithConstant<CEAComparison::NOT_EQUALS, ValueType>>(
+          event_info.id, left_pos, right_val);
       default:
         throw std::logic_error(
-            "Non implemented op in ceql_predicate_to_cea_predicate.hpp "
-            "compare_with_constant");
+          "Non implemented op in ceql_predicate_to_cea_predicate.hpp "
+          "compare_with_constant");
         return {};
     }
   }
@@ -337,27 +339,26 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   size_t get_pos_from_name(std::string name) {
     auto attribute_id = event_info.attribute_names_to_ids.find(name);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
-      throw std::runtime_error("Attribute " + name
-                               + " does not exist in event "
-                               + event_info.name);
+      throw std::runtime_error(
+        "Attribute " + name + " does not exist in event " + event_info.name);
     }
     return attribute_id->second;
   }
 
-  std::unique_ptr<CEA::PhysicalPredicate> create_constant(
-      std::unique_ptr<CEQL::Value>& left,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  create_constant(std::unique_ptr<CEQL::Value>& left,
+                  CEAComparison op,
+                  std::unique_ptr<CEQL::Value>& right) {
     // TODO
     throw std::logic_error(
-        "Create_constant not implemented yet "
-        "(ceql_predicate_to_ceae_predicate.hpp)");
+      "Create_constant not implemented yet "
+      "(ceql_predicate_to_ceae_predicate.hpp)");
   }
 
-  std::unique_ptr<CEA::PhysicalPredicate> compare_math_exprs(
-      std::unique_ptr<CEQL::Value>& left,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_math_exprs(std::unique_ptr<CEQL::Value>& left,
+                     CEAComparison op,
+                     std::unique_ptr<CEQL::Value>& right) {
     left->accept_visitor(final_data_type_visitor);
     right->accept_visitor(final_data_type_visitor);
     auto combined_type = final_data_type_visitor.get_final_data_type();
@@ -370,68 +371,66 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
         return compare_math_exprs<std::string_view>(left, op, right);
       case FinalType::Date:
         return compare_math_exprs<
-            std::chrono::time_point<std::chrono::system_clock,
-                                    std::chrono::nanoseconds>>(
-            left, op, right);
+          std::chrono::time_point<std::chrono::system_clock,
+                                  std::chrono::nanoseconds>>(left, op, right);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
         throw std::runtime_error("Invalid mix of types in value");
       default:
         throw std::logic_error(
-            "Non implemented Type in ceql_predicate_to_cea_predicate.hpp "
-            "compare_math_exprs");
+          "Non implemented Type in ceql_predicate_to_cea_predicate.hpp "
+          "compare_math_exprs");
     }
     return {};
   }
 
   template <typename ValueType>
-  std::unique_ptr<InternalCORECEA::MathExpr<ValueType>> get_expr(
-      std::unique_ptr<CEQL::Value>& val) {
+  std::unique_ptr<InternalCORECEA::MathExpr<ValueType>>
+  get_expr(std::unique_ptr<CEQL::Value>& val) {
     ValueToMathExpr<ValueType> convertor(event_info);
     val->accept_visitor(convertor);
     return std::move(convertor.math_expr);
   }
 
   template <typename ValueType>
-  std::unique_ptr<CEA::PhysicalPredicate> compare_math_exprs(
-      std::unique_ptr<CEQL::Value>& left,
-      CEAComparison op,
-      std::unique_ptr<CEQL::Value>& right) {
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_math_exprs(std::unique_ptr<CEQL::Value>& left,
+                     CEAComparison op,
+                     std::unique_ptr<CEQL::Value>& right) {
     auto left_expr = get_expr<ValueType>(left);
     auto right_expr = get_expr<ValueType>(right);
 
     switch (op) {
       case CEAComparison::EQUALS:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS,
-                                  ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::LESS:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
-            CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
-            event_info.id, std::move(left_expr), std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
+          event_info.id, std::move(left_expr), std::move(right_expr));
       default:
         throw std::logic_error(
-            "Non implemented Comparison Type in "
-            "ceql_predicate_to_cea_predicate.hpp "
-            "compare_math_exprs");
+          "Non implemented Comparison Type in "
+          "ceql_predicate_to_cea_predicate.hpp "
+          "compare_math_exprs");
         return {};
     }
   }
@@ -441,24 +440,20 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case CEQLComparison::EQUALS:
         return reverse ? CEAComparison::NOT_EQUALS : CEAComparison::EQUALS;
       case CEQLComparison::GREATER:
-        return reverse ? CEAComparison::LESS_EQUALS
-                       : CEAComparison::GREATER;
+        return reverse ? CEAComparison::LESS_EQUALS : CEAComparison::GREATER;
       case CEQLComparison::GREATER_EQUALS:
-        return reverse ? CEAComparison::LESS
-                       : CEAComparison::GREATER_EQUALS;
+        return reverse ? CEAComparison::LESS : CEAComparison::GREATER_EQUALS;
       case CEQLComparison::LESS_EQUALS:
-        return reverse ? CEAComparison::GREATER
-                       : CEAComparison::LESS_EQUALS;
+        return reverse ? CEAComparison::GREATER : CEAComparison::LESS_EQUALS;
       case CEQLComparison::LESS:
-        return reverse ? CEAComparison::GREATER_EQUALS
-                       : CEAComparison::LESS;
+        return reverse ? CEAComparison::GREATER_EQUALS : CEAComparison::LESS;
       case CEQLComparison::NOT_EQUALS:
         return reverse ? CEAComparison::EQUALS : CEAComparison::NOT_EQUALS;
       default:
         throw std::logic_error(
-            "Non implemented Comparison Type in "
-            "ceql_predicate_to_cea_predicate.hpp "
-            "compare_math_exprs");
+          "Non implemented Comparison Type in "
+          "ceql_predicate_to_cea_predicate.hpp "
+          "compare_math_exprs");
         return {};
     }
   }

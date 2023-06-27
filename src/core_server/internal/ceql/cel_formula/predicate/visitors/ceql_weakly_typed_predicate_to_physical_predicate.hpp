@@ -165,40 +165,40 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     switch (op) {
       case CEAComparison::EQUALS:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::EQUALS,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       case CEAComparison::GREATER:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::GREATER,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       case CEAComparison::GREATER_EQUALS:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       case CEAComparison::LESS_EQUALS:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::LESS_EQUALS,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       case CEAComparison::LESS:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::LESS,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       case CEAComparison::NOT_EQUALS:
         return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::NOT_EQUALS,
-                                ValueType>>(admissible_event_types,
-                                            std::move(left_expr),
-                                            std::move(right_expr));
+          CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
+          admissible_event_types,
+          std::move(left_expr),
+          std::move(right_expr));
       default:
         throw std::logic_error(
           "Non implemented Comparison Type in "
