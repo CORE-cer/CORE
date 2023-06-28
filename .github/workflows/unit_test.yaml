@@ -88,5 +88,5 @@ jobs:
 
       - name: Check code format
         run: |
-          chmod +x ./scripts/check_code_format.sh
-          ./scripts/check_code_format.sh
+          chmod +x ./scripts/clang_format_all_files.sh
+          ./scripts/clang_format_all_files.sh
