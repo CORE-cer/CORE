@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <vector>
+#include <stdexcept>
 
 namespace RingTupleQueue {
 
