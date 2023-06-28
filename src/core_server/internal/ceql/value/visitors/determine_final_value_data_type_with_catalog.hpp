@@ -34,8 +34,7 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto value_types =
-        catalog.get_possible_attribute_types(attribute.value);
+    auto value_types = catalog.get_possible_attribute_types(attribute.value);
     if (value_types.size() == 0) {
       final_value_datatype = Invalid;
     }
@@ -90,8 +89,7 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   }
 
  private:
-  static DataType attribute_info_type_convertor(
-      CORETypes::ValueTypes type) {
+  static DataType attribute_info_type_convertor(CORETypes::ValueTypes type) {
     switch (type) {
       case CORETypes::ValueTypes::DOUBLE:
         return Double;
@@ -104,9 +102,9 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
         return Date;
       default:
         throw std::logic_error(
-            "A COREType is not considered inside of "
-            "attribute_info_type_convertor at "
-            "determine_final_value_data_type.hpp");
+          "A COREType is not considered inside of "
+          "attribute_info_type_convertor at "
+          "determine_final_value_data_type.hpp");
     }
   }
 

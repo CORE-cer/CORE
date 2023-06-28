@@ -24,8 +24,8 @@ struct Division final : public Value {
   }
 
   bool operator==(const Division& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -42,7 +42,6 @@ struct Division final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   ~Division() noexcept override {}
 

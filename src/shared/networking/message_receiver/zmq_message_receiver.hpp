@@ -28,8 +28,6 @@ class ZMQMessageReceiver : MessageReceiver {
                        zmq_message.size());
   }
 
-  zmq::context_t& get_context() {
-    return context;
-  }
+  zmq::context_t& get_context() { return context; }
 };
 }  // namespace InternalCORE

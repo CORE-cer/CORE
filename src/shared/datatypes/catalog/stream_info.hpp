@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 
-#include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORETypes {
 struct StreamInfo {
@@ -21,7 +21,8 @@ struct StreamInfo {
 
   StreamInfo() noexcept = default;
 
-  StreamInfo(StreamTypeId stream_type_id, std::string stream_name,
+  StreamInfo(StreamTypeId stream_type_id,
+             std::string stream_name,
              std::vector<EventInfo>&& events_info) noexcept
       : id(stream_type_id),
         name(stream_name),
@@ -37,4 +38,4 @@ struct StreamInfo {
     archive(id, name, events_info);
   }
 };
-}  // namespace CORECatalog
+}  // namespace CORETypes

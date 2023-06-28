@@ -30,8 +30,8 @@ struct ConstantBooleanPredicate : public Predicate {
   }
 
   bool equals(Predicate* other) const override {
-    if (auto other_predicate =
-            dynamic_cast<ConstantBooleanPredicate*>(other)) {
+    if (auto other_predicate = dynamic_cast<ConstantBooleanPredicate*>(
+          other)) {
       return *this == *other_predicate;
     }
     return false;

@@ -23,7 +23,8 @@ struct IntegerLiteral final : public Value {
   }
 
   bool equals(Value* val) const noexcept override {
-    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(val)) {
+    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(
+          val)) {
       return *this == *integer_literal;
     } else
       return false;
@@ -36,7 +37,6 @@ struct IntegerLiteral final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   template <class Archive>
   void serialize(Archive& archive) {

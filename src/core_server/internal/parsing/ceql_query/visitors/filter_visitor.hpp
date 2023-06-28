@@ -17,32 +17,30 @@ class FilterVisitor : public CEQLQueryParserBaseVisitor {
  public:
   std::unique_ptr<Filter> get_parsed_filter() { return std::move(filter); }
 
-  virtual std::any visitAtomic_filter(
-      CEQLQueryParser::Atomic_filterContext* ctx) override {
+  virtual std::any
+  visitAtomic_filter(CEQLQueryParser::Atomic_filterContext* ctx) override {
     predicate_visitor.visit(ctx->predicate());
-    filter = std::make_unique<AtomicFilter>(
-        ctx->event_name()->getText(),
-        predicate_visitor.get_parsed_predicate());
+    filter = std::make_unique<AtomicFilter>(ctx->event_name()->getText(),
+                                            predicate_visitor
+                                              .get_parsed_predicate());
     return {};
   }
 
-  virtual std::any visitAnd_filter(
-      CEQLQueryParser::And_filterContext* ctx) override {
+  virtual std::any
+  visitAnd_filter(CEQLQueryParser::And_filterContext* ctx) override {
     visit(ctx->filter()[0]);
     auto left = std::move(filter);
     visit(ctx->filter()[1]);
-    filter =
-        std::make_unique<AndFilter>(std::move(left), std::move(filter));
+    filter = std::make_unique<AndFilter>(std::move(left), std::move(filter));
     return {};
   }
 
-  virtual std::any visitOr_filter(
-      CEQLQueryParser::Or_filterContext* ctx) override {
+  virtual std::any
+  visitOr_filter(CEQLQueryParser::Or_filterContext* ctx) override {
     visit(ctx->filter()[0]);
     auto left = std::move(filter);
     visit(ctx->filter()[1]);
-    filter =
-        std::make_unique<OrFilter>(std::move(left), std::move(filter));
+    filter = std::make_unique<OrFilter>(std::move(left), std::move(filter));
     return {};
   }
 };

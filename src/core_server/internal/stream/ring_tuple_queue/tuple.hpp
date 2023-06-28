@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <numeric>
 #include <span>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
-#include <stdexcept>
 
 namespace RingTupleQueue {
 

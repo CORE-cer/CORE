@@ -21,8 +21,7 @@ struct StringLiteral final : public Value {
   }
 
   bool equals(Value* val) const noexcept override {
-    if (StringLiteral* string_literal =
-          dynamic_cast<StringLiteral*>(val)) {
+    if (StringLiteral* string_literal = dynamic_cast<StringLiteral*>(val)) {
       return *this == *string_literal;
     } else
       return false;
@@ -35,7 +34,6 @@ struct StringLiteral final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   template <class Archive>
   void serialize(Archive& archive) {

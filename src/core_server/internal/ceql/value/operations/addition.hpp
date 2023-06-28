@@ -24,8 +24,8 @@ struct Addition final : Value {
   }
 
   bool operator==(const Addition& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -44,7 +44,6 @@ struct Addition final : Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   template <class Archive>
   void serialize(Archive& archive) {

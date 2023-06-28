@@ -53,17 +53,17 @@ class CompareMathExprs : public PhysicalPredicate {
 
   std::string to_string() const override {
     if constexpr (Comp == ComparisonType::EQUALS)
-      return left->to_string() + "==" +  right->to_string();
+      return left->to_string() + "==" + right->to_string();
     else if constexpr (Comp == ComparisonType::GREATER)
-      return left->to_string() + ">" +  right->to_string();
+      return left->to_string() + ">" + right->to_string();
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return left->to_string() + ">=" +  right->to_string();
+      return left->to_string() + ">=" + right->to_string();
     else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return left->to_string() + "<=" +  right->to_string();
+      return left->to_string() + "<=" + right->to_string();
     else if constexpr (Comp == ComparisonType::LESS)
-      return left->to_string() + "<" +  right->to_string();
+      return left->to_string() + "<" + right->to_string();
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return left->to_string() + "!=" +  right->to_string();
+      return left->to_string() + "!=" + right->to_string();
     else
       assert(false && "to_string() not implemented for some ComparisonType");
   }

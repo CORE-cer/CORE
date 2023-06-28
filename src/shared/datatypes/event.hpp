@@ -1,8 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"

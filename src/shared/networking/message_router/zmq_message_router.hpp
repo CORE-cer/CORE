@@ -33,8 +33,7 @@ class ZMQMessageRouter : MessageRouter {
     }
   }
 
-  void stop() {
-    stop_router.store(true); }
+  void stop() { stop_router.store(true); }
 
  private:
   void receive_and_process() {
@@ -51,10 +50,12 @@ class ZMQMessageRouter : MessageRouter {
         //std::cout << "Did not get request after identity?" << std::endl;
         return;
       }
-      std::string identityString = std::string(
-          static_cast<char*>(identity.data()), identity.size());
-      std::string requestString =
-          std::string(static_cast<char*>(request.data()), request.size());
+      std::string identityString = std::string(static_cast<char*>(
+                                                 identity.data()),
+                                               identity.size());
+      std::string requestString = std::string(static_cast<char*>(
+                                                request.data()),
+                                              request.size());
 
       std::string replyString = transformer(requestString);
       zmq::message_t reply(replyString.size());

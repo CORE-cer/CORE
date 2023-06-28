@@ -13,8 +13,7 @@ struct QueryInfo {
   QueryInfo() noexcept {}
 
   QueryInfo(PortNumber port_number, std::string query_string) noexcept
-      : port_number(port_number),
-        query_string(query_string) {}
+      : port_number(port_number), query_string(query_string) {}
 
   template <class Archive>
   void serialize(Archive& archive) {
@@ -22,4 +21,4 @@ struct QueryInfo {
   }
 };
 
-}  // namespace CORECatalog
+}  // namespace CORETypes

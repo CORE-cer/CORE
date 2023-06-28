@@ -21,15 +21,15 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     return std::move(predicate);
   }
 
-  virtual std::any visitNot_predicate(
-      CEQLQueryParser::Not_predicateContext* ctx) override {
+  virtual std::any
+  visitNot_predicate(CEQLQueryParser::Not_predicateContext* ctx) override {
     visit(ctx->predicate());
     predicate = predicate->negate();
     return {};
   }
 
   virtual std::any visitInequality_predicate(
-      CEQLQueryParser::Inequality_predicateContext* ctx) override {
+    CEQLQueryParser::Inequality_predicateContext* ctx) override {
     value_visitor.visit(ctx->math_expr()[0]);
     std::unique_ptr<Value> left = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->math_expr()[1]);
@@ -50,13 +50,14 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
       operation = InequalityPredicate::LogicalOperation::NOT_EQUALS;
     }
 
-    predicate = std::make_unique<InequalityPredicate>(
-        std::move(left), operation, std::move(right));
+    predicate = std::make_unique<InequalityPredicate>(std::move(left),
+                                                      operation,
+                                                      std::move(right));
     return {};
   }
 
   virtual std::any visitEquality_string_predicate(
-      CEQLQueryParser::Equality_string_predicateContext* ctx) override {
+    CEQLQueryParser::Equality_string_predicateContext* ctx) override {
     value_visitor.visit(ctx->string_literal());
     auto left = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->string_literal_or_regexp());
@@ -69,13 +70,14 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
       operation = InequalityPredicate::LogicalOperation::NOT_EQUALS;
     }
 
-    predicate = std::make_unique<InequalityPredicate>(
-        std::move(left), operation, std::move(right));
+    predicate = std::make_unique<InequalityPredicate>(std::move(left),
+                                                      operation,
+                                                      std::move(right));
     return {};
   }
 
-  virtual std::any visitAnd_predicate(
-      CEQLQueryParser::And_predicateContext* ctx) override {
+  virtual std::any
+  visitAnd_predicate(CEQLQueryParser::And_predicateContext* ctx) override {
     std::vector<std::unique_ptr<Predicate>> predicates;
     visit(ctx->predicate(0));
     predicates.push_back(std::move(predicate));
@@ -85,8 +87,8 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitOr_predicate(
-      CEQLQueryParser::Or_predicateContext* ctx) override {
+  virtual std::any
+  visitOr_predicate(CEQLQueryParser::Or_predicateContext* ctx) override {
     std::vector<std::unique_ptr<Predicate>> predicates;
     visit(ctx->predicate()[0]);
     predicates.push_back(std::move(predicate));
@@ -97,26 +99,26 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitRegex_predicate(
-      CEQLQueryParser::Regex_predicateContext* ctx) override {
+    CEQLQueryParser::Regex_predicateContext* ctx) override {
     auto left = Attribute(ctx->attribute_name()->getText());
     auto right = RegexLiteral(ctx->regexp()->getText());
-    predicate =
-        std::make_unique<LikePredicate>(std::move(left), std::move(right));
+    predicate = std::make_unique<LikePredicate>(std::move(left),
+                                                std::move(right));
     return {};
   }
 
-  virtual std::any visitIn_predicate(
-      CEQLQueryParser::In_predicateContext* ctx) override {
+  virtual std::any
+  visitIn_predicate(CEQLQueryParser::In_predicateContext* ctx) override {
     value_visitor.visit(ctx->attribute_name());
     auto left = value_visitor.get_parsed_value();
 
     value_visitor.visit(ctx->value_seq());
-    Sequence* right_ptr =
-        static_cast<Sequence*>(value_visitor.get_parsed_value().release());
+    Sequence* right_ptr = static_cast<Sequence*>(
+      value_visitor.get_parsed_value().release());
     assert(right_ptr != nullptr);
     Sequence right = std::move(*right_ptr);
-    predicate =
-        std::make_unique<InPredicate>(std::move(left), std::move(right));
+    predicate = std::make_unique<InPredicate>(std::move(left),
+                                              std::move(right));
     if (ctx->K_NOT()) {
       predicate = std::make_unique<NotPredicate>(std::move(predicate));
     }

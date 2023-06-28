@@ -36,7 +36,6 @@ struct Negation final : public Value {
     visitor.visit(*this);
   }
 
-
   ~Negation() noexcept override {}
 
   template <class Archive>

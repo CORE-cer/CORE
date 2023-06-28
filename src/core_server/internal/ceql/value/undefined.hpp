@@ -29,7 +29,6 @@ struct Undefined final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {}
 };

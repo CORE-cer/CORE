@@ -12,12 +12,13 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
 
  public:
   Select get_parsed_select() {
-    return Select(
-        std::move(strategy), std::move(variable_names), std::move(is_star));
+    return Select(std::move(strategy),
+                  std::move(variable_names),
+                  std::move(is_star));
   }
 
-  virtual std::any visitCore_query(
-      CEQLQueryParser::Core_queryContext* ctx) override {
+  virtual std::any
+  visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting Selection Strategy will update the strategy.
     auto selection_strategy_ctx = ctx->selection_strategy();
     if (selection_strategy_ctx) {
@@ -29,50 +30,50 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
     return {};  // Only interested in Select.
   }
 
-  virtual std::any visitS_star(
-      CEQLQueryParser::S_starContext* ctx) override {
+  virtual std::any
+  visitS_star(CEQLQueryParser::S_starContext* ctx) override {
     is_star = true;
     return {};
   }
 
-  virtual std::any visitAny_name(
-      CEQLQueryParser::Any_nameContext* ctx) override {
+  virtual std::any
+  visitAny_name(CEQLQueryParser::Any_nameContext* ctx) override {
     variable_names.insert(ctx->getText());
     return {};
   }
 
-  virtual std::any visitSs_all(
-      CEQLQueryParser::Ss_allContext* ctx) override {
+  virtual std::any
+  visitSs_all(CEQLQueryParser::Ss_allContext* ctx) override {
     strategy = Select::Strategy::ALL;
     return {};
   }
 
-  virtual std::any visitSs_any(
-      CEQLQueryParser::Ss_anyContext* ctx) override {
+  virtual std::any
+  visitSs_any(CEQLQueryParser::Ss_anyContext* ctx) override {
     strategy = Select::Strategy::ANY;
     return {};
   }
 
-  virtual std::any visitSs_last(
-      CEQLQueryParser::Ss_lastContext* ctx) override {
+  virtual std::any
+  visitSs_last(CEQLQueryParser::Ss_lastContext* ctx) override {
     strategy = Select::Strategy::LAST;
     return {};
   }
 
-  virtual std::any visitSs_max(
-      CEQLQueryParser::Ss_maxContext* ctx) override {
+  virtual std::any
+  visitSs_max(CEQLQueryParser::Ss_maxContext* ctx) override {
     strategy = Select::Strategy::MAX;
     return {};
   }
 
-  virtual std::any visitSs_next(
-      CEQLQueryParser::Ss_nextContext* ctx) override {
+  virtual std::any
+  visitSs_next(CEQLQueryParser::Ss_nextContext* ctx) override {
     strategy = Select::Strategy::NEXT;
     return {};
   }
 
-  virtual std::any visitSs_strict(
-      CEQLQueryParser::Ss_strictContext* ctx) override {
+  virtual std::any
+  visitSs_strict(CEQLQueryParser::Ss_strictContext* ctx) override {
     strategy = Select::Strategy::STRICT;
     return {};
   }

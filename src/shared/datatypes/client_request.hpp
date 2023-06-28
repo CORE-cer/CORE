@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 #include "shared/datatypes/client_request_type.hpp"
 
 namespace CORETypes {

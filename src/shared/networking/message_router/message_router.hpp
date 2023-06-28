@@ -13,4 +13,4 @@ class MessageRouter {
   void start();
   void stop();
 };
-}  // namespace InteralCORE
+}  // namespace InternalCORE
