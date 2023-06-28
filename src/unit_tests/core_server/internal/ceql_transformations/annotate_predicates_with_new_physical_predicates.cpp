@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/get_all_atomic_filters.hpp"
 #include "core_server/internal/ceql/query/query.hpp"

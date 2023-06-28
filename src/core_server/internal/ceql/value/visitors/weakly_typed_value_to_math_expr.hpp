@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #include <stdexcept>
 
 #include "core_server/internal/cea/physical_predicate/math_expr/math_expr_headers.hpp"

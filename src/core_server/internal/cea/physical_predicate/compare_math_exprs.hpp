@@ -1,6 +1,6 @@
 #pragma once
-
 #include <cwchar>
+#include <memory>
 
 #include "cassert"
 #include "comparison_type.hpp"

@@ -2,6 +2,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
 
 #include "core_server/internal/cea/physical_predicate/compare_math_exprs.hpp"
 #include "core_server/internal/cea/physical_predicate/compare_with_attribute.hpp"

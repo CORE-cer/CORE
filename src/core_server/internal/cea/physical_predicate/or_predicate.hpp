@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "cassert"
 #include "comparison_type.hpp"

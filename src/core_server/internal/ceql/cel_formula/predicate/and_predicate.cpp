@@ -1,5 +1,7 @@
 #include "and_predicate.hpp"
 
+#include <memory>
+
 #include "or_predicate.hpp"
 
 namespace InternalCORECEQL {

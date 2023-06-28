@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/query/where.hpp"
 #include "core_server/internal/ceql/value/all_value_headers.hpp"

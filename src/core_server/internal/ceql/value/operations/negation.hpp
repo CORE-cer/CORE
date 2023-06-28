@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
