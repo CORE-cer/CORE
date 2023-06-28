@@ -2,6 +2,8 @@
 #include <cassert>
 #include <memory>
 
+#include <cassert>
+
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
