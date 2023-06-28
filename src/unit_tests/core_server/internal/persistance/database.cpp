@@ -183,14 +183,69 @@ TEST_CASE("Creating two streams with events and attributes",
 }
 */
 
+std::string create_database(const std::string& user, const std::string& database, const std::string& password, const std::string& host) {
+    try {
+        pqxx::connection conn("user=" + user + " password=" + password + " host=" + host);
 
-TEST_CASE("Connect to database",
-          "[server coordination]") {
-  Router router(nullptr, 5000);
-  router.start();
-  std::cout << "Entrando..." << std::endl;
+        std::string createDatabaseSQL = "CREATE DATABASE " + database;
+        pqxx::nontransaction txn(conn); 
+        txn.exec(createDatabaseSQL);
+        std::cout << "Database created successfully." << std::endl;
 
-  DatabaseManager::Database database;
-  
-  router.stop();
+        return "dbname=" + database + " user=" + user + " password=" + password + " host=" + host;
+    } catch (const std::exception& e) {
+        std::cerr << "Error creating the database: " << e.what() << std::endl;
+        return "dbname=" + database + " user=" + user + " password=" + password + " host=" + host;
+
+    }
 }
+
+TEST_CASE("Connect to database", "[server coordination]") {
+  std::string connectionString = create_database("postgres", "core", "postgres", "localhost");
+
+  DatabaseManager::Database database(connectionString);
+  std::vector<std::string> event_names;
+
+
+
+  std::string event_name_1 = "T";
+  event_names.push_back("event_" + event_name_1);
+
+  std::vector<AttributeInfo> event_attributes_1 = {
+    AttributeInfo("Attribute1", ValueTypes::Addition),
+    AttributeInfo("Attribute2", ValueTypes::Addition),
+    AttributeInfo("Attribute3", ValueTypes::Addition)
+  };
+  uint64_t event_type_id_1 = 1;
+  database.add_event_type(std::move(event_name_1), std::move(event_attributes_1), event_type_id_1, connectionString);
+
+  std::string event_name_2 = "H";
+  event_names.push_back("event_" + event_name_2);
+
+  std::vector<AttributeInfo> event_attributes_2 = {
+    AttributeInfo("Attribute1", ValueTypes::Addition),
+    AttributeInfo("Attribute2", ValueTypes::Addition),
+    AttributeInfo("Attribute3", ValueTypes::Addition)
+  };
+  uint64_t event_type_id_2 = 2;
+  database.add_event_type(std::move(event_name_2), std::move(event_attributes_2), event_type_id_2, connectionString);
+
+  std::string event_name_3 = "T";
+
+  std::vector<AttributeInfo> event_attributes_3 = {
+    AttributeInfo("Attribute1", ValueTypes::Addition),
+    AttributeInfo("Attribute2", ValueTypes::Addition),
+    AttributeInfo("Attribute3", ValueTypes::Addition)
+  };
+  uint64_t event_type_id_3 = 1;
+
+
+  std::string stream_name = "Stream1";
+  std::vector<uint64_t> stream_event_types = {event_type_id_1, event_type_id_2, event_type_id_3};
+  uint64_t stream_type_id = 1;
+  database.add_stream_type(std::move(stream_name), std::move(stream_event_types), stream_type_id, connectionString, event_names);
+
+  database.create_streams_table(connectionString, event_names);
+
+}
+
