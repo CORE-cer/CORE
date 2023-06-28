@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 
+#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
@@ -13,21 +14,24 @@ using namespace CORETypes;
 
 namespace InternalCORE {
 
-class ComplexEventStreamer {
+class QueryEvaluator {
  private:
   std::string inner_thread_address;
   ZMQMessageReceiver receiver;
   std::thread worker_thread;
   ZMQMessageBroadcaster broadcaster;
   std::atomic<bool> stop_condition = false;
+  RingTupleQueue::Queue& queue;
 
  public:
-  ComplexEventStreamer(PortNumber inner_thread_receiver_port,
-                       PortNumber broadcaster_port)
-      : inner_thread_address("inproc://" +
-                             std::to_string(inner_thread_receiver_port)),
+  QueryEvaluator(PortNumber inner_thread_receiver_port,
+                 PortNumber broadcaster_port,
+                 RingTupleQueue::Queue& queue)
+      : inner_thread_address("inproc://"
+                             + std::to_string(inner_thread_receiver_port)),
         receiver(inner_thread_address),
-        broadcaster("tcp://*:" + std::to_string(broadcaster_port)) {}
+        broadcaster("tcp://*:" + std::to_string(broadcaster_port)),
+        queue(queue) {}
 
   void start() {
     worker_thread = std::thread([&]() {
@@ -50,7 +54,7 @@ class ComplexEventStreamer {
     return receiver.get_context();
   }
 
-private:
+ private:
   std::string handle_message(std::string& serialized_message) {
     return serialized_message;
   }

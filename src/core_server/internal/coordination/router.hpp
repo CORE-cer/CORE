@@ -21,9 +21,7 @@ class Router {
   std::thread router_thread;
 
  public:
-  Router(Mediator* mediator, PortNumber port_number)
-      : router("tcp://*:" + std::to_string(port_number),
-               ClientMessageHandler(mediator)) {}
+  Router(Mediator& mediator, PortNumber port_number);
 
   void start() {
     router_thread = std::thread([&]() { router.start(); });
