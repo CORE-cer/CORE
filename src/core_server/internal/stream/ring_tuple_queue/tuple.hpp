@@ -7,6 +7,7 @@
 #include <span>
 #include <string_view>
 #include <vector>
+#include <stdexcept>
 
 namespace RingTupleQueue {
 
