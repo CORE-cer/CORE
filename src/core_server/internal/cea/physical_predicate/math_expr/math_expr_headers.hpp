@@ -1,10 +1,10 @@
 #pragma once
 
-#include "attribute.hpp"
-#include "non_strongly_typed_attribute.hpp"
-#include "literal.hpp"
 #include "addition.hpp"
-#include "multiplication.hpp"
-#include "subtraction.hpp"
+#include "attribute.hpp"
 #include "division.hpp"
+#include "literal.hpp"
 #include "modulo.hpp"
+#include "multiplication.hpp"
+#include "non_strongly_typed_attribute.hpp"
+#include "subtraction.hpp"

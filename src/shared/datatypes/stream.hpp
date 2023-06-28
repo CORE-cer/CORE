@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/event.hpp"
 
 namespace CORETypes {
 /**

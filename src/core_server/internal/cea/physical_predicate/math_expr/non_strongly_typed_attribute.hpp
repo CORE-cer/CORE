@@ -1,9 +1,10 @@
 #pragma once
+#include <cassert>
+#include <memory>
 
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
-#include <cassert>
 
 namespace InternalCORECEA {
 
@@ -13,8 +14,7 @@ class NonStronglyTypedAttribute : public MathExpr<Type> {
   std::string name;
   InternalCORE::Catalog& catalog;
 
-  NonStronglyTypedAttribute(std::string name,
-                            InternalCORE::Catalog& catalog)
+  NonStronglyTypedAttribute(std::string name, InternalCORE::Catalog& catalog)
       : name(name), catalog(catalog) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {

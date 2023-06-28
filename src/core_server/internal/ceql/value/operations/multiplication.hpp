@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
@@ -25,13 +26,12 @@ struct Multiplication final : Value {
   }
 
   bool operator==(const Multiplication& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
-    if (Multiplication* multiplication =
-          dynamic_cast<Multiplication*>(val)) {
+    if (Multiplication* multiplication = dynamic_cast<Multiplication*>(val)) {
       return *this == *multiplication;
     } else
       return false;
@@ -44,7 +44,6 @@ struct Multiplication final : Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   ~Multiplication() noexcept override {}
 

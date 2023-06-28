@@ -13,11 +13,11 @@ class Mediator;
 
 class ClientMessageHandler {
  private:
-  Catalog catalog;
-  Mediator* mediator;
+  Catalog& catalog;
+  Mediator& mediator;
 
  public:
-  ClientMessageHandler(Mediator* mediator) : mediator(mediator) {}
+  ClientMessageHandler(Mediator& mediator);
 
   /**
    * The ClientMessageHandler exists inside a MessageRouter class (one

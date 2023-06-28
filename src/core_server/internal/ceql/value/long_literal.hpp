@@ -1,6 +1,6 @@
 #pragma once
-
 #include <cwchar>
+#include <memory>
 #include <string>
 
 #include "value.hpp"
@@ -37,7 +37,6 @@ struct LongLiteral final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   template <class Archive>
   void serialize(Archive& archive) {

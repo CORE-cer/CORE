@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/query/where.hpp"
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
@@ -16,28 +17,28 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
  public:
   std::unique_ptr<Value> get_parsed_value() { return std::move(value); }
 
-  virtual std::any visitInteger(
-      CEQLQueryParser::IntegerContext* ctx) override {
+  virtual std::any
+  visitInteger(CEQLQueryParser::IntegerContext* ctx) override {
     std::string integer_string = ctx->getText();
     value = std::make_unique<IntegerLiteral>(std::stoll(integer_string));
     return {};
   }
 
-  virtual std::any visitDouble(
-      CEQLQueryParser::DoubleContext* ctx) override {
+  virtual std::any
+  visitDouble(CEQLQueryParser::DoubleContext* ctx) override {
     std::string double_string = ctx->getText();
     value = std::make_unique<DoubleLiteral>(std::stod(double_string));
     return {};
   }
 
   virtual std::any visitAttribute_math_expr(
-      CEQLQueryParser::Attribute_math_exprContext* ctx) override {
+    CEQLQueryParser::Attribute_math_exprContext* ctx) override {
     value = std::make_unique<Attribute>(ctx->getText());
     return {};
   }
 
   virtual std::any visitUnary_math_expr(
-      CEQLQueryParser::Unary_math_exprContext* ctx) override {
+    CEQLQueryParser::Unary_math_exprContext* ctx) override {
     visit(ctx->math_expr());
     if (ctx->MINUS()) {
       value = std::make_unique<Negation>(std::move(value));
@@ -45,8 +46,8 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitMul_math_expr(
-      CEQLQueryParser::Mul_math_exprContext* ctx) override {
+  virtual std::any
+  visitMul_math_expr(CEQLQueryParser::Mul_math_exprContext* ctx) override {
     visit(ctx->math_expr()[0]);
     std::unique_ptr<Value> first_val = std::move(value);
     visit(ctx->math_expr()[1]);
@@ -57,14 +58,14 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
       value = std::make_unique<Division>(std::move(first_val),
                                          std::move(value));
     } else {
-      value =
-          std::make_unique<Modulo>(std::move(first_val), std::move(value));
+      value = std::make_unique<Modulo>(std::move(first_val),
+                                       std::move(value));
     }
     return {};
   }
 
-  virtual std::any visitSum_math_expr(
-      CEQLQueryParser::Sum_math_exprContext* ctx) override {
+  virtual std::any
+  visitSum_math_expr(CEQLQueryParser::Sum_math_exprContext* ctx) override {
     visit(ctx->math_expr()[0]);
     std::unique_ptr<Value> first_val = std::move(value);
     visit(ctx->math_expr()[1]);
@@ -78,40 +79,42 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitString(
-      CEQLQueryParser::StringContext* ctx) override {
+  virtual std::any
+  visitString(CEQLQueryParser::StringContext* ctx) override {
     value = std::make_unique<StringLiteral>(ctx->getText());
     return {};
   }
 
-  virtual std::any visitAttribute_name(
-      CEQLQueryParser::Attribute_nameContext* ctx) override {
+  virtual std::any
+  visitAttribute_name(CEQLQueryParser::Attribute_nameContext* ctx) override {
     value = std::make_unique<Attribute>(ctx->getText());
     return {};
   }
 
-  virtual std::any visitInteger_range(
-      CEQLQueryParser::Integer_rangeContext* ctx) override {
+  virtual std::any
+  visitInteger_range(CEQLQueryParser::Integer_rangeContext* ctx) override {
     int64_t first_int = std::stoll(ctx->integer()[0]->getText());
     int64_t second_int = std::stoll(ctx->integer()[1]->getText());
-    value = std::make_unique<Sequence>(
-        std::make_unique<IntegerLiteral>(first_int),
-        std::make_unique<IntegerLiteral>(second_int));
+    value = std::make_unique<Sequence>(std::make_unique<IntegerLiteral>(
+                                         first_int),
+                                       std::make_unique<IntegerLiteral>(
+                                         second_int));
     return {};
   }
 
-  virtual std::any visitDouble_range(
-      CEQLQueryParser::Double_rangeContext* ctx) override {
+  virtual std::any
+  visitDouble_range(CEQLQueryParser::Double_rangeContext* ctx) override {
     double first_double = std::stod(ctx->double_()[0]->getText());
     double second_double = std::stod(ctx->double_()[1]->getText());
-    value = std::make_unique<Sequence>(
-        std::make_unique<DoubleLiteral>(first_double),
-        std::make_unique<DoubleLiteral>(second_double));
+    value = std::make_unique<Sequence>(std::make_unique<DoubleLiteral>(
+                                         first_double),
+                                       std::make_unique<DoubleLiteral>(
+                                         second_double));
     return {};
   }
 
-  virtual std::any visitNumber_list(
-      CEQLQueryParser::Number_listContext* ctx) override {
+  virtual std::any
+  visitNumber_list(CEQLQueryParser::Number_listContext* ctx) override {
     std::vector<std::unique_ptr<Value>> values;
     auto numbers = ctx->number();
     for (auto& num_ctx : numbers) {
@@ -123,7 +126,7 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNumber_range_lower(
-      CEQLQueryParser::Number_range_lowerContext* ctx) override {
+    CEQLQueryParser::Number_range_lowerContext* ctx) override {
     visit(ctx->number());
     value = std::make_unique<Sequence>(std::move(value),
                                        Sequence::LOWER_BOUND);
@@ -131,15 +134,15 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNumber_range_upper(
-      CEQLQueryParser::Number_range_upperContext* ctx) override {
+    CEQLQueryParser::Number_range_upperContext* ctx) override {
     visit(ctx->number());
     value = std::make_unique<Sequence>(std::move(value),
                                        Sequence::UPPER_BOUND);
     return {};
   }
 
-  virtual std::any visitString_seq(
-      CEQLQueryParser::String_seqContext* ctx) override {
+  virtual std::any
+  visitString_seq(CEQLQueryParser::String_seqContext* ctx) override {
     std::vector<std::unique_ptr<Value>> values;
     auto strings = ctx->string();
     for (auto& string_ctx : strings) {

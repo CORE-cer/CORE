@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
@@ -28,7 +28,6 @@ struct Undefined final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   template <class Archive>
   void serialize(Archive& archive) {}

@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "cassert"
 #include "comparison_type.hpp"
@@ -23,8 +24,7 @@ class NotPredicate : public PhysicalPredicate {
         predicate(std::move(predicate)) {}
 
   NotPredicate(std::unique_ptr<PhysicalPredicate> predicate)
-      : PhysicalPredicate(),
-        predicate(std::move(predicate)) {}
+      : PhysicalPredicate(), predicate(std::move(predicate)) {}
 
   ~NotPredicate() override = default;
 

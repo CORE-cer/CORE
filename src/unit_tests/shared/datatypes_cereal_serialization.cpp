@@ -12,12 +12,12 @@ void check_serialization_of(ArgumentType arg) {
   Object initial_obj(arg);
 
   // Serialize
-  std::string serialized_object =
-    CerealSerializer<Object>::serialize(initial_obj);
+  std::string serialized_object = CerealSerializer<Object>::serialize(
+    initial_obj);
 
   // Deserialize
-  Object final_obj =
-    CerealSerializer<Object>::deserialize(serialized_object);
+  Object final_obj = CerealSerializer<Object>::deserialize(
+    serialized_object);
 
   REQUIRE(initial_obj.val == final_obj.val);
 }

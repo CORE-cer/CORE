@@ -34,8 +34,8 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto attribute_id =
-        event_info.attribute_names_to_ids.find(attribute.value);
+    auto attribute_id = event_info.attribute_names_to_ids.find(
+      attribute.value);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
                                + " does not exist in event "
@@ -93,8 +93,7 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
  private:
-  static DataType attribute_info_type_convertor(
-      CORETypes::ValueTypes type) {
+  static DataType attribute_info_type_convertor(CORETypes::ValueTypes type) {
     switch (type) {
       case CORETypes::ValueTypes::DOUBLE:
         return Double;
@@ -107,9 +106,9 @@ class DetermineFinalValueDataType : public ValueVisitor {
         return Date;
       default:
         throw std::logic_error(
-            "A COREType is not considered inside of "
-            "attribute_info_type_convertor at "
-            "determine_final_value_data_type.hpp");
+          "A COREType is not considered inside of "
+          "attribute_info_type_convertor at "
+          "determine_final_value_data_type.hpp");
     }
   }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
@@ -25,8 +26,8 @@ struct Subtraction final : Value {
   }
 
   bool operator==(const Subtraction& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -43,7 +44,6 @@ struct Subtraction final : Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   ~Subtraction() noexcept override {}
 

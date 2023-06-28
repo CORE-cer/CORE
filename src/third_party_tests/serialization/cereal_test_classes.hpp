@@ -81,9 +81,7 @@ struct ClassWithAbstractClassSharedPtr {
 // This will be in the CerealSerializer class hpp:
 CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass1);
 CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass2);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass1);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass2);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CerealThirdPartyTesting::AbstractClass,
+                                     CerealThirdPartyTesting::ConcreteClass1);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CerealThirdPartyTesting::AbstractClass,
+                                     CerealThirdPartyTesting::ConcreteClass2);

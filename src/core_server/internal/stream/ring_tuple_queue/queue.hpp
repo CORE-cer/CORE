@@ -13,7 +13,7 @@
 namespace RingTupleQueue {
 
 class Queue {
-  // TODO: Checks for if memory is being overwriten with start index.
+  // TODO: Check if memory is being overwriten with start index.
  private:
   std::vector<uint64_t> buffer;
   uint64_t start_index;

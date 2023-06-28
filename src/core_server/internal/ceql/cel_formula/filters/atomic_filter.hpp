@@ -20,8 +20,7 @@ struct AtomicFilter : public Filter {
   ~AtomicFilter() override = default;
 
   std::unique_ptr<Filter> clone() const override {
-    return std::make_unique<AtomicFilter>(variable_name,
-                                          predicate->clone());
+    return std::make_unique<AtomicFilter>(variable_name, predicate->clone());
   }
 
   bool operator==(const AtomicFilter& other) const {

@@ -27,7 +27,7 @@ class DCEA {
   std::vector<std::vector<Transition>> transitions;
   std::map<std::pair<States, PredicateEvaluation>,
            std::tuple<UnmarkedStates, MarkedStates>>
-      precomputed_transitions;
+    precomputed_transitions;
   // Maybe change to a single initial state id.
   States initial_states;
   // Maybe change to a single final state id.
@@ -41,19 +41,19 @@ class DCEA {
         current_states(ndcea.initial_states),
         final_states(ndcea.final_states) {
     for (auto& state_transitions : ndcea.transitions) {
-      for (std::tuple<PredicatesToSatisfy, mpz_class, EndNodeId>
-               nd_transition : state_transitions) {
+      for (std::tuple<PredicatesToSatisfy, mpz_class, EndNodeId> nd_transition :
+           state_transitions) {
         std::vector<Transition> new_state_transitions;
         if (std::get<1>(nd_transition) == 0) {
           new_state_transitions.push_back(
-              std::make_tuple(std::get<0>(nd_transition),
-                              false,
-                              std::get<2>(nd_transition)));
+            std::make_tuple(std::get<0>(nd_transition),
+                            false,
+                            std::get<2>(nd_transition)));
         } else {
           new_state_transitions.push_back(
-              std::make_tuple(std::get<0>(nd_transition),
-                              true,
-                              std::get<2>(nd_transition)));
+            std::make_tuple(std::get<0>(nd_transition),
+                            true,
+                            std::get<2>(nd_transition)));
         }
       }
     }

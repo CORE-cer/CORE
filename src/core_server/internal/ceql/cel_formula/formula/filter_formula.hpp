@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -24,8 +24,8 @@ struct FilterFormula : public Formula {
   }
 
   bool operator==(const FilterFormula& other) const {
-    return formula->equals(other.formula.get()) &&
-           filter->equals(other.filter.get());
+    return formula->equals(other.formula.get())
+           && filter->equals(other.filter.get());
   }
 
   bool equals(Formula* other) const override {

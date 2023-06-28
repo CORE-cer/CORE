@@ -14,8 +14,7 @@ namespace COREQueryParsingTestsValueToMathExpr {
 TEST_CASE("Single functionality testing of Value to MathExpr",
           "[ValueToMathExpr]") {
   std::vector<AttributeInfo> attributes_info;
-  attributes_info.emplace_back("String",
-                               CORETypes::ValueTypes::STRING_VIEW);
+  attributes_info.emplace_back("String", CORETypes::ValueTypes::STRING_VIEW);
   attributes_info.emplace_back("Integer1", CORETypes::ValueTypes::INT64);
   attributes_info.emplace_back("Integer2", CORETypes::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", CORETypes::ValueTypes::DOUBLE);
@@ -24,10 +23,11 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
 
   TupleSchemas schemas;
   Queue ring_tuple_queue(100, &schemas);
-  auto id =
-      schemas.add_schema({SupportedTypes::STRING_VIEW,
-                          SupportedTypes::INT64, SupportedTypes::INT64,
-                          SupportedTypes::DOUBLE, SupportedTypes::DOUBLE});
+  auto id = schemas.add_schema({SupportedTypes::STRING_VIEW,
+                                SupportedTypes::INT64,
+                                SupportedTypes::INT64,
+                                SupportedTypes::DOUBLE,
+                                SupportedTypes::DOUBLE});
   std::span<uint64_t> data = ring_tuple_queue.start_tuple(id);
   char* chars = ring_tuple_queue.writer<std::string>(11);
   std::string hello_world = "hello world";
@@ -44,9 +44,9 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
   Tuple tuple(data, &schemas);
 
   InternalCORECEQL::ValueToMathExpr<int64_t> value_to_int_math_expr(
-      event_info);
+    event_info);
   InternalCORECEQL::ValueToMathExpr<double> value_to_double_math_expr(
-      event_info);
+    event_info);
 
   SECTION("Int attributes", "ValueToMathExpr") {
     InternalCORECEQL::Attribute value("Integer1");
@@ -78,24 +78,24 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
   }
 
   SECTION("addition", "ValueToMathExpr") {
-    InternalCORECEQL::Addition value(
-        std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
-        std::make_unique<InternalCORECEQL::Attribute>("Integer1"));
+    InternalCORECEQL::Addition
+      value(std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
+            std::make_unique<InternalCORECEQL::Attribute>("Integer1"));
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);
     REQUIRE(math_expr->eval(tuple) == 1);
   }
 
   SECTION("Combination of exprs", "ValueToMathExpr") {
-    InternalCORECEQL::Addition value(
-        std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
-        std::make_unique<InternalCORECEQL::Multiplication>(
-            std::make_unique<InternalCORECEQL::Subtraction>(
+    InternalCORECEQL::Addition
+      value(std::make_unique<InternalCORECEQL::IntegerLiteral>(2),
+            std::make_unique<InternalCORECEQL::Multiplication>(
+              std::make_unique<InternalCORECEQL::Subtraction>(
                 std::make_unique<InternalCORECEQL::Division>(
-                    std::make_unique<InternalCORECEQL::IntegerLiteral>(10),
-                    std::make_unique<InternalCORECEQL::IntegerLiteral>(3)),
+                  std::make_unique<InternalCORECEQL::IntegerLiteral>(10),
+                  std::make_unique<InternalCORECEQL::IntegerLiteral>(3)),
                 std::make_unique<InternalCORECEQL::Attribute>("Integer1")),
-            std::make_unique<InternalCORECEQL::Modulo>(
+              std::make_unique<InternalCORECEQL::Modulo>(
                 std::make_unique<InternalCORECEQL::Attribute>("Integer2"),
                 std::make_unique<InternalCORECEQL::IntegerLiteral>(7))));
     // 2 + ((10/3 - -1)) * (1 % 7))

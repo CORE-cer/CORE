@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
@@ -35,7 +36,6 @@ struct Negation final : public Value {
   void accept_visitor(ValueVisitor& visitor) override {
     visitor.visit(*this);
   }
-
 
   ~Negation() noexcept override {}
 

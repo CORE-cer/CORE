@@ -10,4 +10,4 @@ class MessageSender {
    */
   void send(const std::string& message);
 };
-}  // namespace InteralCORE
+}  // namespace InternalCORE
