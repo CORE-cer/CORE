@@ -30,7 +30,7 @@ do
 done
 
 if [ "$changed_files" = true ]; then
-  echo -e "${GREEN}Done formatting. Some files were changed.${NORMAL_OUTPUT}"
+  echo -e "${RED}Done formatting. Some files were changed.${NORMAL_OUTPUT}"
   exit 1
 else
   echo -e "${GREEN}Done formatting. No files were changed.${NORMAL_OUTPUT}"
