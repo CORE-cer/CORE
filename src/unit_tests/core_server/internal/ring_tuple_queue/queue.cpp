@@ -1,8 +1,9 @@
+#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
 using namespace RingTupleQueue;
@@ -12,9 +13,8 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
   Queue ring_tuple_queue(100, &schemas);
 
   SECTION("Tuple indexing") {
-    auto id =
-        schemas.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE,
-                            SupportedTypes::BOOL});
+    auto id = schemas.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
     std::span<uint64_t> data = ring_tuple_queue.start_tuple(id);
     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
     *integer_ptr = -10;

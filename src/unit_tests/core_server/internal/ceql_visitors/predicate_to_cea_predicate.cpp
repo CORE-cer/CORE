@@ -49,22 +49,21 @@ TEST_CASE("Compare with constant predicate computed correctly.",
   CEQLStrongTypedPredicateToPhysicalPredicate converter(event_info);
 
   SECTION("Compare with a constant") {
-    std::unique_ptr<InternalCORECEQL::Predicate> predicate = std::make_unique<
-      InequalityPredicate>(std::make_unique<InternalCORECEQL::Attribute>(
-                             "Integer1"),
-                           InequalityPredicate::LogicalOperation::LESS,
-                           std::make_unique<IntegerLiteral>(5));
+    std::unique_ptr<InternalCORECEQL::Predicate>
+      predicate = std::make_unique<InequalityPredicate>(
+        std::make_unique<InternalCORECEQL::Attribute>("Integer1"),
+        InequalityPredicate::LogicalOperation::LESS,
+        std::make_unique<IntegerLiteral>(5));
     predicate->accept_visitor(converter);
     REQUIRE((*converter.predicate)(tuple));
   }
 
   SECTION("Compare with an attribute") {
-    std::unique_ptr<InternalCORECEQL::Predicate> predicate = std::make_unique<
-      InequalityPredicate>(std::make_unique<InternalCORECEQL::Attribute>(
-                             "Integer1"),
-                           InequalityPredicate::LogicalOperation::GREATER,
-                           std::make_unique<InternalCORECEQL::Attribute>(
-                             "Integer2"));
+    std::unique_ptr<InternalCORECEQL::Predicate>
+      predicate = std::make_unique<InequalityPredicate>(
+        std::make_unique<InternalCORECEQL::Attribute>("Integer1"),
+        InequalityPredicate::LogicalOperation::GREATER,
+        std::make_unique<InternalCORECEQL::Attribute>("Integer2"));
     predicate->accept_visitor(converter);
     REQUIRE(!(*converter.predicate)(tuple));
   }

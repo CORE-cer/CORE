@@ -38,9 +38,9 @@ TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
 }
 
 TEST_CASE(
-    "MessageRouterRequesterTest - messages are sent specifically to each "
-    "listener",
-    "[zmq]") {
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener",
+  "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
@@ -119,9 +119,9 @@ TEST_CASE("A broadcast message is received exactly as it was sent.",
 }
 
 TEST_CASE(
-    "MessageRouterRequesterTest - messages are sent specifically to each "
-    "listener: 100 listeners 1 router",
-    "[zmq]") {
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener: 100 listeners 1 router",
+  "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
@@ -171,9 +171,9 @@ TEST_CASE(
 }
 
 TEST_CASE(
-    "A broadcast message is received exactly as it was sent. 100 "
-    "receivers",
-    "[zmq]") {
+  "A broadcast message is received exactly as it was sent. 100 "
+  "receivers",
+  "[zmq]") {
   std::string sent_message = "Hello World 1";
   std::vector<std::string> received_messages;
 

@@ -22,8 +22,8 @@ void StreamsListener::start() {
 }
 
 void StreamsListener::stop() {
-  ZMQMessageSender sender("tcp://localhost:" +
-                          std::to_string(receiver_port));
+  ZMQMessageSender sender("tcp://localhost:"
+                          + std::to_string(receiver_port));
   stop_condition = true;
   sender.send(CerealSerializer<Stream>::serialize(Stream(0, {})));
   worker_thread.join();
