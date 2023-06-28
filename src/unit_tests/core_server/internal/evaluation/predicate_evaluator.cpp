@@ -34,7 +34,7 @@ add_event_type_1(RingTupleQueue::Queue& ring_tuple_queue,
                  int64_t val3,
                  double val4,
                  double val5) {
-  std::span<uint64_t> data = ring_tuple_queue.start_tuple(0);
+  uint64_t* data = ring_tuple_queue.start_tuple(0);
   char* chars = ring_tuple_queue.writer<std::string>(val1.size());
   memcpy(chars, &val1[0], val1.size());
   int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
@@ -59,7 +59,7 @@ RingTupleQueue::Tuple
 add_event_type_2(RingTupleQueue::Queue& ring_tuple_queue,
                  int64_t val1,
                  int64_t val2) {
-  std::span<uint64_t> data = ring_tuple_queue.start_tuple(1);
+  uint64_t* data = ring_tuple_queue.start_tuple(1);
   int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
   *integer_ptr = val1;
   integer_ptr = ring_tuple_queue.writer<int64_t>();

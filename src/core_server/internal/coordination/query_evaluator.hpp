@@ -56,6 +56,8 @@ class QueryEvaluator {
 
  private:
   std::string handle_message(std::string& serialized_message) {
+    // The serialized_message should be a span, and we will static cast
+    // on it to obtain it.
     return serialized_message;
   }
 };

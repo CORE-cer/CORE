@@ -4,7 +4,6 @@
 #include <chrono>
 #include <cstdint>
 #include <numeric>
-#include <span>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -133,11 +132,11 @@ class TupleSchemas {
 
 class Tuple {
  private:
-  std::span<uint64_t> data;  // Span to hold tuple data.
+  uint64_t* data;  // Span to hold tuple data.
   TupleSchemas* schemas;
 
  public:
-  explicit Tuple(std::span<uint64_t> data, TupleSchemas* schemas)
+  explicit Tuple(uint64_t* data, TupleSchemas* schemas)
       : data(data), schemas(schemas) {}
 
   uint64_t id() const { return data[0]; }

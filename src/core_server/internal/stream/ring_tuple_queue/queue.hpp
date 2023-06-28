@@ -25,7 +25,7 @@ class Queue {
   std::chrono::system_clock::time_point overwrite_timepoint;
 
  public:
-  Tuple get_tuple(std::span<uint64_t> data) { return Tuple(data, schemas); }
+  Tuple get_tuple(uint64_t* data) { return Tuple(data, schemas); }
 
   explicit Queue(uint64_t size, TupleSchemas* schemas)
       : buffer(size),
@@ -36,7 +36,7 @@ class Queue {
 
   uint64_t size() const { return buffer.size(); }
 
-  std::span<uint64_t> start_tuple(uint64_t tuple_type_id) {
+  uint64_t* start_tuple(uint64_t tuple_type_id) {
     int64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
     if (current_index < buffer.size() - minimum_size) {
       constant_section_index = current_index;
@@ -57,8 +57,7 @@ class Queue {
                   <= sizeof(uint64_t));
     std::chrono::system_clock::time_point overwrite_timepoint;
 
-    return std::span<uint64_t>(&buffer[constant_section_index - 2],
-                               &buffer[current_index - 1]);
+    return &buffer[constant_section_index - 2];
   }
 
   // Note that Substitution is not a failure is used in these functions.

@@ -32,7 +32,7 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
                                 SupportedTypes::INT64,
                                 SupportedTypes::DOUBLE,
                                 SupportedTypes::DOUBLE});
-  std::span<uint64_t> data = ring_tuple_queue.start_tuple(id);
+  uint64_t* data = ring_tuple_queue.start_tuple(id);
   char* chars = ring_tuple_queue.writer<std::string>(11);
   std::string hello_world = "hello world";
   memcpy(chars, &hello_world[0], 11);
