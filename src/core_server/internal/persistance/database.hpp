@@ -48,6 +48,9 @@ class Database {
     execute_query(query, db_connection_query);
   }
 
+  void add_event(uint64_t event_type_id, uint64_t event_uid, uint64_t stream_uid, std::chrono::system_clock::time_point timestamp, std::vector<Value> attributes) {
+  }
+
   void add_stream_type(std::string stream_name,
                        std::vector<uint64_t>&& stream_event_types,
                        uint64_t stream_type_id,
