@@ -59,8 +59,8 @@ class Database {
     query += "event_type_id INT, ";
     query += "timestamp INT";
     query +=
-        ", FOREIGN KEY (event_type_id) REFERENCES "
-        "eventnames(event_type_id)";  //FK
+      ", FOREIGN KEY (event_type_id) REFERENCES "
+      "eventnames(event_type_id)";  //FK
     query += ");";
 
     execute_query(query, db_connection_query);
@@ -69,11 +69,12 @@ class Database {
   void create_streams_table(const std::string& db_connection_query,
                             const std::vector<std::string>& event_tables) {
     std::string query =
-        "CREATE TABLE streams (stream_uid INT, event_type_id INT, PRIMARY "
-        "KEY (stream_uid, event_type_id)";
+      "CREATE TABLE streams (stream_uid INT, event_type_id INT, PRIMARY "
+      "KEY (stream_uid, event_type_id)";
 
     query +=
-        ", FOREIGN KEY (stream_uid) REFERENCES streamnames(stream_uid)";  //FK
+      ", FOREIGN KEY (stream_uid) REFERENCES "
+      "streamnames(stream_uid)";
     query += ");";
 
     execute_query(query, db_connection_query);
@@ -81,22 +82,22 @@ class Database {
 
   void create_event_names_table(const std::string& db_connection_query) {
     std::string query =
-        "CREATE TABLE eventnames (event_type_id INT PRIMARY KEY, "
-        "event_table_name VARCHAR(255));";
+      "CREATE TABLE eventnames (event_type_id INT PRIMARY KEY, "
+      "event_table_name VARCHAR(255));";
     execute_query(query, db_connection_query);
   }
 
   void create_streams_names_table(const std::string& db_connection_query) {
     std::string query =
-        "CREATE TABLE streamnames (stream_uid INT PRIMARY KEY, "
-        "stream_table_name VARCHAR(255));";
+      "CREATE TABLE streamnames (stream_uid INT PRIMARY KEY, "
+      "stream_table_name VARCHAR(255));";
     execute_query(query, db_connection_query);
   }
 
   void connect_database(const std::string& db_connection_query) {
     try {
-      std::unique_ptr<pqxx::connection> conn =
-          std::make_unique<pqxx::connection>(db_connection_query);
+      std::unique_ptr<pqxx::connection>
+        conn = std::make_unique<pqxx::connection>(db_connection_query);
       if (conn->is_open()) {
         std::cout << "Connected to the database." << std::endl;
         connection = std::move(conn);
