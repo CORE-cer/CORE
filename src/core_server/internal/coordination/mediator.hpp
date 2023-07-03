@@ -39,6 +39,17 @@ class Mediator {
     Evaluation::PredicateEvaluator&& evaluator);
   void
   send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
+
+ private:
+  RingTupleQueue::Tuple event_to_tuple(Types::Event& event);
+
+  // clang-format off
+  void write_int        (std::shared_ptr<Types::Value>& attr);
+  void write_double     (std::shared_ptr<Types::Value>& attr);
+  void write_bool       (std::shared_ptr<Types::Value>& attr);
+  void write_string_view(std::shared_ptr<Types::Value>& attr);
+  void write_date       (std::shared_ptr<Types::Value>& attr);
+  // clang-format on
 };
 
 }  // namespace Internal

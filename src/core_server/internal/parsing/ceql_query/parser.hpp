@@ -8,8 +8,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "visitors/from_visitor.hpp"
 #include "visitors/select_visitor.hpp"
-
-//#include "visitors/where_visitor.hpp"
+#include "visitors/where_visitor.hpp"
 
 namespace CORE {
 namespace Internal {
@@ -51,17 +50,17 @@ class Parser {
     from_visitor.visit(tree);
     CEQL::From from = from_visitor.get_parsed_from();
 
-    //WhereVisitor where_visitor;
-    //where_visitor.visit(tree);
-    //Where where = where_visitor.get_parsed_where();
+    WhereVisitor where_visitor;
+    where_visitor.visit(tree);
+    CEQL::Where where = where_visitor.get_parsed_where();
 
     // TODO: Add PartitionByVisitor
     // TODO: Add WithinSegmentVisitor
     // TODO: Add ConsumeByVisitor
 
-    //return {std::move(select), std::move(from), std::move(where), {}, {}, {}};
-
     //return parsedQuery;
+
+    return {std::move(select), std::move(from), std::move(where), {}, {}, {}};
   }
 };
 

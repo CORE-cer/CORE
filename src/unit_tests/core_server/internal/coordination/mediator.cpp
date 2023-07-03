@@ -19,13 +19,10 @@ namespace COREMediatorCoordinationTests {
 
 Types::ServerResponse
 send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
-  std::cout << "Almost getting serialized response" << std::endl;
   std::string
     serialized_request = CerealSerializer<Types::ClientRequest>::serialize(
       request);
-  std::cout << "Serialized" << std::endl;
   auto serialized_response = dealer.send_and_receive(serialized_request);
-  std::cout << "Got serialized response" << std::endl;
   return CerealSerializer<Types::ServerResponse>::deserialize(
     serialized_response);
 }
@@ -95,7 +92,6 @@ declare_and_check_for_stream(std::string name,
   // Stream info from id works
   auto id = CerealSerializer<Types::StreamTypeId>::deserialize(
     id_response.serialized_response_data);
-  //std::cout << "stream id gotten: " << id << std::endl;
   Types::ClientRequest
     request(CerealSerializer<Types::EventTypeId>::serialize(id),
             Types::ClientRequestType::StreamInfoFromId);
@@ -169,35 +165,30 @@ TEST_CASE(
     "Mixed[Int1 <= 30 OR Double1 >= 3.0]");
   Types::ClientRequest create_dummy_streamer{
     std::move(query), Types::ClientRequestType::AddQuery};
-  std::cout << "Created dummy streamer " << std::endl;
 
   ZMQMessageDealer dealer("tcp://localhost:5000");
-  std::cout << "Created dealer" << std::endl;
   Types::ServerResponse response = send_request(dealer,
                                                 create_dummy_streamer);
-  std::cout << "Got response" << std::endl;
   REQUIRE(response.response_type == Types::ServerResponseType::PortNumber);
   auto port_number = CerealSerializer<Types::PortNumber>::deserialize(
     response.serialized_response_data);
+  REQUIRE(port_number == 5002);
 
   ZMQMessageSubscriber subscriber("tcp://localhost:"
                                   + std::to_string(port_number));
   std::string message;
   std::thread subscriber_thread = std::thread(
     [&]() { message = subscriber.receive(); });
-  //ingTupleQueue::Tuple tuple = add_event_type_1(mediator.queue,
-  //"somestring",
-  //20,
-  //0,
-  //0.0,
-  //1.2);
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  //ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-  //sender.send(
-  //CerealSerializer<Stream>::serialize(Stream(0, {event_to_send})));
-  //subscriber_thread.join();
-  //REQUIRE(message == CerealSerializer<Event>::serialize(event_to_send));
-  //mediator.stop();
+  ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
+  Types::Event event_to_send{event_type_id_1,
+                             {std::make_shared<Types::IntValue>(20),
+                              std::make_shared<Types::IntValue>(2)}};
+  sender.send(CerealSerializer<Types::Stream>::serialize(
+    Types::Stream(stream_type_id_1, {event_to_send})));
+  subscriber_thread.join();
+  REQUIRE(message == "101");  // Is type 1 and first query.
+  mediator.stop();
 }
 }  // namespace COREMediatorCoordinationTests
 }  // namespace UnitTests

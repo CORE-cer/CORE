@@ -39,8 +39,7 @@ struct Event {
 
   Event() noexcept {}
 
-  Event(time_t event_date,
-        EventTypeId event_type_id,
+  Event(EventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
 

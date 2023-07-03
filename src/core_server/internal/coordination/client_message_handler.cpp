@@ -139,10 +139,8 @@ Types::ServerResponse
 ClientMessageHandler::add_query(std::string s_query_info) {
   // TODO: Change this to a CEA. Right now it's a query string that might
   // Not be correct.
-  std::cout << "Adding query: " << s_query_info << std::endl;
   // TODO: Check if it is possible to parse it.
   CEQL::Query query = Parsing::Parser::parse_query(s_query_info);
-  std::cout << "Parsed query" << std::endl;
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
   query = transformer(std::move(query));
   Evaluation::PredicateEvaluator evaluator(
