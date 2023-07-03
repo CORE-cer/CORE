@@ -9,10 +9,9 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "predicate_visitor.hpp"
 
-namespace InternalCORECEQL {
-
-namespace CEQL = InternalCORECEQL;
-namespace CEA = InternalCORECEA;
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 class CEQLWeaklyTypedPredicateToCEAPredicate final
     : public PredicateVisitor {
@@ -27,12 +26,12 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
  private:
   // In the construction, we will determine the event types
   // that could satisfy all of the predicates that will be used.
-  InternalCORE::Catalog& catalog;
-  std::set<EventTypeId> admissible_event_types;
+  Catalog& catalog;
+  std::set<Types::EventTypeId> admissible_event_types;
   bool has_added_admissible_event_types = false;
 
  public:
-  CEQLWeaklyTypedPredicateToCEAPredicate(InternalCORE::Catalog& catalog)
+  CEQLWeaklyTypedPredicateToCEAPredicate(Catalog& catalog)
       : catalog(catalog) {}
 
   void visit(InPredicate& in_predicate) override {
@@ -43,7 +42,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     ObtainCompatibleEventTypes determine_event_types(catalog);
     inequality_predicate.left->accept_visitor(determine_event_types);
     inequality_predicate.right->accept_visitor(determine_event_types);
-    std::set<EventTypeId>
+    std::set<Types::EventTypeId>
       compatible_event_types = determine_event_types
                                  .get_compatible_event_types();
 
@@ -210,7 +209,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   template <typename ValueType>
-  std::unique_ptr<InternalCORECEA::MathExpr<ValueType>>
+  std::unique_ptr<CEA::MathExpr<ValueType>>
   get_expr(std::unique_ptr<CEQL::Value>& val) {
     WeaklyTypedValueToMathExpr<ValueType> convertor(catalog);
     val->accept_visitor(convertor);
@@ -241,20 +240,24 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
  private:
-  static std::set<EventTypeId>
-  intersect(std::set<EventTypeId> left, std::set<EventTypeId> right) {
-    std::set<EventTypeId> out;
+  static std::set<Types::EventTypeId>
+  intersect(std::set<Types::EventTypeId> left,
+            std::set<Types::EventTypeId> right) {
+    std::set<Types::EventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);
     return out;
   }
 
-  static std::set<EventTypeId>
-  unite(std::set<EventTypeId>&& left, std::set<EventTypeId>&& right) {
-    std::set<EventTypeId> out = std::move(left);
+  static std::set<Types::EventTypeId>
+  unite(std::set<Types::EventTypeId>&& left,
+        std::set<Types::EventTypeId>&& right) {
+    std::set<Types::EventTypeId> out = std::move(left);
     for (auto& elem : right) out.insert(elem);
     return out;
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

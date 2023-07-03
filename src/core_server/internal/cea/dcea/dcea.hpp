@@ -9,12 +9,13 @@
 #include "core_server/internal/cea/ndcea/ndcea.hpp"
 #include "core_server/internal/cea/predicate_set.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 class DCEA {
-  using PredicatesToSatisfy = mpz_class;
   using IsMarked = bool;
   using EndNodeId = int64_t;
-  using Transition = std::tuple<PredicatesToSatisfy, IsMarked, EndNodeId>;
+  using Transition = std::tuple<PredicateSet, IsMarked, EndNodeId>;
 
   using States = mpz_class;
   using PredicateEvaluation = mpz_class;
@@ -41,7 +42,7 @@ class DCEA {
         current_states(ndcea.initial_states),
         final_states(ndcea.final_states) {
     for (auto& state_transitions : ndcea.transitions) {
-      for (std::tuple<PredicatesToSatisfy, mpz_class, EndNodeId> nd_transition :
+      for (std::tuple<PredicateSet, mpz_class, EndNodeId> nd_transition :
            state_transitions) {
         std::vector<Transition> new_state_transitions;
         if (std::get<1>(nd_transition) == 0) {
@@ -59,4 +60,6 @@ class DCEA {
     }
   }
 };
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

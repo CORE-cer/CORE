@@ -3,7 +3,9 @@
 #include "core_server/internal/ceql/value/all_value_headers.hpp"
 #include "value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 class DetermineValueType : public ValueVisitor {
  private:
   ValueTypes value_type;
@@ -30,4 +32,6 @@ class DetermineValueType : public ValueVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

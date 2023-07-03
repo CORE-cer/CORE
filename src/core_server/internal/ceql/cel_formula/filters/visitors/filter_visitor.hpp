@@ -2,7 +2,9 @@
 
 #include <stdexcept>
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 class AndFilter;
 class AtomicFilter;
@@ -19,4 +21,6 @@ class FilterVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

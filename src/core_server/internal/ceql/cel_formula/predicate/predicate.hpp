@@ -5,7 +5,9 @@
 
 #include "visitors/predicate_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct Predicate {
  public:
@@ -18,4 +20,6 @@ struct Predicate {
   virtual std::string to_string() const = 0;
   virtual void accept_visitor(PredicateVisitor&) = 0;
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

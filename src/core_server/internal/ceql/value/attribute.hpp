@@ -4,7 +4,9 @@
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 struct Attribute final : public Value {
   std::string value;
 
@@ -40,4 +42,6 @@ struct Attribute final : public Value {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

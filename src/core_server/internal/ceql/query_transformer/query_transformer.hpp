@@ -1,7 +1,9 @@
 #pragma once
 #include "core_server/internal/ceql/query/query.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 /**
  * This type of polymorphism is called CRTP that allows for interfaces with
@@ -20,4 +22,6 @@ class QueryTransformer {
     throw std::logic_error("eval not implemented");
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

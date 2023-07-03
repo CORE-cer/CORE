@@ -6,7 +6,9 @@
 
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct ProjectionFormula : public Formula {
   std::unique_ptr<Formula> formula;
@@ -52,4 +54,6 @@ struct ProjectionFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

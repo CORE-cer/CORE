@@ -2,11 +2,15 @@
 #include <set>
 #include <string>
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct From {
   std::set<std::string> streams;
 
   From(std::set<std::string>&& streams) : streams(std::move(streams)) {}
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

@@ -8,7 +8,9 @@
 #include "core_server/internal/ceql/value/value.hpp"
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct InequalityPredicate : public Predicate {
   enum struct LogicalOperation {
@@ -112,4 +114,6 @@ struct InequalityPredicate : public Predicate {
     }
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

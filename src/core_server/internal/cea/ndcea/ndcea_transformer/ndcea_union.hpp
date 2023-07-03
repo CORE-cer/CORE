@@ -2,7 +2,9 @@
 #include "core_server/internal/cea/ndcea/ndcea.hpp"
 #include "ndcea_transformer.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 /**
  * The union_of method is a helper function of the base class.
@@ -16,4 +18,6 @@ class NDCEAUnion : public NDCEATransformer<NDCEAUnion> {
   NDCEA eval(NDCEA& left, NDCEA& right) { return union_of(left, right); }
 };
 
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

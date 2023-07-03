@@ -5,7 +5,8 @@
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/event.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 /**
  * A stream is just a collection of events that is being sent to the
  * server by a streamer. The stream_id is used to identify to what
@@ -31,4 +32,5 @@ struct Stream {
     archive(id, events);
   }
 };
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

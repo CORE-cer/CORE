@@ -1,6 +1,7 @@
 #include <string>
 
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 class MessageBroadcaster {
   /**
    * An interface for sending messages to all connected subscribers.
@@ -10,4 +11,5 @@ class MessageBroadcaster {
    */
   std::string broadcast();
 };
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

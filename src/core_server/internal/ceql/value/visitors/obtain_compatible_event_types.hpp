@@ -8,7 +8,9 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 class ObtainCompatibleEventTypes : public ValueVisitor {
  public:
   enum DataType {
@@ -21,14 +23,13 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   };
 
  private:
-  InternalCORE::Catalog& catalog;
-  std::set<EventTypeId> compatible_event_types = {};
+  Catalog& catalog;
+  std::set<Types::EventTypeId> compatible_event_types = {};
   bool has_added_an_event_type = false;
 
  public:
-  ObtainCompatibleEventTypes(InternalCORE::Catalog& catalog)
-      : catalog(catalog) {
-    for (EventTypeId i = 0; i < catalog.number_of_events(); i++) {
+  ObtainCompatibleEventTypes(Catalog& catalog) : catalog(catalog) {
+    for (Types::EventTypeId i = 0; i < catalog.number_of_events(); i++) {
       compatible_event_types.insert(i);
     }
   }
@@ -77,12 +78,15 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   }
 
  private:
-  static std::set<EventTypeId>
-  intersect(std::set<EventTypeId> left, std::set<EventTypeId> right) {
-    std::set<EventTypeId> out;
+  static std::set<Types::EventTypeId>
+  intersect(std::set<Types::EventTypeId> left,
+            std::set<Types::EventTypeId> right) {
+    std::set<Types::EventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);
     return out;
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

@@ -8,9 +8,9 @@
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_weakly_typed_predicate_to_physical_predicate.hpp"
 #include "query_transformer.hpp"
 
-namespace InternalCORECEQL {
-using InternalCORECEA::CheckTypePredicate;
-using InternalCORECEA::PhysicalPredicate;
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 /**
  * Creates all the physical predicates that are needed to evaluate the query,
@@ -19,14 +19,14 @@ using InternalCORECEA::PhysicalPredicate;
 class AnnotatePredicatesWithNewPhysicalPredicates
     : public QueryTransformer<AnnotatePredicatesWithNewPhysicalPredicates> {
  public:
-  std::vector<std::unique_ptr<PhysicalPredicate>> physical_predicates;
+  std::vector<std::unique_ptr<CEA::PhysicalPredicate>> physical_predicates;
 
  private:
   GetAllAtomicFilters visitor;
-  InternalCORE::Catalog& catalog;
+  Catalog& catalog;
 
  public:
-  AnnotatePredicatesWithNewPhysicalPredicates(InternalCORE::Catalog& catalog)
+  AnnotatePredicatesWithNewPhysicalPredicates(Catalog& catalog)
       : catalog(catalog) {}
 
   Query eval(Query&& query) {
@@ -46,7 +46,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
          event_type_id < catalog.number_of_events();
          event_type_id++) {
       physical_predicates.push_back(
-        std::make_unique<CheckTypePredicate>(event_type_id));
+        std::make_unique<CEA::CheckTypePredicate>(event_type_id));
     }
     for (int64_t i = 0, predicate_id = physical_predicates.size();
          i < filters.size();
@@ -67,4 +67,6 @@ class AnnotatePredicatesWithNewPhysicalPredicates
     }
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

@@ -4,7 +4,8 @@
 
 #include "shared/datatypes/aliases/port_number.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 
 struct QueryInfo {
   PortNumber port_number;
@@ -21,4 +22,5 @@ struct QueryInfo {
   }
 };
 
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

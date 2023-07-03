@@ -6,7 +6,9 @@
 
 #include "core_server/internal/cea/predicate_set.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 struct NDCEA {
  public:
   using VariablesToMark = mpz_class;
@@ -91,4 +93,6 @@ struct NDCEA {
     return out;
   }
 };
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

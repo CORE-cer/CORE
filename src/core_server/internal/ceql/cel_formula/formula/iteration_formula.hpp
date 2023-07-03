@@ -5,7 +5,9 @@
 
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct IterationFormula : public Formula {
   std::unique_ptr<Formula> formula;
@@ -38,4 +40,6 @@ struct IterationFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

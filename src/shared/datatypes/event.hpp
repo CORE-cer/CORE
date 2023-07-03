@@ -7,7 +7,8 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 
 /**
  * An Event is what the base CORE paper defines as a data-tuple. Formally
@@ -17,7 +18,6 @@ namespace CORETypes {
  * from attribute names to values can be obtained.
  */
 struct Event {
-  time_t event_date;
   /**
    * An EventType is an id that is used to know what each index in the
    * attributes vector represent. To obtain this, it needs to be requested
@@ -35,21 +35,20 @@ struct Event {
    *   from an archive, cereal will not allocate extraneous data."
    *   https://uscilab.github.io/cereal/pointers.html
    */
-  std::vector<std::shared_ptr<CORETypes::Value>> attributes;
+  std::vector<std::shared_ptr<Types::Value>> attributes;
 
   Event() noexcept {}
 
   Event(time_t event_date,
         EventTypeId event_type_id,
-        std::vector<std::shared_ptr<CORETypes::Value>> attributes) noexcept
-      : event_date(event_date),
-        event_type_id(event_type_id),
-        attributes(attributes) {}
+        std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
+      : event_type_id(event_type_id), attributes(attributes) {}
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(event_date, event_type_id, attributes);
+    archive(event_type_id, attributes);
   }
 };
 
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

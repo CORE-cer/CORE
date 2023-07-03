@@ -9,17 +9,16 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "predicate_visitor.hpp"
 
-namespace InternalCORECEQL {
-
-namespace CEQL = InternalCORECEQL;
-namespace CEA = InternalCORECEA;
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 class CEQLStrongTypedPredicateToPhysicalPredicate final
     : public PredicateVisitor {
  private:
   DetermineValueType value_type_visitor;
   DetermineFinalValueDataType final_data_type_visitor;
-  EventInfo event_info;
+  Types::EventInfo event_info;
 
   using CEQLComparison = CEQL::InequalityPredicate::LogicalOperation;
   using CEAComparison = CEA::ComparisonType;
@@ -28,7 +27,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
  public:
   std::unique_ptr<CEA::PhysicalPredicate> predicate;
 
-  CEQLStrongTypedPredicateToPhysicalPredicate(EventInfo event_info)
+  CEQLStrongTypedPredicateToPhysicalPredicate(Types::EventInfo event_info)
       : event_info(event_info), final_data_type_visitor(event_info) {}
 
   void visit(InPredicate& in_predicate) override {
@@ -383,7 +382,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   }
 
   template <typename ValueType>
-  std::unique_ptr<InternalCORECEA::MathExpr<ValueType>>
+  std::unique_ptr<CEA::MathExpr<ValueType>>
   get_expr(std::unique_ptr<CEQL::Value>& val) {
     ValueToMathExpr<ValueType> convertor(event_info);
     val->accept_visitor(convertor);
@@ -456,4 +455,6 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

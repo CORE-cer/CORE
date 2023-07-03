@@ -1,7 +1,9 @@
 #pragma once
 #include "core_server/internal/cea/ndcea/ndcea.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 /**
  * This type of polymorphism is called CRTP that allows for interfaces with
@@ -50,4 +52,6 @@ class NDCEATransformer {
   }
 };
 
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

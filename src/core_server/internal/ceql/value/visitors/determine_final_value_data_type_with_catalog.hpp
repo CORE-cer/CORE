@@ -5,7 +5,9 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
  public:
   enum DataType {
@@ -21,10 +23,10 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   DataType final_value_datatype = Undetermined;
 
  private:
-  InternalCORE::Catalog& catalog;
+  Catalog& catalog;
 
  public:
-  DetermineFinalValueDataTypeWithCatalog(InternalCORE::Catalog& catalog)
+  DetermineFinalValueDataTypeWithCatalog(Catalog& catalog)
       : catalog(catalog) {}
 
   DataType get_final_data_type() {
@@ -89,16 +91,16 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   }
 
  private:
-  static DataType attribute_info_type_convertor(CORETypes::ValueTypes type) {
+  static DataType attribute_info_type_convertor(Types::ValueTypes type) {
     switch (type) {
-      case CORETypes::ValueTypes::DOUBLE:
+      case Types::ValueTypes::DOUBLE:
         return Double;
-      case CORETypes::ValueTypes::INT64:
-      case CORETypes::ValueTypes::BOOL:
+      case Types::ValueTypes::INT64:
+      case Types::ValueTypes::BOOL:
         return Integer;
-      case CORETypes::ValueTypes::STRING_VIEW:
+      case Types::ValueTypes::STRING_VIEW:
         return String;
-      case CORETypes::ValueTypes::DATE:
+      case Types::ValueTypes::DATE:
         return Date;
       default:
         throw std::logic_error(
@@ -125,4 +127,6 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

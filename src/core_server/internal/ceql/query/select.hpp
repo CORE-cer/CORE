@@ -2,7 +2,9 @@
 #include <set>
 #include <string>
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct Select {
   enum class Strategy {
@@ -26,4 +28,6 @@ struct Select {
         variable_names(std::move(variable_names)),
         is_star(is_star) {}
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

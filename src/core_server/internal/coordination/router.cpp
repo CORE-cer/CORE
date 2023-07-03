@@ -2,10 +2,10 @@
 
 #include "core_server/internal/coordination/mediator.hpp"
 
-using namespace CORETypes;
-
-namespace InternalCORE {
-Router::Router(Mediator& mediator, PortNumber port_number)
+namespace CORE {
+namespace Internal {
+Router::Router(Mediator& mediator, Types::PortNumber port_number)
     : router("tcp://*:" + std::to_string(port_number),
              ClientMessageHandler(mediator)) {}
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

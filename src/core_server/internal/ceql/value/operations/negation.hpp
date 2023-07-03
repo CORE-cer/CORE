@@ -3,7 +3,9 @@
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 struct Negation final : public Value {
   std::unique_ptr<Value> val;
 
@@ -44,4 +46,6 @@ struct Negation final : public Value {
     archive(val);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

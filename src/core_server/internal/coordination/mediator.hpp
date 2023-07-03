@@ -9,11 +9,10 @@
 #include "core_server/internal/coordination/streams_listener.hpp"
 #include "shared/datatypes/event.hpp"
 
-using namespace CORETypes;
-
 class CEA;
 
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 
 class Mediator {
  public:
@@ -23,17 +22,24 @@ class Mediator {
  private:
   Router router;
   StreamsListener streams_listener;
-  std::vector<std::unique_ptr<QueryEvaluator>> complex_event_streamers;
+
+  // unique_ptr is used because the QueryEvaluator has a ZMQMessageReceiver
+  // and a ZMQMesssageBroadcaster. That is a problem because it doesn't
+  // allow either move or copy constructions.
+  std::vector<std::unique_ptr<QueryEvaluator>> query_evaluators;
   std::vector<ZMQMessageSender> inner_thread_event_senders;
-  PortNumber current_next_port_number;
+  Types::PortNumber current_next_port_number;
 
  public:
-  Mediator(PortNumber port);
+  Mediator(Types::PortNumber port);
   void start();
   void stop();
-  PortNumber create_complex_event_stream(std::string ecs);
-  PortNumber create_dummy_complex_event_stream();
-  void send_event_to_queries(StreamTypeId stream_id, Event event);
+  Types::PortNumber create_complex_event_stream(std::string ecs);
+  Types::PortNumber create_dummy_complex_event_stream(
+    Evaluation::PredicateEvaluator&& evaluator);
+  void
+  send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
 };
 
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

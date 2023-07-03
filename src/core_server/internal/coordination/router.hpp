@@ -9,9 +9,8 @@
 #include "shared/datatypes/server_response.hpp"
 #include "shared/networking/message_router/zmq_message_router.hpp"
 
-using namespace CORETypes;
-
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 
 class Mediator;
 
@@ -21,7 +20,7 @@ class Router {
   std::thread router_thread;
 
  public:
-  Router(Mediator& mediator, PortNumber port_number);
+  Router(Mediator& mediator, Types::PortNumber port_number);
 
   void start() {
     router_thread = std::thread([&]() { router.start(); });
@@ -33,4 +32,5 @@ class Router {
   }
 };
 
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

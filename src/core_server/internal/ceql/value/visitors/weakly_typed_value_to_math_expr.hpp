@@ -7,28 +7,27 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 template <typename Type>
 class WeaklyTypedValueToMathExpr : public ValueVisitor {
  private:
-  InternalCORE::Catalog& catalog;
+  Catalog& catalog;
 
  public:
-  WeaklyTypedValueToMathExpr(InternalCORE::Catalog& catalog)
-      : catalog(catalog) {}
+  WeaklyTypedValueToMathExpr(Catalog& catalog) : catalog(catalog) {}
 
-  std::unique_ptr<InternalCORECEA::MathExpr<Type>> math_expr;
+  std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
-    math_expr = std::make_unique<
-      InternalCORECEA::NonStronglyTypedAttribute<Type>>(attribute.value,
-                                                        catalog);
+    math_expr = std::make_unique<CEA::NonStronglyTypedAttribute<Type>>(
+      attribute.value, catalog);
   }
 
   void visit(DoubleLiteral& literal) override {
     if constexpr (std::is_same_v<Type, double>) {
-      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
-        literal.value);
+      math_expr = std::make_unique<CEA::Literal<double>>(literal.value);
     } else {
       assert(false && "Type is not double");
     }
@@ -36,10 +35,9 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
 
   void visit(IntegerLiteral& literal) override {
     if constexpr (std::is_same_v<Type, int64_t>) {
-      math_expr = std::make_unique<InternalCORECEA::Literal<int64_t>>(
-        literal.value);
+      math_expr = std::make_unique<CEA::Literal<int64_t>>(literal.value);
     } else if constexpr (std::is_same_v<Type, double>) {
-      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
+      math_expr = std::make_unique<CEA::Literal<double>>(
         static_cast<double>(literal.value));
     } else {
       assert(false
@@ -49,10 +47,9 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
 
   void visit(LongLiteral& literal) override {
     if constexpr (std::is_same_v<Type, int64_t>) {
-      math_expr = std::make_unique<InternalCORECEA::Literal<int64_t>>(
-        literal.value);
+      math_expr = std::make_unique<CEA::Literal<int64_t>>(literal.value);
     } else if constexpr (std::is_same_v<Type, double>) {
-      math_expr = std::make_unique<InternalCORECEA::Literal<double>>(
+      math_expr = std::make_unique<CEA::Literal<double>>(
         static_cast<double>(literal.value));
     } else {
       assert(false
@@ -65,8 +62,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     addition.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<InternalCORECEA::Addition<Type>>(
-      std::move(left), std::move(right));
+    math_expr = std::make_unique<CEA::Addition<Type>>(std::move(left),
+                                                      std::move(right));
   }
 
   void visit(Division& division) override {
@@ -74,8 +71,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     division.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<InternalCORECEA::Division<Type>>(
-      std::move(left), std::move(right));
+    math_expr = std::make_unique<CEA::Division<Type>>(std::move(left),
+                                                      std::move(right));
   }
 
   void visit(Modulo& modulo) override {
@@ -83,8 +80,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     modulo.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<InternalCORECEA::Modulo<Type>>(
-      std::move(left), std::move(right));
+    math_expr = std::make_unique<CEA::Modulo<Type>>(std::move(left),
+                                                    std::move(right));
   }
 
   void visit(Multiplication& multiplication) override {
@@ -92,8 +89,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     multiplication.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<InternalCORECEA::Multiplication<Type>>(
-      std::move(left), std::move(right));
+    math_expr = std::make_unique<CEA::Multiplication<Type>>(std::move(left),
+                                                            std::move(right));
   }
 
   void visit(Subtraction& subtraction) override {
@@ -101,8 +98,10 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     subtraction.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<InternalCORECEA::Subtraction<Type>>(
-      std::move(left), std::move(right));
+    math_expr = std::make_unique<CEA::Subtraction<Type>>(std::move(left),
+                                                         std::move(right));
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

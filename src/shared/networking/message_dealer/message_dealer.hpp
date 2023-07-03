@@ -1,6 +1,7 @@
 #include <string>
 
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 class MessageDealer {
   /**
    * An interface for requesting a reply messages. Note that this
@@ -12,4 +13,5 @@ class MessageDealer {
   /// requests something using message.
   std::string send_and_receive(const std::string& message);
 };
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

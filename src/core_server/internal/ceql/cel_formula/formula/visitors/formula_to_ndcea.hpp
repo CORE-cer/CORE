@@ -9,21 +9,21 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "formula_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 class FormulaToNDCEA : public FormulaVisitor {
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
-  using NDCEA = InternalCORECEA::NDCEA;
-  using PredicateSet = InternalCORECEA::PredicateSet;
 
  private:
-  InternalCORE::Catalog& catalog;
+  Catalog& catalog;
 
  public:
-  NDCEA current_cea{0};
+  CEA::NDCEA current_cea{0};
 
-  FormulaToNDCEA(InternalCORE::Catalog& catalog) : catalog(catalog) {}
+  FormulaToNDCEA(Catalog& catalog) : catalog(catalog) {}
 
   ~FormulaToNDCEA() override = default;
 
@@ -32,7 +32,7 @@ class FormulaToNDCEA : public FormulaVisitor {
   }
 
   void visit(EventTypeFormula& formula) override {
-    current_cea = NDCEA(2);
+    current_cea = CEA::NDCEA(2);
     if (!catalog.event_name_is_taken(formula.event_type_name)) {
       throw std::runtime_error("The event_name: " + formula.event_type_name +
                                " is not in the catalog, and base cases "
@@ -42,7 +42,7 @@ class FormulaToNDCEA : public FormulaVisitor {
     mpz_class position_of_event = (mpz_class)1 << event_type_id;
     mpz_class predicate_mask = (mpz_class)1 << event_type_id;
     current_cea.transitions[0].push_back(
-      std::make_tuple(PredicateSet(position_of_event, predicate_mask),
+      std::make_tuple(CEA::PredicateSet(position_of_event, predicate_mask),
                       position_of_event,
                       1));
     current_cea.initial_states = 1 << 0;
@@ -51,22 +51,22 @@ class FormulaToNDCEA : public FormulaVisitor {
 
   void visit(OrFormula& formula) override {
     formula.left->accept_visitor(*this);
-    NDCEA left_cea = std::move(current_cea);
+    CEA::NDCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
-    NDCEA right_cea = std::move(current_cea);
-    current_cea = InternalCORECEA::NDCEAUnion()(left_cea, right_cea);
+    CEA::NDCEA right_cea = std::move(current_cea);
+    current_cea = CEA::NDCEAUnion()(left_cea, right_cea);
   }
 
   void visit(SequencingFormula& formula) override {
     formula.left->accept_visitor(*this);
-    NDCEA left_cea = std::move(current_cea);
+    CEA::NDCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
-    NDCEA right_cea = std::move(current_cea);
+    CEA::NDCEA right_cea = std::move(current_cea);
 
     // Note, for this to work the implementation of union must offset the
     // right_states by the amount of states in the left_cea, and not make
     // another arbitrary permutation.
-    current_cea = InternalCORECEA::NDCEAUnion()(left_cea, right_cea);
+    current_cea = CEA::NDCEAUnion()(left_cea, right_cea);
     current_cea.initial_states = left_cea.initial_states;
     current_cea.final_states = right_cea.final_states
                                << left_cea.amount_of_states;
@@ -75,8 +75,8 @@ class FormulaToNDCEA : public FormulaVisitor {
     std::vector<int64_t> right_initial_states = right_cea.get_initial_states();
     for (size_t i = 0; i < left_cea.transitions.size(); i++) {
       auto& transitions = left_cea.transitions[i];
-      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
-           transitions) {
+      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
+             transition : transitions) {
         mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
         if ((end_node & left_cea.final_states) != 0) {
           for (int64_t destination : right_initial_states) {
@@ -96,8 +96,8 @@ class FormulaToNDCEA : public FormulaVisitor {
     // Copy the transitions from all initial states to the new state
     for (int64_t state : current_cea.get_initial_states()) {
       auto& transitions = current_cea.transitions[state];
-      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
-           transitions) {
+      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
+             transition : transitions) {
         current_cea.transitions.back().push_back(
           std::make_tuple(std::get<0>(transition),
                           std::get<1>(transition),
@@ -108,8 +108,8 @@ class FormulaToNDCEA : public FormulaVisitor {
     // Copy the transitions to a final state to the new initial state.
     for (size_t i = 0; i < current_cea.amount_of_states - 1; i++) {
       auto& transitions = current_cea.transitions[i];
-      for (std::tuple<PredicateSet, VariablesToMark, EndNodeId> transition :
-           transitions) {
+      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
+             transition : transitions) {
         mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
         if ((end_node & current_cea.final_states) != 0) {
           std::make_tuple(std::get<0>(transition),
@@ -130,4 +130,6 @@ class FormulaToNDCEA : public FormulaVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

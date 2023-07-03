@@ -7,7 +7,9 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 class AndPredicate : public PhysicalPredicate {
  private:
@@ -46,4 +48,6 @@ class AndPredicate : public PhysicalPredicate {
     return out;
   }
 };
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

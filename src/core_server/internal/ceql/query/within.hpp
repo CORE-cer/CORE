@@ -2,7 +2,9 @@
 
 #include <chrono>
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct Within {
   enum TimeWindowMode {
@@ -28,4 +30,6 @@ struct Within {
   TimeWindow time_window;
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE
