@@ -22,7 +22,7 @@ class Server<> {
    */
 
  private:
-   Internal::Mediator mediator;
+  Internal::Mediator mediator;
 
  public:
   Server(int port, int maximum_amount_of_result_ports = 100)
