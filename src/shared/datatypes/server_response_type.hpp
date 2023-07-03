@@ -1,6 +1,7 @@
 #pragma once
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 enum struct ServerResponseType {
   AttributeInfo,
   EventInfo,
@@ -13,4 +14,5 @@ enum struct ServerResponseType {
   StreamTypeId,
   Error,
 };
-}  // namespace CORETypes
+}
+}  // namespace CORE

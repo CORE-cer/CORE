@@ -8,22 +8,25 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "visitors/from_visitor.hpp"
 #include "visitors/select_visitor.hpp"
+#include "visitors/where_visitor.hpp"
 
-namespace InternalCORECEQLParsing {
+namespace CORE {
+namespace Internal {
+namespace Parsing {
 
 class QueryVisitor : public CEQLQueryParserBaseVisitor {
   // Override methods from the base visitor to handle
   // specific grammar rules as needed
 };
 
-class WhereVisitor;
 class PartitionByVisitor;
 class WithinSegmentVisitor;
 class ConsumeByVisitor;
 
 class Parser {
  public:
-  static Query parse_query(std::string query) {
+  static CEQL::Query parse_query(std::string query) {
+    // TODO finish this.
     // Convert the input string to a stream
     antlr4::ANTLRInputStream input(query);
 
@@ -41,19 +44,26 @@ class Parser {
 
     SelectVisitor select_visitor;
     select_visitor.visit(tree);
-    Select select = select_visitor.get_parsed_select();
+    CEQL::Select select = select_visitor.get_parsed_select();
 
     FromVisitor from_visitor;
     from_visitor.visit(tree);
-    From from = from_visitor.get_parsed_from();
+    CEQL::From from = from_visitor.get_parsed_from();
 
-    // Create a visitor
-    // SelectVisitor select_visitor;
-    // Select = select_visitor.select;
-    // ....
+    WhereVisitor where_visitor;
+    where_visitor.visit(tree);
+    CEQL::Where where = where_visitor.get_parsed_where();
+
+    // TODO: Add PartitionByVisitor
+    // TODO: Add WithinSegmentVisitor
+    // TODO: Add ConsumeByVisitor
 
     //return parsedQuery;
+
+    return {std::move(select), std::move(from), std::move(where), {}, {}, {}};
   }
 };
 
-}  // namespace InternalCORECEQLParsing
+}  // namespace Parsing
+}  // namespace Internal
+}  // namespace CORE

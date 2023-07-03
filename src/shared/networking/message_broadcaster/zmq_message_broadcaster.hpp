@@ -2,7 +2,8 @@
 
 #include "shared/networking/message_broadcaster/message_broadcaster.hpp"
 
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 class ZMQMessageBroadcaster {
  public:
   ZMQMessageBroadcaster(const std::string& address)
@@ -19,4 +20,5 @@ class ZMQMessageBroadcaster {
   zmq::context_t context;
   zmq::socket_t socket;
 };
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

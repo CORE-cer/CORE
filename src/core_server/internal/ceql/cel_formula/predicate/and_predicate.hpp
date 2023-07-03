@@ -5,7 +5,9 @@
 
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct AndPredicate : public Predicate {
   std::vector<std::unique_ptr<Predicate>> predicates;
@@ -66,4 +68,6 @@ struct AndPredicate : public Predicate {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

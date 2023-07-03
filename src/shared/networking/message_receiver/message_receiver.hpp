@@ -1,6 +1,7 @@
 #include <string>
 
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 class MessageReceiver {
   /**
    * An interface for receiving messages from an address. Note that this
@@ -10,4 +11,5 @@ class MessageReceiver {
    */
   std::string receive();
 };
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

@@ -6,7 +6,9 @@
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 struct Sequence final : public Value {
   enum Type { LOWER_BOUND, UPPER_BOUND, RANGE, SEQUENCE };
 
@@ -126,4 +128,6 @@ struct Sequence final : public Value {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

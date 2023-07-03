@@ -4,7 +4,10 @@
 
 #include "filter.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
+
 struct AndFilter : public Filter {
   std::unique_ptr<Filter> left;
   std::unique_ptr<Filter> right;
@@ -38,4 +41,6 @@ struct AndFilter : public Filter {
     return left->to_string() + " AND " + right->to_string();
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

@@ -12,8 +12,9 @@
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 
-namespace CerealThirdPartyTesting {
-using namespace InternalCORE;
+namespace CORE {
+namespace Internal {
+namespace ThirdPartyTests {
 
 TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
   std::string sent_message1 = "Hello World 1";
@@ -256,4 +257,6 @@ TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
                Catch::Matchers::UnorderedEquals(received_messages));
 }
 
-}  // namespace CerealThirdPartyTesting
+}  // namespace ThirdPartyTests
+}  // namespace Internal
+}  // namespace CORE

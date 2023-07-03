@@ -7,14 +7,15 @@
 
 #include "core_server/internal/cea/physical_predicate/physical_predicate.hpp"
 
-namespace InternalCOREEvaluation {
+namespace CORE {
+namespace Internal {
+namespace Evaluation {
 
 struct PredicateEvaluator {
-  std::vector<std::unique_ptr<InternalCORECEA::PhysicalPredicate>> predicates;
+  std::vector<std::unique_ptr<CEA::PhysicalPredicate>> predicates;
 
   PredicateEvaluator(
-    std::vector<std::unique_ptr<InternalCORECEA::PhysicalPredicate>>&&
-      predicates)
+    std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates)
       : predicates(std::move(predicates)) {}
 
   mpz_class operator()(RingTupleQueue::Tuple& tuple) {
@@ -28,4 +29,6 @@ struct PredicateEvaluator {
   }
 };
 
-}  // namespace InternalCOREEvaluation
+}  // namespace Evaluation
+}  // namespace Internal
+}  // namespace CORE

@@ -6,7 +6,8 @@
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 struct StreamInfo {
   /**
    * A stream is just a collection of events that is being sent to the
@@ -38,4 +39,5 @@ struct StreamInfo {
     archive(id, name, events_info);
   }
 };
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

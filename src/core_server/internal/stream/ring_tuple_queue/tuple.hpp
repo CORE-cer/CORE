@@ -3,8 +3,9 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstring>
+#include <iostream>
 #include <numeric>
-#include <span>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -133,11 +134,11 @@ class TupleSchemas {
 
 class Tuple {
  private:
-  std::span<uint64_t> data;  // Span to hold tuple data.
+  uint64_t* data;  // Span to hold tuple data.
   TupleSchemas* schemas;
 
  public:
-  explicit Tuple(std::span<uint64_t> data, TupleSchemas* schemas)
+  explicit Tuple(uint64_t* data, TupleSchemas* schemas)
       : data(data), schemas(schemas) {}
 
   uint64_t id() const { return data[0]; }
@@ -146,6 +147,14 @@ class Tuple {
     // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
       std::chrono::system_clock::duration(data[1]));
+  }
+
+  std::string serialize_data() const {
+    // Use memcpy or some other way so that the data ptr is sent as a string, so that
+    // it is then converted directly to a uint64_t* pos.
+    std::string out(sizeof(uint64_t*), '\0');
+    std::memcpy(&out[0], &data, sizeof(uint64_t*));
+    return out;
   }
 
   uint64_t* operator[](uint64_t index) {

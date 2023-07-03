@@ -6,7 +6,8 @@
 
 #include "datatypes.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 
 struct AttributeInfo {
   std::string name;
@@ -27,4 +28,5 @@ struct AttributeInfo {
   }
 };
 
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

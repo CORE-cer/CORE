@@ -5,7 +5,8 @@
 
 #include "shared/datatypes/event.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 /**
  * Formally a complex event is a pair C = ([i,j], D) where i <= j and D
  * is a subset of {i,...j} representing the data-tuples that are relevant
@@ -31,4 +32,5 @@ struct ComplexEvent {
     archive(id, events);
   }
 };
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

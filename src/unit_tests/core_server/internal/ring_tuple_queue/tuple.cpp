@@ -5,7 +5,8 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
-using namespace RingTupleQueue;
+namespace RingTupleQueue {
+namespace UnitTests {
 
 TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   TupleSchemas schema;
@@ -39,14 +40,14 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   }
 
   SECTION("Tuple creation and id") {
-    Tuple tuple(data, &schema);
+    Tuple tuple(&data[0], &schema);
     REQUIRE(tuple.id() == 0);
   }
 
   SECTION("Tuple indexing") {
     auto id = schema.add_schema(
       {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
-    Tuple tuple(data, &schema);
+    Tuple tuple(&data[0], &schema);
 
     tuple.timestamp();
     Value<int64_t> val1(tuple[0]);
@@ -59,3 +60,5 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
     REQUIRE(val3.get() == true);
   }
 }
+}  // namespace UnitTests
+}  // namespace RingTupleQueue

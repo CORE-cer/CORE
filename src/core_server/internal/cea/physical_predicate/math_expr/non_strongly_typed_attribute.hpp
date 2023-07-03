@@ -6,15 +6,17 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 template <typename Type>
 class NonStronglyTypedAttribute : public MathExpr<Type> {
  public:
   std::string name;
-  InternalCORE::Catalog& catalog;
+  Catalog& catalog;
 
-  NonStronglyTypedAttribute(std::string name, InternalCORE::Catalog& catalog)
+  NonStronglyTypedAttribute(std::string name, Catalog& catalog)
       : name(name), catalog(catalog) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {
@@ -25,7 +27,7 @@ class NonStronglyTypedAttribute : public MathExpr<Type> {
 
   Type eval(RingTupleQueue::Tuple& tuple) override {
     size_t pos;
-    EventInfo event_info = catalog.get_event_info(tuple.id());
+    Types::EventInfo event_info = catalog.get_event_info(tuple.id());
     // It must be determined at the predicate level whether this eval
     // makes sense for the tuple.
     assert(event_info.attribute_names_to_ids.contains(name));
@@ -36,4 +38,6 @@ class NonStronglyTypedAttribute : public MathExpr<Type> {
 
   std::string to_string() const override { return name; }
 };
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

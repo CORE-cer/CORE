@@ -8,7 +8,9 @@
 #include "not_predicate.hpp"
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct LikePredicate : public Predicate {
   Attribute attribute;
@@ -51,4 +53,6 @@ struct LikePredicate : public Predicate {
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

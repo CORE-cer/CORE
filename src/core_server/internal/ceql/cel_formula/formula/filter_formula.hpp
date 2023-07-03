@@ -6,7 +6,9 @@
 #include "core_server/internal/ceql/cel_formula/filters/filter.hpp"
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct FilterFormula : public Formula {
   std::unique_ptr<Formula> formula;
@@ -43,4 +45,6 @@ struct FilterFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

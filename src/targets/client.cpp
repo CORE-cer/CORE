@@ -13,72 +13,77 @@
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-using namespace CORETypes;
-using namespace InternalCORE;
+using namespace CORE;
+using namespace CORE::Internal;
 
-ServerResponse
-send_request(ZMQMessageDealer& dealer, ClientRequest& request) {
+Types::ServerResponse
+send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
   auto serialized_response = dealer.send_and_receive(
-    CerealSerializer<ClientRequest>::serialize(request));
-  return CerealSerializer<ServerResponse>::deserialize(serialized_response);
+    CerealSerializer<Types::ClientRequest>::serialize(request));
+  return CerealSerializer<Types::ServerResponse>::deserialize(
+    serialized_response);
 }
 
-EventTypeId
-declare_event(std::string name, std::vector<AttributeInfo> attribute_info) {
+Types::EventTypeId
+declare_event(std::string name,
+              std::vector<Types::AttributeInfo> attribute_info) {
   ZMQMessageDealer dealer("tcp://localhost:5000");
-  ClientRequest event_declaration(
-    CerealSerializer<std::pair<std::string, std::vector<AttributeInfo>>>::
+  Types::ClientRequest event_declaration(
+    CerealSerializer<std::pair<std::string, std::vector<Types::AttributeInfo>>>::
       serialize(std::pair(name, attribute_info)),
-    ClientRequestType::EventDeclaration);
-  ServerResponse id_response = send_request(dealer, event_declaration);
-  auto id = CerealSerializer<EventTypeId>::deserialize(
+    Types::ClientRequestType::EventDeclaration);
+  Types::ServerResponse id_response = send_request(dealer,
+                                                   event_declaration);
+  auto id = CerealSerializer<Types::EventTypeId>::deserialize(
     id_response.serialized_response_data);
   return id;
 }
 
-EventTypeId declare_and_check_for_stream(std::string name,
-                                         std::vector<EventTypeId> ids) {
+Types::EventTypeId
+declare_and_check_for_stream(std::string name,
+                             std::vector<Types::EventTypeId> ids) {
   ZMQMessageDealer dealer("tcp://localhost:5000");
-  ClientRequest stream_declaration(
-    CerealSerializer<std::pair<std::string, std::vector<EventTypeId>>>::serialize(
-      std::pair(name, ids)),
-    ClientRequestType::StreamDeclaration);
-  ServerResponse id_response = send_request(dealer, stream_declaration);
-  auto id = CerealSerializer<StreamTypeId>::deserialize(
+  Types::ClientRequest stream_declaration(
+    CerealSerializer<std::pair<std::string, std::vector<Types::EventTypeId>>>::
+      serialize(std::pair(name, ids)),
+    Types::ClientRequestType::StreamDeclaration);
+  Types::ServerResponse id_response = send_request(dealer,
+                                                   stream_declaration);
+  auto id = CerealSerializer<Types::StreamTypeId>::deserialize(
     id_response.serialized_response_data);
   return id;
 }
 
 int main(int argc, char** argv) {
-  ZMQMessageDealer dealer("tcp://localhost:5000");
-  auto event_type_id = declare_event("DummyEvent", {});
-  auto stream_type_id = declare_and_check_for_stream("DummyStream",
-                                                     {event_type_id});
+  //ZMQMessageDealer dealer("tcp://localhost:5000");
+  //auto event_type_id = declare_event("DummyEvent", {});
+  //auto stream_type_id = declare_and_check_for_stream("DummyStream",
+  //{event_type_id});
 
-  ClientRequest create_dummy_streamer("", ClientRequestType::AddQuery);
-  ServerResponse response = send_request(dealer, create_dummy_streamer);
-  auto port_number = CerealSerializer<PortNumber>::deserialize(
-    response.serialized_response_data);
+  //Types::ClientRequest create_dummy_streamer("", Types::ClientRequestType::AddQuery);
+  //Types::ServerResponse response = send_request(dealer, create_dummy_streamer);
+  //auto port_number = CerealSerializer<PortNumber>::deserialize(
+  //response.serialized_response_data);
 
-  ZMQMessageSubscriber subscriber("tcp://localhost:"
-                                  + std::to_string(port_number));
-  std::vector<std::string> messages;
-  std::thread subscriber_thread = std::thread([&]() {
-    for (int i = 0; i < 10; i++) messages.push_back(subscriber.receive());
-  });
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //ZMQMessageSubscriber subscriber("tcp://localhost:"
+  //+ std::to_string(port_number));
+  //std::vector<std::string> messages;
+  //std::thread subscriber_thread = std::thread([&]() {
+  //for (int i = 0; i < 10; i++) messages.push_back(subscriber.receive());
+  //});
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-  for (int i = 0; i < 10; i++) {
-    Event event_to_send(i, 0, {});
-    ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-    sender.send(
-      CerealSerializer<Stream>::serialize(Stream(0, {event_to_send})));
-  }
-  subscriber_thread.join();
-  for (int i = 0; i < 10; i++) {
-    Event event = CerealSerializer<Event>::deserialize(messages[i]);
-    std::cout << "Received Empty Event with date: " << event.event_date
-              << std::endl;
-  }
+  //for (int i = 0; i < 10; i++) {
+  //Event event_to_send(i, 0, {});
+  //ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
+  //sender.send(
+  //CerealSerializer<Stream>::serialize(Stream(0, {event_to_send})));
+  //}
+  //subscriber_thread.join();
+  //for (int i = 0; i < 10; i++) {
+  //Event event = CerealSerializer<Event>::deserialize(messages[i]);
+  //std::cout << "Received Empty Event:  " << event.event_date
+  //<< std::endl;
+  //}
   return 0;
 }

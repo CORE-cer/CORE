@@ -6,7 +6,9 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 template <ComparisonType Comp, typename ValueType>
 class CompareWithConstant : public PhysicalPredicate {
@@ -109,5 +111,6 @@ class CompareWithConstant : public PhysicalPredicate {
     }
   }
 };
-
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

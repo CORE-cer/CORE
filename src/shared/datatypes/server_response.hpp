@@ -4,7 +4,8 @@
 
 #include "shared/datatypes/server_response_type.hpp"
 
-namespace CORETypes {
+namespace CORE {
+namespace Types {
 /**
  * The client can communicate with the server through requests, passing
  * data through streams or receiving results through specific ports. To
@@ -39,4 +40,5 @@ struct ServerResponse {
     archive(serialized_response_data, response_type);
   }
 };
-}  // namespace CORETypes
+}  // namespace Types
+}  // namespace CORE

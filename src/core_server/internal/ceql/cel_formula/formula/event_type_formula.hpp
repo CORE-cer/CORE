@@ -5,7 +5,9 @@
 
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 
 struct EventTypeFormula : public Formula {
   std::string event_type_name;
@@ -36,4 +38,6 @@ struct EventTypeFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

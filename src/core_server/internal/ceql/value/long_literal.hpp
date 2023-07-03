@@ -5,7 +5,9 @@
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 struct LongLiteral final : public Value {
   long value;
 
@@ -43,4 +45,6 @@ struct LongLiteral final : public Value {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE

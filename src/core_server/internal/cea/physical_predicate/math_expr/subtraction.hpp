@@ -5,7 +5,9 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace InternalCORECEA {
+namespace CORE {
+namespace Internal {
+namespace CEA {
 
 template <typename Type>
 class Subtraction : public MathExpr<Type> {
@@ -34,4 +36,6 @@ class Subtraction : public MathExpr<Type> {
     return "(" + left->to_string() + " - " + right->to_string() + ")";
   }
 };
-}  // namespace InternalCORECEA
+}  // namespace CEA
+}  // namespace Internal
+}  // namespace CORE

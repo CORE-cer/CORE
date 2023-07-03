@@ -5,9 +5,8 @@
 #include "shared/datatypes/client_request_type.hpp"
 #include "shared/datatypes/server_response.hpp"
 
-using namespace CORETypes;
-
-namespace InternalCORE {
+namespace CORE {
+namespace Internal {
 
 class Mediator;
 
@@ -27,18 +26,19 @@ class ClientMessageHandler {
   std::string operator()(const std::string& serialized_client_request);
 
  private:
-  ServerResponse handle_client_request(ClientRequest request);
+  Types::ServerResponse handle_client_request(Types::ClientRequest request);
 
-  ServerResponse event_declaration(std::string s_event_info);
-  ServerResponse event_info_from_id(std::string s_event_id);
-  ServerResponse event_info_from_name(std::string s_event_name);
-  ServerResponse list_all_events();
-  ServerResponse stream_declaration(std::string s_stream_info);
-  ServerResponse stream_info_from_id(std::string s_stream_id);
-  ServerResponse stream_info_from_name(std::string s_stream_name);
-  ServerResponse list_all_streams();
-  ServerResponse add_query(std::string s_query_info);
+  Types::ServerResponse event_declaration(std::string s_event_info);
+  Types::ServerResponse event_info_from_id(std::string s_event_id);
+  Types::ServerResponse event_info_from_name(std::string s_event_name);
+  Types::ServerResponse list_all_events();
+  Types::ServerResponse stream_declaration(std::string s_stream_info);
+  Types::ServerResponse stream_info_from_id(std::string s_stream_id);
+  Types::ServerResponse stream_info_from_name(std::string s_stream_name);
+  Types::ServerResponse list_all_streams();
+  Types::ServerResponse add_query(std::string s_query_info);
   // TODO: all queries and port numbers
 };
 
-}  // namespace InternalCORE
+}  // namespace Internal
+}  // namespace CORE

@@ -4,7 +4,9 @@
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE {
+namespace Internal {
+namespace CEQL {
 struct BooleanLiteral final : public Value {
   bool value;
 
@@ -42,4 +44,6 @@ struct BooleanLiteral final : public Value {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CEQL
+}  // namespace Internal
+}  // namespace CORE
