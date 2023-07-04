@@ -4,11 +4,11 @@
 #include <vector>
 
 #include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/value.hpp"
 
 using namespace CORETypes;
 
 namespace DatabaseManager {
-class Value;
 
 class Database {
  private:
@@ -49,50 +49,50 @@ class Database {
   }
 
   void add_event(uint64_t event_type_id,
-               uint64_t event_uid,
-               uint64_t stream_uid,
-               std::chrono::system_clock::time_point timestamp,
-               std::vector<Value> attributes) {
-  std::string eventTableName = get_event_table_name(event_type_id);
-  if (eventTableName.empty()) {
-    std::cout << "Event table not found for event type ID: " << event_type_id << std::endl;
-    return;
-  }
-
-  std::string query = "INSERT INTO " + eventTableName + " (event_uid, event_type_id, stream_uid, timestamp";
-  std::string values = " VALUES ($1, $2, $3, $4";
-  std::vector<pqxx::prepare::param_t> preparedParams;
-
-  int paramIndex = 5;
-  for (const Value& attribute : attributes) {
-    query += ", " + attribute.name;
-    values += ", $" + std::to_string(paramIndex);
-    preparedParams.push_back(attribute.value);
-    paramIndex++;
-  }
-
-  query += ")" + values + ");";
-
-  try {
-    pqxx::work transaction(*connection);
-    pqxx::prepare::invocation invoc = transaction.prepared(query);
-
-    for (const auto& param : preparedParams) {
-      invoc(param);
+                 uint64_t event_uid,
+                 uint64_t stream_uid,
+                 std::chrono::system_clock::time_point timestamp,
+                 std::vector<Value> attributes) {
+    std::string eventTableName = get_event_table_name(event_type_id);
+    if (eventTableName.empty()) {
+      std::cout << "Event table not found for event type ID: "
+                << event_type_id << std::endl;
+      return;
     }
 
-    invoc.exec();
-    transaction.commit();
+    std::string
+      query = "INSERT INTO " + eventTableName
+              + " (event_uid, event_type_id, stream_uid, timestamp";
+    std::string values = " VALUES ($1, $2, $3, $4";
+    //std::vector<pqxx::prepare::param_t> preparedParams;
 
-    std::cout << "Event added successfully." << std::endl;
+    //int paramIndex = 5;
+    //for (const Value& attribute : attributes) {
+    //query += ", " + attribute.name;
+    //values += ", $" + std::to_string(paramIndex);
+    //preparedParams.push_back(attribute.value);
+    //paramIndex++;
+    //}
+
+    query += ")" + values + ");";
+
+    try {
+      pqxx::work transaction(*connection);
+      //pqxx::prepare::invocation invoc = transaction.prepared(query);
+
+      //for (const auto& param : preparedParams) {
+      //invoc(param);
+      //}
+
+      //invoc.exec();
+      //transaction.commit();
+
+      //std::cout << "Event added successfully." << std::endl;
     } catch (const std::exception& e) {
-    std::cout << "Failed to add event." << std::endl;
-    std::cout << "Error message: " << e.what() << std::endl;
+      std::cout << "Failed to add event." << std::endl;
+      std::cout << "Error message: " << e.what() << std::endl;
     }
   }
-
-
-
 
   void add_stream_type(std::string stream_name,
                        std::vector<uint64_t>&& stream_event_types,
@@ -141,23 +141,24 @@ class Database {
   }
 
   std::string get_event_table_name(uint64_t event_type_id) {
+    std::string eventTableName;
+    std::string query =
+      "SELECT event_table_name FROM eventnames WHERE event_type_id = "
+      + std::to_string(event_type_id) + ";";
 
-  std::string eventTableName;
-  std::string query = "SELECT event_table_name FROM eventnames WHERE event_type_id = " + std::to_string(event_type_id) + ";";
-  
-  try {
-    pqxx::work transaction(*connection);
-    pqxx::result result = transaction.exec(query);
-    if (!result.empty()) {
-      eventTableName = result[0][0].as<std::string>();
+    try {
+      pqxx::work transaction(*connection);
+      pqxx::result result = transaction.exec(query);
+      if (!result.empty()) {
+        eventTableName = result[0][0].as<std::string>();
+      }
+      transaction.commit();
+    } catch (const std::exception& e) {
+      std::cout << "Failed to get event table name." << std::endl;
+      std::cout << "Error message: " << e.what() << std::endl;
     }
-    transaction.commit();
-  } catch (const std::exception& e) {
-    std::cout << "Failed to get event table name." << std::endl;
-    std::cout << "Error message: " << e.what() << std::endl;
-  }
 
-  return eventTableName;
+    return eventTableName;
   }
 
   void connect_database(const std::string& db_connection_query) {

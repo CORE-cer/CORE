@@ -262,8 +262,8 @@ TEST_CASE("Connect to database", "[server coordination]") {
   database.create_streams_table(connectionString, event_names);
   
   std::chrono::system_clock::time_point eventTimestamp = std::chrono::system_clock::now();
-  std::vector<DatabaseManager::Value> eventAttributes;
-  eventAttributes.push_back(DatabaseManager::Value("Attribute1", 123));
-  eventAttributes.push_back(DatabaseManager::Value("Attribute2", 3.14));
-  eventAttributes.push_back(DatabaseManager::Value
+  //std::vector<DatabaseManager::Value> eventAttributes;
+  //eventAttributes.push_back(DatabaseManager::Value("Attribute1", 123));
+  //eventAttributes.push_back(DatabaseManager::Value("Attribute2", 3.14));
+  //eventAttributes.push_back(DatabaseManager::Value
 }
