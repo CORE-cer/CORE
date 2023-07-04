@@ -12,6 +12,7 @@ CMakeCache.txt
 CMakeFiles
 CMakeScripts
 CMakeUserPresets.json
+cmake-build-debug
 
 .env
 .antlr
