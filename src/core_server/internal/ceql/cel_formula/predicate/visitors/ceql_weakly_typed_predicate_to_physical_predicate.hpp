@@ -139,9 +139,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
       case FinalType::String:
         return compare_math_exprs<std::string_view>(left, op, right);
       case FinalType::Date:
-        return compare_math_exprs<
-          std::chrono::time_point<std::chrono::system_clock,
-                                  std::chrono::nanoseconds>>(left, op, right);
+        return compare_math_exprs<std::time_t>(left, op, right);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:

@@ -108,11 +108,11 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
     // clang-format off
     auto math_expr_eval_1 =
       std::make_unique<CEA::Subtraction<int64_t>>(
-          std::make_unique<CEA::Attribute<int64_t>>(1),
+          std::make_unique<CEA::Attribute<int64_t, int64_t>>(1),
           std::make_unique<CEA::Literal<int64_t>>(-2));
     auto math_expr_eval_2 =
       std::make_unique<CEA::Multiplication<int64_t>>(
-          std::make_unique<CEA::Attribute<int64_t>>(1),
+          std::make_unique<CEA::Attribute<int64_t, int64_t>>(1),
           std::make_unique<CEA::Literal<int64_t>>(-2));
     auto math_expr_eval_4 =
       std::make_unique<CEA::Multiplication<int64_t>>(

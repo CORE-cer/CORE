@@ -29,7 +29,37 @@ class ValueToMathExpr : public ValueVisitor {
                                + event_info.name);
     }
     size_t id = attribute_id->second;
-    math_expr = std::make_unique<CEA::Attribute<Type>>(id);
+    Types::AttributeInfo info = event_info.attributes_info[id];
+    switch (info.value_type) {
+      case Types::INT64:
+        math_expr = std::make_unique<CEA::Attribute<Type, int64_t>>(id);
+        break;
+      case Types::DOUBLE:
+        math_expr = std::make_unique<CEA::Attribute<Type, double>>(id);
+        break;
+      case Types::BOOL:
+        math_expr = std::make_unique<CEA::Attribute<Type, bool>>(id);
+        break;
+      case Types::STRING_VIEW:
+        if constexpr (std::is_same_v<Type, std::string_view>) {
+          math_expr = std::make_unique<
+            CEA::Attribute<std::string_view, std::string_view>>(id);
+        } else {
+          assert(false
+                 && "Global type is not std::string_view and local is.");
+        }
+        break;
+      case Types::DATE:
+        if constexpr (std::is_same_v<Type, std::time_t>) {
+          math_expr = std::make_unique<
+            CEA::Attribute<std::time_t, std::time_t>>(id);
+        } else {
+          assert(false && "Global type is not std::time_t and local is.");
+        }
+        break;
+      default:
+        assert(false && "Some AttributeType is not coded inside the Attribute Visitation in Value To Math Expr.");
+    }
   }
 
   void visit(DoubleLiteral& literal) override {

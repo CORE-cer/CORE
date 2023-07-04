@@ -36,7 +36,7 @@ struct _Type {
         size_in_bytes = 2 * sizeof(uint64_t);
         break;
       case _Type::Type::DATE:
-        size_in_bytes = sizeof(std::chrono::system_clock::time_point);
+        size_in_bytes = sizeof(std::time_t);
         break;
       default:
         throw std::invalid_argument("Unsupported type");

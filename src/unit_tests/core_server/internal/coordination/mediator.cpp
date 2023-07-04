@@ -134,14 +134,13 @@ std::string create_query(std::string filter_clause) {
 }
 
 TEST_CASE(
+  "INTEGRATION TEST:"
   "Query sent to the Router creates a query evaluator, a listener receives"
   "a message, stores it in the ring tuple queue and sends it to the"
   "dummy query evaluator, the dummy query evaluator then evaluates it"
   "and responds back a string representing the bits that are satisfied",
   "[server coordination]") {
-  // This will fail once events are sent to specific streams
-  // This will also fail once the streamer sends complex events.
-  // TODO
+  // TODO: Change this to actual complex event, not queryEvaluator.
   Mediator mediator(5000);
   mediator.start();
 
@@ -189,6 +188,85 @@ TEST_CASE(
   subscriber_thread.join();
   REQUIRE(message == "101");  // Is type 1 and first query.
   mediator.stop();
+}
+
+TEST_CASE(
+  "INTEGRATION TEST:"
+  "4 queries, 1 tuple. One weakly typed query."
+  "[server coordination]") {
+  // TODO: Change this to complex events.
+  Mediator mediator(5000);
+  mediator.start();
+
+  auto event_type_id_1 = declare_and_check_for_event(
+    "Ints",
+    {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
+     Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
+  auto stream_type_id_1 = declare_and_check_for_stream("S1",
+                                                       {event_type_id_1});
+  auto event_type_id_2 = declare_and_check_for_event(
+    "Mixed",
+    {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
+     Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
+     Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
+  auto stream_type_id_2 = declare_and_check_for_stream("S2",
+                                                       {event_type_id_1,
+                                                        event_type_id_2});
+
+  // TODO: Maybe add the variables in the other parts of the query.
+  std::vector<std::string> queries;
+  queries.push_back(
+    create_query("Ints[Int1 >= 20 AND Int2 >= 1] AND "
+                 "X[Int1 <= 30 OR Double1 >= 3.0]"));
+  queries.push_back(
+    create_query("Mixed[Int1 >= 3 AND Int2 <= 20] AND "
+                 "X[Int1 == 30 OR Double1 >= 3.0]"));
+  queries.push_back(
+    create_query("Ints[Int2 <= 4 AND Int2 >= 1] AND "
+                 "X[Double1 == 30 OR Int2 >= 1.0]"));
+  ZMQMessageDealer dealer("tcp://localhost:5000");
+  Types::PortNumber expected_port_number = 5002;
+  for (auto& query : queries) {
+    Types::ClientRequest create_streamer{std::move(query),
+                                         Types::ClientRequestType::AddQuery};
+    Types::ServerResponse response = send_request(dealer, create_streamer);
+    REQUIRE(response.response_type == Types::ServerResponseType::PortNumber);
+    auto port_number = CerealSerializer<Types::PortNumber>::deserialize(
+      response.serialized_response_data);
+    REQUIRE(port_number == expected_port_number++);
+  }
+
+  std::vector<ZMQMessageSubscriber> subscribers;
+  std::vector<std::string> messages(queries.size());
+  std::vector<std::thread> subscriber_threads;
+
+  for (size_t port = 5002; port < expected_port_number; port++) {
+    subscribers.emplace_back("tcp://localhost:" + std::to_string(port));
+  }
+
+  // Separately because of the parallel nature of this test case.
+  std::atomic<Types::PortNumber> port_num{5002};
+  for (size_t i = 0; i < queries.size(); i++) {
+    subscriber_threads.emplace_back([&]() {
+      auto port = port_num++;  // Atomic
+      messages[port - 5002] = subscribers[port - 5002].receive();
+    });
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
+  Types::Event event_to_send{event_type_id_1,
+                             {std::make_shared<Types::IntValue>(20),
+                              std::make_shared<Types::IntValue>(2)}};
+  sender.send(CerealSerializer<Types::Stream>::serialize(
+    Types::Stream(stream_type_id_1, {event_to_send})));
+  for (auto& thread : subscriber_threads) {
+    thread.join();
+  }
+  mediator.stop();
+  REQUIRE(messages[0] == "1101");
+  REQUIRE(messages[1] == "1");
+  REQUIRE(messages[2] == "1101");
 }
 }  // namespace COREMediatorCoordinationTests
 }  // namespace UnitTests

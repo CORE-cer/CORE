@@ -167,11 +167,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case FinalType::String:
         return compare_attributes<std::string_view>(left_pos, op, right_pos);
       case FinalType::Date:
-        return compare_attributes<
-          std::chrono::time_point<std::chrono::system_clock,
-                                  std::chrono::nanoseconds>>(left_pos,
-                                                             op,
-                                                             right_pos);
+        return compare_attributes<std::time_t>(left_pos, op, right_pos);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
@@ -226,14 +222,13 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
                         CEAComparison op,
                         std::unique_ptr<CEQL::Value>& right) {
     left->accept_visitor(final_data_type_visitor);
-    right->accept_visitor(final_data_type_visitor);
-    auto combined_type = final_data_type_visitor.get_final_data_type();
+    auto attribute_type = final_data_type_visitor.get_final_data_type();
 
     assert(dynamic_cast<CEQL::Attribute*>(left.get()) != nullptr);
     auto left_ptr = static_cast<CEQL::Attribute*>(left.get());
     size_t left_pos = get_pos_from_name(left_ptr->value);
 
-    switch (combined_type) {
+    switch (attribute_type) {
       case FinalType::Integer:
         return compare_with_constant<int64_t>(left_pos, op, right);
       case FinalType::Double:
@@ -241,11 +236,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case FinalType::String:
         return compare_with_constant<std::string_view>(left_pos, op, right);
       case FinalType::Date:
-        return compare_with_constant<
-          std::chrono::time_point<std::chrono::system_clock,
-                                  std::chrono::nanoseconds>>(left_pos,
-                                                             op,
-                                                             right);
+        return compare_with_constant<std::time_t>(left_pos, op, right);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
@@ -264,25 +255,23 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       assert(dynamic_cast<CEQL::StringLiteral*>(ptr.get()) != nullptr);
       auto casted_ptr = static_cast<CEQL::StringLiteral*>(ptr.get());
       return casted_ptr->value;
-    } else if constexpr (std::is_same_v<
-                           ValueType,
-                           std::chrono::time_point<std::chrono::system_clock,
-                                                   std::chrono::nanoseconds>>) {
-      throw std::logic_error(
-        "TimePoint Val not implemented yet, nor its transformation");
     } else {
       ptr->accept_visitor(value_type_visitor);
       auto right_value_type = value_type_visitor.get_value_type();
       switch (right_value_type) {
         case ValueTypes::IntegerLiteral:
           assert(dynamic_cast<CEQL::IntegerLiteral*>(ptr.get()) != nullptr);
-          return static_cast<CEQL::IntegerLiteral*>(ptr.get())->value;
+          return static_cast<ValueType>(
+            static_cast<CEQL::IntegerLiteral*>(ptr.get())->value);
         case ValueTypes::BooleanLiteral:
           assert(dynamic_cast<CEQL::BooleanLiteral*>(ptr.get()) != nullptr);
-          return static_cast<CEQL::BooleanLiteral*>(ptr.get())->value;
+          return static_cast<ValueType>(
+            static_cast<CEQL::BooleanLiteral*>(ptr.get())->value);
         case ValueTypes::DoubleLiteral:
           assert(dynamic_cast<CEQL::DoubleLiteral*>(ptr.get()) != nullptr);
-          return static_cast<CEQL::DoubleLiteral*>(ptr.get())->value;
+          return static_cast<ValueType>(
+            static_cast<CEQL::DoubleLiteral*>(ptr.get())->value);
+        // TODO: Date type.
         default:
           assert(false &&
                  "Some non constant value was passed to "
@@ -366,9 +355,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       case FinalType::String:
         return compare_math_exprs<std::string_view>(left, op, right);
       case FinalType::Date:
-        return compare_math_exprs<
-          std::chrono::time_point<std::chrono::system_clock,
-                                  std::chrono::nanoseconds>>(left, op, right);
+        return compare_math_exprs<std::time_t>(left, op, right);
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
