@@ -78,27 +78,27 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
 
   SECTION("Compare with attribute", "ValueToMathExpr") {
     // clang-format off
-    CEA::CompareWithAttribute<CEA::ComparisonType::EQUALS, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::EQUALS, int64_t, int64_t>
     predicate_equals(id, 1, 2);
     REQUIRE(!predicate_equals(tuple));
 
-    CEA::CompareWithAttribute<CEA::ComparisonType::GREATER, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::GREATER, int64_t, int64_t>
     predicate_greater(id, 2, 1);
     REQUIRE(predicate_greater(tuple));
 
-    CEA::CompareWithAttribute<CEA::ComparisonType::GREATER_EQUALS, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::GREATER_EQUALS, int64_t, int64_t>
     predicate_greater_equals(id, 1, 2);
     REQUIRE(!predicate_greater_equals(tuple));
 
-    CEA::CompareWithAttribute<CEA::ComparisonType::LESS_EQUALS, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::LESS_EQUALS, int64_t, int64_t>
     predicate_less_equals(id, 1, 2);
     REQUIRE(predicate_less_equals(tuple));
 
-    CEA::CompareWithAttribute<CEA::ComparisonType::LESS, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::LESS, int64_t, int64_t>
     predicate_less(id, 1, 2);
     REQUIRE(predicate_less(tuple));
 
-    CEA::CompareWithAttribute<CEA::ComparisonType::NOT_EQUALS, int64_t>
+    CEA::CompareWithAttribute<CEA::ComparisonType::NOT_EQUALS, int64_t, int64_t>
     predicate_not_equals(id, 1, 2);
     REQUIRE(predicate_not_equals(tuple));
     // clang-format on
@@ -108,11 +108,11 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
     // clang-format off
     auto math_expr_eval_1 =
       std::make_unique<CEA::Subtraction<int64_t>>(
-          std::make_unique<CEA::Attribute<int64_t>>(1),
+          std::make_unique<CEA::Attribute<int64_t, int64_t>>(1),
           std::make_unique<CEA::Literal<int64_t>>(-2));
     auto math_expr_eval_2 =
       std::make_unique<CEA::Multiplication<int64_t>>(
-          std::make_unique<CEA::Attribute<int64_t>>(1),
+          std::make_unique<CEA::Attribute<int64_t, int64_t>>(1),
           std::make_unique<CEA::Literal<int64_t>>(-2));
     auto math_expr_eval_4 =
       std::make_unique<CEA::Multiplication<int64_t>>(

@@ -21,6 +21,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
+    // TODO: Add local type and Global Type.
     math_expr = std::make_unique<CEA::NonStronglyTypedAttribute<Type>>(
       attribute.value, catalog);
   }
