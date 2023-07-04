@@ -19,3 +19,7 @@ CMakeUserPresets.json
 
 # MACOS
 .DS_Store
+
+# other
+.cache
+.idea
