@@ -89,7 +89,10 @@ jobs:
           echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" | sudo tee -a /etc/apt/sources.list
           sudo apt-get update
           sudo apt-get install -y clang-format-15
-          clang-format --version
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-15 1000
+
+    - name: Check clang-format version
+      run: clang-format --version
 
       - name: Check code format
         run: |
