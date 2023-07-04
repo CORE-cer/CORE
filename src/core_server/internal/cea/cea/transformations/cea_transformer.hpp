@@ -1,5 +1,5 @@
 #pragma once
-#include "core_server/internal/cea/ndcea/ndcea.hpp"
+#include "core_server/internal/cea/cea/cea.hpp"
 
 namespace CORE {
 namespace Internal {
@@ -17,24 +17,24 @@ class NDCEATransformer {
   using EndNodeId = int64_t;
 
  public:
-  NDCEA operator()(NDCEA&& query) {
+  CEA operator()(CEA&& query) {
     return static_cast<Derived*>(this)->eval(query);
   }
 
-  NDCEA operator()(NDCEA&& left, NDCEA&& right) {
+  CEA operator()(CEA&& left, CEA&& right) {
     return static_cast<Derived*>(this)->eval(left, right);
   }
 
-  NDCEA eval(NDCEA&& query) {
+  CEA eval(CEA&& query) {
     throw std::logic_error("eval(query) not implemented");
   }
 
-  NDCEA eval(NDCEA&& left, NDCEA&& right) {
+  CEA eval(CEA&& left, CEA&& right) {
     throw std::logic_error("eval(left, right) not implemented");
   }
 
-  static NDCEA union_of(NDCEA& left, NDCEA& right) {
-    NDCEA out = NDCEA(left);
+  static CEA union_of(CEA& left, CEA& right) {
+    CEA out = CEA(left);
     out.add_n_states(right.amount_of_states);
     out.initial_states |= right.initial_states << left.amount_of_states;
     out.final_states |= right.final_states << left.amount_of_states;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core_server/internal/cea/ndcea/ndcea.hpp"
-#include "core_server/internal/cea/ndcea/ndcea_transformer/ndcea_transformer.hpp"
-#include "core_server/internal/cea/ndcea/ndcea_transformer/ndcea_union.hpp"
+#include "core_server/internal/cea/cea/cea.hpp"
+#include "core_server/internal/cea/cea/transformations/cea_transformer.hpp"
+#include "core_server/internal/cea/cea/transformations/constructions/cea_union.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_atomic_filters.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
@@ -13,7 +13,7 @@ namespace CORE {
 namespace Internal {
 namespace CEQL {
 
-class FormulaToNDCEA : public FormulaVisitor {
+class FormulaToCEA : public FormulaVisitor {
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
 
@@ -21,18 +21,18 @@ class FormulaToNDCEA : public FormulaVisitor {
   Catalog& catalog;
 
  public:
-  CEA::NDCEA current_cea{0};
+  CEA::CEA current_cea{0};
 
-  FormulaToNDCEA(Catalog& catalog) : catalog(catalog) {}
+  FormulaToCEA(Catalog& catalog) : catalog(catalog) {}
 
-  ~FormulaToNDCEA() override = default;
+  ~FormulaToCEA() override = default;
 
   void visit(FilterFormula& formula) override {
     // TODO
   }
 
   void visit(EventTypeFormula& formula) override {
-    current_cea = CEA::NDCEA(2);
+    current_cea = CEA::CEA(2);
     if (!catalog.event_name_is_taken(formula.event_type_name)) {
       throw std::runtime_error("The event_name: " + formula.event_type_name +
                                " is not in the catalog, and base cases "
@@ -51,17 +51,17 @@ class FormulaToNDCEA : public FormulaVisitor {
 
   void visit(OrFormula& formula) override {
     formula.left->accept_visitor(*this);
-    CEA::NDCEA left_cea = std::move(current_cea);
+    CEA::CEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
-    CEA::NDCEA right_cea = std::move(current_cea);
+    CEA::CEA right_cea = std::move(current_cea);
     current_cea = CEA::NDCEAUnion()(left_cea, right_cea);
   }
 
   void visit(SequencingFormula& formula) override {
     formula.left->accept_visitor(*this);
-    CEA::NDCEA left_cea = std::move(current_cea);
+    CEA::CEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
-    CEA::NDCEA right_cea = std::move(current_cea);
+    CEA::CEA right_cea = std::move(current_cea);
 
     // Note, for this to work the implementation of union must offset the
     // right_states by the amount of states in the left_cea, and not make

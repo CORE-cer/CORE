@@ -12,7 +12,7 @@
 namespace CORE {
 namespace Internal {
 namespace CEA {
-class DCEA {
+class DetCEA {
   using IsMarked = bool;
   using EndNodeId = int64_t;
   using Transition = std::tuple<PredicateSet, IsMarked, EndNodeId>;
@@ -36,7 +36,7 @@ class DCEA {
   States current_states;
 
  public:
-  DCEA(NDCEA& ndcea)
+  DetCEA(CEA& ndcea)
       : amount_of_states(ndcea.amount_of_states),
         initial_states(ndcea.initial_states),
         current_states(ndcea.initial_states),

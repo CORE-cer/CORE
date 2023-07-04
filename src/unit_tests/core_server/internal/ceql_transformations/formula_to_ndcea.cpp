@@ -42,9 +42,9 @@ TEST_CASE("Basic Event Type", "[ValueToMathExpr]") {
   Catalog catalog;
   auto event_type_id = catalog.add_event_type("H", {});
   auto formula = parse_formula(create_query("H"));
-  auto visitor = FormulaToNDCEA(catalog);
+  auto visitor = FormulaToCEA(catalog);
   formula->accept_visitor(visitor);
-  CEA::NDCEA ndcea = visitor.current_cea;
+  CEA::CEA ndcea = visitor.current_cea;
 }
 }  // namespace FormulaToNDCEATests
 }  // namespace UnitTests

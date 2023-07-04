@@ -192,7 +192,7 @@ TEST_CASE(
 
 TEST_CASE(
   "INTEGRATION TEST:"
-  "4 queries, 1 tuple. One weakly typed query."
+  "3 queries, 1 tuple. One weakly typed query."
   "[server coordination]") {
   // TODO: Change this to complex events.
   Mediator mediator(5000);

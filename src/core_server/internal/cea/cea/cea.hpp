@@ -6,10 +6,8 @@
 
 #include "core_server/internal/cea/predicate_set.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
-struct NDCEA {
+namespace CORE::Internal::CEA {
+struct CEA {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
@@ -23,13 +21,13 @@ struct NDCEA {
   int64_t amount_of_states;
 
  public:
-  NDCEA(int64_t amount_of_states) : amount_of_states(amount_of_states) {
+  CEA(int64_t amount_of_states) : amount_of_states(amount_of_states) {
     for (int i = 0; i < amount_of_states; i++) {
       transitions.push_back({});
     }
   }
 
-  NDCEA(const NDCEA& other)
+  CEA(const CEA& other)
       : amount_of_states(other.amount_of_states),
         transitions(other.transitions),
         initial_states(other.initial_states),
@@ -93,6 +91,4 @@ struct NDCEA {
     return out;
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA
