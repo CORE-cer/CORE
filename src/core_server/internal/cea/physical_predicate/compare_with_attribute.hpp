@@ -12,7 +12,7 @@ namespace CORE {
 namespace Internal {
 namespace CEA {
 
-template <ComparisonType Comp, typename ValueType>
+template <ComparisonType Comp, typename LeftValueType, typename RightValueType>
 class CompareWithAttribute : public PhysicalPredicate {
  private:
   size_t first_pos;
@@ -38,22 +38,30 @@ class CompareWithAttribute : public PhysicalPredicate {
   bool eval(RingTupleQueue::Tuple& tuple) override {
     uint64_t* pos1 = tuple[first_pos];
     uint64_t* pos2 = tuple[second_pos];
-    RingTupleQueue::Value<ValueType> first_val(pos1);
-    RingTupleQueue::Value<ValueType> second_val(pos2);
-    if constexpr (Comp == ComparisonType::EQUALS)
-      return first_val.get() == second_val.get();
-    else if constexpr (Comp == ComparisonType::GREATER)
-      return first_val.get() > second_val.get();
-    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return first_val.get() >= second_val.get();
-    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return first_val.get() <= second_val.get();
-    else if constexpr (Comp == ComparisonType::LESS)
-      return first_val.get() < second_val.get();
-    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return first_val.get() != second_val.get();
-    else
-      assert(false && "Operator() not implemented for some ComparisonType");
+    RingTupleQueue::Value<LeftValueType> first_val(pos1);
+    RingTupleQueue::Value<RightValueType> second_val(pos2);
+    if constexpr (!std::is_same_v<LeftValueType, RightValueType>
+                  && (std::is_same_v<LeftValueType, std::string_view>
+                      || std::is_same_v<RightValueType, std::string_view>)) {
+      return false;  // Cannot compare string with non string.
+    } else {
+      if constexpr (Comp == ComparisonType::EQUALS)
+        return first_val.get() == second_val.get();
+      else if constexpr (Comp == ComparisonType::GREATER)
+        return first_val.get() > second_val.get();
+      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+        return first_val.get() >= second_val.get();
+      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+        return first_val.get() <= second_val.get();
+      else if constexpr (Comp == ComparisonType::LESS)
+        return first_val.get() < second_val.get();
+
+      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+        return first_val.get() != second_val.get();
+      else
+        assert(false
+               && "Operator() not implemented for some ComparisonType");
+    }
   }
 
   std::string to_string() const override {
