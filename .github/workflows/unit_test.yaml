@@ -83,8 +83,12 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Install clang-format
-        run: sudo apt-get install -y clang-format
+      - name: Install latest clang-format
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-15
 
       - name: Check code format
         run: |
