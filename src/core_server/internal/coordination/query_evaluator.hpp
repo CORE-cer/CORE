@@ -11,8 +11,7 @@
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class QueryEvaluator {
  private:
@@ -76,5 +75,4 @@ class QueryEvaluator {
   }
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

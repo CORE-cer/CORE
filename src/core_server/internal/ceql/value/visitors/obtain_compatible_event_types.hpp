@@ -8,9 +8,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "value_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 class ObtainCompatibleEventTypes : public ValueVisitor {
  public:
   enum DataType {
@@ -87,6 +85,4 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
     return out;
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

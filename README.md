@@ -32,6 +32,18 @@ source ~/.profile # Or reboot your terminal
 
 If you are using WSL, you might need to reboot your terminal for this to work.
 
+## Install version 11 of g++, or later.
+
+if `g++ --version` is >= 11, then you can skip this step.
+
+```
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install g++-11
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
+```
+
 ## Setup conan with autodetected configs of your computer
 
 `conan profile detect`

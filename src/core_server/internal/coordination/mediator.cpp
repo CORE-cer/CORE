@@ -6,8 +6,7 @@
 #include "core_server/internal/coordination/streams_listener.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 Mediator::Mediator(Types::PortNumber port)
     : router(*this, port),
@@ -147,5 +146,4 @@ void Mediator::write_date(std::shared_ptr<Types::Value>& attr) {
   std::time_t* time_ptr = queue.writer<std::time_t>();
   *time_ptr = val_ptr->val;
 }
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

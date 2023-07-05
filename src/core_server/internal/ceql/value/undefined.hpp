@@ -4,9 +4,7 @@
 
 #include "value.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct Undefined final : public Value {
   Undefined() noexcept {}
 
@@ -34,6 +32,4 @@ struct Undefined final : public Value {
   template <class Archive>
   void serialize(Archive& archive) {}
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

@@ -11,10 +11,7 @@
 
 using namespace RingTupleQueue;
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
-namespace UnitTests {
+namespace CORE::Internal::CEQL::UnitTests {
 
 TEST_CASE("Compare with constant predicate computed correctly.",
           "[ValueToMathExpr]") {
@@ -134,7 +131,4 @@ TEST_CASE("Compare with constant predicate computed correctly.",
     REQUIRE((*converter.predicate)(tuple));
   }
 }
-}  // namespace UnitTests
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL::UnitTests

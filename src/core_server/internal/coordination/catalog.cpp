@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 /*
      .--,       .--,
@@ -226,5 +225,4 @@ uint64_t Catalog::add_type_to_schema(
   }
   return tuple_schemas.add_schema(std::move(converted_types));
 }
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

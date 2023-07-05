@@ -4,8 +4,7 @@
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 void StreamsListener::start() {
   stop_condition = false;
@@ -30,5 +29,4 @@ void StreamsListener::stop() {
   worker_thread.join();
 }
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

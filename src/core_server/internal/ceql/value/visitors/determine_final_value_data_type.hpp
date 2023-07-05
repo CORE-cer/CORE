@@ -5,9 +5,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "value_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 class DetermineFinalValueDataType : public ValueVisitor {
  public:
   enum DataType {
@@ -131,6 +129,4 @@ class DetermineFinalValueDataType : public ValueVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

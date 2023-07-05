@@ -12,10 +12,7 @@
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace UnitTests {
-namespace COREMediatorCoordinationTests {
+namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests {
 
 Types::ServerResponse
 send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
@@ -192,7 +189,7 @@ TEST_CASE(
 
 TEST_CASE(
   "INTEGRATION TEST:"
-  "4 queries, 1 tuple. One weakly typed query."
+  "3 queries, 1 tuple. One weakly typed query."
   "[server coordination]") {
   // TODO: Change this to complex events.
   Mediator mediator(5000);
@@ -268,7 +265,4 @@ TEST_CASE(
   REQUIRE(messages[1] == "1");
   REQUIRE(messages[2] == "1101");
 }
-}  // namespace COREMediatorCoordinationTests
-}  // namespace UnitTests
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests

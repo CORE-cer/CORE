@@ -1,17 +1,15 @@
 #pragma once
 
-#include "core_server/internal/cea/physical_predicate/predicate_headers.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type_with_catalog.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class CEQLWeaklyTypedPredicateToCEAPredicate final
     : public PredicateVisitor {
@@ -256,6 +254,4 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 };
 
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

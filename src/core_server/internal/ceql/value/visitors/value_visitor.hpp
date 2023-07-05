@@ -2,9 +2,7 @@
 
 #include <stdexcept>
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class Attribute;
 class BooleanLiteral;
@@ -45,6 +43,4 @@ class ValueVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

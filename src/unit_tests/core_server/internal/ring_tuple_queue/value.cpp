@@ -3,8 +3,7 @@
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 
-namespace RingTupleQueue {
-namespace UnitTests {
+namespace RingTupleQueue::UnitTests {
 TEST_CASE("Get method returns correct value for constant sized type",
           "[Value]") {
   uint64_t data = 1234567890;
@@ -46,5 +45,4 @@ TEST_CASE("Get method returns correct value for trivially copyable type",
   auto arr_copy = value.get();
   REQUIRE(arr_copy == arr);
 }
-}  // namespace UnitTests
-}  // namespace RingTupleQueue
+}  // namespace RingTupleQueue::UnitTests

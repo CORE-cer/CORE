@@ -4,9 +4,7 @@
 
 #include "visitors/formula_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 struct Formula {
   virtual ~Formula() = default;
@@ -15,6 +13,4 @@ struct Formula {
   virtual std::string to_string() const = 0;
   virtual void accept_visitor(FormulaVisitor&) = 0;
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

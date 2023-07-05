@@ -8,9 +8,7 @@
 #include "not_predicate.hpp"
 #include "predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 struct InPredicate : public Predicate {
   std::unique_ptr<Value> left;
@@ -55,6 +53,4 @@ struct InPredicate : public Predicate {
     visitor.visit(*this);
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

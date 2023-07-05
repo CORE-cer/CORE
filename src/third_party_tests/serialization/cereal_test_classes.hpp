@@ -3,10 +3,7 @@
 
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace ThirdPartyTests {
-namespace Cereal {
+namespace CORE::Internal::ThirdPartyTests::Cereal {
 struct SimpleStruct {
   int x;
 
@@ -76,10 +73,7 @@ struct ClassWithAbstractClassSharedPtr {
     archive(objects);
   }
 };
-}  // namespace Cereal
-}  // namespace ThirdPartyTests
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::ThirdPartyTests::Cereal
 
 // Need to add this in the header file of the CEREAL serializer
 // for cereal to be able to serialize polimorphic types correctly

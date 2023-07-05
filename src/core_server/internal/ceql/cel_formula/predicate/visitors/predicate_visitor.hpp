@@ -2,9 +2,7 @@
 
 #include <stdexcept>
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class AndPredicate;
 class InPredicate;
@@ -29,6 +27,4 @@ class PredicateVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

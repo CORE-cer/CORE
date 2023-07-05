@@ -9,8 +9,7 @@
 #include "shared/datatypes/server_response.hpp"
 #include "shared/networking/message_router/zmq_message_router.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class Mediator;
 
@@ -32,5 +31,4 @@ class Router {
   }
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

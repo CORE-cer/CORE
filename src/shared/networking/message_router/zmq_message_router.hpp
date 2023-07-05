@@ -6,8 +6,7 @@
 
 #include "shared/networking/message_router/message_router.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 template <typename TransformFunc>
 class ZMQMessageRouter : MessageRouter {
  private:
@@ -70,5 +69,4 @@ class ZMQMessageRouter : MessageRouter {
   }
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

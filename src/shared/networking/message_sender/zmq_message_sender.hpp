@@ -4,8 +4,7 @@
 
 #include "shared/networking/message_sender/message_sender.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 class ZMQMessageSender : MessageSender {
  private:
   zmq::context_t context;
@@ -29,5 +28,4 @@ class ZMQMessageSender : MessageSender {
     socket.send(zmq_message, zmq::send_flags::none);
   }
 };
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

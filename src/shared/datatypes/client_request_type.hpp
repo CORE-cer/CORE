@@ -1,7 +1,6 @@
 #pragma once
 
-namespace CORE {
-namespace Types {
+namespace CORE::Types {
 enum struct ClientRequestType {
   EventDeclaration,
   EventInfoFromId,
@@ -13,5 +12,4 @@ enum struct ClientRequestType {
   ListStreams,
   AddQuery
 };
-}
-}  // namespace CORE
+}  // namespace CORE::Types

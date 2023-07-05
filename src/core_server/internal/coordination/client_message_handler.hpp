@@ -5,8 +5,7 @@
 #include "shared/datatypes/client_request_type.hpp"
 #include "shared/datatypes/server_response.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class Mediator;
 
@@ -40,5 +39,4 @@ class ClientMessageHandler {
   // TODO: all queries and port numbers
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

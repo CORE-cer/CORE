@@ -4,9 +4,7 @@
 
 #include "visitors/filter_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct Filter {
  public:
   virtual ~Filter() = default;
@@ -15,6 +13,4 @@ struct Filter {
   virtual void accept_visitor(FilterVisitor&) = 0;
   virtual std::string to_string() const = 0;
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

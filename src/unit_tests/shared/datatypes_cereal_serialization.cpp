@@ -3,9 +3,7 @@
 #include "shared/datatypes/value.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace ThirdPartyTests {
+namespace CORE::Internal::ThirdPartyTests {
 
 template <typename Object, typename ArgumentType>
 void check_serialization_of(ArgumentType arg) {
@@ -31,6 +29,4 @@ TEST_CASE("Serialization works for all basic CORE types",
   check_serialization_of<Types::DateValue, std::time_t>(200);
 }
 
-}  // namespace ThirdPartyTests
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::ThirdPartyTests

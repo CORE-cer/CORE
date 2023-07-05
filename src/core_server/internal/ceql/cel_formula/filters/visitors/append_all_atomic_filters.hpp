@@ -7,9 +7,7 @@
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "filter_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class AppendAllAtomicFilters : public FilterVisitor {
  public:
@@ -32,6 +30,4 @@ class AppendAllAtomicFilters : public FilterVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

@@ -1,12 +1,10 @@
 #include <string>
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 template <typename StructName>
 class Serializer {
  public:
   static std::string serialize(const StructName);
   StructName deserialize(const std::string& message);
 };
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

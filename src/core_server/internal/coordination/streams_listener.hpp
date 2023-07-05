@@ -7,8 +7,7 @@
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class Mediator;
 
@@ -31,5 +30,4 @@ class StreamsListener {
   void stop();
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

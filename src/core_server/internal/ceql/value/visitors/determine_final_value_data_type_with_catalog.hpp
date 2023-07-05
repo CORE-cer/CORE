@@ -5,9 +5,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "value_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
  public:
   enum DataType {
@@ -127,6 +125,4 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL
