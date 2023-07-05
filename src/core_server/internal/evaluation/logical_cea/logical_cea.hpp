@@ -2,6 +2,7 @@
 #include <gmpxx.h>
 
 #include <cstdint>
+#include <set>
 #include <vector>
 
 #include "core_server/internal/evaluation/predicate_set.hpp"
@@ -16,6 +17,7 @@ struct LogicalCEA {
 
   // transitions[i] = all transitions of node i.
   std::vector<std::vector<Transition>> transitions;
+  std::vector<std::set<EndNodeId>> epsilon_transitions;
   States initial_states;
   States final_states;
   int64_t amount_of_states;
@@ -25,19 +27,35 @@ struct LogicalCEA {
       : amount_of_states(amount_of_states) {
     for (int i = 0; i < amount_of_states; i++) {
       transitions.push_back({});
+      epsilon_transitions.push_back({});
     }
   }
 
   LogicalCEA(const LogicalCEA& other)
       : amount_of_states(other.amount_of_states),
         transitions(other.transitions),
+        epsilon_transitions(other.epsilon_transitions),
         initial_states(other.initial_states),
         final_states(other.final_states) {}
+
+  static LogicalCEA atomic_cea(int64_t event_type_id) {
+    auto atomic_cea = LogicalCEA(2);
+    mpz_class position_of_event = (mpz_class)1 << event_type_id;
+    mpz_class predicate_mask = (mpz_class)1 << event_type_id;
+    atomic_cea.transitions[0].push_back(
+      std::make_tuple(PredicateSet(position_of_event, predicate_mask),
+                      position_of_event,
+                      1));
+    atomic_cea.initial_states = 1 << 0;
+    atomic_cea.final_states = 1 << 1;
+    return atomic_cea;
+  }
 
   void add_n_states(int64_t n) {
     amount_of_states += n;
     for (int64_t i = 0; i < n; i++) {
       transitions.push_back({});
+      epsilon_transitions.push_back({});
     }
   }
 
@@ -49,7 +67,7 @@ struct LogicalCEA {
       if ((initial_states_copy & 1) != 0) {
         out.push_back(current_pos);
       }
-      initial_states_copy <<= 1;
+      initial_states_copy >>= 1;
       current_pos++;
     }
     return out;
@@ -63,7 +81,7 @@ struct LogicalCEA {
       if ((final_states_copy & 1) != 0) {
         out.push_back(current_pos);
       }
-      final_states_copy <<= 1;
+      final_states_copy >>= 1;
       current_pos++;
     }
     return out;
@@ -73,7 +91,7 @@ struct LogicalCEA {
   std::string to_string() const {
     // clang-format off
     std::string out =
-      "NDCEA{\n"
+      "LogicalCEA{\n"
       "Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
       "I = (bitset) " + initial_states.get_str(2) + "\n"
       "F = (bitset) " + final_states.get_str(2) + "\n"
@@ -89,6 +107,14 @@ struct LogicalCEA {
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }
+    out += "Δε: [NodeId]";
+    for (size_t i = 0; i < epsilon_transitions.size(); i++) {
+      if (transitions[i].size() != 0)
+        for (const EndNodeId& end_node : epsilon_transitions[i]) {
+          out += std::to_string(i) + "→ " + std::to_string(end_node) + "\n";
+        }
+    }
+
     return out;
   }
 };
