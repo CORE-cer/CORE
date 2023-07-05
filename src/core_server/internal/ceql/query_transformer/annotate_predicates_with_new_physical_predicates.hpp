@@ -2,10 +2,10 @@
 #include <memory>
 #include <vector>
 
-#include "core_server/internal/cea/physical_predicate/check_type_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/visitors/get_all_atomic_filters.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_strong_typed_predicate_to_physical_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_weakly_typed_predicate_to_physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/check_type_predicate.hpp"
 #include "query_transformer.hpp"
 
 namespace CORE {

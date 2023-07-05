@@ -1,5 +1,5 @@
 #pragma once
-#include "core_server/internal/cea/cea/cea.hpp"
+#include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 
 namespace CORE {
 namespace Internal {
@@ -12,29 +12,29 @@ namespace CEA {
  * this inferface
  */
 template <class Derived>
-class NDCEATransformer {
+class LogicalCEATransformer {
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
 
  public:
-  CEA operator()(CEA&& query) {
+  LogicalCEA operator()(LogicalCEA&& query) {
     return static_cast<Derived*>(this)->eval(query);
   }
 
-  CEA operator()(CEA&& left, CEA&& right) {
+  LogicalCEA operator()(LogicalCEA&& left, LogicalCEA&& right) {
     return static_cast<Derived*>(this)->eval(left, right);
   }
 
-  CEA eval(CEA&& query) {
+  LogicalCEA eval(LogicalCEA&& query) {
     throw std::logic_error("eval(query) not implemented");
   }
 
-  CEA eval(CEA&& left, CEA&& right) {
+  LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) {
     throw std::logic_error("eval(left, right) not implemented");
   }
 
-  static CEA union_of(CEA& left, CEA& right) {
-    CEA out = CEA(left);
+  static LogicalCEA union_of(LogicalCEA& left, LogicalCEA& right) {
+    LogicalCEA out = LogicalCEA(left);
     out.add_n_states(right.amount_of_states);
     out.initial_states |= right.initial_states << left.amount_of_states;
     out.final_states |= right.final_states << left.amount_of_states;

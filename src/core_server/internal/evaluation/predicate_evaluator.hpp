@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include "core_server/internal/cea/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 
 namespace CORE {
 namespace Internal {

@@ -6,8 +6,8 @@
 #include <map>
 #include <vector>
 
-#include "core_server/internal/cea/ndcea/ndcea.hpp"
 #include "core_server/internal/cea/predicate_set.hpp"
+#include "core_server/internal/evaluation/logical_cea/ndcea.hpp"
 
 namespace CORE {
 namespace Internal {

@@ -4,10 +4,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "core_server/internal/cea/predicate_set.hpp"
+#include "core_server/internal/evaluation/predicate_set.hpp"
 
 namespace CORE::Internal::CEA {
-struct CEA {
+struct LogicalCEA {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
@@ -21,13 +21,14 @@ struct CEA {
   int64_t amount_of_states;
 
  public:
-  CEA(int64_t amount_of_states) : amount_of_states(amount_of_states) {
+  LogicalCEA(int64_t amount_of_states)
+      : amount_of_states(amount_of_states) {
     for (int i = 0; i < amount_of_states; i++) {
       transitions.push_back({});
     }
   }
 
-  CEA(const CEA& other)
+  LogicalCEA(const LogicalCEA& other)
       : amount_of_states(other.amount_of_states),
         transitions(other.transitions),
         initial_states(other.initial_states),
