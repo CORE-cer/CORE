@@ -8,10 +8,7 @@
 #include "core_server/internal/evaluation/physical_predicate/compare_with_constant.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
-namespace UnitTests {
+namespace CORE::Internal::CEQL::UnitTests {
 
 TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
           "[ValueToMathExpr]") {
@@ -155,7 +152,4 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate",
     // clang-format on
   }
 }
-}  // namespace UnitTests
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL::UnitTests

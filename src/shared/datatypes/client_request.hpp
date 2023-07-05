@@ -4,8 +4,7 @@
 
 #include "shared/datatypes/client_request_type.hpp"
 
-namespace CORE {
-namespace Types {
+namespace CORE::Types {
 /**
  * The client can communicate with the server through requests, passing
  * data through streams or receiving results through specific ports. To
@@ -40,5 +39,4 @@ struct ClientRequest {
     archive(serialized_request_data, request_type);
   }
 };
-}  // namespace Types
-}  // namespace CORE
+}  // namespace CORE::Types

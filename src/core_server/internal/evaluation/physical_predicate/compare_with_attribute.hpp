@@ -8,9 +8,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <ComparisonType Comp, typename LeftValueType, typename RightValueType>
 class CompareWithAttribute : public PhysicalPredicate {
@@ -87,6 +85,4 @@ class CompareWithAttribute : public PhysicalPredicate {
       assert(false && "to_string() not implemented for some ComparisonType");
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

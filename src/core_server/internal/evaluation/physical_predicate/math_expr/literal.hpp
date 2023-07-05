@@ -4,9 +4,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <typename Type>
 class Literal : public MathExpr<Type> {
@@ -24,6 +22,4 @@ class Literal : public MathExpr<Type> {
 
   std::string to_string() const override { return std::to_string(val); }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

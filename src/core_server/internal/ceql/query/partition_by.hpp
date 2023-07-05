@@ -3,13 +3,9 @@
 
 #include "core_server/internal/ceql/value/attribute.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 struct PartitionBy {
   std::vector<Attribute> formula;
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

@@ -9,9 +9,7 @@
 #include "math_expr/math_expr_headers.hpp"
 #include "physical_predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <ComparisonType Comp, typename ValueType>
 class CompareMathExprs : public PhysicalPredicate {
@@ -70,6 +68,4 @@ class CompareMathExprs : public PhysicalPredicate {
       assert(false && "to_string() not implemented for some ComparisonType");
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

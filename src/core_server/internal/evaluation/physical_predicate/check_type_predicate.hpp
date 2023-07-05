@@ -6,9 +6,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 class CheckTypePredicate : public PhysicalPredicate {
  public:
@@ -34,6 +32,4 @@ class CheckTypePredicate : public PhysicalPredicate {
   }
 };
 
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

@@ -1,7 +1,6 @@
 #include <string>
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 class MessageSubscriber {
   /**
    * An interface for receiving all messaged broadcasted at the address provided.
@@ -14,5 +13,4 @@ class MessageSubscriber {
    */
   std::string receive();
 };
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

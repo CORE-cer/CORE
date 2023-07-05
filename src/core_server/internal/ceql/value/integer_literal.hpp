@@ -4,9 +4,7 @@
 
 #include "value.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct IntegerLiteral final : public Value {
   int64_t value;
 
@@ -45,6 +43,4 @@ struct IntegerLiteral final : public Value {
     archive(value);
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

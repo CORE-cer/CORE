@@ -3,10 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
-namespace UnitTests {
+namespace CORE::Internal::CEA::UnitTests {
 
 TEST_CASE("PredicateSet correctly determines satisfiability.",
           "PredicateSet") {
@@ -75,7 +72,4 @@ TEST_CASE("PredicateSet that is a tautology is always satisfiable",
   REQUIRE(predicate_set.is_satisfied_by(0b10));
   REQUIRE(predicate_set.is_satisfied_by(0b11));
 }
-}  // namespace UnitTests
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA::UnitTests

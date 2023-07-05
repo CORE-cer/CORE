@@ -7,9 +7,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 class NotPredicate : public PhysicalPredicate {
  private:
@@ -38,6 +36,4 @@ class NotPredicate : public PhysicalPredicate {
     return "NOT " + predicate->to_string();
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

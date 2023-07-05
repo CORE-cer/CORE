@@ -5,9 +5,7 @@
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "filter.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 /**
  * The atomic filter is the filter of type X[P]
  */
@@ -45,6 +43,4 @@ struct AtomicFilter : public Filter {
     return variable_name + "[" + predicate->to_string() + "]";
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

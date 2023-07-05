@@ -9,9 +9,7 @@
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class CEQLWeaklyTypedPredicateToCEAPredicate final
     : public PredicateVisitor {
@@ -256,6 +254,4 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 };
 
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

@@ -3,10 +3,7 @@
 #include "shared/serializer/cereal_serializer.hpp"
 #include "third_party_tests/serialization/cereal_test_classes.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace ThirdPartyTests {
-namespace Cereal {
+namespace CORE::Internal::ThirdPartyTests::Cereal {
 
 TEST_CASE("Serialization works for a simple structure", "[cereal]") {
   SimpleStruct initial_struct{5};
@@ -54,7 +51,4 @@ TEST_CASE("Serialization works for an object with an abstract class ptr",
   REQUIRE(obj2->value == final_concrete2->value);
 }
 
-}  // namespace Cereal
-}  // namespace ThirdPartyTests
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::ThirdPartyTests::Cereal

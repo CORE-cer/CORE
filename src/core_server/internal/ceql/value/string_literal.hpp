@@ -4,9 +4,7 @@
 
 #include "value.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct StringLiteral final : public Value {
   std::string value;
 
@@ -42,6 +40,4 @@ struct StringLiteral final : public Value {
     archive(value);
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

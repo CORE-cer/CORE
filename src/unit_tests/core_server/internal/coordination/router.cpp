@@ -12,9 +12,7 @@
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace UnitTests {
+namespace CORE::Internal::UnitTests {
 Types::ServerResponse
 send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
   auto serialized_response = dealer.send_and_receive(
@@ -269,6 +267,4 @@ TEST_CASE(
   REQUIRE(id_response.response_type == Types::ServerResponseType::Error);
   router.stop();
 }
-}  // namespace UnitTests
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::UnitTests

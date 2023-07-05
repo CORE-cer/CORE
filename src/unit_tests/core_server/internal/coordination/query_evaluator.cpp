@@ -19,11 +19,7 @@
 
 using namespace RingTupleQueue;
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
-namespace UnitTests {
-namespace COREQueryEvaluatorCoordinationTests {
+namespace CORE::Internal::CEA::UnitTests::COREQueryEvaluatorCoordinationTests {
 std::string send(Types::PortNumber inner_thread_port_number,
                  RingTupleQueue::Tuple& event,
                  zmq::context_t& context) {
@@ -160,8 +156,4 @@ TEST_CASE("A sent event is read back by dummy EventStreamer",
   REQUIRE("1" == received_message);
   streamer.stop();
 }
-}  // namespace COREQueryEvaluatorCoordinationTests
-}  // namespace UnitTests
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA::UnitTests::COREQueryEvaluatorCoordinationTests

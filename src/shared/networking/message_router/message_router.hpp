@@ -1,7 +1,6 @@
 #include <string>
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 class MessageRouter {
   /**
    * An interface for routing incomming messages. Note that this
@@ -14,5 +13,4 @@ class MessageRouter {
   void start();
   void stop();
 };
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

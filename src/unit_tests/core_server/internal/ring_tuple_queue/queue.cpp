@@ -6,8 +6,7 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
-namespace RingTupleQueue {
-namespace UnitTests {
+namespace RingTupleQueue::UnitTests {
 
 TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
   TupleSchemas schemas;
@@ -60,5 +59,4 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     REQUIRE(val3.get() == true);
   }
 }
-}  // namespace UnitTests
-}  // namespace RingTupleQueue
+}  // namespace RingTupleQueue::UnitTests

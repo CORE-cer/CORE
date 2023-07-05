@@ -3,9 +3,7 @@
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct Subtraction final : Value {
   std::unique_ptr<Value> left;
   std::unique_ptr<Value> right;
@@ -54,6 +52,4 @@ struct Subtraction final : Value {
     archive(left, right);
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

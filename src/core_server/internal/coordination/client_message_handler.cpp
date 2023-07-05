@@ -5,8 +5,7 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 ClientMessageHandler::ClientMessageHandler(Mediator& mediator)
     : mediator(mediator), catalog(mediator.catalog) {}
@@ -152,5 +151,4 @@ ClientMessageHandler::add_query(std::string s_query_info) {
                                  port),
                                Types::ServerResponseType::PortNumber);
 }
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

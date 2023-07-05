@@ -10,9 +10,7 @@
 #include "visitors/select_visitor.hpp"
 #include "visitors/where_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace Parsing {
+namespace CORE::Internal::Parsing {
 
 class QueryVisitor : public CEQLQueryParserBaseVisitor {
   // Override methods from the base visitor to handle
@@ -64,6 +62,4 @@ class Parser {
   }
 };
 
-}  // namespace Parsing
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::Parsing

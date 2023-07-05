@@ -1,7 +1,5 @@
 #pragma once
 
-namespace CORE {
-namespace Types {
+namespace CORE::Types {
 enum ValueTypes { INT64, DOUBLE, BOOL, STRING_VIEW, DATE };
-}
-}  // namespace CORE
+}  // namespace CORE::Types

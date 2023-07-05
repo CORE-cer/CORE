@@ -2,9 +2,7 @@
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 /**
  * The union_of method is a helper function of the base class.
@@ -22,6 +20,4 @@ class LCEAUnion : public LogicalCEATransformer<LCEAUnion> {
   }
 };
 
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

@@ -32,8 +32,7 @@
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 template <typename StructName>
 class CerealSerializer : Serializer<StructName> {
  public:
@@ -52,8 +51,7 @@ class CerealSerializer : Serializer<StructName> {
     return data;
   }
 };
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal
 
 /**
  * For cereal to work on abstract classes it is necessary to declar all

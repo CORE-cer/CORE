@@ -6,9 +6,7 @@
 #include "where.hpp"
 #include "within.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct Query {
   Select select;
   From from;
@@ -30,6 +28,4 @@ struct Query {
         within(std::move(within)),
         consume_by(std::move(consume_by)) {}
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

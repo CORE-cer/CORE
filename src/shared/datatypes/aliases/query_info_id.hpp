@@ -1,8 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-namespace CORE {
-namespace Types {
+namespace CORE::Types {
 using QueryInfoId = uint64_t;
-}
-}  // namespace CORE
+}  // namespace CORE::Types

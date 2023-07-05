@@ -5,9 +5,7 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <typename Type>
 class MathExpr {
@@ -17,6 +15,4 @@ class MathExpr {
   virtual Type eval(RingTupleQueue::Tuple&) = 0;
   virtual std::string to_string() const = 0;
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

@@ -6,12 +6,10 @@
 #include <map>
 #include <vector>
 
-#include "core_server/internal/cea/predicate_set.hpp"
-#include "core_server/internal/evaluation/logical_cea/ndcea.hpp"
+#include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
+#include "core_server/internal/evaluation/predicate_set.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 class DetCEA {
   using IsMarked = bool;
   using EndNodeId = int64_t;
@@ -36,7 +34,7 @@ class DetCEA {
   States current_states;
 
  public:
-  DetCEA(CEA& ndcea)
+  DetCEA(LogicalCEA& ndcea)
       : amount_of_states(ndcea.amount_of_states),
         initial_states(ndcea.initial_states),
         current_states(ndcea.initial_states),
@@ -60,6 +58,4 @@ class DetCEA {
     }
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

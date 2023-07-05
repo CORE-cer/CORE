@@ -8,9 +8,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/lcea_union.hpp"
 #include "formula_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 class FormulaToCEA : public FormulaVisitor {
   using VariablesToMark = mpz_class;
@@ -129,6 +127,4 @@ class FormulaToCEA : public FormulaVisitor {
 
   // clang-format on
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

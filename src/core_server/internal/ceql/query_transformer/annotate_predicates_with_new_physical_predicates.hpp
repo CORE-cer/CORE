@@ -8,9 +8,7 @@
 #include "core_server/internal/evaluation/physical_predicate/check_type_predicate.hpp"
 #include "query_transformer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 
 /**
  * Creates all the physical predicates that are needed to evaluate the query,
@@ -67,6 +65,4 @@ class AnnotatePredicatesWithNewPhysicalPredicates
     }
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

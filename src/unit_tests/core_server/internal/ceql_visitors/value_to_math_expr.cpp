@@ -7,10 +7,7 @@
 
 using namespace RingTupleQueue;
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
-namespace UnitTests {
+namespace CORE::Internal::CEQL::UnitTests {
 
 TEST_CASE("Single functionality testing of Value to MathExpr",
           "[ValueToMathExpr]") {
@@ -103,7 +100,4 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
     REQUIRE(math_expr->eval(tuple) == 6);
   }
 }
-}  // namespace UnitTests
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL::UnitTests

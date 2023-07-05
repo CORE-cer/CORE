@@ -10,8 +10,4 @@
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace UnitTests {}
-}  // namespace Internal
-}  // namespace CORE
+namespace CORE::Internal::UnitTests {}

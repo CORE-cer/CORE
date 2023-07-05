@@ -14,8 +14,7 @@
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class Catalog {
  public:
@@ -74,5 +73,4 @@ class Catalog {
   add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes);
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal

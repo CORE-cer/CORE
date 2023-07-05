@@ -7,9 +7,7 @@
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr_headers.hpp"
 #include "value_visitor.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 template <typename Type>
 class WeaklyTypedValueToMathExpr : public ValueVisitor {
  private:
@@ -103,6 +101,4 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
                                                          std::move(right));
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

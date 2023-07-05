@@ -1,9 +1,7 @@
 #pragma once
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 /**
  * This type of polymorphism is called CRTP that allows for interfaces with
@@ -52,6 +50,4 @@ class LogicalCEATransformer {
   }
 };
 
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

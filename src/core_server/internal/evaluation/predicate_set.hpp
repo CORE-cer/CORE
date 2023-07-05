@@ -2,9 +2,7 @@
 
 #include <gmpxx.h>
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 struct PredicateSet {
   enum Type { Satisfiable, Contradiction, Tautology };
@@ -104,6 +102,4 @@ struct PredicateSet {
     return out;
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

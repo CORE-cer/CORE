@@ -1,8 +1,6 @@
 #pragma once
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 enum ComparisonType {
   EQUALS,
   GREATER,
@@ -12,5 +10,3 @@ enum ComparisonType {
   NOT_EQUALS,
 };
 }
-}  // namespace Internal
-}  // namespace CORE

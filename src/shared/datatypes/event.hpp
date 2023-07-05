@@ -7,8 +7,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"
 
-namespace CORE {
-namespace Types {
+namespace CORE::Types {
 
 /**
  * An Event is what the base CORE paper defines as a data-tuple. Formally
@@ -49,5 +48,4 @@ struct Event {
   }
 };
 
-}  // namespace Types
-}  // namespace CORE
+}  // namespace CORE::Types

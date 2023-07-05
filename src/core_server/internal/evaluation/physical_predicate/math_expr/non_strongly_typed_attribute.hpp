@@ -6,9 +6,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <typename GlobalType>
 class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
@@ -71,6 +69,4 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
 
   std::string to_string() const override { return name; }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

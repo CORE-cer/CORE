@@ -7,9 +7,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace Evaluation {
+namespace CORE::Internal::Evaluation {
 
 struct PredicateEvaluator {
   std::vector<std::unique_ptr<CEA::PhysicalPredicate>> predicates;
@@ -29,6 +27,4 @@ struct PredicateEvaluator {
   }
 };
 
-}  // namespace Evaluation
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::Evaluation

@@ -6,9 +6,7 @@
 
 #include "predicate.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEQL {
+namespace CORE::Internal::CEQL {
 struct OrPredicate : public Predicate {
  public:
   std::vector<std::unique_ptr<Predicate>> predicates;
@@ -69,6 +67,4 @@ struct OrPredicate : public Predicate {
     visitor.visit(*this);
   }
 };
-}  // namespace CEQL
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEQL

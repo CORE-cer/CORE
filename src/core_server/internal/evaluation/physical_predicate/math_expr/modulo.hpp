@@ -5,9 +5,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <typename Type>
 class Modulo : public MathExpr<Type> {
@@ -38,6 +36,4 @@ class Modulo : public MathExpr<Type> {
     return "(" + left->to_string() + " % " + right->to_string() + ")";
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

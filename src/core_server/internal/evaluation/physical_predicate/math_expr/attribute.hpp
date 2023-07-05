@@ -5,9 +5,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 
-namespace CORE {
-namespace Internal {
-namespace CEA {
+namespace CORE::Internal::CEA {
 
 template <typename GlobalType, typename LocalType>
 class Attribute : public MathExpr<GlobalType> {
@@ -37,6 +35,4 @@ class Attribute : public MathExpr<GlobalType> {
     return "Attribute[" + std::to_string(pos) + "]";
   }
 };
-}  // namespace CEA
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal::CEA

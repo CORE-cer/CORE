@@ -11,8 +11,7 @@
 
 class CEA;
 
-namespace CORE {
-namespace Internal {
+namespace CORE::Internal {
 
 class Mediator {
  public:
@@ -52,5 +51,4 @@ class Mediator {
   // clang-format on
 };
 
-}  // namespace Internal
-}  // namespace CORE
+}  // namespace CORE::Internal
