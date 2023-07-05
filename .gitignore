@@ -1,4 +1,5 @@
 build/
+NetrwTreeListing
 
 # text editor metadata
 compile_commands.json
@@ -24,3 +25,4 @@ cmake-build-debug
 # other
 .cache
 .idea
+
