@@ -31,6 +31,7 @@
 using namespace InternalCORE;
 using namespace InternalCORECEQL;
 
+
 ServerResponse
 send_request(ZMQMessageDealer& dealer, ClientRequest& request) {
   auto serialized_response = dealer.send_and_receive(
@@ -261,9 +262,16 @@ TEST_CASE("Connect to database", "[server coordination]") {
 
   database.create_streams_table(connectionString, event_names);
   
-  std::chrono::system_clock::time_point eventTimestamp = std::chrono::system_clock::now();
-  //std::vector<DatabaseManager::Value> eventAttributes;
-  //eventAttributes.push_back(DatabaseManager::Value("Attribute1", 123));
-  //eventAttributes.push_back(DatabaseManager::Value("Attribute2", 3.14));
-  //eventAttributes.push_back(DatabaseManager::Value
+  uint64_t event_uid = 123;
+  uint64_t stream_uid = 456;
+  std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now();
+
+std::vector<std::shared_ptr<Value>> attributes = {
+  std::make_shared<IntValue>(29),
+  std::make_shared<IntValue>(10),
+  std::make_shared<IntValue>(17)
+};
+
+database.add_event(event_type_id_1, event_uid, stream_uid, timestamp, attributes, std::move(event_name_1), connectionString);
+
 }

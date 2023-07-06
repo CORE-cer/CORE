@@ -2,6 +2,13 @@
 #include <pqxx/pqxx>
 #include <string>
 #include <vector>
+#include <cctype> 
+#include <algorithm> 
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
+
 
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/value.hpp"
@@ -42,57 +49,67 @@ class Database {
       query += attribute.name + " VARCHAR(255), ";
     }
 
+
     query = query.substr(0, query.size() - 2);
     query += ");";
 
     execute_query(query, db_connection_query);
   }
 
-  void add_event(uint64_t event_type_id,
-                 uint64_t event_uid,
-                 uint64_t stream_uid,
-                 std::chrono::system_clock::time_point timestamp,
-                 std::vector<Value> attributes) {
-    std::string eventTableName = get_event_table_name(event_type_id);
-    if (eventTableName.empty()) {
-      std::cout << "Event table not found for event type ID: "
-                << event_type_id << std::endl;
-      return;
-    }
+void add_event(uint64_t event_type_id, uint64_t event_uid, uint64_t stream_uid,
+               std::chrono::system_clock::time_point timestamp,
+               std::vector<std::shared_ptr<Value>> attributes,
+               std::string&& event_name,
+               const std::string& db_connection_query) {
 
-    std::string
-      query = "INSERT INTO " + eventTableName
-              + " (event_uid, event_type_id, stream_uid, timestamp";
-    std::string values = " VALUES ($1, $2, $3, $4";
-    //std::vector<pqxx::prepare::param_t> preparedParams;
+  insert_eventnames(event_name,event_type_id,db_connection_query);
 
-    //int paramIndex = 5;
-    //for (const Value& attribute : attributes) {
-    //query += ", " + attribute.name;
-    //values += ", $" + std::to_string(paramIndex);
-    //preparedParams.push_back(attribute.value);
-    //paramIndex++;
-    //}
+  std::string eventTableName = get_event_table_name(event_type_id);
 
-    query += ")" + values + ");";
+  std::string lowercaseEventTableName;
+  std::transform(eventTableName.begin(), eventTableName.end(),
+               std::back_inserter(lowercaseEventTableName), ::tolower);
+ std::vector<std::string> attributeNames = get_event_table_attributes(lowercaseEventTableName, db_connection_query);
 
-    try {
-      pqxx::work transaction(*connection);
-      //pqxx::prepare::invocation invoc = transaction.prepared(query);
-
-      //for (const auto& param : preparedParams) {
-      //invoc(param);
-      //}
-
-      //invoc.exec();
-      //transaction.commit();
-
-      //std::cout << "Event added successfully." << std::endl;
-    } catch (const std::exception& e) {
-      std::cout << "Failed to add event." << std::endl;
-      std::cout << "Error message: " << e.what() << std::endl;
-    }
+  
+  if (eventTableName.empty()) {
+    std::cout << "Event table not found for event type ID: "
+              << event_type_id << std::endl;
+    return;
   }
+
+    std::string query = "INSERT INTO event_" + eventTableName +
+                        " (event_type_id, event_uid, stream_uid, timestamp";
+if (attributeNames.size() >= 4) {
+  auto it = attributeNames.begin() + 4;  // Starting from the 4th element
+  for (; it != attributeNames.end(); ++it) {
+    query += ", "+*it;
+  }
+}
+
+    query += ") VALUES (";
+    query += std::to_string(event_type_id) + ", ";
+    query += std::to_string(event_uid) + ", ";
+    query += std::to_string(stream_uid) + ", ";
+    std::time_t timestamp_t = std::chrono::system_clock::to_time_t(timestamp);
+std::tm* timeinfo = std::localtime(&timestamp_t);
+std::stringstream dateStream;
+dateStream << std::put_time(timeinfo, "%Y-%m-%d");
+std::string dateString = dateStream.str();
+
+query += "'" + dateString + "'";
+
+    for (const auto& attribute : attributes) {
+      query += ", " + (*attribute).to_string();
+    }
+
+    query += ")";
+
+    execute_query(query, db_connection_query);
+
+  }
+
+
 
   void add_stream_type(std::string stream_name,
                        std::vector<uint64_t>&& stream_event_types,
@@ -139,13 +156,19 @@ class Database {
       "stream_table_name VARCHAR(255));";
     execute_query(query, db_connection_query);
   }
+               
+  void insert_eventnames(std::string& event_name, uint64_t event_type_id, const std::string& db_connection_query) {
+   std::string query = "INSERT INTO eventnames (event_type_id, event_table_name) VALUES (" + std::to_string(event_type_id) + ", '" + event_name + "')";
+   execute_query(query, db_connection_query);
+  }
+
 
   std::string get_event_table_name(uint64_t event_type_id) {
     std::string eventTableName;
     std::string query =
       "SELECT event_table_name FROM eventnames WHERE event_type_id = "
       + std::to_string(event_type_id) + ";";
-
+    
     try {
       pqxx::work transaction(*connection);
       pqxx::result result = transaction.exec(query);
@@ -160,6 +183,23 @@ class Database {
 
     return eventTableName;
   }
+
+std::vector<std::string> get_event_table_attributes(std::string eventTableName, const std::string& db_connection_query) {
+  std::vector<std::string> attributeNames;
+  std::string query = "SELECT column_name FROM information_schema.columns WHERE table_name = 'event_" + eventTableName + "'";
+  try {
+    pqxx::work transaction(*connection);
+    pqxx::result result = transaction.exec(query);
+    for (const auto& row : result) {
+      attributeNames.push_back(row[0].as<std::string>());
+    }
+    transaction.commit();
+  } catch (const std::exception& e) {
+    std::cout << "Failed to retrieve attribute names." << std::endl;
+    std::cout << "Error message: " << e.what() << std::endl;
+  }
+  return attributeNames;
+}
 
   void connect_database(const std::string& db_connection_query) {
     try {
