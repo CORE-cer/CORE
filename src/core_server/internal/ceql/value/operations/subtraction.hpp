@@ -1,8 +1,9 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Subtraction final : Value {
   std::unique_ptr<Value> left;
   std::unique_ptr<Value> right;
@@ -25,8 +26,8 @@ struct Subtraction final : Value {
   }
 
   bool operator==(const Subtraction& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -44,7 +45,6 @@ struct Subtraction final : Value {
     visitor.visit(*this);
   }
 
-
   ~Subtraction() noexcept override {}
 
   template <class Archive>
@@ -52,4 +52,4 @@ struct Subtraction final : Value {
     archive(left, right);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

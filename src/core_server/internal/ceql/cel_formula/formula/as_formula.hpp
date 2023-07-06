@@ -1,11 +1,11 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct AsFormula : public Formula {
   std::unique_ptr<Formula> formula;
@@ -39,4 +39,4 @@ struct AsFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

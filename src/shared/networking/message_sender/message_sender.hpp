@@ -1,6 +1,6 @@
 #include <string>
 
-namespace InternalCORE {
+namespace CORE::Internal {
 class MessageSender {
   /**
    * An interface for sending messages to an address. Note that this
@@ -10,4 +10,4 @@ class MessageSender {
    */
   void send(const std::string& message);
 };
-}  // namespace InteralCORE
+}  // namespace CORE::Internal

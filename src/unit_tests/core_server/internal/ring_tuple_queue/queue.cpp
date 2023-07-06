@@ -1,21 +1,21 @@
+#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
-using namespace RingTupleQueue;
+namespace RingTupleQueue::UnitTests {
 
 TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
   TupleSchemas schemas;
   Queue ring_tuple_queue(100, &schemas);
 
   SECTION("Tuple indexing") {
-    auto id =
-        schemas.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE,
-                            SupportedTypes::BOOL});
-    std::span<uint64_t> data = ring_tuple_queue.start_tuple(id);
+    auto id = schemas.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
+    uint64_t* data = ring_tuple_queue.start_tuple(id);
     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
     *integer_ptr = -10;
     double* double_ptr = ring_tuple_queue.writer<double>();
@@ -37,7 +37,7 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     auto id = schemas.add_schema({SupportedTypes::INT64,
                                   SupportedTypes::STRING_VIEW,
                                   SupportedTypes::BOOL});
-    std::span<uint64_t> data = ring_tuple_queue.start_tuple(id);
+    uint64_t* data = ring_tuple_queue.start_tuple(id);
     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
     *integer_ptr = -10;
     char* chars = ring_tuple_queue.writer<std::string>(11);
@@ -59,3 +59,4 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     REQUIRE(val3.get() == true);
   }
 }
+}  // namespace RingTupleQueue::UnitTests

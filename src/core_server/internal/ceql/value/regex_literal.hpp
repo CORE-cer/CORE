@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct RegexLiteral final : public Value {
   std::string value;
 
@@ -21,8 +21,7 @@ struct RegexLiteral final : public Value {
   }
 
   bool equals(Value* val) const noexcept override {
-    if (RegexLiteral* regex_literal =
-          dynamic_cast<RegexLiteral*>(val)) {
+    if (RegexLiteral* regex_literal = dynamic_cast<RegexLiteral*>(val)) {
       return *this == *regex_literal;
     } else
       return false;
@@ -36,10 +35,9 @@ struct RegexLiteral final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

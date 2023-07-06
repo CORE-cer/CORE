@@ -5,7 +5,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 class DetermineFinalValueDataType : public ValueVisitor {
  public:
   enum DataType {
@@ -20,13 +20,13 @@ class DetermineFinalValueDataType : public ValueVisitor {
  public:
   DataType final_value_datatype = Undetermined;
 
-  DetermineFinalValueDataType(CORETypes::EventInfo event_info)
-      : event_info(event_info) {}
-
  private:
-  CORETypes::EventInfo event_info;
+  Types::EventInfo event_info;
 
  public:
+  DetermineFinalValueDataType(Types::EventInfo event_info)
+      : event_info(event_info) {}
+
   DataType get_final_data_type() {
     auto out = final_value_datatype;
     final_value_datatype = Undetermined;
@@ -34,12 +34,12 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto attribute_id =
-        event_info.attribute_names_to_ids.find(attribute.value);
+    auto attribute_id = event_info.attribute_names_to_ids.find(
+      attribute.value);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
-      throw std::runtime_error("Attribute " + attribute.value +
-                               " does not exist in event " +
-                               event_info.name);
+      throw std::runtime_error("Attribute " + attribute.value
+                               + " does not exist in event "
+                               + event_info.name);
     }
     size_t id = attribute_id->second;
     auto info = event_info.attributes_info[id];
@@ -93,23 +93,22 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
  private:
-  static DataType attribute_info_type_convertor(
-      CORETypes::ValueTypes type) {
+  static DataType attribute_info_type_convertor(Types::ValueTypes type) {
     switch (type) {
-      case CORETypes::ValueTypes::DOUBLE:
+      case Types::ValueTypes::DOUBLE:
         return Double;
-      case CORETypes::ValueTypes::INT64:
-      case CORETypes::ValueTypes::BOOL:
+      case Types::ValueTypes::INT64:
+      case Types::ValueTypes::BOOL:
         return Integer;
-      case CORETypes::ValueTypes::STRING_VIEW:
+      case Types::ValueTypes::STRING_VIEW:
         return String;
-      case CORETypes::ValueTypes::DATE:
+      case Types::ValueTypes::DATE:
         return Date;
       default:
         throw std::logic_error(
-            "A COREType is not considered inside of "
-            "attribute_info_type_convertor at "
-            "determine_final_value_data_type.hpp");
+          "A COREType is not considered inside of "
+          "attribute_info_type_convertor at "
+          "determine_final_value_data_type.hpp");
     }
   }
 
@@ -130,4 +129,4 @@ class DetermineFinalValueDataType : public ValueVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

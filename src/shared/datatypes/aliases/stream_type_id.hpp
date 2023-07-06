@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-namespace CORETypes {
+namespace CORE::Types {
 using StreamTypeId = uint64_t;
-}
+}  // namespace CORE::Types

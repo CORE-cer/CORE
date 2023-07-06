@@ -8,7 +8,7 @@
 #include "core_server/internal/ceql/value/value.hpp"
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct InequalityPredicate : public Predicate {
   enum struct LogicalOperation {
@@ -34,8 +34,9 @@ struct InequalityPredicate : public Predicate {
   ~InequalityPredicate() override = default;
 
   std::unique_ptr<Predicate> clone() const override {
-    return std::make_unique<InequalityPredicate>(
-        left->clone(), logical_op, right->clone());
+    return std::make_unique<InequalityPredicate>(left->clone(),
+                                                 logical_op,
+                                                 right->clone());
   }
 
   bool is_constant() const override {
@@ -43,8 +44,9 @@ struct InequalityPredicate : public Predicate {
   }
 
   std::unique_ptr<Predicate> negate() const override {
-    return std::make_unique<InequalityPredicate>(
-        left->clone(), negate(logical_op), right->clone());
+    return std::make_unique<InequalityPredicate>(left->clone(),
+                                                 negate(logical_op),
+                                                 right->clone());
   }
 
   bool operator==(const InequalityPredicate& other) const {
@@ -110,4 +112,4 @@ struct InequalityPredicate : public Predicate {
     }
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

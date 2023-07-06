@@ -1,6 +1,7 @@
 #include <atomic>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
 #include <thread>
 #include <vector>
 
@@ -11,8 +12,7 @@
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 
-namespace CerealThirdPartyTesting {
-using namespace InternalCORE;
+namespace CORE::Internal::ThirdPartyTests {
 
 TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
   std::string sent_message1 = "Hello World 1";
@@ -38,9 +38,9 @@ TEST_CASE("A sent message is received exactly as it was sent.", "[zmq]") {
 }
 
 TEST_CASE(
-    "MessageRouterRequesterTest - messages are sent specifically to each "
-    "listener",
-    "[zmq]") {
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener",
+  "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
@@ -119,9 +119,9 @@ TEST_CASE("A broadcast message is received exactly as it was sent.",
 }
 
 TEST_CASE(
-    "MessageRouterRequesterTest - messages are sent specifically to each "
-    "listener: 100 listeners 1 router",
-    "[zmq]") {
+  "MessageRouterRequesterTest - messages are sent specifically to each "
+  "listener: 100 listeners 1 router",
+  "[zmq]") {
   auto transformer = [](const std::string& message) {
     return "Transformed: " + message;
   };
@@ -171,9 +171,9 @@ TEST_CASE(
 }
 
 TEST_CASE(
-    "A broadcast message is received exactly as it was sent. 100 "
-    "receivers",
-    "[zmq]") {
+  "A broadcast message is received exactly as it was sent. 100 "
+  "receivers",
+  "[zmq]") {
   std::string sent_message = "Hello World 1";
   std::vector<std::string> received_messages;
 
@@ -255,4 +255,4 @@ TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
                Catch::Matchers::UnorderedEquals(received_messages));
 }
 
-}  // namespace CerealThirdPartyTesting
+}  // namespace CORE::Internal::ThirdPartyTests

@@ -1,9 +1,11 @@
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
-using namespace RingTupleQueue;
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+
+namespace RingTupleQueue::UnitTests {
 
 TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   TupleSchemas schema;
@@ -20,7 +22,8 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   memcpy(&data[4], &bool_var, sizeof(bool));
 
   SECTION("Schema creation and retrieval") {
-    auto id = schema.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE});
+    auto id = schema.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::DOUBLE});
     REQUIRE(id == 0);
     auto retSchema = schema.get_schema(id);
     REQUIRE(retSchema[0] == SupportedTypes::INT64);
@@ -28,29 +31,32 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   }
 
   SECTION("Schema creation and size") {
-    auto id = schema.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
+    auto id = schema.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
     REQUIRE(id == 0);
     auto size = schema.size();
     REQUIRE(size == 1);
   }
 
   SECTION("Tuple creation and id") {
-    Tuple tuple(data, &schema);
+    Tuple tuple(&data[0], &schema);
     REQUIRE(tuple.id() == 0);
   }
 
   SECTION("Tuple indexing") {
-    auto id = schema.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
-    Tuple tuple(data, &schema);
+    auto id = schema.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
+    Tuple tuple(&data[0], &schema);
 
     tuple.timestamp();
     Value<int64_t> val1(tuple[0]);
-    REQUIRE( val1.get() == -10 );
+    REQUIRE(val1.get() == -10);
 
     Value<double> val2(tuple[1]);
-    REQUIRE(val2.get() == Catch::Approx(20.0) );
+    REQUIRE(val2.get() == Catch::Approx(20.0));
 
     Value<bool> val3(tuple[2]);
-    REQUIRE( val3.get() == true );
+    REQUIRE(val3.get() == true);
   }
 }
+}  // namespace RingTupleQueue::UnitTests

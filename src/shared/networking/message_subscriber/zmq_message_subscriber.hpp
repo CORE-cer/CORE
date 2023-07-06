@@ -2,7 +2,7 @@
 
 #include "shared/networking/message_subscriber/message_subscriber.hpp"
 
-namespace InternalCORE {
+namespace CORE::Internal {
 
 class ZMQMessageSubscriber {
  private:
@@ -27,4 +27,4 @@ class ZMQMessageSubscriber {
     }
   }
 };
-}  // namespace InternalCORE
+}  // namespace CORE::Internal

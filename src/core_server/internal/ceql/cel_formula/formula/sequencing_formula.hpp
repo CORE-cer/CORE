@@ -1,12 +1,12 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "core_server/internal/ceql/cel_formula/filters/filter.hpp"
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct SequencingFormula : public Formula {
   std::unique_ptr<Formula> left;
@@ -43,4 +43,4 @@ struct SequencingFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

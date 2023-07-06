@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Undefined final : public Value {
   Undefined() noexcept {}
 
@@ -29,8 +29,7 @@ struct Undefined final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {}
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

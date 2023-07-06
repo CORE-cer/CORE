@@ -3,7 +3,7 @@
 #include <chrono>
 #include <string>
 
-namespace CORETypes {
+namespace CORE::Types {
 struct Value {
   virtual ~Value() = default;
   virtual std::string to_string() const = 0;
@@ -93,4 +93,4 @@ struct DateValue final : public Value {
     archive(val);
   }
 };
-}  // namespace CORETypes
+}  // namespace CORE::Types

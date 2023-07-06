@@ -7,7 +7,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 
-namespace CORETypes {
+namespace CORE::Types {
 
 struct EventInfo {
   EventTypeId id;
@@ -32,4 +32,4 @@ struct EventInfo {
   }
 };
 
-}  // namespace CORETypes
+}  // namespace CORE::Types

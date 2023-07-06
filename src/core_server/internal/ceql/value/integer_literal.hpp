@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct IntegerLiteral final : public Value {
   int64_t value;
 
@@ -23,7 +23,8 @@ struct IntegerLiteral final : public Value {
   }
 
   bool equals(Value* val) const noexcept override {
-    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(val)) {
+    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(
+          val)) {
       return *this == *integer_literal;
     } else
       return false;
@@ -37,10 +38,9 @@ struct IntegerLiteral final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

@@ -1,11 +1,11 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct AndPredicate : public Predicate {
   std::vector<std::unique_ptr<Predicate>> predicates;
@@ -66,4 +66,4 @@ struct AndPredicate : public Predicate {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

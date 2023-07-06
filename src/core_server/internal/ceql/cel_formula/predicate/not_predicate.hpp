@@ -8,7 +8,7 @@
 #include "not_predicate.hpp"
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct NotPredicate : public Predicate {
   std::unique_ptr<Predicate> predicate;
@@ -48,4 +48,4 @@ struct NotPredicate : public Predicate {
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

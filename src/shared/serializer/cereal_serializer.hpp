@@ -32,7 +32,7 @@
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace InternalCORE {
+namespace CORE::Internal {
 template <typename StructName>
 class CerealSerializer : Serializer<StructName> {
  public:
@@ -51,7 +51,7 @@ class CerealSerializer : Serializer<StructName> {
     return data;
   }
 };
-}  // namespace InternalCORE
+}  // namespace CORE::Internal
 
 /**
  * For cereal to work on abstract classes it is necessary to declar all
@@ -60,15 +60,15 @@ class CerealSerializer : Serializer<StructName> {
 
 // clang-format off
 #include "shared/datatypes/value.hpp"
-CEREAL_REGISTER_TYPE(CORETypes::Value);
-CEREAL_REGISTER_TYPE(CORETypes::StringValue);
-CEREAL_REGISTER_TYPE(CORETypes::IntValue);
-CEREAL_REGISTER_TYPE(CORETypes::DoubleValue);
-CEREAL_REGISTER_TYPE(CORETypes::BoolValue);
-CEREAL_REGISTER_TYPE(CORETypes::DateValue);
+CEREAL_REGISTER_TYPE(CORE::Types::Value);
+CEREAL_REGISTER_TYPE(CORE::Types::StringValue);
+CEREAL_REGISTER_TYPE(CORE::Types::IntValue);
+CEREAL_REGISTER_TYPE(CORE::Types::DoubleValue);
+CEREAL_REGISTER_TYPE(CORE::Types::BoolValue);
+CEREAL_REGISTER_TYPE(CORE::Types::DateValue);
 
-CEREAL_REGISTER_POLYMORPHIC_RELATION(CORETypes::Value, CORETypes::StringValue);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(CORETypes::Value, CORETypes::IntValue);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(CORETypes::Value, CORETypes::DoubleValue);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(CORETypes::Value, CORETypes::BoolValue);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(CORETypes::Value, CORETypes::DateValue);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CORE::Types::Value, CORE::Types::StringValue);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CORE::Types::Value, CORE::Types::IntValue);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CORE::Types::Value, CORE::Types::DoubleValue);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CORE::Types::Value, CORE::Types::BoolValue);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(CORE::Types::Value, CORE::Types::DateValue);

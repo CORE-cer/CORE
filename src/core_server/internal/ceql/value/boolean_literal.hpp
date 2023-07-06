@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct BooleanLiteral final : public Value {
   bool value;
 
@@ -37,10 +37,9 @@ struct BooleanLiteral final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

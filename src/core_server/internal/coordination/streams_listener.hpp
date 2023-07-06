@@ -7,22 +7,20 @@
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
-using namespace CORETypes;
-
-namespace InternalCORE {
+namespace CORE::Internal {
 
 class Mediator;
 
 class StreamsListener {
  private:
   Mediator* mediator;
-  PortNumber receiver_port;
+  Types::PortNumber receiver_port;
   ZMQMessageReceiver receiver;
   std::thread worker_thread;
   bool stop_condition;
 
  public:
-  StreamsListener(Mediator* mediator, PortNumber port_number)
+  StreamsListener(Mediator* mediator, Types::PortNumber port_number)
       : mediator(mediator),
         receiver_port(port_number),
         receiver("tcp://*:" + std::to_string(port_number)) {}
@@ -32,4 +30,4 @@ class StreamsListener {
   void stop();
 };
 
-}  // namespace InternalCORE
+}  // namespace CORE::Internal

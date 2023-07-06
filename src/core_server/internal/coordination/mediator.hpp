@@ -1,34 +1,54 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
+#include "catalog.hpp"
+#include "core_server/internal/coordination/query_evaluator.hpp"
 #include "core_server/internal/coordination/router.hpp"
 #include "core_server/internal/coordination/streams_listener.hpp"
-#include "core_server/internal/coordination/complex_event_streamer.hpp"
 #include "shared/datatypes/event.hpp"
-
-#include <vector>
-#include <memory>
-
-using namespace CORETypes;
 
 class CEA;
 
-namespace InternalCORE {
+namespace CORE::Internal {
 
 class Mediator {
-  private:
-    Router router;
-    StreamsListener streams_listener;
-    std::vector<std::unique_ptr<ComplexEventStreamer>> complex_event_streamers;
-    std::vector<ZMQMessageSender> inner_thread_event_senders;
-    PortNumber current_next_port_number;
+ public:
+  Catalog catalog;
+  RingTupleQueue::Queue queue;
 
-  public:
-    Mediator(PortNumber port);
-    void start();
-    void stop();
-    PortNumber create_complex_event_stream(std::string ecs);
-    PortNumber create_dummy_complex_event_stream();
-    void send_event_to_queries(StreamTypeId stream_id, Event event);
+ private:
+  Router router;
+  StreamsListener streams_listener;
+
+  // unique_ptr is used because the QueryEvaluator has a ZMQMessageReceiver
+  // and a ZMQMesssageBroadcaster. That is a problem because it doesn't
+  // allow either move or copy constructions.
+  std::vector<std::unique_ptr<QueryEvaluator>> query_evaluators;
+  std::vector<ZMQMessageSender> inner_thread_event_senders;
+  Types::PortNumber current_next_port_number;
+
+ public:
+  Mediator(Types::PortNumber port);
+  void start();
+  void stop();
+  Types::PortNumber create_complex_event_stream(std::string ecs);
+  Types::PortNumber create_dummy_complex_event_stream(
+    Evaluation::PredicateEvaluator&& evaluator);
+  void
+  send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
+
+ private:
+  RingTupleQueue::Tuple event_to_tuple(Types::Event& event);
+
+  // clang-format off
+  void write_int        (std::shared_ptr<Types::Value>& attr);
+  void write_double     (std::shared_ptr<Types::Value>& attr);
+  void write_bool       (std::shared_ptr<Types::Value>& attr);
+  void write_string_view(std::shared_ptr<Types::Value>& attr);
+  void write_date       (std::shared_ptr<Types::Value>& attr);
+  // clang-format on
 };
 
-}  // namespace InternalCORE
+}  // namespace CORE::Internal

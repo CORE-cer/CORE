@@ -6,7 +6,7 @@
 
 #include "datatypes.hpp"
 
-namespace CORETypes {
+namespace CORE::Types {
 
 struct AttributeInfo {
   std::string name;
@@ -14,8 +14,7 @@ struct AttributeInfo {
 
   AttributeInfo() noexcept {}
 
-  AttributeInfo(std::string name,
-                ValueTypes value_type) noexcept
+  AttributeInfo(std::string name, ValueTypes value_type) noexcept
       : name(name), value_type(value_type) {}
 
   bool operator==(AttributeInfo other) {
@@ -28,4 +27,4 @@ struct AttributeInfo {
   }
 };
 
-}  // namespace CORECatalog
+}  // namespace CORE::Types

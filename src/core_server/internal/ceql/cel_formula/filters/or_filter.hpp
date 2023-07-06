@@ -4,7 +4,8 @@
 
 #include "filter.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
+
 struct OrFilter : public Filter {
   std::unique_ptr<Filter> left;
   std::unique_ptr<Filter> right;
@@ -38,4 +39,4 @@ struct OrFilter : public Filter {
     return left->to_string() + " OR " + right->to_string();
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

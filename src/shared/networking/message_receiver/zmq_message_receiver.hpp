@@ -4,7 +4,7 @@
 
 #include "shared/networking/message_receiver/message_receiver.hpp"
 
-namespace InternalCORE {
+namespace CORE::Internal {
 class ZMQMessageReceiver : MessageReceiver {
  private:
   zmq::context_t context;
@@ -28,8 +28,6 @@ class ZMQMessageReceiver : MessageReceiver {
                        zmq_message.size());
   }
 
-  zmq::context_t& get_context() {
-    return context;
-  }
+  zmq::context_t& get_context() { return context; }
 };
-}  // namespace InternalCORE
+}  // namespace CORE::Internal

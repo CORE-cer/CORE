@@ -1,12 +1,12 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "core_server/internal/ceql/cel_formula/filters/filter.hpp"
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct FilterFormula : public Formula {
   std::unique_ptr<Formula> formula;
@@ -24,8 +24,8 @@ struct FilterFormula : public Formula {
   }
 
   bool operator==(const FilterFormula& other) const {
-    return formula->equals(other.formula.get()) &&
-           filter->equals(other.filter.get());
+    return formula->equals(other.formula.get())
+           && filter->equals(other.filter.get());
   }
 
   bool equals(Formula* other) const override {
@@ -43,4 +43,4 @@ struct FilterFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

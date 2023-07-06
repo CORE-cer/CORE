@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 enum struct ValueTypes {
   Undefined,
@@ -36,4 +36,4 @@ struct ValueTypeHelpers {
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

@@ -8,7 +8,7 @@
 #include "not_predicate.hpp"
 #include "predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct LikePredicate : public Predicate {
   Attribute attribute;
@@ -29,7 +29,7 @@ struct LikePredicate : public Predicate {
 
   virtual std::unique_ptr<Predicate> negate() const override {
     return std::make_unique<NotPredicate>(
-        std::make_unique<LikePredicate>(attribute, regex_literal));
+      std::make_unique<LikePredicate>(attribute, regex_literal));
   }
 
   bool operator==(const LikePredicate& other) const {
@@ -55,4 +55,4 @@ struct LikePredicate : public Predicate {
   }
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

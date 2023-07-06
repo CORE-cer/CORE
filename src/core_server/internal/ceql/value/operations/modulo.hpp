@@ -1,8 +1,9 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Modulo final : Value {
   std::unique_ptr<Value> left;
   std::unique_ptr<Value> right;
@@ -12,8 +13,7 @@ struct Modulo final : Value {
   Modulo(const Modulo& modulo) noexcept
       : left(modulo.left->clone()), right(modulo.right->clone()) {}
 
-  Modulo(std::unique_ptr<Value> left,
-         std::unique_ptr<Value> right) noexcept
+  Modulo(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
   Modulo(Value*&& left, Value*&& right) noexcept
@@ -24,8 +24,8 @@ struct Modulo final : Value {
   }
 
   bool operator==(const Modulo& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -43,7 +43,6 @@ struct Modulo final : Value {
     visitor.visit(*this);
   }
 
-
   ~Modulo() noexcept override {}
 
   template <class Archive>
@@ -51,4 +50,4 @@ struct Modulo final : Value {
     archive(left, right);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

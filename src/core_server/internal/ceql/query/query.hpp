@@ -1,3 +1,4 @@
+#pragma once
 #include "consume_by.hpp"
 #include "from.hpp"
 #include "partition_by.hpp"
@@ -5,7 +6,7 @@
 #include "where.hpp"
 #include "within.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Query {
   Select select;
   From from;
@@ -27,4 +28,4 @@ struct Query {
         within(std::move(within)),
         consume_by(std::move(consume_by)) {}
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

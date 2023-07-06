@@ -1,6 +1,6 @@
 #pragma once
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct ConsumeBy {
   enum class ConsumptionPolicy {
     NONE,
@@ -10,4 +10,4 @@ struct ConsumeBy {
   };
   ConsumptionPolicy policy;
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

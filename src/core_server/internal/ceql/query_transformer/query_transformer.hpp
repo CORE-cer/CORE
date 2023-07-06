@@ -1,7 +1,7 @@
 #pragma once
 #include "core_server/internal/ceql/query/query.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 /**
  * This type of polymorphism is called CRTP that allows for interfaces with
@@ -11,10 +11,13 @@ namespace InternalCORECEQL {
  */
 template <class Derived>
 class QueryTransformer {
-  Query operator()(Query&& query) { static_cast<Derived*>(this)->eval(query); }
+ public:
+  Query operator()(Query&& query) {
+    return static_cast<Derived*>(this)->eval(std::move(query));
+  }
 
   Query eval(Query&& query) {
     throw std::logic_error("eval not implemented");
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

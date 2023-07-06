@@ -1,8 +1,9 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Division final : public Value {
   std::unique_ptr<Value> left;
   std::unique_ptr<Value> right;
@@ -24,8 +25,8 @@ struct Division final : public Value {
   }
 
   bool operator==(const Division& other) const noexcept {
-    return left->equals(other.left.get()) &&
-           right->equals(other.right.get());
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -43,7 +44,6 @@ struct Division final : public Value {
     visitor.visit(*this);
   }
 
-
   ~Division() noexcept override {}
 
   template <class Archive>
@@ -51,4 +51,4 @@ struct Division final : public Value {
     archive(left, right);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

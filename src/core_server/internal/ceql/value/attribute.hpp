@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Attribute final : public Value {
   std::string value;
 
@@ -40,4 +40,4 @@ struct Attribute final : public Value {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

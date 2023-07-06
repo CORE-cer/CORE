@@ -6,7 +6,7 @@
 
 #include "visitors/value_visitor.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Value {
   /// All concrete classes of Value should have a constructor with no
   /// parameters, that way it can be serialized by cereal.
@@ -20,4 +20,4 @@ struct Value {
   virtual std::unique_ptr<Value> clone() const noexcept = 0;
   virtual void accept_visitor(ValueVisitor&) = 0;
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

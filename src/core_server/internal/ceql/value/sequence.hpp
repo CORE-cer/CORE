@@ -1,12 +1,12 @@
 #pragma once
-
 #include <cassert>
+#include <iostream>
+#include <memory>
 #include <string>
 
 #include "value.hpp"
-#include <iostream>
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Sequence final : public Value {
   enum Type { LOWER_BOUND, UPPER_BOUND, RANGE, SEQUENCE };
 
@@ -98,8 +98,8 @@ struct Sequence final : public Value {
       case LOWER_BOUND:
         return lower_bound->equals(other.lower_bound.get());
       case RANGE:
-        return upper_bound->equals(other.upper_bound.get()) &&
-               lower_bound->equals(other.lower_bound.get());
+        return upper_bound->equals(other.upper_bound.get())
+               && lower_bound->equals(other.lower_bound.get());
       default:
         assert(false && "switch should cover all cases.");
       case SEQUENCE:
@@ -126,4 +126,4 @@ struct Sequence final : public Value {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

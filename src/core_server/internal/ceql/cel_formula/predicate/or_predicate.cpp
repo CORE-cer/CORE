@@ -1,8 +1,10 @@
 #include "or_predicate.hpp"
 
+#include <memory>
+
 #include "and_predicate.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 std::unique_ptr<Predicate> OrPredicate::negate() const {
   std::vector<std::unique_ptr<Predicate>> negated;
   for (auto& predicate : predicates) {
@@ -11,4 +13,4 @@ std::unique_ptr<Predicate> OrPredicate::negate() const {
   }
   return std::make_unique<AndPredicate>(std::move(negated));
 }
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

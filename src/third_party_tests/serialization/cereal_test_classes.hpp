@@ -3,7 +3,7 @@
 
 #include "shared/serializer/cereal_serializer.hpp"
 
-namespace CerealThirdPartyTesting {
+namespace CORE::Internal::ThirdPartyTests::Cereal {
 struct SimpleStruct {
   int x;
 
@@ -73,17 +73,17 @@ struct ClassWithAbstractClassSharedPtr {
     archive(objects);
   }
 };
-}  // namespace CerealThirdPartyTesting
+}  // namespace CORE::Internal::ThirdPartyTests::Cereal
 
 // Need to add this in the header file of the CEREAL serializer
 // for cereal to be able to serialize polimorphic types correctly
 
 // This will be in the CerealSerializer class hpp:
-CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass1);
-CEREAL_REGISTER_TYPE(CerealThirdPartyTesting::ConcreteClass2);
+CEREAL_REGISTER_TYPE(CORE::Internal::ThirdPartyTests::Cereal::ConcreteClass1);
+CEREAL_REGISTER_TYPE(CORE::Internal::ThirdPartyTests::Cereal::ConcreteClass2);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass1);
+  CORE::Internal::ThirdPartyTests::Cereal::AbstractClass,
+  CORE::Internal::ThirdPartyTests::Cereal::ConcreteClass1);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(
-  CerealThirdPartyTesting::AbstractClass,
-  CerealThirdPartyTesting::ConcreteClass2);
+  CORE::Internal::ThirdPartyTests::Cereal::AbstractClass,
+  CORE::Internal::ThirdPartyTests::Cereal::ConcreteClass2);

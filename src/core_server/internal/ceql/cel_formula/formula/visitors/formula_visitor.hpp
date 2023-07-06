@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 class EventTypeFormula;   //[[R]]
 class AsFormula;          // AS
@@ -27,4 +27,4 @@ class FormulaVisitor {
 
   // clang-format on
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

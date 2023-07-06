@@ -5,7 +5,7 @@
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "filter.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 /**
  * The atomic filter is the filter of type X[P]
  */
@@ -20,8 +20,7 @@ struct AtomicFilter : public Filter {
   ~AtomicFilter() override = default;
 
   std::unique_ptr<Filter> clone() const override {
-    return std::make_unique<AtomicFilter>(variable_name,
-                                          predicate->clone());
+    return std::make_unique<AtomicFilter>(variable_name, predicate->clone());
   }
 
   bool operator==(const AtomicFilter& other) const {
@@ -44,4 +43,4 @@ struct AtomicFilter : public Filter {
     return variable_name + "[" + predicate->to_string() + "]";
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

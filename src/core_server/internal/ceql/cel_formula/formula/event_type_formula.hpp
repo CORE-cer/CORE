@@ -1,11 +1,11 @@
 #pragma once
-
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "formula.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 struct EventTypeFormula : public Formula {
   std::string event_type_name;
@@ -36,4 +36,4 @@ struct EventTypeFormula : public Formula {
     visitor.visit(*this);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

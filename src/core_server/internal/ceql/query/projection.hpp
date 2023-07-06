@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 
 class Projection {
  public:
@@ -19,4 +19,4 @@ class Projection {
   std::string stream;
 };
 
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

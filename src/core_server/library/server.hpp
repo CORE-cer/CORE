@@ -6,7 +6,6 @@
 #include "core_server/internal/coordination/mediator.hpp"
 #include "shared/networking/message_router/zmq_message_router.hpp"
 
-using namespace InternalCORE;
 namespace CORE {
 
 template <typename... Ts>
@@ -23,7 +22,7 @@ class Server<> {
    */
 
  private:
-   Mediator mediator;
+  Internal::Mediator mediator;
 
  public:
   Server(int port, int maximum_amount_of_result_ports = 100)

@@ -1,8 +1,9 @@
 #pragma once
+#include <memory>
 
 #include "core_server/internal/ceql/value/value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct Negation final : public Value {
   std::unique_ptr<Value> val;
 
@@ -36,7 +37,6 @@ struct Negation final : public Value {
     visitor.visit(*this);
   }
 
-
   ~Negation() noexcept override {}
 
   template <class Archive>
@@ -44,4 +44,4 @@ struct Negation final : public Value {
     archive(val);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL

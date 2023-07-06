@@ -5,7 +5,7 @@
 
 #include "shared/networking/message_dealer/message_dealer.hpp"
 
-namespace InternalCORE {
+namespace CORE::Internal {
 class ZMQMessageDealer {
  private:
   zmq::context_t context;
@@ -47,4 +47,4 @@ class ZMQMessageDealer {
   }
 };
 
-}  // namespace InternalCORE
+}  // namespace CORE::Internal

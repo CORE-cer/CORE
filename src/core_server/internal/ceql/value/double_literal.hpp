@@ -1,10 +1,10 @@
 #pragma once
-
+#include <memory>
 #include <string>
 
 #include "value.hpp"
 
-namespace InternalCORECEQL {
+namespace CORE::Internal::CEQL {
 struct DoubleLiteral final : public Value {
   double value;
 
@@ -14,7 +14,9 @@ struct DoubleLiteral final : public Value {
 
   ~DoubleLiteral() noexcept override {}
 
-  std::string to_string() const noexcept override { return std::to_string(value); }
+  std::string to_string() const noexcept override {
+    return std::to_string(value);
+  }
 
   bool operator==(const DoubleLiteral& other) const noexcept {
     return value == other.value;
@@ -35,10 +37,9 @@ struct DoubleLiteral final : public Value {
     visitor.visit(*this);
   }
 
-
   template <class Archive>
   void serialize(Archive& archive) {
     archive(value);
   }
 };
-}  // namespace InternalCORECEQL
+}  // namespace CORE::Internal::CEQL
