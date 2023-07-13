@@ -9,11 +9,11 @@ namespace CORE::Internal::CEA {
 
 class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
   using VariablesToMark = mpz_class;
-  using EndNodeId = int64_t;
+  using EndNodeId = uint64_t;
 
  private:
   VariablesToMark variables_to_filter;
-  int64_t physical_predicate_id;
+  uint64_t physical_predicate_id;
   PredicateSet predicate_set;
 
  public:

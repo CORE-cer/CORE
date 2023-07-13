@@ -10,7 +10,7 @@ namespace CORE::Internal::CEA {
 class Concat : public LogicalCEATransformer<Concat> {
  public:
   using VariablesToMark = mpz_class;
-  using EndNodeId = int64_t;
+  using EndNodeId = uint64_t;
 
   // Note, for this to work the implementation of union must offset the
   // right_states by the amount of states in the left_cea, and not make

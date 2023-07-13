@@ -7,7 +7,7 @@ namespace CORE::Internal::CEA {
 class Union : public LogicalCEATransformer<Union> {
  public:
   using VariablesToMark = mpz_class;
-  using EndNodeId = int64_t;
+  using EndNodeId = uint64_t;
 
   LogicalCEA eval(LogicalCEA& left, LogicalCEA& right) {
     LogicalCEA out = LogicalCEA(left);

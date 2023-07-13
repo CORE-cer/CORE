@@ -6,7 +6,7 @@ namespace CORE::Internal::CEA {
 
 class Project : public LogicalCEATransformer<Project> {
   using VariablesToMark = mpz_class;
-  using EndNodeId = int64_t;
+  using EndNodeId = uint64_t;
 
  private:
   VariablesToMark variables_to_project;

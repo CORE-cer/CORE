@@ -11,13 +11,13 @@ namespace CORE::Internal::CEA {
 struct LogicalCEA {
  public:
   using VariablesToMark = mpz_class;
-  using EndNodeId = int64_t;
-  using Transition = std::tuple<PredicateSet, VariablesToMark, EndNodeId>;
+  using NodeId = uint64_t;
+  using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
   using States = mpz_class;
 
   // transitions[i] = all transitions of node i.
   std::vector<std::vector<Transition>> transitions;
-  std::vector<std::set<EndNodeId>> epsilon_transitions;
+  std::vector<std::set<NodeId>> epsilon_transitions;
   States initial_states;
   States final_states;
   int64_t amount_of_states;
@@ -91,27 +91,28 @@ struct LogicalCEA {
   std::string to_string() const {
     // clang-format off
     std::string out =
-      "LogicalCEA{\n"
-      "Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
-      "I = (bitset) " + initial_states.get_str(2) + "\n"
-      "F = (bitset) " + final_states.get_str(2) + "\n"
-      "Δ : [PredicateSet × (bitset) VariablesToMark → FinalState]" + "\n";
+      "LogicalCEA\n"
+      "    Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
+      "    I = (bitset) " + initial_states.get_str(2) + "\n"
+      "    F = (bitset) " + final_states.get_str(2) + "\n"
+      "    Δ : [PredicateSet × (bitset) VariablesToMark → FinalState]" + "\n";
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
       if (transitions[i].size() != 0)
-        out += "Δ[" + std::to_string(i) + "]\n";
-      for (const std::tuple<PredicateSet, VariablesToMark, EndNodeId>&
-             transition : transitions[i]) {
-        out += std::get<0>(transition).to_string() + ","
-               + std::get<1>(transition).get_str(2) + ","
+        out += "    Δ[" + std::to_string(i) + "]:";
+      for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
+           transitions[i]) {
+        out += "        " + std::get<0>(transition).to_string() + ",0xb"
+               + std::get<1>(transition).get_str(2) + "→"
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }
-    out += "Δε: [NodeId]";
+    out += "    Δε: [NodeId]:";
     for (size_t i = 0; i < epsilon_transitions.size(); i++) {
       if (transitions[i].size() != 0)
-        for (const EndNodeId& end_node : epsilon_transitions[i]) {
-          out += std::to_string(i) + "→ " + std::to_string(end_node) + "\n";
+        for (const NodeId& end_node : epsilon_transitions[i]) {
+          out += "        " + std::to_string(i) + "→ "
+                 + std::to_string(end_node) + "\n";
         }
     }
 
