@@ -1,4 +1,4 @@
-name: Run all unit test
+name: Requirements for merging
 
 on:
   pull_request:
