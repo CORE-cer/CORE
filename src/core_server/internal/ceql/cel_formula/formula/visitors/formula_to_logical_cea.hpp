@@ -1,49 +1,55 @@
 #pragma once
 
 #include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_atomic_filters.hpp"
+#include "core_server/internal/ceql/cel_formula/filters/visitors/apply_filters_to_logical_cea.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/lcea_union.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/concat.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/strict_kleene.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
 #include "formula_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 
-class FormulaToCEA : public FormulaVisitor {
+class FormulaToLogicalCEA : public FormulaVisitor {
   using VariablesToMark = mpz_class;
   using EndNodeId = int64_t;
 
  private:
   Catalog& catalog;
+  std::map<std::string, uint64_t> variables_to_id;
+  int64_t next_variable_id = catalog.number_of_events();
 
  public:
   CEA::LogicalCEA current_cea{0};
 
-  FormulaToCEA(Catalog& catalog) : catalog(catalog) {}
-
-  ~FormulaToCEA() override = default;
-
-  void visit(FilterFormula& formula) override {
-    // TODO
+  FormulaToLogicalCEA(Catalog& catalog) : catalog(catalog) {
+    for (uint64_t event_id = 0; event_id < catalog.number_of_events();
+         event_id++) {
+      variables_to_id[catalog.get_event_info(event_id).name] = event_id;
+    }
   }
 
+  ~FormulaToLogicalCEA() override = default;
+
   void visit(EventTypeFormula& formula) override {
-    current_cea = CEA::LogicalCEA(2);
     if (!catalog.event_name_is_taken(formula.event_type_name)) {
       throw std::runtime_error("The event_name: " + formula.event_type_name +
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
     int64_t event_type_id = catalog.get_event_info(formula.event_type_name).id;
-    mpz_class position_of_event = (mpz_class)1 << event_type_id;
-    mpz_class predicate_mask = (mpz_class)1 << event_type_id;
-    current_cea.transitions[0].push_back(
-      std::make_tuple(CEA::PredicateSet(position_of_event, predicate_mask),
-                      position_of_event,
-                      1));
-    current_cea.initial_states = 1 << 0;
-    current_cea.final_states = 1 << 1;
+    current_cea = CEA::LogicalCEA::atomic_cea(event_type_id);
+  }
+
+  void visit(FilterFormula& formula) override {
+    formula.formula->accept_visitor(*this);
+    ApplyFiltersToLogicalCEA visitor(current_cea, variables_to_id);
+    formula.filter->accept_visitor(visitor);
   }
 
   void visit(OrFormula& formula) override {
@@ -51,7 +57,7 @@ class FormulaToCEA : public FormulaVisitor {
     CEA::LogicalCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
-    current_cea = CEA::LCEAUnion()(left_cea, right_cea);
+    current_cea = CEA::Union()(left_cea, right_cea);
   }
 
   void visit(SequencingFormula& formula) override {
@@ -59,72 +65,33 @@ class FormulaToCEA : public FormulaVisitor {
     CEA::LogicalCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
-
-    // Note, for this to work the implementation of union must offset the
-    // right_states by the amount of states in the left_cea, and not make
-    // another arbitrary permutation.
-    current_cea = CEA::LCEAUnion()(left_cea, right_cea);
-    current_cea.initial_states = left_cea.initial_states;
-    current_cea.final_states = right_cea.final_states
-                               << left_cea.amount_of_states;
-
-    // Make the transition from the left_cea to the right_cea.
-    std::vector<int64_t> right_initial_states = right_cea.get_initial_states();
-    for (size_t i = 0; i < left_cea.transitions.size(); i++) {
-      auto& transitions = left_cea.transitions[i];
-      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
-             transition : transitions) {
-        mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
-        if ((end_node & left_cea.final_states) != 0) {
-          for (int64_t destination : right_initial_states) {
-            current_cea.transitions[i].push_back(
-              std::make_tuple(std::get<0>(transition),
-                              std::get<1>(transition),
-                              destination + left_cea.amount_of_states));
-          }
-        }
-      }
-    }
+    current_cea = CEA::Concat()(left_cea, right_cea);
   }
 
   void visit(IterationFormula& formula) override {
     formula.formula->accept_visitor(*this);  // updates current_cea
-    current_cea.add_n_states(1);
-    // Copy the transitions from all initial states to the new state
-    for (int64_t state : current_cea.get_initial_states()) {
-      auto& transitions = current_cea.transitions[state];
-      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
-             transition : transitions) {
-        current_cea.transitions.back().push_back(
-          std::make_tuple(std::get<0>(transition),
-                          std::get<1>(transition),
-                          std::get<2>(transition)));
-      }
-    }
-
-    // Copy the transitions to a final state to the new initial state.
-    for (size_t i = 0; i < current_cea.amount_of_states - 1; i++) {
-      auto& transitions = current_cea.transitions[i];
-      for (std::tuple<CEA::PredicateSet, VariablesToMark, EndNodeId>
-             transition : transitions) {
-        mpz_class end_node = (mpz_class)1 << std::get<2>(transition);
-        if ((end_node & current_cea.final_states) != 0) {
-          std::make_tuple(std::get<0>(transition),
-                          std::get<1>(transition),
-                          current_cea.amount_of_states - 1);
-        }
-      }
-    }
+    current_cea = CEA::StrictKleene()(std::move(current_cea));
   }
 
-  // clang-format off
   void visit(ProjectionFormula& formula) override {
-    // TODO
-  }
-  void visit(AsFormula& formula)         override {
-    // TODO
+    formula.formula->accept_visitor(*this);
+    mpz_class variables_to_project = 0;
+    for (const std::string& var_name : formula.variables) {
+      if (variables_to_id.contains(var_name)) {
+        variables_to_project |= 1 << variables_to_id.find(var_name)->second;
+      }  // If not, then the variable was not added to any transitions,
+         // so no variables should be projected.
+    }
+    current_cea = CEA::Project(variables_to_project)(std::move(current_cea));
   }
 
-  // clang-format on
+  void visit(AsFormula& formula) override {
+    formula.formula->accept_visitor(*this);
+    if (!variables_to_id.contains(formula.variable_name)) {
+      variables_to_id[formula.variable_name] = next_variable_id++;
+    }
+    int64_t variable_id = variables_to_id[formula.variable_name];
+    current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
+  }
 };
 }  // namespace CORE::Internal::CEQL

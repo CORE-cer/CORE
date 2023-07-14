@@ -1,0 +1,265 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
+
+#include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
+#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/duplicate.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_epsilon_transitions.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
+
+namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations {
+
+std::string create_query(std::string clause) {
+  // clang-format off
+  return "SELECT ALL * \n"
+         "FROM S, S2\n"
+         "WHERE " + clause + " WITHIN 4 EVENTS\n";
+  // clang-format on
+}
+
+TEST_CASE("Remove Epsilons of Simple Iteration",
+          "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto query = Parsing::Parser::parse_query(create_query("H+"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 1);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+}
+
+TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 4);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 1);
+  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[3].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[3].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b1000);
+}
+
+TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
+          "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 4);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[3].size() == 1);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[3].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[1][1]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[3][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b1000);
+}
+
+TEST_CASE(
+  "After sequencing and Remove Epsilons, it is possible to remove an "
+  "unreachable state (2).",
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  cea = CEA::RemoveUnreachableStates()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 3);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 1);
+  REQUIRE(cea.transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b100);
+}
+
+TEST_CASE(
+  "An artificial useless state that is added can be removed by "
+  "RemoveUselessStates.",
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto query = Parsing::Parser::parse_query(create_query("H"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea.add_n_states(1);
+  cea.transitions[0].push_back(
+    std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 2));
+  REQUIRE(cea.amount_of_states == 3);
+  cea = CEA::RemoveUselessStates()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+}
+
+TEST_CASE(
+  "A unique intial state is added correctly. (basic test 1)"
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::AddUniqueInitialState()(std::move(cea));
+  REQUIRE(cea.amount_of_states == 5);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[3].size() == 0);
+  REQUIRE(cea.transitions[4].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 1);
+  REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[3].size() == 0);
+  REQUIRE(cea.epsilon_transitions[4].size() == 1);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.epsilon_transitions[1].contains(2));
+  REQUIRE(cea.epsilon_transitions[4].contains(0));
+  REQUIRE(cea.initial_states == 0b10000);
+  REQUIRE(cea.final_states == 0b1000);
+}
+
+TEST_CASE(
+  "Adding unique initial state combination test. (basic test 2)"
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  // clang-format off
+  CEA::LogicalCEA cea = CEA::RemoveUnreachableStates()(
+                        CEA::RemoveUselessStates()(
+                        CEA::RemoveEpsilonTransitions()(
+                        CEA::AddUniqueInitialState()(
+                          std::move(visitor.current_cea)))));
+  // clang-format on
+  INFO(cea.to_string());
+  REQUIRE(cea.amount_of_states == 3);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 0));
+  REQUIRE(cea.initial_states == 0b100);
+  REQUIRE(cea.final_states == 0b10);
+}
+
+TEST_CASE(
+  "duplicate works. (basic test 1)"
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  // clang-format off
+  CEA::LogicalCEA cea = CEA::Duplicate()(
+                        CEA::RemoveUnreachableStates()(
+                        CEA::RemoveUselessStates()(
+                        CEA::RemoveEpsilonTransitions()(
+                        CEA::AddUniqueInitialState()(
+                          std::move(visitor.current_cea))))));
+  // clang-format on
+  INFO(cea.to_string());
+  REQUIRE(cea.amount_of_states == 6);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[3].size() == 1);
+  REQUIRE(cea.transitions[4].size() == 0);
+  REQUIRE(cea.transitions[5].size() == 1);
+  for (int i = 0; i < 6; i++) {
+    REQUIRE(cea.epsilon_transitions[i].empty());
+  }
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 3));
+  REQUIRE(cea.transitions[3][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
+  REQUIRE(cea.transitions[5][0]
+          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 0));
+  REQUIRE(cea.initial_states == 0b100100);
+  REQUIRE(cea.final_states == 0b010010);
+}
+
+}  // namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations
