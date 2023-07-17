@@ -1,6 +1,7 @@
 #pragma once
-
 #include <gmpxx.h>
+
+#include <iostream>
 
 namespace CORE::Internal::CEA {
 
@@ -74,6 +75,16 @@ struct PredicateSet {
     return conflicts == 0;
   }
 
+  // For set comparison
+  bool operator<(const PredicateSet other) const {
+    if (type < other.type) return true;
+    if (type > other.type) return false;
+    if (mask < other.mask) return true;
+    if (mask > other.mask) return false;
+    if (mask < other.predicates) return true;
+    return false;
+  }
+
   std::string to_string() const {
     if (type == Contradiction)
       return "⊥";
@@ -86,8 +97,8 @@ struct PredicateSet {
                           ? out.size() - mask_string.size()
                           : mask_string.size() - out.size();
     std::string buffer = "";
-    for (int i = 0; i <= buffer_length; i++) {
-      buffer += " ";
+    for (int i = 0; i < buffer_length; i++) {
+      buffer += '0';
     }
 
     if (out.size() > mask_string.size())
