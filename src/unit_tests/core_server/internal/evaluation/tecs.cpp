@@ -7,14 +7,6 @@
 #include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
 
 namespace CORE::Internal::tECS::UnitTests {
-int compute_odepth_of_ecs_node(Node* node) {
-  if (node->is_output() || node->is_bottom()) {
-    return 0;
-  } else {
-    return 1 + compute_odepth_of_ecs_node(node->next());
-  }
-}
-
 TEST_CASE("new-ulist lifespan") {
   tECS ecs;
   // We first create 2048 nodes so that the first minipool is full.
@@ -41,9 +33,10 @@ TEST_CASE("new-ulist lifespan") {
 TEST_CASE("insert") {
   tECS ecs;
   std::vector<Node*> ulist = ecs.new_ulist(ecs.new_bottom(20));
-  ecs.insert(ulist, ecs.new_bottom(1));
-  ecs.insert(ulist, ecs.new_bottom(1));  // This merges both bottoms.
-  ecs.insert(ulist, ecs.new_extend(ecs.new_bottom(2), 3));
+  ulist = ecs.insert(std::move(ulist), ecs.new_bottom(1));
+  ulist = ecs.insert(std::move(ulist),
+                     ecs.new_bottom(1));  // This merges both bottoms.
+  ulist = ecs.insert(std::move(ulist), ecs.new_extend(ecs.new_bottom(2), 3));
   REQUIRE(ulist.size() == 3);
   for (size_t i = 0; i < 3; i++) {
     REQUIRE(ulist[i] != nullptr);
@@ -61,10 +54,11 @@ TEST_CASE("insert") {
 TEST_CASE("merge") {
   tECS ecs;
   std::vector<Node*> ulist = ecs.new_ulist(ecs.new_bottom(20));
-  ecs.insert(ulist, ecs.new_bottom(1));
-  ecs.insert(ulist, ecs.new_bottom(1));  // This merges both bottoms.
-  ecs.insert(ulist, ecs.new_extend(ecs.new_bottom(2), 3));
-  Node* merged_node = ecs.merge(std::move(ulist));
+  ulist = ecs.insert(std::move(ulist), ecs.new_bottom(1));
+  ulist = ecs.insert(std::move(ulist),
+                     ecs.new_bottom(1));  // This merges both bottoms.
+  ulist = ecs.insert(std::move(ulist), ecs.new_extend(ecs.new_bottom(2), 3));
+  Node* merged_node = ecs.merge(ulist);
   /*       _\|/_
             (o o)
     +----oOO-{_}-OOo-----------+

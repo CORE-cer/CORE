@@ -27,30 +27,37 @@ TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA logical_cea = visitor.current_cea;
   INFO(logical_cea.to_string());
-  logical_cea = CEA::RemoveEpsilonTransitions()(std::move(logical_cea));
   auto cea = CEA::CEA(std::move(logical_cea));
 
   INFO(cea.to_string());
-  REQUIRE(cea.amount_of_states == 6);
-  REQUIRE(cea.transitions[0].size() == 2);
-  REQUIRE(cea.transitions[1].size() == 1);
+  REQUIRE(cea.amount_of_states == 8);
+  REQUIRE(cea.transitions[0].size() == 3);
+  REQUIRE(cea.transitions[1].size() == 2);
   REQUIRE(cea.transitions[2].size() == 1);
-  REQUIRE(cea.transitions[3].size() == 2);
-  REQUIRE(cea.transitions[4].size() == 1);
-  REQUIRE(cea.transitions[5].size() == 1);
+  REQUIRE(cea.transitions[3].size() == 1);
+  REQUIRE(cea.transitions[4].size() == 3);
+  REQUIRE(cea.transitions[5].size() == 2);
+  REQUIRE(cea.transitions[6].size() == 1);
+  REQUIRE(cea.transitions[7].size() == 1);
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 3)));
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 4)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 3)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 3)));
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 1)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 4)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 6)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 5)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 6)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 5)));
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 4)));
+  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 4)));
   REQUIRE(cea.transitions[4].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
-  REQUIRE(cea.transitions[5].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[4].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 2)));
+  REQUIRE(cea.transitions[4].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
+  REQUIRE(cea.transitions[5].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 2)));
+  REQUIRE(cea.transitions[5].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
+  REQUIRE(cea.transitions[6].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[7].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
   // clang-format on
-  REQUIRE(cea.initial_states.first == 2);
-  REQUIRE(cea.initial_states.second == 5);
-  REQUIRE(cea.final_states == 0b010010);
+  REQUIRE(cea.initial_states.first == 3);
+  REQUIRE(cea.initial_states.second == 7);
+  REQUIRE(cea.final_states == 0b01000100);
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA

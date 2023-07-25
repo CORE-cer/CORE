@@ -40,7 +40,6 @@ class MiniPool {
 
   template <class... Args>
   Node* alloc(Args... args) {
-    std::cout << "Minipool alloc" << std::endl;
     node_container.emplace_back(std::forward<Args>(args)...);
     return &node_container.back();
   }

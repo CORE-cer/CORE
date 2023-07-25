@@ -6,7 +6,7 @@
 #include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/concat.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/strict_kleene.hpp"
@@ -65,7 +65,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     CEA::LogicalCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
-    current_cea = CEA::Concat()(left_cea, right_cea);
+    current_cea = CEA::Sequencing()(left_cea, right_cea);
   }
 
   void visit(IterationFormula& formula) override {

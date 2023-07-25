@@ -20,6 +20,12 @@ class Literal : public MathExpr<Type> {
 
   Type eval(RingTupleQueue::Tuple& tuple) override { return val; }
 
-  std::string to_string() const override { return std::to_string(val); }
+  std::string to_string() const override {
+    if constexpr (std::is_same_v<Type, std::string_view>) {
+      return std::string{val};
+    } else {
+      return std::to_string(val);
+    }
+  }
 };
 }  // namespace CORE::Internal::CEA

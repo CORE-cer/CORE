@@ -45,7 +45,7 @@ struct CEA {
     final_states = logical_cea.final_states;
   }
 
-  void add_n_states(int64_t n) {
+  void add_n_states(uint64_t n) {
     amount_of_states += n;
     for (int64_t i = 0; i < n; i++) {
       transitions.push_back({});

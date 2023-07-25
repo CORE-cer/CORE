@@ -11,6 +11,8 @@
 namespace CORE::Internal::tECS {
 
 class tECS {
+  using UnionList = std::vector<Node*>;
+
  public:
   size_t get_amount_of_nodes_used() const {
     return node_manager.get_amount_of_nodes_used();
@@ -68,28 +70,24 @@ class tECS {
     return node;
   }
 
-  std::vector<Node*> new_ulist(Node* node) {
+  UnionList new_ulist(Node* node) {
     assert(!node->is_union());
     return {node};
   }
 
   /// Inserts the node in the ulist, maintaining the max-sorted invariant.
-  void insert(std::vector<Node*>& ulist, Node* node) {
+  [[nodiscard]] UnionList insert(UnionList&& ulist, Node* node) {
     assert_required_properties_of_union_list(ulist);
     assert(node->max() <= ulist[0]->max());
-    std::cout << "after asserting" << std::endl;
     if (ulist.size() == 1) {
       ulist.push_back(node);
       assert_required_properties_of_union_list(ulist);
-      return;
+      return std::move(ulist);
     }
     // binary search would be better.
-    std::cout << "Finding where to insert the node" << std::endl;
     for (size_t i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        std::cout << "merging inside insert of a ulist. " << std::endl;
         ulist[i] = new_union(ulist[i], node);
-        std::cout << "after creating union" << std::endl;
         break;
       }
       if (ulist[i]->max() < node->max()) {
@@ -98,6 +96,7 @@ class tECS {
       }
     }
     assert_required_properties_of_union_list(ulist);
+    return std::move(ulist);
   }
 
   /*       _\|/_
@@ -115,7 +114,7 @@ class tECS {
    |             /   \                                    |
    |           nk-1   nk                                  |
    +-----------------------------------------------------*/
-  Node* merge(std::vector<Node*>&& ulist) {
+  Node* merge(UnionList& ulist) {
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
     for (int i = ulist.size() - 2; i >= 0; i--) {
@@ -131,8 +130,7 @@ class tECS {
   void unpin_node(Node* node) { node_manager.decrease_ref_count(node); }
 
  private:
-  void
-  assert_required_properties_of_union_list(std::vector<Node*> union_list) {
+  void assert_required_properties_of_union_list(UnionList& union_list) {
     assert(union_list.size() >= 1);
     assert(union_list[0] != nullptr);
     assert(!union_list[0]->is_union());
@@ -163,14 +161,10 @@ class tECS {
     +----------------------------------------------------- +
   */
   Node* create_union_of_two_non_output_nodes(Node* node_1, Node* node_2) {
-    std::cout << "Creating u2" << std::endl;
     Node* u2 = create_first_intermediate_union_node(node_1, node_2);
-    std::cout << "Created u2" << std::endl;
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
-    std::cout << "Created u1" << std::endl;
     Node* new_node = create_union_of_output_and_intermediate_node(node_1,
                                                                   u1);
-    std::cout << "Created new_node" << std::endl;
     return new_node;
   }
 

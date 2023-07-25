@@ -38,15 +38,12 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
-    std::cout << "Entering ecs alloc" << std::endl;
     Node*
       recycled_node = get_node_to_recycle_or_increase_mempool_size_if_necessary();
     if (recycled_node != nullptr) {
-      std::cout << "recycling node (ecs)" << std::endl;
       recycled_node->reset(std::forward<Args>(args)...);
       return recycled_node;
     }
-    std::cout << "Creating new node" << std::endl;
     return allocate_a_new_node((args)...);
   }
 
@@ -75,11 +72,9 @@ class NodeManager {
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
     if (!minipool_head->is_full()) {
-      std::cout << "minipool head is not full" << std::endl;
       return nullptr;
     }
     if (recyclable_node_head == nullptr) {
-      std::cout << "Recyclable node_head is nullptr mempool" << std::endl;
       increase_mempool_size();
       return nullptr;
     }
@@ -95,7 +90,6 @@ class NodeManager {
   }
 
   Node* get_node_to_recycle() {
-    std::cout << "Getting node to recycle" << std::endl;
     Node* node_to_recycle = recyclable_node_head;
     Node* children_of_the_recycled_node[2] = {nullptr, nullptr};
     if (node_to_recycle->is_union()) {
@@ -112,12 +106,10 @@ class NodeManager {
   }
 
   void decrease_references_to_children(Node* children[2]) {
-    std::cout << "decreasing reference to children" << std::endl;
     for (int i = 0; i < 2; i++) {
       Node* node = children[i];
       if (node != nullptr) decrease_ref_count(node);
     }
-    std::cout << "Finished decreasing reference to children" << std::endl;
   }
 
   void advance_recyclable_nodes_list_head() {
@@ -128,7 +120,6 @@ class NodeManager {
   template <class... Args>
   Node* allocate_a_new_node(Args&&... args) {
     ++amount_of_nodes_used;
-    std::cout << "Allocating a node!" << std::endl;
     return minipool_head->alloc(std::forward<Args>(args)...);
   }
 
