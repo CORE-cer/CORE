@@ -41,9 +41,13 @@ class Enumerator {
  public:
   Enumerator(Node* node, uint64_t original_pos, int64_t time_window)
       : original_pos(original_pos),
-        last_time_to_consider(original_pos - time_window) {
+        last_time_to_consider(
+          (original_pos < time_window) ? 0 : original_pos - time_window) {
     if (node->max() >= last_time_to_consider) {
       stack.push({node, {}});
+    } else {
+      std::cout << "node max: " << node->max()
+                << "Is less than: " << last_time_to_consider << std::endl;
     }
   }
 
@@ -53,13 +57,20 @@ class Enumerator {
 
  private:
   bool has_next() {
+    std::cout << "has_next Stack Size: " << stack.size() << std::endl;
     while (!stack.empty()) {
+      std::cout << "tECS enumerator Stack is not empty" << std::endl;
       Node* current_node = stack.top().first;
+      std::cout << "Enumerating the node:" << std::endl;
+      std::cout << current_node->to_string() << std::endl;
       std::set<uint64_t> positions = stack.top().second;
       stack.pop();
       while (true) {
         if (current_node->is_bottom()) {
           next_value = {{current_node->pos(), original_pos}, positions};
+          std::cout << "\nGOT AN OUTPUT TECS ENUMERATOR\n" << std::endl;
+          std::cout << "Elements still in stack: " << stack.size()
+                    << std::endl;
           return true;
         } else if (current_node->is_output()) {
           positions.insert(current_node->pos());
@@ -72,6 +83,7 @@ class Enumerator {
         }
       }
     }
+    std::cout << "\nNO OUTPUT TECS ENUMEARTOR\n" << std::endl;
     return false;
   }
 

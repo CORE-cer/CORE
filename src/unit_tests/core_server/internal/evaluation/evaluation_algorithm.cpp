@@ -13,7 +13,7 @@ namespace CORE::Internal::Evaluation::UnitTests {
 
 RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
                                 uint64_t event_type_id,
-                                std::string& val1,
+                                std::string val1,
                                 int64_t val2) {
   uint64_t* data = ring_tuple_queue.start_tuple(event_type_id);
   char* chars = ring_tuple_queue.writer<std::string>(val1.size());
@@ -21,6 +21,22 @@ RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
   int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
   *integer_ptr = val2;
   return ring_tuple_queue.get_tuple(data);
+}
+
+std::string output_to_string(std::vector<tECS::Enumerator> eval) {
+  std::string out = "There are: " + std::to_string(eval.size()) + " tECS enumerators as outputs!\n";
+  for (auto enumerator : eval) {
+    for (std::pair<std::pair<uint64_t, uint64_t>, std::set<uint64_t>> info :
+         enumerator) {
+      out += "[" + std::to_string(info.first.first) + ","
+             + std::to_string(info.first.second) + "]" + ", {";
+      for (auto i : info.second) {
+        out += std::to_string(i) + " ";
+      }
+      out += "}\n";
+    }
+  }
+  return out;
 }
 
 TEST_CASE("Evaluation on the example stream of the paper.") {
@@ -44,22 +60,69 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
     "SELECT * FROM Stock\n"
     "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
-    "    AND intel[name='INTC']\n"
+    "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  std::cout << "Query parsed" << std::endl;
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
   query = transformer(std::move(query));
   auto predicates = std::move(transformer.physical_predicates);
   auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  std::cout << "Tuple evaluator created" << std::endl;
+  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
 
   auto visitor = CEQL::FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
-  CEA::DetCEA cea = CEA::DetCEA(CEA::CEA(std::move(visitor.current_cea)));
+  INFO(visitor.current_cea.to_string());
+  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
+  INFO(intermediate_cea.to_string());
+  CEA::DetCEA cea = CEA::DetCEA(std::move(intermediate_cea));
 
   Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
+
+  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
+  auto next_eval = evaluator.next(tuple);
+  INFO("SELL MSFT 101");
+  // 1001101 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
+  next_eval = evaluator.next(tuple);
+  INFO("SELL MSFT 102");
+  // 1001101 <- Tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
+  next_eval = evaluator.next(tuple);
+
+  INFO("SELL INTL 80");
+  // 1000001 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
+  next_eval = evaluator.next(tuple);
+  INFO("BUY INTL 80");
+  // 1000010 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
+  next_eval = evaluator.next(tuple);
+  INFO("SELL AMZN 1900");
+  // 1101001 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
+  next_eval = evaluator.next(tuple);
+  INFO("SELL INTL 81");
+  // 1000001 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
+  next_eval = evaluator.next(tuple);
+  INFO("SELL AMZN 1920");
+  // 1101001 <- tuple evaluator
+  INFO(output_to_string(next_eval));
+
+  REQUIRE(false);
 }
 
 }  // namespace CORE::Internal::Evaluation::UnitTests

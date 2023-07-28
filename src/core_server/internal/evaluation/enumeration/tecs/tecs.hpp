@@ -77,6 +77,10 @@ class tECS {
 
   /// Inserts the node in the ulist, maintaining the max-sorted invariant.
   [[nodiscard]] UnionList insert(UnionList&& ulist, Node* node) {
+    std::cout << "Inserting: " << node->to_string() << "In Ulist: " << std::endl;
+    for (size_t i = 0; i < ulist.size(); i++) {
+      std::cout << "i: " << i << ": " << ulist[i]->to_string() << std::endl;
+    }
     assert_required_properties_of_union_list(ulist);
     assert(node->max() <= ulist[0]->max());
     if (ulist.size() == 1) {
@@ -84,7 +88,7 @@ class tECS {
       assert_required_properties_of_union_list(ulist);
       return std::move(ulist);
     }
-    // binary search would be better.
+    // TODO: binary search would be better on large lists.
     for (size_t i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
         ulist[i] = new_union(ulist[i], node);
@@ -116,8 +120,12 @@ class tECS {
    +-----------------------------------------------------*/
   Node* merge(UnionList& ulist) {
     assert_required_properties_of_union_list(ulist);
+    std::cout << "Merging a ulist!" << std::endl;
     Node* tail = ulist.back();
+    std::cout << "i: " << ulist.size() - 1 << ": " << tail->to_string()
+              << std::endl;
     for (int i = ulist.size() - 2; i >= 0; i--) {
+      std::cout << "i: " << i << ": " << ulist[i]->to_string() << std::endl;
       tail = node_manager.alloc(ulist[i], tail);
     }
     return tail;

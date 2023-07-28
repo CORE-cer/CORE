@@ -74,7 +74,7 @@ struct CEA {
       "    Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
       "    (q0, q0') = " + std::to_string(initial_states.first) + "," + std::to_string(initial_states.second) + "\n"
       "    F = (bitset) " + final_states.get_str(2) + "\n"
-      "    Δ : {PredicateSet × (bitset) VariablesToMark → FinalState}" + "\n";
+      "    Δ : {PredicateSet × Marked → FinalState}" + "\n";
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
       if (transitions[i].size() != 0)
@@ -82,7 +82,7 @@ struct CEA {
       for (const std::tuple<PredicateSet, IsMarked, NodeId>& transition :
            transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ","
-               + std::to_string(std::get<1>(transition)) + ","
+               + (std::get<1>(transition) ? "Marked" : "Unmarked") + ","
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }

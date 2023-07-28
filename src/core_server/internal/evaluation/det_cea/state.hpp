@@ -36,7 +36,7 @@ class State {
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
       std::pair<uint64_t, State*>& first_state_info = it->second.first;
-      std::pair<uint64_t, State*>& second_state_info = it->second.first;
+      std::pair<uint64_t, State*>& second_state_info = it->second.second;
       if (!id_is_consistent(first_state_info)
           || !id_is_consistent(second_state_info)) {
         transitions.erase(it);
@@ -53,6 +53,10 @@ class State {
     State* second_state = next_states.second;
     assert(!transitions.contains(evaluation));
     assert(first_state != nullptr && second_state != nullptr);
+    std::cout << "Adding transition: eval: " << evaluation.get_str(2)
+              << "id: " << first_state->id << " Marked:" << first_state->states.get_str(2)
+              << "id: "<< second_state->id << " Unmarked: " << second_state->states.get_str(2)
+              << std::endl;
     transitions.insert(std::make_pair(
       evaluation,
       std::make_pair(std::make_pair(first_state->id, first_state),

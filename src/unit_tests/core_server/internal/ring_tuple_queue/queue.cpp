@@ -103,16 +103,12 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
       datas.push_back(data);
     }
 
-    std::cout << "First buffer recycled" << std::endl;
-
     for (int i = 0; i < 33; i++) {
       uint64_t* data = datas[i];
       Tuple tuple(data, &schemas);
       Value<int64_t> val1(tuple[0]);
       REQUIRE(val1.get() == i + 66);
     }
-
-    std::cout << "Checked first buffer" << std::endl;
 
     for (int i = 33; i < 66; i++) {
       uint64_t* data = datas[i];
