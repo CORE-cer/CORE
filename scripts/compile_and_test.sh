@@ -9,6 +9,12 @@ cd "$(dirname "$0")/.."
 
 # Compile the project under "Debug"
 ./scripts/build.sh
+build_result=$?
+
+if [ $build_result -ne 0 ]; then
+    echo -e "${RED}Build failed!${NORMAL_OUTPUT}"
+    exit 1
+fi
 
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Internal Tests${NORMAL_OUTPUT}"

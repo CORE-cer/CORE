@@ -11,26 +11,27 @@
 namespace CORE::Internal::CEQL {
 
 struct LikePredicate : public Predicate {
-  Attribute attribute;
-  RegexLiteral regex_literal;
+  std::unique_ptr<Value> left;
+  std::unique_ptr<Value> right;
 
-  LikePredicate(Attribute attribute, RegexLiteral regex_literal)
-      : attribute(attribute), regex_literal(regex_literal) {}
+  LikePredicate(std::unique_ptr<Value>&& left,
+                std::unique_ptr<Value>&& right)
+      : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<Predicate> clone() const override {
-    return std::make_unique<LikePredicate>(attribute, regex_literal);
+    return std::make_unique<LikePredicate>(left->clone(), right->clone());
   }
 
   ~LikePredicate() {}
 
   virtual std::unique_ptr<Predicate> negate() const override {
     return std::make_unique<NotPredicate>(
-      std::make_unique<LikePredicate>(attribute, regex_literal));
+      std::make_unique<LikePredicate>(left->clone(), right->clone()));
   }
 
   bool operator==(const LikePredicate& other) const {
-    return attribute == other.attribute
-           && regex_literal == other.regex_literal;
+    return left->equals(other.left.get())
+           && right->equals(other.right.get());
   }
 
   bool equals(Predicate* other) const override {
@@ -43,7 +44,7 @@ struct LikePredicate : public Predicate {
   bool is_constant() const override { return false; }
 
   std::string to_string() const override {
-    return attribute.value + " like " + regex_literal.value;
+    return left->to_string() + " like " + right->to_string();
   }
 
   void accept_visitor(PredicateVisitor& visitor) override {
