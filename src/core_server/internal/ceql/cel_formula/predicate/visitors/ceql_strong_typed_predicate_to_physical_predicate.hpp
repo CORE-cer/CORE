@@ -6,6 +6,7 @@
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_with_regex.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
@@ -106,7 +107,19 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
   }
 
   void visit(LikePredicate& like_predicate) override {
-    throw std::logic_error("visit LikePredicate not implemented.");
+    like_predicate.left->accept_visitor(value_type_visitor);
+    auto first_val_type = value_type_visitor.get_value_type();
+    like_predicate.right->accept_visitor(value_type_visitor);
+    auto second_val_type = value_type_visitor.get_value_type();
+
+    if (first_val_type != ValueTypes::Attribute
+        || second_val_type != ValueTypes::RegexLiteral) {
+      throw std::logic_error(
+        "Like predicate only supports attribute and string literal.");
+    }
+
+    predicate = compare_with_regex(like_predicate.left,
+                                   like_predicate.right);
   }
 
   void visit(NotPredicate& not_predicate) override {
@@ -300,13 +313,20 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
 
   template <typename ValueType>
   ValueType get_val_from_literal(std::unique_ptr<CEQL::Value>& ptr) {
+    ptr->accept_visitor(value_type_visitor);
+    auto right_value_type = value_type_visitor.get_value_type();
     if constexpr (std::is_same_v<ValueType, std::string_view>) {
-      assert(dynamic_cast<CEQL::StringLiteral*>(ptr.get()) != nullptr);
-      auto casted_ptr = static_cast<CEQL::StringLiteral*>(ptr.get());
-      return casted_ptr->value;
+      switch (right_value_type) {
+        case ValueTypes::StringLiteral:
+          assert(dynamic_cast<CEQL::StringLiteral*>(ptr.get()) != nullptr);
+          return static_cast<CEQL::StringLiteral*>(ptr.get())->value;
+        case ValueTypes::RegexLiteral:
+          assert(dynamic_cast<CEQL::RegexLiteral*>(ptr.get()) != nullptr);
+          return static_cast<CEQL::RegexLiteral*>(ptr.get())->value;
+        default:
+          throw std::runtime_error("Invalid mix of types in value");
+      }
     } else {
-      ptr->accept_visitor(value_type_visitor);
-      auto right_value_type = value_type_visitor.get_value_type();
       switch (right_value_type) {
         case ValueTypes::IntegerLiteral:
           assert(dynamic_cast<CEQL::IntegerLiteral*>(ptr.get()) != nullptr);
@@ -488,6 +508,21 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
           "compare_math_exprs");
         return {};
     }
+  }
+
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_with_regex(std::unique_ptr<CEQL::Value>& left,
+                     std::unique_ptr<CEQL::Value>& right) {
+    assert(dynamic_cast<CEQL::Attribute*>(left.get()) != nullptr);
+    auto left_ptr = static_cast<CEQL::Attribute*>(left.get());
+    size_t left_pos = get_pos_from_name(left_ptr->value);
+
+    std::string_view right_str = get_val_from_literal<std::string_view>(
+      right);
+
+    return std::make_unique<CEA::CompareWithRegex>(event_info.id,
+                                                   left_pos,
+                                                   right_str);
   }
 };
 

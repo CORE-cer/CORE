@@ -23,7 +23,15 @@ public:
     LEFT_SQUARE_BRACKET = 46, RIGHT_SQUARE_BRACKET = 47, LEFT_CURLY_BRACKET = 48, 
     RIGHT_CURLY_BRACKET = 49, IDENTIFIER = 50, DOUBLE_LITERAL = 51, INTEGER_LITERAL = 52, 
     NUMERICAL_EXPONENT = 53, STRING_LITERAL = 54, SINGLE_LINE_COMMENT = 55, 
-    MULTILINE_COMMENT = 56, SPACES = 57, UNEXPECTED_CHAR = 58
+    MULTILINE_COMMENT = 56, SPACES = 57, UNEXPECTED_CHAR = 58, REGEX_START = 59, 
+    REGEX_END = 60, REGEX_END_ESCAPED = 61, REGEX_PIPE = 62, REGEX_EXCLAMAITON = 63, 
+    REGEX_L_CURLY = 64, REGEX_R_CURLY = 65, REGEX_L_PAR = 66, REGEX_R_PAR = 67, 
+    REGEX_COMMA = 68, REGEX_QUESTION = 69, REGEX_PLUS = 70, REGEX_STAR = 71, 
+    REGEX_HAT = 72, REGEX_HYPHEN = 73, REGEX_L_BRACK = 74, REGEX_R_BRACK = 75, 
+    REGEX_BACKSLASH = 76, REGEX_ALPHA = 77, REGEX_DOT = 78, REGEX_DOUBLED_DOT = 79, 
+    UNRECOGNIZED = 80, REGEX_DECIMAL_DIGIT = 81, REGEX_NOT_DECIMAL_DIGIT = 82, 
+    REGEX_WHITESPACE = 83, REGEX_NOT_WHITESPACE = 84, REGEX_ALPHANUMERIC = 85, 
+    REGEX_NOT_ALPHANUMERIC = 86, REGEX_DIGIT = 87
   };
 
   enum {
@@ -31,12 +39,18 @@ public:
     RuleList_of_variables = 4, RuleFrom_clause = 5, RuleCel_formula = 6, 
     RulePartition_list = 7, RuleAttribute_list = 8, RuleConsumption_policy = 9, 
     RuleFilter = 10, RulePredicate = 11, RuleString_literal = 12, RuleString_literal_or_regexp = 13, 
-    RuleRegexp = 14, RuleMath_expr = 15, RuleValue_seq = 16, RuleNumber_seq = 17, 
-    RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, RuleTime_span = 21, 
-    RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, RuleCustom_span = 25, 
-    RuleNamed_event = 26, RuleS_event_name = 27, RuleEvent_name = 28, RuleStream_name = 29, 
-    RuleAttribute_name = 30, RuleInteger = 31, RuleDouble = 32, RuleNumber = 33, 
-    RuleString = 34, RuleAny_name = 35, RuleKeyword = 36
+    RuleMath_expr = 14, RuleValue_seq = 15, RuleNumber_seq = 16, RuleString_seq = 17, 
+    RuleTime_window = 18, RuleEvent_span = 19, RuleTime_span = 20, RuleHour_span = 21, 
+    RuleMinute_span = 22, RuleSecond_span = 23, RuleCustom_span = 24, RuleNamed_event = 25, 
+    RuleS_event_name = 26, RuleEvent_name = 27, RuleStream_name = 28, RuleAttribute_name = 29, 
+    RuleInteger = 30, RuleDouble = 31, RuleNumber = 32, RuleString = 33, 
+    RuleAny_name = 34, RuleKeyword = 35, RuleRegexp = 36, RuleRegexp_alternation = 37, 
+    RuleRegexp_exp = 38, RuleRegexp_element = 39, RuleRegexp_group = 40, 
+    RuleParenthesis = 41, RuleQuantifier = 42, RuleQuantity = 43, RuleQuantExact = 44, 
+    RuleQuantRange = 45, RuleQuantMin = 46, RuleQuantMax = 47, RuleAtom = 48, 
+    RuleCharacterClass = 49, RuleCcAtom = 50, RuleCcRange = 51, RuleCcSingle = 52, 
+    RuleCcLiteral = 53, RuleCcEscapes = 54, RuleCcOther = 55, RuleLiteral = 56, 
+    RuleEscapes = 57, RuleOther = 58, RuleSharedAtom = 59, RuleRegexp_number = 60
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -70,7 +84,6 @@ public:
   class PredicateContext;
   class String_literalContext;
   class String_literal_or_regexpContext;
-  class RegexpContext;
   class Math_exprContext;
   class Value_seqContext;
   class Number_seqContext;
@@ -92,7 +105,32 @@ public:
   class NumberContext;
   class StringContext;
   class Any_nameContext;
-  class KeywordContext; 
+  class KeywordContext;
+  class RegexpContext;
+  class Regexp_alternationContext;
+  class Regexp_expContext;
+  class Regexp_elementContext;
+  class Regexp_groupContext;
+  class ParenthesisContext;
+  class QuantifierContext;
+  class QuantityContext;
+  class QuantExactContext;
+  class QuantRangeContext;
+  class QuantMinContext;
+  class QuantMaxContext;
+  class AtomContext;
+  class CharacterClassContext;
+  class CcAtomContext;
+  class CcRangeContext;
+  class CcSingleContext;
+  class CcLiteralContext;
+  class CcEscapesContext;
+  class CcOtherContext;
+  class LiteralContext;
+  class EscapesContext;
+  class OtherContext;
+  class SharedAtomContext;
+  class Regexp_numberContext; 
 
   class  ParseContext : public antlr4::ParserRuleContext {
   public:
@@ -637,19 +675,6 @@ public:
 
   String_literal_or_regexpContext* string_literal_or_regexp();
 
-  class  RegexpContext : public antlr4::ParserRuleContext {
-  public:
-    RegexpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *STRING_LITERAL();
-
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  RegexpContext* regexp();
-
   class  Math_exprContext : public antlr4::ParserRuleContext {
   public:
     Math_exprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -1108,6 +1133,401 @@ public:
   };
 
   KeywordContext* keyword();
+
+  class  RegexpContext : public antlr4::ParserRuleContext {
+  public:
+    RegexpContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_START();
+    Regexp_alternationContext *regexp_alternation();
+    antlr4::tree::TerminalNode *REGEX_END();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  RegexpContext* regexp();
+
+  class  Regexp_alternationContext : public antlr4::ParserRuleContext {
+  public:
+    Regexp_alternationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<Regexp_expContext *> regexp_exp();
+    Regexp_expContext* regexp_exp(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> REGEX_PIPE();
+    antlr4::tree::TerminalNode* REGEX_PIPE(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Regexp_alternationContext* regexp_alternation();
+
+  class  Regexp_expContext : public antlr4::ParserRuleContext {
+  public:
+    Regexp_expContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<Regexp_elementContext *> regexp_element();
+    Regexp_elementContext* regexp_element(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Regexp_expContext* regexp_exp();
+
+  class  Regexp_elementContext : public antlr4::ParserRuleContext {
+  public:
+    Regexp_elementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Regexp_groupContext *regexp_group();
+    QuantifierContext *quantifier();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Regexp_elementContext* regexp_element();
+
+  class  Regexp_groupContext : public antlr4::ParserRuleContext {
+  public:
+    Regexp_groupContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ParenthesisContext *parenthesis();
+    AtomContext *atom();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Regexp_groupContext* regexp_group();
+
+  class  ParenthesisContext : public antlr4::ParserRuleContext {
+  public:
+    ParenthesisContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_L_PAR();
+    Regexp_alternationContext *regexp_alternation();
+    antlr4::tree::TerminalNode *REGEX_R_PAR();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ParenthesisContext* parenthesis();
+
+  class  QuantifierContext : public antlr4::ParserRuleContext {
+  public:
+    QuantifierContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_QUESTION();
+    antlr4::tree::TerminalNode *REGEX_PLUS();
+    antlr4::tree::TerminalNode *REGEX_STAR();
+    antlr4::tree::TerminalNode *REGEX_L_CURLY();
+    QuantityContext *quantity();
+    antlr4::tree::TerminalNode *REGEX_R_CURLY();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantifierContext* quantifier();
+
+  class  QuantityContext : public antlr4::ParserRuleContext {
+  public:
+    QuantityContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    QuantExactContext *quantExact();
+    QuantRangeContext *quantRange();
+    QuantMinContext *quantMin();
+    QuantMaxContext *quantMax();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantityContext* quantity();
+
+  class  QuantExactContext : public antlr4::ParserRuleContext {
+  public:
+    QuantExactContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Regexp_numberContext *regexp_number();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantExactContext* quantExact();
+
+  class  QuantRangeContext : public antlr4::ParserRuleContext {
+  public:
+    QuantRangeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<Regexp_numberContext *> regexp_number();
+    Regexp_numberContext* regexp_number(size_t i);
+    antlr4::tree::TerminalNode *REGEX_COMMA();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantRangeContext* quantRange();
+
+  class  QuantMinContext : public antlr4::ParserRuleContext {
+  public:
+    QuantMinContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    Regexp_numberContext *regexp_number();
+    antlr4::tree::TerminalNode *REGEX_COMMA();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantMinContext* quantMin();
+
+  class  QuantMaxContext : public antlr4::ParserRuleContext {
+  public:
+    QuantMaxContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_COMMA();
+    Regexp_numberContext *regexp_number();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  QuantMaxContext* quantMax();
+
+  class  AtomContext : public antlr4::ParserRuleContext {
+  public:
+    AtomContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    CharacterClassContext *characterClass();
+    SharedAtomContext *sharedAtom();
+    LiteralContext *literal();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  AtomContext* atom();
+
+  class  CharacterClassContext : public antlr4::ParserRuleContext {
+  public:
+    CharacterClassContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_L_BRACK();
+    antlr4::tree::TerminalNode *REGEX_R_BRACK();
+    antlr4::tree::TerminalNode *REGEX_HAT();
+    std::vector<CcAtomContext *> ccAtom();
+    CcAtomContext* ccAtom(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CharacterClassContext* characterClass();
+
+  class  CcAtomContext : public antlr4::ParserRuleContext {
+  public:
+    CcAtomContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    CcRangeContext *ccRange();
+    SharedAtomContext *sharedAtom();
+    CcSingleContext *ccSingle();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcAtomContext* ccAtom();
+
+  class  CcRangeContext : public antlr4::ParserRuleContext {
+  public:
+    CcRangeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<CcLiteralContext *> ccLiteral();
+    CcLiteralContext* ccLiteral(size_t i);
+    antlr4::tree::TerminalNode *REGEX_HYPHEN();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcRangeContext* ccRange();
+
+  class  CcSingleContext : public antlr4::ParserRuleContext {
+  public:
+    CcSingleContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    CcLiteralContext *ccLiteral();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcSingleContext* ccSingle();
+
+  class  CcLiteralContext : public antlr4::ParserRuleContext {
+  public:
+    CcLiteralContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    CcEscapesContext *ccEscapes();
+    CcOtherContext *ccOther();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcLiteralContext* ccLiteral();
+
+  class  CcEscapesContext : public antlr4::ParserRuleContext {
+  public:
+    CcEscapesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> REGEX_BACKSLASH();
+    antlr4::tree::TerminalNode* REGEX_BACKSLASH(size_t i);
+    antlr4::tree::TerminalNode *REGEX_HAT();
+    antlr4::tree::TerminalNode *REGEX_HYPHEN();
+    antlr4::tree::TerminalNode *REGEX_R_BRACK();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcEscapesContext* ccEscapes();
+
+  class  CcOtherContext : public antlr4::ParserRuleContext {
+  public:
+    CcOtherContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_HAT();
+    antlr4::tree::TerminalNode *REGEX_HYPHEN();
+    antlr4::tree::TerminalNode *REGEX_R_BRACK();
+    antlr4::tree::TerminalNode *REGEX_BACKSLASH();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  CcOtherContext* ccOther();
+
+  class  LiteralContext : public antlr4::ParserRuleContext {
+  public:
+    LiteralContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    EscapesContext *escapes();
+    antlr4::tree::TerminalNode *REGEX_DOT();
+    OtherContext *other();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  LiteralContext* literal();
+
+  class  EscapesContext : public antlr4::ParserRuleContext {
+  public:
+    EscapesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> REGEX_BACKSLASH();
+    antlr4::tree::TerminalNode* REGEX_BACKSLASH(size_t i);
+    antlr4::tree::TerminalNode *REGEX_L_BRACK();
+    antlr4::tree::TerminalNode *REGEX_R_BRACK();
+    antlr4::tree::TerminalNode *REGEX_L_PAR();
+    antlr4::tree::TerminalNode *REGEX_R_PAR();
+    antlr4::tree::TerminalNode *REGEX_L_CURLY();
+    antlr4::tree::TerminalNode *REGEX_R_CURLY();
+    antlr4::tree::TerminalNode *REGEX_STAR();
+    antlr4::tree::TerminalNode *REGEX_PLUS();
+    antlr4::tree::TerminalNode *REGEX_QUESTION();
+    antlr4::tree::TerminalNode *REGEX_PIPE();
+    antlr4::tree::TerminalNode *REGEX_DOT();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  EscapesContext* escapes();
+
+  class  OtherContext : public antlr4::ParserRuleContext {
+  public:
+    OtherContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_L_BRACK();
+    antlr4::tree::TerminalNode *REGEX_R_BRACK();
+    antlr4::tree::TerminalNode *REGEX_L_PAR();
+    antlr4::tree::TerminalNode *REGEX_R_PAR();
+    antlr4::tree::TerminalNode *REGEX_L_CURLY();
+    antlr4::tree::TerminalNode *REGEX_R_CURLY();
+    antlr4::tree::TerminalNode *REGEX_STAR();
+    antlr4::tree::TerminalNode *REGEX_PLUS();
+    antlr4::tree::TerminalNode *REGEX_QUESTION();
+    antlr4::tree::TerminalNode *REGEX_PIPE();
+    antlr4::tree::TerminalNode *REGEX_BACKSLASH();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  OtherContext* other();
+
+  class  SharedAtomContext : public antlr4::ParserRuleContext {
+  public:
+    SharedAtomContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_DECIMAL_DIGIT();
+    antlr4::tree::TerminalNode *REGEX_NOT_DECIMAL_DIGIT();
+    antlr4::tree::TerminalNode *REGEX_WHITESPACE();
+    antlr4::tree::TerminalNode *REGEX_NOT_WHITESPACE();
+    antlr4::tree::TerminalNode *REGEX_ALPHANUMERIC();
+    antlr4::tree::TerminalNode *REGEX_NOT_ALPHANUMERIC();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  SharedAtomContext* sharedAtom();
+
+  class  Regexp_numberContext : public antlr4::ParserRuleContext {
+  public:
+    Regexp_numberContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<antlr4::tree::TerminalNode *> REGEX_DIGIT();
+    antlr4::tree::TerminalNode* REGEX_DIGIT(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Regexp_numberContext* regexp_number();
 
 
   bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;
