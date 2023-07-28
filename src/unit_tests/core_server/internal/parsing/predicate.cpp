@@ -382,9 +382,7 @@ TEST_CASE("Like", "[Predicate]") {
   auto query = create_query("t2[temp LIKE <<.*>>]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   auto expected_predicate = make_unique<LikePredicate>(
-      make_unique<Attribute>("temp"),
-      make_unique<RegexLiteral>(".*")
-  );
+    make_unique<Attribute>("temp"), make_unique<RegexLiteral>(".*"));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
