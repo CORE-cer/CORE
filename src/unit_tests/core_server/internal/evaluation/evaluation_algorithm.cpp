@@ -23,20 +23,48 @@ RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
   return ring_tuple_queue.get_tuple(data);
 }
 
-std::string output_to_string(std::vector<tECS::Enumerator> eval) {
-  std::string out = "There are: " + std::to_string(eval.size()) + " tECS enumerators as outputs!\n";
-  for (auto enumerator : eval) {
-    for (std::pair<std::pair<uint64_t, uint64_t>, std::set<uint64_t>> info :
-         enumerator) {
-      out += "[" + std::to_string(info.first.first) + ","
-             + std::to_string(info.first.second) + "]" + ", {";
-      for (auto i : info.second) {
-        out += std::to_string(i) + " ";
-      }
-      out += "}\n";
-    }
+std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                      std::vector<RingTupleQueue::Tuple>>>
+enumerator_to_vector(tECS::Enumerator enumerator) {
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    out;
+  for (auto info : enumerator) {
+    out.push_back(info);
   }
   return out;
+}
+
+std::string output_to_string(tECS::Enumerator enumerator) {
+  std::string out = "";
+  for (std::pair<std::pair<uint64_t, uint64_t>,
+                 std::vector<RingTupleQueue::Tuple>> info : enumerator) {
+    out += "[" + std::to_string(info.first.first) + ","
+           + std::to_string(info.first.second) + "]" + ", {";
+    for (auto tuple : info.second) {
+      RingTupleQueue::Value<std::string_view> val1(tuple[0]);
+      RingTupleQueue::Value<std::int64_t> val2(tuple[1]);
+      if (tuple.id() == 0) {
+        out += "SELL " + std::string(val1.get()) + " "
+               + std::to_string(val2.get()) + " ";
+      }
+    }
+    out += "}\n";
+  }
+  return out;
+}
+
+bool is_the_same_as(RingTupleQueue::Tuple tuple,
+                    uint64_t event_type_id,
+                    std::string name,
+                    int64_t value) {
+  if (tuple.id() != event_type_id) {
+    return false;
+  }
+  std::string_view
+    tuple_name = RingTupleQueue::Value<std::string_view>(tuple[0]).get();
+  int64_t tuple_val = RingTupleQueue::Value<int64_t>(tuple[1]).get();
+  return (tuple_name == name && tuple_val == value);
 }
 
 TEST_CASE("Evaluation on the example stream of the paper.") {
@@ -80,49 +108,87 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_eval = evaluator.next(tuple);
+  auto next_output_enumerator = evaluator.next(tuple);
+  auto outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
 
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 2);
+  for (std::pair<std::pair<uint64_t, uint64_t>,
+                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
+  }
+  REQUIRE(outputs[0].first.first == 1);
+  REQUIRE(outputs[0].first.second == 4);
+  REQUIRE(outputs[1].first.first == 0);
+  REQUIRE(outputs[1].first.second == 4);
+
+  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_eval));
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_eval = evaluator.next(tuple);
+  next_output_enumerator = evaluator.next(tuple);
+  outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_eval));
-
-  REQUIRE(false);
+  INFO(output_to_string(next_output_enumerator));
+  REQUIRE(outputs.size() == 4);
+  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
+  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));
+  REQUIRE(is_the_same_as(outputs[2].second[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(outputs[2].second[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(outputs[2].second[2], 0, "AMZN", 1920));
+  REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(outputs[3].second[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1920));
 }
 
 }  // namespace CORE::Internal::Evaluation::UnitTests

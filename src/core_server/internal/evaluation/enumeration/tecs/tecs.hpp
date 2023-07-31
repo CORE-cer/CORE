@@ -11,6 +11,8 @@
 namespace CORE::Internal::tECS {
 
 class tECS {
+  // tECS manages nodes and union lists, by default all operations take
+  // ownership of the node passed.
   using UnionList = std::vector<Node*>;
 
  public:
@@ -30,26 +32,50 @@ class tECS {
 
   ~tECS() = default;
 
+  void pin(Node* node) { node_manager.increase_ref_count(node); }
+
+  void pin(UnionList& ulist) {
+    for (auto node : ulist) {
+      pin(node);
+    }
+  }
+
+  /**
+   * If a node is no longer used, it should be unpinned, this allows the
+   * memory manager to recycle the memory allocated to it.
+   */
+  void unpin(Node* node) { node_manager.decrease_ref_count(node); }
+
+  void unpin(UnionList& ulist) {
+    for (auto node : ulist) {
+      unpin(node);
+    }
+  }
+
   /**
    * The bottom node, also known as the terminal node, has no children and
    * tells us that we reached the end of an output
    */
-  Node* new_bottom(uint64_t index) { return node_manager.alloc(index); }
+  [[nodiscard]] Node*
+  new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
+    return node_manager.alloc(tuple, timestamp);
+  }
 
   /**
    * Extend nodes, also known as content nodes store the opened and closed
    * variables and the position in the document that this annotation is
    * referring to.
    */
-  Node* new_extend(Node* node, uint64_t index) {
-    return node_manager.alloc(node, index);
+  [[nodiscard]] Node*
+  new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
+    return node_manager.alloc(node, tuple, timestamp);
   }
 
   /**
    * Union nodes allow us to enumerate multiple outputs starting from a
    * single node.
    */
-  Node* new_union(Node* node_1, Node* node_2) {
+  [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {
@@ -65,11 +91,6 @@ class tECS {
    * If the node is going to be used in another scope, it is necessary to
    * pin it so that the memory manager does not recycle its memory location.
    */
-  Node* pin_node(Node* node) {
-    node_manager.increase_ref_count(node);
-    return node;
-  }
-
   UnionList new_ulist(Node* node) {
     assert(!node->is_union());
     return {node};
@@ -77,10 +98,6 @@ class tECS {
 
   /// Inserts the node in the ulist, maintaining the max-sorted invariant.
   [[nodiscard]] UnionList insert(UnionList&& ulist, Node* node) {
-    std::cout << "Inserting: " << node->to_string() << "In Ulist: " << std::endl;
-    for (size_t i = 0; i < ulist.size(); i++) {
-      std::cout << "i: " << i << ": " << ulist[i]->to_string() << std::endl;
-    }
     assert_required_properties_of_union_list(ulist);
     assert(node->max() <= ulist[0]->max());
     if (ulist.size() == 1) {
@@ -118,24 +135,17 @@ class tECS {
    |             /   \                                    |
    |           nk-1   nk                                  |
    +-----------------------------------------------------*/
+  // And the nodes n0, n1, n2,...nk are pinned
   Node* merge(UnionList& ulist) {
     assert_required_properties_of_union_list(ulist);
-    std::cout << "Merging a ulist!" << std::endl;
     Node* tail = ulist.back();
-    std::cout << "i: " << ulist.size() - 1 << ": " << tail->to_string()
-              << std::endl;
+    pin(tail);
     for (int i = ulist.size() - 2; i >= 0; i--) {
-      std::cout << "i: " << i << ": " << ulist[i]->to_string() << std::endl;
+      pin(ulist[i]);
       tail = node_manager.alloc(ulist[i], tail);
     }
     return tail;
   }
-
-  /**
-   * If a node is no longer used, it should be unpinned, this allows the
-   * memory manager to recycle the memory allocated to it.
-   */
-  void unpin_node(Node* node) { node_manager.decrease_ref_count(node); }
 
  private:
   void assert_required_properties_of_union_list(UnionList& union_list) {
@@ -169,6 +179,12 @@ class tECS {
     +----------------------------------------------------- +
   */
   Node* create_union_of_two_non_output_nodes(Node* node_1, Node* node_2) {
+    pin(node_1->left);
+    pin(node_1->right);
+    pin(node_2->left);
+    pin(node_2->right);
+    unpin(node_1);
+    unpin(node_2);
     Node* u2 = create_first_intermediate_union_node(node_1, node_2);
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
     Node* new_node = create_union_of_output_and_intermediate_node(node_1,

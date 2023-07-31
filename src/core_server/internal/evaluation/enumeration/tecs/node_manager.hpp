@@ -124,7 +124,9 @@ class NodeManager {
   }
 
   void try_to_mark_node_as_unused(Node* node) {
-    if (node->ref_count == 0) add_to_list_of_free_memory(node);
+    if (node->ref_count == 0) {
+      add_to_list_of_free_memory(node);
+    }
   }
 };
 }  // namespace CORE::Internal::tECS

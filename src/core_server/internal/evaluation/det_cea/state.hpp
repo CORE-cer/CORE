@@ -8,21 +8,39 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 
 namespace CORE::Internal::CEA::Det {
+
 class State {
+ private:
+  struct StatesData {
+    uint64_t marked_state_id;
+    State* marked_state;
+    uint64_t unmarked_state_id;
+    State* unmarked_state;
+
+    bool is_consistent() {
+      assert(marked_state != nullptr && unmarked_state != nullptr);
+      return (marked_state_id == marked_state->id)
+             && (unmarked_state_id == unmarked_state->id);
+    }
+  };
+
  public:
+  struct States {
+    State* marked_state;
+    State* unmarked_state;
+  };
+
   uint64_t id;
   mpz_class states;
   // The id is stored in the transitions because in the future we might
   // want to remove some states. And to remove them we can
-  using States = std::pair<std::pair<uint64_t, State*>,
-                           std::pair<uint64_t, State*>>;
   CEA& cea;
   bool is_final;
   bool is_empty;
 
  private:
   inline static uint64_t IdCounter = 0;
-  std::map<mpz_class, States> transitions;
+  std::map<mpz_class, StatesData> transitions;
 
  public:
   State(mpz_class states, CEA& cea)
@@ -32,44 +50,29 @@ class State {
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
 
-  std::pair<State*, State*> next(mpz_class evaluation) {
+  States next(mpz_class evaluation) {
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
-      std::pair<uint64_t, State*>& first_state_info = it->second.first;
-      std::pair<uint64_t, State*>& second_state_info = it->second.second;
-      if (!id_is_consistent(first_state_info)
-          || !id_is_consistent(second_state_info)) {
+      StatesData states_data = it->second;
+      if (!states_data.is_consistent()) {
         transitions.erase(it);
       } else {
-        return {first_state_info.second, second_state_info.second};
+        return {states_data.marked_state, states_data.unmarked_state};
       }
     }
     return {nullptr, nullptr};
   }
 
-  void add_transition(mpz_class evaluation,
-                      std::pair<State*, State*> next_states) {
-    State* first_state = next_states.first;
-    State* second_state = next_states.second;
+  void add_transition(mpz_class evaluation, States next_states) {
     assert(!transitions.contains(evaluation));
-    assert(first_state != nullptr && second_state != nullptr);
-    std::cout << "Adding transition: eval: " << evaluation.get_str(2)
-              << "id: " << first_state->id << " Marked:" << first_state->states.get_str(2)
-              << "id: "<< second_state->id << " Unmarked: " << second_state->states.get_str(2)
-              << std::endl;
-    transitions.insert(std::make_pair(
-      evaluation,
-      std::make_pair(std::make_pair(first_state->id, first_state),
-                     std::make_pair(second_state->id, second_state))));
-  }
-
- private:
-  static bool
-  id_is_consistent(const std::pair<uint64_t, State*>& state_info) {
-    uint64_t expected_id = state_info.first;
-    State* state = state_info.second;
-    assert(state != nullptr);  // states can only be overwritten.
-    return state->id == expected_id;
+    assert(next_states.unmarked_state != nullptr
+           && next_states.marked_state != nullptr);
+    transitions.insert(
+      std::make_pair(evaluation,
+                     StatesData{next_states.marked_state->id,
+                                next_states.marked_state,
+                                next_states.unmarked_state->id,
+                                next_states.unmarked_state}));
   }
 };
 }  // namespace CORE::Internal::CEA::Det

@@ -23,25 +23,23 @@ struct CEA {
 
   int64_t amount_of_states;
   std::vector<std::set<Transition>> transitions;
-  std::pair<NodeId, NodeId> initial_states;
+  NodeId initial_state;
   States final_states;
 
  public:
   CEA(LogicalCEA&& logical_cea) {
     // clang-format off
-    logical_cea = Duplicate()(
-                  RemoveUnreachableStates()(
+    logical_cea = RemoveUnreachableStates()(
                   RemoveUselessStates()(
                   RemoveEpsilonTransitions()(
-                  AddUniqueInitialState()(std::move(logical_cea))))));
+                  AddUniqueInitialState()(std::move(logical_cea)))));
     // clang-format on
     amount_of_states = logical_cea.amount_of_states;
     transcribe_transitions(logical_cea);
 
     auto initial_states_list = logical_cea.get_initial_states();
-    assert(initial_states_list.size() == 2);
-    initial_states = std::make_pair(initial_states_list[0],
-                                    initial_states_list[1]);
+    assert(initial_states_list.size() == 1);
+    initial_state = initial_states_list[0];
     final_states = logical_cea.final_states;
   }
 
@@ -72,7 +70,7 @@ struct CEA {
     std::string out =
       "CEA\n"
       "    Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
-      "    (q0, q0') = " + std::to_string(initial_states.first) + "," + std::to_string(initial_states.second) + "\n"
+      "    q0 = " + std::to_string(initial_state) + "\n"
       "    F = (bitset) " + final_states.get_str(2) + "\n"
       "    Δ : {PredicateSet × Marked → FinalState}" + "\n";
     // clang-format on

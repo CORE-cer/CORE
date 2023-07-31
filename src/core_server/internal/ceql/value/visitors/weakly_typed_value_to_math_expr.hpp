@@ -26,10 +26,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
 
   void visit(StringLiteral& literal) override {
     if constexpr (std::is_same_v<Type, std::string_view>) {
-      std::cout << "Literal value: " << literal.value << std::endl;
       std::string_view value = literal.value;
       value = value.substr(1, value.size() - 2);
-      std::cout << "Literal substr value: " << value << std::endl;
       math_expr = std::make_unique<CEA::Literal<std::string_view>>(value);
     } else {
       assert(false && "Type is not string view");

@@ -14,6 +14,7 @@ class Evaluator {
  private:
   using UnionList = std::vector<tECS::Node*>;
   using State = CEA::Det::State;
+  using States = CEA::Det::State::States;
   using Node = tECS::Node;
   //                                      // Name in paper
   CEA::DetCEA cea;                        // A
@@ -30,7 +31,6 @@ class Evaluator {
   // Other auxiliary objects
 
   tECS::tECS tecs;
-  bool pick_first_initial_state = true;
 
  public:
   Evaluator(CEA::DetCEA&& cea,
@@ -40,112 +40,90 @@ class Evaluator {
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound) {}
 
-  std::vector<tECS::Enumerator>
+  tECS::Enumerator
   next(RingTupleQueue::Tuple tuple) {  // Pasarle el timestamp.
     stream.insert(tuple);
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
-    std::cout << "\n--------------------" << std::endl;
-    std::cout << "Next of a new tuple" << std::endl;
-    std::cout << "--------------------" << std::endl << std::endl;
-    std::cout << "Tuple evaluation: " << predicates_satisfied.get_str(2)
-              << std::endl;
     current_stream_position += 1;
     current_union_list_map = {};
     current_ordered_keys = {};
     UnionList u1 = tecs.new_ulist(
-      tecs.new_bottom(current_stream_position));  // Modify
+      tecs.new_bottom(tuple, current_stream_position));  // Modify
     State* q0 = get_initial_state();  // Maybe remove duplication and this.
-    exec_trans(q0, u1, predicates_satisfied, current_stream_position);
+    exec_trans(tuple, q0, std::move(u1), predicates_satisfied);
 
-    std::cout << "\n" << std::endl;
-    std::cout << "Historic Ordered Keys" << std::endl;
-    std::cout << "--------------------" << std::endl << std::endl;
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
-      std::cout << p->states.get_str(2) << std::endl;
-      exec_trans(p,
-                 historic_union_list_map[p],
-                 predicates_satisfied,
-                 current_stream_position);  // Send the tuple in exec_trans.
+      exec_trans(tuple,
+                 p,
+                 std::move(historic_union_list_map[p]),
+                 predicates_satisfied);  // Send the tuple in exec_trans.
     }
-    std::cout << "--------------------" << std::endl << std::endl;
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     return output();
   }
 
  private:
-  State* get_initial_state() {
-    if (pick_first_initial_state) {
-      pick_first_initial_state = false;
-      return cea.initial_states.first;
-    } else {
-      pick_first_initial_state = true;
-      return cea.initial_states.second;
-    }
-  }
+  State* get_initial_state() { return cea.initial_state; }
 
-  void exec_trans(State* p, UnionList& u1, mpz_class& t, uint64_t j) {
+  void exec_trans(RingTupleQueue::Tuple& tuple,
+                  State* p,
+                  UnionList&& u1,
+                  mpz_class& t) {
+    // exec_trans places all the code of add into exec_trans.
     assert(p != nullptr);
-    std::cout << "\nState number: " << p->id
-              << "states: " << p->states.get_str(2) << "\n"
-              << std::endl;
-    Node* n = tecs.merge(u1);  // Hacer el merge en esta pos es un overkill
-                               // maybe lazy load de MergedNode.
-    std::cout << "Before next_states" << std::endl;
-    // StructConAlgunNombre -> .marked_state -> .unmarked_state
-    std::pair<State*, State*> next_states = cea.next(p, t);
-    assert(next_states.first != nullptr && next_states.second != nullptr);
-    std::cout << "After next_states" << std::endl;
-    if (!next_states.first->is_empty) {
-      std::cout << "\nMarked state: " << next_states.first->id
-                << " states: " << next_states.first->states.get_str(2)
-                << std::endl;
-      Node* new_node = tecs.new_extend(n, current_stream_position);
-      UnionList new_ulist = tecs.new_ulist(new_node);
-      add(next_states.first, new_node, new_ulist);
+    States next_states = cea.next(p, t);
+    auto marked_state = next_states.marked_state;
+    auto unmarked_state = next_states.unmarked_state;
+    assert(marked_state != nullptr && unmarked_state != nullptr);
+    if (!marked_state->is_empty) {
+      Node* new_node = tecs.new_extend(tecs.merge(u1),
+                                       tuple,
+                                       current_stream_position);
+      if (current_union_list_map.contains(marked_state)) {
+        current_union_list_map[marked_state] = tecs.insert(
+          std::move(current_union_list_map[marked_state]), new_node);
+      } else {
+        UnionList new_ulist = tecs.new_ulist(new_node);
+        current_ordered_keys.push_back(marked_state);
+        current_union_list_map[marked_state] = new_ulist;
+      }
     }
-    if (!next_states.second->is_empty) {
-      std::cout << "\nUnmarked state: " << next_states.second->id
-                << " states: " << next_states.second->states.get_str(2)
-                << std::endl;
-      std::cout << "Entered here without marking new state" << std::endl;
-      add(next_states.second, n, u1);
+    if (!unmarked_state->is_empty) {
+      if (current_union_list_map.contains(unmarked_state)) {
+        Node* new_node = tecs.merge(u1);
+        current_union_list_map[unmarked_state] = tecs.insert(
+          std::move(current_union_list_map[unmarked_state]), new_node);
+      } else {
+        current_ordered_keys.push_back(unmarked_state);
+        current_union_list_map[unmarked_state] = u1;
+        tecs.pin(u1);
+      }
     }
-  }
-
-  void add(State* q, Node* n, UnionList& u1) {
-    // clang-format off
-    if (current_union_list_map.contains(q)) {
-      std::cout << "Current union list map contains: " << q->id << std::endl;
-      current_union_list_map[q] = tecs.insert(
-          std::move(current_union_list_map[q]),
-          n
-      );
-    } else {
-      std::cout << "Current union list map does not contains: " << q->id << std::endl;
-      current_ordered_keys.push_back(q);
-      current_union_list_map[q] = std::move(u1);
-    }
-    // clang-format on
+    tecs.unpin(u1);
   }
 
   // Change to tECS::Enumerator.
-  std::vector<tECS::Enumerator> output() {
-    std::vector<tECS::Enumerator> out;
+  tECS::Enumerator output() {
+    Node* out = nullptr;
     for (State* p : historic_ordered_keys) {
-      std::cout << "Checking if states: " << p->states.get_str(2)
-                << " Is final." << std::endl;
       if (p->is_final) {
-        std::cout << "There should be an output!!" << std::endl;
         assert(historic_union_list_map.contains(p));
         Node* n = tecs.merge(historic_union_list_map[p]);
         // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
-        out.emplace_back(n, current_stream_position, time_window);
+        if (out == nullptr) {
+          out = n;
+        } else {
+          out = tecs.new_union(out, n);
+        }
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
     }
-    return out;
+    if (out == nullptr)
+      return {};
+    else
+      return {out, current_stream_position, time_window};
   }
 };
 }  // namespace CORE::Internal::Evaluation
