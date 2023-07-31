@@ -94,10 +94,11 @@ TEST_CASE("Sequencing Formula", "[CEQL To LogicalCEA]") {
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 4);
   REQUIRE(cea.transitions[0].size() == 1);
   REQUIRE(cea.transitions[1].size() == 0);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[2].size() == 2);
   REQUIRE(cea.transitions[3].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 1);
@@ -107,6 +108,11 @@ TEST_CASE("Sequencing Formula", "[CEQL To LogicalCEA]") {
           == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
   REQUIRE(cea.transitions[2][0]
           == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(
+    cea.transitions[2][1]
+    == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),
+                       0,
+                       2));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b1000);

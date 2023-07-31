@@ -20,10 +20,10 @@ struct LogicalCEA {
   std::vector<std::set<NodeId>> epsilon_transitions;
   States initial_states;
   States final_states;
-  int64_t amount_of_states;
+  uint64_t amount_of_states;
 
  public:
-  LogicalCEA(int64_t amount_of_states)
+  LogicalCEA(uint64_t amount_of_states)
       : amount_of_states(amount_of_states) {
     for (int i = 0; i < amount_of_states; i++) {
       transitions.push_back({});
@@ -38,7 +38,7 @@ struct LogicalCEA {
         initial_states(other.initial_states),
         final_states(other.final_states) {}
 
-  static LogicalCEA atomic_cea(int64_t event_type_id) {
+  static LogicalCEA atomic_cea(uint64_t event_type_id) {
     auto atomic_cea = LogicalCEA(2);
     mpz_class position_of_event = (mpz_class)1 << event_type_id;
     mpz_class predicate_mask = (mpz_class)1 << event_type_id;
@@ -51,7 +51,7 @@ struct LogicalCEA {
     return atomic_cea;
   }
 
-  void add_n_states(int64_t n) {
+  void add_n_states(uint64_t n) {
     amount_of_states += n;
     for (int64_t i = 0; i < n; i++) {
       transitions.push_back({});
@@ -59,8 +59,8 @@ struct LogicalCEA {
     }
   }
 
-  std::vector<int64_t> get_initial_states() {
-    std::vector<int64_t> out;
+  std::vector<uint64_t> get_initial_states() {
+    std::vector<uint64_t> out;
     States initial_states_copy = initial_states;
     int64_t current_pos = 0;
     while (initial_states_copy != 0) {
@@ -73,8 +73,8 @@ struct LogicalCEA {
     return out;
   }
 
-  std::vector<int64_t> get_final_states() {
-    std::vector<int64_t> out;
+  std::vector<uint64_t> get_final_states() {
+    std::vector<uint64_t> out;
     States final_states_copy = final_states;
     int64_t current_pos = 0;
     while (final_states_copy != 0) {
@@ -99,7 +99,7 @@ struct LogicalCEA {
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
       if (transitions[i].size() != 0)
-        out += "    Δ[" + std::to_string(i) + "]:";
+        out += "    Δ[" + std::to_string(i) + "]:\n";
       for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
            transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ",0xb"
@@ -107,13 +107,12 @@ struct LogicalCEA {
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }
-    out += "    Δε: [NodeId]:";
+    out += "    Δε: [NodeId]:\n";
     for (size_t i = 0; i < epsilon_transitions.size(); i++) {
-      if (transitions[i].size() != 0)
-        for (const NodeId& end_node : epsilon_transitions[i]) {
-          out += "        " + std::to_string(i) + "→ "
-                 + std::to_string(end_node) + "\n";
-        }
+      for (const NodeId& end_node : epsilon_transitions[i]) {
+        out += "        " + std::to_string(i) + "→ "
+               + std::to_string(end_node) + "\n";
+      }
     }
 
     return out;

@@ -86,7 +86,6 @@ declare_and_check_for_stream(std::string name,
   // Stream info from id works
   auto id = CerealSerializer<Types::StreamTypeId>::deserialize(
     id_response.serialized_response_data);
-  //std::cout << "stream id gotten: " << id << std::endl;
   Types::ClientRequest
     request(CerealSerializer<Types::EventTypeId>::serialize(id),
             Types::ClientRequestType::StreamInfoFromId);

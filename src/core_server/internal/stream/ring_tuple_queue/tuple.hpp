@@ -157,6 +157,16 @@ class Tuple {
     return out;
   }
 
+  // for set comparison.
+  bool operator<(const RingTupleQueue::Tuple& other) const {
+    return data < other.data;
+  }
+
+  // for set comparison.
+  bool operator==(const RingTupleQueue::Tuple& other) const {
+    return data == other.data;
+  }
+
   uint64_t* operator[](uint64_t index) {
     return &data[schemas->get_relative_positions(id())[index]];
   }

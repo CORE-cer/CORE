@@ -25,6 +25,14 @@ struct PredicateEvaluator {
     }
     return out;
   }
+
+  std::string to_string() const {
+    std::string out = "Physical predicates:\n";
+    for (auto& pred : predicates) {
+      out += "    " + pred->to_string() + "\n";
+    }
+    return out;
+  }
 };
 
 }  // namespace CORE::Internal::Evaluation

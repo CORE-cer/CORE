@@ -49,7 +49,7 @@ class RemoveEpsilonTransitions
     for (int i = 0; i < cea.amount_of_states; i++)
       assert(cea.epsilon_transitions[i].empty());
 
-    return cea;
+    return std::move(cea);
   }
 };
 

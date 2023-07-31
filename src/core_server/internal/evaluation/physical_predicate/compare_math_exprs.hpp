@@ -35,9 +35,9 @@ class CompareMathExprs : public PhysicalPredicate {
   ~CompareMathExprs() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
-    if constexpr (Comp == ComparisonType::EQUALS)
+    if constexpr (Comp == ComparisonType::EQUALS) {
       return left->eval(tuple) == right->eval(tuple);
-    else if constexpr (Comp == ComparisonType::GREATER)
+    } else if constexpr (Comp == ComparisonType::GREATER)
       return left->eval(tuple) > right->eval(tuple);
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
       return left->eval(tuple) >= right->eval(tuple);
