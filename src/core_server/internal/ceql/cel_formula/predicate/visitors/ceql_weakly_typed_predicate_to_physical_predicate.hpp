@@ -49,7 +49,6 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
                                          compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
-#include <memory>
       has_added_admissible_event_types = true;
     }
 
