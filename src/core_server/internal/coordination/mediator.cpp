@@ -49,14 +49,14 @@ Types::PortNumber Mediator::create_dummy_complex_event_stream(
 }
 
 void Mediator::send_event_to_queries(Types::StreamTypeId stream_id,
-                                     Types::Event event) {
+                                     Types::EventType event) {
   // TODO: send events to specific queries
   for (auto& sender : inner_thread_event_senders) {
     sender.send(event_to_tuple(event).serialize_data());
   }
 }
 
-RingTupleQueue::Tuple Mediator::event_to_tuple(Types::Event& event) {
+RingTupleQueue::Tuple Mediator::event_to_tuple(Types::EventType& event) {
   if (event.event_type_id > catalog.number_of_events()) {
     throw std::runtime_error("Provided event type id is not valid.");
   }

@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 
 namespace CORE::Types {
 /**

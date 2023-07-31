@@ -12,7 +12,7 @@
 #include "core_server/internal/parsing/ceql_query/visitors/where_visitor.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"

@@ -5,7 +5,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"

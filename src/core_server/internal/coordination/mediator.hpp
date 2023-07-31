@@ -7,7 +7,7 @@
 #include "core_server/internal/coordination/query_evaluator.hpp"
 #include "core_server/internal/coordination/router.hpp"
 #include "core_server/internal/coordination/streams_listener.hpp"
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 
 class CEA;
 
@@ -37,10 +37,10 @@ class Mediator {
   Types::PortNumber create_dummy_complex_event_stream(
     Evaluation::PredicateEvaluator&& evaluator);
   void
-  send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
+  send_event_to_queries(Types::StreamTypeId stream_id, Types::EventType event);
 
  private:
-  RingTupleQueue::Tuple event_to_tuple(Types::Event& event);
+  RingTupleQueue::Tuple event_to_tuple(Types::EventType& event);
 
   // clang-format off
   void write_int        (std::shared_ptr<Types::Value>& attr);

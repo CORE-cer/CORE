@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 
 namespace CORE::Types {
 /**
@@ -14,14 +14,14 @@ namespace CORE::Types {
  */
 struct Stream {
   StreamTypeId id;
-  std::vector<Event> events;
+  std::vector<EventType> events;
 
   Stream() noexcept = default;
 
-  Stream(StreamTypeId id, std::vector<Event>&& events) noexcept
+  Stream(StreamTypeId id, std::vector<EventType>&& events) noexcept
       : id(id), events(std::move(events)) {}
 
-  Stream(StreamTypeId id, std::initializer_list<Event>&& events) noexcept
+  Stream(StreamTypeId id, std::initializer_list<EventType>&& events) noexcept
       : id(id), events(std::move(events)) {}
 
   ~Stream() noexcept = default;

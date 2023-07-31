@@ -5,7 +5,7 @@
 
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/event_type.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
@@ -177,7 +177,7 @@ TEST_CASE(
     [&]() { message = subscriber.receive(); });
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-  Types::Event event_to_send{event_type_id_1,
+  Types::EventType event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
   sender.send(CerealSerializer<Types::Stream>::serialize(
@@ -252,7 +252,7 @@ TEST_CASE(
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-  Types::Event event_to_send{event_type_id_1,
+  Types::EventType event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
   sender.send(CerealSerializer<Types::Stream>::serialize(

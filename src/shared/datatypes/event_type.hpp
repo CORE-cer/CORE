@@ -16,7 +16,7 @@ namespace CORE::Types {
  * event_types_id's are given here, and through the schema the mapping
  * from attribute names to values can be obtained.
  */
-struct Event {
+struct EventType {
   /**
    * An EventType is an id that is used to know what each index in the
    * attributes vector represent. To obtain this, it needs to be requested
@@ -36,9 +36,9 @@ struct Event {
    */
   std::vector<std::shared_ptr<Types::Value>> attributes;
 
-  Event() noexcept {}
+  EventType() noexcept {}
 
-  Event(EventTypeId event_type_id,
+  EventType(EventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
 
