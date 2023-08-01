@@ -9,14 +9,14 @@
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
 namespace CORE::Internal::CEA {
-class CompareWithRegex : public PhysicalPredicate {
+class CompareWithRegexStronglyTyped : public PhysicalPredicate {
  private:
   size_t pos_to_compare;
   std::string_view regex_string;
   re2::RE2 regex_compiled;
 
  public:
-  CompareWithRegex(uint64_t event_type_id,
+  CompareWithRegexStronglyTyped(uint64_t event_type_id,
                    size_t pos_to_compare,
                    std::string_view regex)
       : PhysicalPredicate(event_type_id),
@@ -24,9 +24,7 @@ class CompareWithRegex : public PhysicalPredicate {
         regex_string(regex),
         regex_compiled(regex) {}
 
-  // TODO: add constructor with admissible_event_types
-
-  ~CompareWithRegex() override = default;
+  ~CompareWithRegexStronglyTyped() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
     uint64_t* pos = tuple[pos_to_compare];
