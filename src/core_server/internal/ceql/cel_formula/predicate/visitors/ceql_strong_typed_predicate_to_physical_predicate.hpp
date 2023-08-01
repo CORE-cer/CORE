@@ -521,8 +521,8 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
       right);
 
     return std::make_unique<CEA::CompareWithRegexStronglyTyped>(event_info.id,
-                                                   left_pos,
-                                                   right_str);
+                                                                left_pos,
+                                                                right_str);
   }
 };
 

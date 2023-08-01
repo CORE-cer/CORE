@@ -237,8 +237,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[String LIKE <<.*>>]"));
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"));
     auto evaluator = Evaluation::PredicateEvaluator(
       get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
@@ -255,8 +254,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[String LIKE <<.>>]"));
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"));
     auto evaluator = Evaluation::PredicateEvaluator(
       get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,

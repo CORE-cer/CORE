@@ -17,8 +17,8 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
 
  public:
   CompareWithRegexStronglyTyped(uint64_t event_type_id,
-                   size_t pos_to_compare,
-                   std::string_view regex)
+                                size_t pos_to_compare,
+                                std::string_view regex)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
         regex_string(regex),

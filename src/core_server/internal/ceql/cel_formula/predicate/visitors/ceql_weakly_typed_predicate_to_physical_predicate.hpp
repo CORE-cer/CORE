@@ -5,8 +5,8 @@
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
-#include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_weakly_typed.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_weakly_typed.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
@@ -76,9 +76,10 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
       has_added_admissible_event_types = true;
     }
 
-    predicate = compare_with_regex(like_predicate.left, like_predicate.right);
+    predicate = compare_with_regex(like_predicate.left,
+                                   like_predicate.right);
   }
- 
+
   void visit(NotPredicate& not_predicate) override {
     not_predicate.predicate->accept_visitor(*this);
     if (has_added_admissible_event_types)
@@ -264,9 +265,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     auto right_expr = get_expr<std::string_view>(right);
 
     return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(
-      admissible_event_types,
-      std::move(left_expr),
-      std::move(right_expr));
+      admissible_event_types, std::move(left_expr), std::move(right_expr));
   }
 
   static std::set<Types::EventTypeId>
