@@ -269,7 +269,6 @@ TEST_CASE(
     REQUIRE(evaluation == 0b0001);
     tuple = add_event_type_2(ring_tuple_queue, 20, 5);
     evaluation = evaluator(tuple);
-    std::cout << evaluation << std::endl;
     REQUIRE(evaluation == 0b0010);
   }
 }
