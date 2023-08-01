@@ -27,9 +27,9 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
   ~CompareWithRegexWeaklyTyped() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
-   if (!regex_compiled.has_value()) {
-      regex_compiled.emplace(right->eval(tuple));
-   }
+    if (!regex_compiled.has_value()) {
+       regex_compiled.emplace(right->eval(tuple));
+    }
     return re2::RE2::FullMatch(left->eval(tuple), regex_compiled.value());
   }
 
