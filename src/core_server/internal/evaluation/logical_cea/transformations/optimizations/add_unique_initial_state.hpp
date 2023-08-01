@@ -21,7 +21,7 @@ class AddUniqueInitialState
       cea.epsilon_transitions[new_initial_state].insert(initial_state);
     }
     cea.initial_states = 1 << (cea.amount_of_states - 1);
-    return cea;
+    return std::move(cea);
   }
 };
 

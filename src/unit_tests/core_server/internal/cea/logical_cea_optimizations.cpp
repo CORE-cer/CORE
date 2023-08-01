@@ -13,6 +13,8 @@
 
 namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations {
 
+CEA::PredicateSet::Type Tautology = CEA::PredicateSet::Type::Tautology;
+
 std::string create_query(std::string clause) {
   // clang-format off
   return "SELECT ALL * \n"
@@ -30,6 +32,7 @@ TEST_CASE("Remove Epsilons of Simple Iteration",
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 2);
   REQUIRE(cea.transitions[0].size() == 1);
   REQUIRE(cea.transitions[1].size() == 1);
@@ -52,10 +55,11 @@ TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 4);
   REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 1);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 2);
   REQUIRE(cea.transitions[3].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
@@ -81,10 +85,11 @@ TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 4);
   REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 2);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 3);
+  REQUIRE(cea.transitions[2].size() == 2);
   REQUIRE(cea.transitions[3].size() == 1);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
@@ -95,9 +100,13 @@ TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
   REQUIRE(cea.transitions[1][0]
           == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
   REQUIRE(cea.transitions[1][1]
-          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 2));
+  REQUIRE(cea.transitions[1][2]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
   REQUIRE(cea.transitions[2][0]
           == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[2][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 2));
   REQUIRE(cea.transitions[3][0]
           == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
   REQUIRE(cea.initial_states == 0b1);
@@ -117,19 +126,28 @@ TEST_CASE(
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
   cea = CEA::RemoveUnreachableStates()(std::move(cea));
-  REQUIRE(cea.amount_of_states == 3);
+  INFO(cea.to_string());
+  REQUIRE(cea.amount_of_states == 4);
   REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 1);
-  REQUIRE(cea.transitions[2].size() == 0);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 2);
+  REQUIRE(cea.transitions[3].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[3].size() == 0);
   REQUIRE(cea.transitions[0][0]
           == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
   REQUIRE(cea.transitions[1][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[1][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 2));
+  REQUIRE(cea.transitions[2][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[2][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 2));
   REQUIRE(cea.initial_states == 0b1);
-  REQUIRE(cea.final_states == 0b100);
+  REQUIRE(cea.final_states == 0b1000);
 }
 
 TEST_CASE(
@@ -145,6 +163,7 @@ TEST_CASE(
   cea.add_n_states(1);
   cea.transitions[0].push_back(
     std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 2));
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 3);
   cea = CEA::RemoveUselessStates()(std::move(cea));
   REQUIRE(cea.amount_of_states == 2);
@@ -169,10 +188,11 @@ TEST_CASE(
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::AddUniqueInitialState()(std::move(cea));
+  INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 5);
   REQUIRE(cea.transitions[0].size() == 1);
   REQUIRE(cea.transitions[1].size() == 0);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.transitions[2].size() == 2);
   REQUIRE(cea.transitions[3].size() == 0);
   REQUIRE(cea.transitions[4].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
@@ -184,6 +204,8 @@ TEST_CASE(
           == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
   REQUIRE(cea.transitions[2][0]
           == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+  REQUIRE(cea.transitions[2][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0b0, 2));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
   REQUIRE(cea.epsilon_transitions[4].contains(0));
   REQUIRE(cea.initial_states == 0b10000);
@@ -207,19 +229,27 @@ TEST_CASE(
                           std::move(visitor.current_cea)))));
   // clang-format on
   INFO(cea.to_string());
-  REQUIRE(cea.amount_of_states == 3);
-  REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 0);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.amount_of_states == 4);
+  REQUIRE(cea.transitions[0].size() == 2);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 0);
+  REQUIRE(cea.transitions[3].size() == 1);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[2].size() == 0);
+  REQUIRE(cea.epsilon_transitions[3].size() == 0);
   REQUIRE(cea.transitions[0][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
-  REQUIRE(cea.transitions[2][0]
-          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 0));
-  REQUIRE(cea.initial_states == 0b100);
-  REQUIRE(cea.final_states == 0b10);
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+  REQUIRE(cea.transitions[0][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0b0, 1));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+  REQUIRE(cea.transitions[1][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 1));
+  REQUIRE(cea.transitions[3][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 0b1, 0));
+  REQUIRE(cea.initial_states == 0b1000);
+  REQUIRE(cea.final_states == 0b100);
 }
 
 TEST_CASE(
@@ -240,26 +270,36 @@ TEST_CASE(
                           std::move(visitor.current_cea))))));
   // clang-format on
   INFO(cea.to_string());
-  REQUIRE(cea.amount_of_states == 6);
-  REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 0);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.amount_of_states == 8);
+  REQUIRE(cea.transitions[0].size() == 2);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 0);
   REQUIRE(cea.transitions[3].size() == 1);
-  REQUIRE(cea.transitions[4].size() == 0);
-  REQUIRE(cea.transitions[5].size() == 1);
+  REQUIRE(cea.transitions[4].size() == 2);
+  REQUIRE(cea.transitions[5].size() == 2);
+  REQUIRE(cea.transitions[6].size() == 0);
+  REQUIRE(cea.transitions[7].size() == 1);
   for (int i = 0; i < 6; i++) {
     REQUIRE(cea.epsilon_transitions[i].empty());
   }
   REQUIRE(cea.transitions[0][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4));
-  REQUIRE(cea.transitions[2][0]
-          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 3));
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 6));
+  REQUIRE(cea.transitions[0][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 5));
+  REQUIRE(cea.transitions[1][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 6));
   REQUIRE(cea.transitions[3][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 0b1, 4));
+  REQUIRE(cea.transitions[4][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+  REQUIRE(cea.transitions[4][1]
+          == std::make_tuple(CEA::PredicateSet(Tautology), 0, 1));
   REQUIRE(cea.transitions[5][0]
-          == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 0));
-  REQUIRE(cea.initial_states == 0b100100);
-  REQUIRE(cea.final_states == 0b010010);
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 2));
+  REQUIRE(cea.transitions[7][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 0b1, 0));
+  REQUIRE(cea.initial_states == 0b10001000);
+  REQUIRE(cea.final_states == 0b01000100);
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations

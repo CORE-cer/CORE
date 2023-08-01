@@ -113,7 +113,6 @@ bool Catalog::stream_name_is_taken(std::string stream_name) const noexcept {
 
 Types::StreamInfo Catalog::get_stream_info(
   const Types::StreamTypeId stream_type_id) const noexcept {
-  //std::cout << "get_stream_info from id: " << stream_type_id << std::endl;
   if (stream_type_id < streams_info.size()) {
     return streams_info[stream_type_id];
   } else {

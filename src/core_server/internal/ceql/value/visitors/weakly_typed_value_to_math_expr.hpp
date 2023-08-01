@@ -24,6 +24,16 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
       attribute.value, catalog);
   }
 
+  void visit(StringLiteral& literal) override {
+    if constexpr (std::is_same_v<Type, std::string_view>) {
+      std::string_view value = literal.value;
+      value = value.substr(1, value.size() - 2);
+      math_expr = std::make_unique<CEA::Literal<std::string_view>>(value);
+    } else {
+      assert(false && "Type is not string view");
+    }
+  }
+
   void visit(DoubleLiteral& literal) override {
     if constexpr (std::is_same_v<Type, double>) {
       math_expr = std::make_unique<CEA::Literal<double>>(literal.value);
