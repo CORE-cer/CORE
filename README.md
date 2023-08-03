@@ -1,5 +1,30 @@
 # How to build the project:
 
+## Easy Install Docker
+
+First pull repo
+
+`git pull https://github.com/CER-CORE/CORE`
+
+CD in to directory
+
+`cd CORE`
+
+Run docker-compose with bash
+
+`sudo docker-compose run core-terminal bash`
+
+Now you have a terminal with all the necessary tools installed. To compile for the first time run:
+
+`chmod +x ./scripts/* && ./scripts/build.sh && ./scripts/build_grammar.sh`
+
+Now you can compile and test with
+
+`./scripts/compile_and_test.sh`
+
+
+## Manual Install
+
 We utilize conan for package managing. In ubuntu this is how it could be done:
 
 ## Update packages
