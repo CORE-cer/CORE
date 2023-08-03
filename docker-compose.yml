@@ -1,0 +1,5 @@
+services:
+  core-terminal:
+    image: core-test
+    volumes:
+      - .:/CORE
