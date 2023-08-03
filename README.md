@@ -22,7 +22,6 @@ Now you can compile and test with
 
 `./scripts/compile_and_test.sh`
 
-
 ## Manual Install
 
 We utilize conan for package managing. In ubuntu this is how it could be done:
