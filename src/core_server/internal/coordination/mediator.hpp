@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "catalog.hpp"
+#include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_evaluator.hpp"
 #include "core_server/internal/coordination/router.hpp"
 #include "core_server/internal/coordination/streams_listener.hpp"
@@ -21,6 +22,7 @@ class Mediator {
  private:
   Router router;
   StreamsListener streams_listener;
+  uint64_t default_time_duration;  // TODO: Change that as an option for user.
 
   // unique_ptr is used because the QueryEvaluator has a ZMQMessageReceiver
   // and a ZMQMesssageBroadcaster. That is a problem because it doesn't
@@ -30,12 +32,12 @@ class Mediator {
   Types::PortNumber current_next_port_number;
 
  public:
-  Mediator(Types::PortNumber port);
+  Mediator(Types::PortNumber port, uint64_t default_time_duration = 20);
   void start();
   void stop();
-  Types::PortNumber create_complex_event_stream(std::string ecs);
-  Types::PortNumber create_dummy_complex_event_stream(
-    Evaluation::PredicateEvaluator&& evaluator);
+  Types::PortNumber create_complex_event_stream(CEQL::Query query);
+  //Types::PortNumber create_dummy_complex_event_stream(
+  //Evaluation::PredicateEvaluator&& evaluator);
   void
   send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
 

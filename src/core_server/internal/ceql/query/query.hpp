@@ -27,5 +27,13 @@ struct Query {
         partition_by(std::move(partition_by)),
         within(std::move(within)),
         consume_by(std::move(consume_by)) {}
+
+  std::string to_string() const {
+    std::string out = select.to_string() + "\n" + from.to_string() + "\n"
+                      + where.to_string() + "\n" + partition_by.to_string()
+                      + "\n" + within.to_string() + "\n"
+                      + consume_by.to_string();
+    return out;
+  }
 };
 }  // namespace CORE::Internal::CEQL

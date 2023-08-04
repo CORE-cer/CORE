@@ -2,14 +2,18 @@
 
 #include <atomic>
 #include <iostream>
+#include <memory>
 #include <thread>
 
-#include "core_server/internal/evaluation/predicate_evaluator.hpp"
+#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/complex_event.hpp"
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
+#include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Internal {
 
@@ -21,19 +25,28 @@ class QueryEvaluator {
   ZMQMessageBroadcaster broadcaster;
   std::atomic<bool> stop_condition = false;
   RingTupleQueue::Queue& queue;
-  Evaluation::PredicateEvaluator evaluator;
+  std::unique_ptr<Evaluation::Evaluator> evaluator;
+  bool time_is_stream_position;
+  uint64_t current_stream_position = 0;
+  Catalog& catalog;
 
  public:
-  QueryEvaluator(Evaluation::PredicateEvaluator&& evaluator,
+  QueryEvaluator(std::unique_ptr<Evaluation::Evaluator>&& evaluator,
+                 bool time_is_stream_position,
                  Types::PortNumber inner_thread_receiver_port,
                  Types::PortNumber broadcaster_port,
-                 RingTupleQueue::Queue& queue)
+                 RingTupleQueue::Queue& queue,
+                 Catalog& catalog)
       : inner_thread_address("inproc://"
                              + std::to_string(inner_thread_receiver_port)),
         receiver(inner_thread_address),
         broadcaster("tcp://*:" + std::to_string(broadcaster_port)),
         queue(queue),
-        evaluator(std::move(evaluator)) {}
+        evaluator(std::move(evaluator)),
+        time_is_stream_position(time_is_stream_position),
+        catalog(catalog) {}
+
+  ~QueryEvaluator() {}
 
   void start() {
     worker_thread = std::thread([&]() {
@@ -70,8 +83,13 @@ class QueryEvaluator {
     uint64_t* data;
     memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
     RingTupleQueue::Tuple tuple = queue.get_tuple(data);
-    mpz_class out = evaluator(tuple);
-    return out.get_str(2);  // base 2
+    uint64_t time = time_is_stream_position ? current_stream_position++
+                                            : tuple.nanoseconds();
+    tECS::Enumerator enumerator;
+    enumerator = evaluator->next(tuple, time);
+    Types::Enumerator output = catalog.convert_enumerator(enumerator);
+
+    return CerealSerializer<Types::Enumerator>::serialize(output);
   }
 };
 

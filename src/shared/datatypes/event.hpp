@@ -42,6 +42,15 @@ struct Event {
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
 
+  std::string to_string() const {
+    std::string out = "(id: " + std::to_string(event_type_id)
+                      + " attributes: [";
+    for (auto& val : attributes) {
+      out += val->to_string() + " ";
+    }
+    return out + "])";
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(event_type_id, attributes);
