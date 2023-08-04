@@ -27,7 +27,7 @@ struct Select {
         variable_names(std::move(variable_names)),
         is_star(is_star) {}
 
-  std::string to_string() const { 
+  std::string to_string() const {
     std::string out = "Select " + strategy_to_string(strategy);
     if (is_star) {
       return out + " * ";

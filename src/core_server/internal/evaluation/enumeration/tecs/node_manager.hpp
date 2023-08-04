@@ -26,8 +26,7 @@ class NodeManager {
  public:
   NodeManager(size_t starting_size)
       : minipool_head(new MiniPool(starting_size)),
-        recyclable_node_head(nullptr) {
-  }
+        recyclable_node_head(nullptr) {}
 
   ~NodeManager() {
     for (MiniPool* mp = minipool_head; mp != nullptr;) {
