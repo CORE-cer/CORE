@@ -99,7 +99,7 @@ struct InequalityPredicate : public Predicate {
       case LogicalOperation::GREATER:
         return ">";
       case LogicalOperation::GREATER_EQUALS:
-        return ">= EQUALS";
+        return ">=";
       case LogicalOperation::LESS_EQUALS:
         return "<=";
       case LogicalOperation::LESS:

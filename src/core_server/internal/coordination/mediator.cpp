@@ -3,16 +3,21 @@
 #include <memory>
 #include <vector>
 
+#include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
+#include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
 #include "core_server/internal/coordination/streams_listener.hpp"
+#include "core_server/internal/evaluation/evaluator.hpp"
+#include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Internal {
 
-Mediator::Mediator(Types::PortNumber port)
+Mediator::Mediator(Types::PortNumber port, uint64_t default_time_duration)
     : router(*this, port),
       streams_listener(this, port + 1),
       current_next_port_number(port + 2),
-      queue(100000, &catalog.tuple_schemas) {}
+      queue(100000, &catalog.tuple_schemas),
+      default_time_duration(default_time_duration) {}
 
 void Mediator::start() {
   router.start();
@@ -27,18 +32,30 @@ void Mediator::stop() {
   }
 }
 
-Types::PortNumber Mediator::create_complex_event_stream(std::string ecs) {
-  // TODO
-}
+Types::PortNumber Mediator::create_complex_event_stream(CEQL::Query query) {
+  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
+  query = transformer(std::move(query));
+  auto predicates = std::move(transformer.physical_predicates);
+  auto tuple_evaluator = Evaluation::PredicateEvaluator(
+    std::move(predicates));
 
-Types::PortNumber Mediator::create_dummy_complex_event_stream(
-  Evaluation::PredicateEvaluator&& evaluator) {
-  auto query_evaluator = std::make_unique<QueryEvaluator>(
+  auto visitor = CEQL::FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::DetCEA cea(CEA::CEA(std::move(visitor.current_cea)));
+  uint64_t time_duration = query.within.time_window.mode
+                               == CEQL::Within::TimeWindowMode::NONE
+                             ? default_time_duration
+                             : query.within.time_window.duration;
+  auto evaluator = std::make_unique<Evaluation::Evaluator>(
+    std::move(cea), std::move(tuple_evaluator), time_duration);
+  query_evaluators.emplace_back(std::make_unique<QueryEvaluator>(
     std::move(evaluator),
+    query.within.time_window.mode
+      != CEQL::Within::TimeWindowMode::NANOSECONDS,
     current_next_port_number,
     current_next_port_number,
-    queue);
-  query_evaluators.push_back(std::move(query_evaluator));
+    queue,
+    catalog));
   query_evaluators.back()->start();
   std::string address = "inproc://"
                         + std::to_string(current_next_port_number);
@@ -47,6 +64,23 @@ Types::PortNumber Mediator::create_dummy_complex_event_stream(
   inner_thread_event_senders.emplace_back(address, shared_context);
   return current_next_port_number++;
 }
+
+//Types::PortNumber Mediator::create_dummy_complex_event_stream(
+//Evaluation::PredicateEvaluator&& evaluator) {
+//auto query_evaluator = std::make_unique<QueryEvaluator>(
+//std::move(evaluator),
+//current_next_port_number,
+//current_next_port_number,
+//queue);
+//query_evaluators.push_back(std::move(query_evaluator));
+//query_evaluators.back()->start();
+//std::string address = "inproc://"
+//+ std::to_string(current_next_port_number);
+//zmq::context_t& shared_context = query_evaluators.back()
+//->get_inner_thread_context();
+//inner_thread_event_senders.emplace_back(address, shared_context);
+//return current_next_port_number++;
+//}
 
 void Mediator::send_event_to_queries(Types::StreamTypeId stream_id,
                                      Types::Event event) {
