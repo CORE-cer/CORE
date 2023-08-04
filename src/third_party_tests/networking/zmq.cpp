@@ -58,11 +58,9 @@ TEST_CASE(
   std::atomic<int> counter = 0;
   bool results[amount_of_threads];
   for (int i = 0; i < amount_of_threads; i++) {
-    //std::cout << "i = " << i << std::endl;
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);
       std::string to_send = "ping" + std::to_string(j);
-      //std::cout << "DEALER thread started" << std::endl;
       ZMQMessageDealer dealer("tcp://localhost:5555");
       std::string reply;
       try {
@@ -70,7 +68,6 @@ TEST_CASE(
       } catch (std::runtime_error err) {
         results[j] = false;
       }
-      //std::cout << "DEALER thread received reply" << reply << std::endl;
       results[j] = reply == "Transformed: " + to_send;
     });
   }
@@ -139,11 +136,9 @@ TEST_CASE(
   std::atomic<int> counter = 0;
   bool results[amount_of_threads];
   for (int i = 0; i < amount_of_threads; i++) {
-    //std::cout << "i = " << i << std::endl;
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);
       std::string to_send = "ping" + std::to_string(j);
-      //std::cout << "DEALER thread started" << std::endl;
       ZMQMessageDealer dealer("tcp://localhost:5555");
       std::string reply;
       try {
@@ -151,7 +146,6 @@ TEST_CASE(
       } catch (std::runtime_error err) {
         results[j] = false;
       }
-      //std::cout << "DEALER thread received reply" << reply << std::endl;
       results[j] = reply == "Transformed: " + to_send;
     });
   }
@@ -185,7 +179,6 @@ TEST_CASE(
   std::atomic<int> counter = 0;
 
   for (int i = 0; i < amount_of_threads; i++) {
-    //std::cout << "i = " << i << std::endl;
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);
       ZMQMessageSubscriber receiver("tcp://localhost:5555");

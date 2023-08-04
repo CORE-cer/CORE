@@ -140,13 +140,8 @@ ClientMessageHandler::add_query(std::string s_query_info) {
   // Not be correct.
   // TODO: Check if it is possible to parse it.
   CEQL::Query query = Parsing::Parser::parse_query(s_query_info);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  Evaluation::PredicateEvaluator evaluator(
-    std::move(transformer.physical_predicates));
-
-  Types::PortNumber port = mediator.create_dummy_complex_event_stream(
-    std::move(evaluator));
+  Types::PortNumber port = mediator.create_complex_event_stream(
+    std::move(query));
   return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
                                  port),
                                Types::ServerResponseType::PortNumber);

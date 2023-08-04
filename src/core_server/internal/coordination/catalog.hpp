@@ -2,9 +2,11 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "core_server/internal/ceql/value/value_types.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -13,6 +15,8 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/enumerator.hpp"
+#include "shared/datatypes/event.hpp"
 
 namespace CORE::Internal {
 
@@ -71,6 +75,18 @@ class Catalog {
 
   uint64_t
   add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes);
+
+  Types::Enumerator convert_enumerator(tECS::Enumerator enumerator);
+
+ private:
+  Types::ComplexEvent tuples_to_complex_event(
+    uint64_t start,
+    uint64_t end,
+    std::vector<RingTupleQueue::Tuple>& tuples,
+    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory);
+
+  Types::Event tuple_to_event(Types::EventInfo& event_info,
+                              RingTupleQueue::Tuple& tuple);
 };
 
 }  // namespace CORE::Internal

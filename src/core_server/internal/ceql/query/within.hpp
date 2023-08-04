@@ -1,31 +1,42 @@
 #pragma once
-
+#include <cassert>
 #include <chrono>
+#include <string>
 
 namespace CORE::Internal::CEQL {
 
 struct Within {
   enum TimeWindowMode {
-    DATE,
+    NANOSECONDS,
     EVENTS,
     NONE,
   };
 
   struct TimeWindow {
     TimeWindowMode mode;
-    std::chrono::duration<int64_t> duration;
-    int64_t amount_of_events;
+    uint64_t duration;
 
     TimeWindow() : mode(TimeWindowMode::NONE){};
 
-    TimeWindow(std::chrono::duration<int64_t> time_interval)
-        : mode(TimeWindowMode::DATE), duration(time_interval) {}
-
-    TimeWindow(int events)
-        : mode(TimeWindowMode::EVENTS), amount_of_events(events) {}
+    TimeWindow(uint64_t time_interval)
+        : mode(TimeWindowMode::NANOSECONDS), duration(time_interval) {}
   };
 
   TimeWindow time_window;
+
+  std::string to_string() const {
+    switch (time_window.mode) {
+      case NANOSECONDS:
+        return "Within " + std::to_string(time_window.duration) + " ns";
+      case EVENTS:
+        return "Within " + std::to_string(time_window.duration) + " events";
+      case NONE:
+        return "";
+      default:
+        assert(false && "A time_window mode does not have a to_string.");
+        return "";
+    }
+  }
 };
 
 }  // namespace CORE::Internal::CEQL
