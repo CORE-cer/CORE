@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 #include <cassert>
+#include <memory>
 
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 

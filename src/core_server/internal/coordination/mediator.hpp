@@ -37,7 +37,7 @@ class Mediator {
   void stop();
   Types::PortNumber create_complex_event_stream(CEQL::Query query);
   //Types::PortNumber create_dummy_complex_event_stream(
-    //Evaluation::PredicateEvaluator&& evaluator);
+  //Evaluation::PredicateEvaluator&& evaluator);
   void
   send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
 
