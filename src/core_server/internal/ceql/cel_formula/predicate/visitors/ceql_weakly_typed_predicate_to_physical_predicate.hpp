@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type_with_catalog.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
@@ -254,18 +256,25 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   std::unique_ptr<CEA::PhysicalPredicate>
   compare_with_regex(std::unique_ptr<CEQL::Value>& left,
                      std::unique_ptr<CEQL::Value>& right) {
-    left->accept_visitor(final_data_type_visitor);
-    right->accept_visitor(final_data_type_visitor);
-    auto combined_type = final_data_type_visitor.get_final_data_type();
+    assert(dynamic_cast<const CEQL::Attribute*>(left.get()) != nullptr);
+    auto left_value_attr = static_cast<CEQL::Attribute*>(left.get());
+    auto left_expr_attr = std::make_unique<
+      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value,
+                                                        catalog);
 
-    if (combined_type != FinalType::String)
-      throw std::runtime_error(
-        "Regex comparison is only supported for strings");
-    auto left_expr = get_expr<std::string_view>(left);
-    auto right_expr = get_expr<std::string_view>(right);
+    assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
+    auto right_value_string = static_cast<CEQL::RegexLiteral*>(
+      right.get());
+    std::string_view value = right_value_string->value;
+    auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(
+      value);
+
+    auto regex_string = right_expr_string->val;
 
     return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(
-      admissible_event_types, std::move(left_expr), std::move(right_expr));
+      admissible_event_types,
+      std::move(left_expr_attr),
+      std::move(regex_string));
   }
 
   static std::set<Types::EventTypeId>

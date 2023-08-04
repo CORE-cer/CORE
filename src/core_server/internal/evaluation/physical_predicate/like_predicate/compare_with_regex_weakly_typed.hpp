@@ -12,30 +12,28 @@
 namespace CORE::Internal::CEA {
 class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
  private:
-  std::unique_ptr<MathExpr<std::string_view>> left;
-  std::unique_ptr<MathExpr<std::string_view>> right;
-  std::optional<re2::RE2> regex_compiled;
+  std::unique_ptr<NonStronglyTypedAttribute<std::string_view>> left;
+  std::string_view regex_string;
+  re2::RE2 regex_compiled;
 
  public:
   CompareWithRegexWeaklyTyped(
     std::set<uint64_t> admissible_event_types,
-    std::unique_ptr<MathExpr<std::string_view>>&& left,
-    std::unique_ptr<MathExpr<std::string_view>>&& right)
+    std::unique_ptr<NonStronglyTypedAttribute<std::string_view>>&& left,
+    std::string_view regex)
       : PhysicalPredicate(admissible_event_types),
         left(std::move(left)),
-        right(std::move(right)) {}
+        regex_string(regex),
+        regex_compiled(regex) {}
 
   ~CompareWithRegexWeaklyTyped() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
-    if (!regex_compiled.has_value()) {
-      regex_compiled.emplace(right->eval(tuple));
-    }
-    return re2::RE2::FullMatch(left->eval(tuple), regex_compiled.value());
+    return re2::RE2::FullMatch(left->eval(tuple), regex_compiled);
   }
 
   std::string to_string() const override {
-    return left->to_string() + " (regex match) " + right->to_string();
+    return left->to_string() + " (regex match) " + regex_string.data();
   }
 };
 }  // namespace CORE::Internal::CEA
