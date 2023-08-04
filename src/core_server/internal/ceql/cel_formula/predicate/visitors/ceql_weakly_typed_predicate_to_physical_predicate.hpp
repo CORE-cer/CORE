@@ -263,8 +263,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
                                                         catalog);
 
     assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
-    auto right_value_string = static_cast<CEQL::RegexLiteral*>(
-      right.get());
+    auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());
     std::string_view value = right_value_string->value;
     auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(
       value);
