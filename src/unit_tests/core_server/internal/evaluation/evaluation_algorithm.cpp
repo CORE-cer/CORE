@@ -196,7 +196,9 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1920));
 }
 
-TEST_CASE("Evaluation on the example stream of the paper with within of 4 seconds.") {
+TEST_CASE(
+  "Evaluation on the example stream of the paper with within of 4 "
+  "seconds.") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
