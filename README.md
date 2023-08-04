@@ -2,6 +2,8 @@
 
 ## Easy Install Docker
 
+Dependencies: Docker.
+
 First pull repo
 
 `git pull https://github.com/CER-CORE/CORE`
@@ -9,6 +11,10 @@ First pull repo
 CD in to directory
 
 `cd CORE`
+
+If the docker daemon is not running:
+
+`systemctl start docker`
 
 Run docker-compose with bash
 
