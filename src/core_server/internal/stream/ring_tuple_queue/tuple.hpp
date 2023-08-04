@@ -1,6 +1,7 @@
 #ifndef TUPLE_HPP
 #define TUPLE_HPP
 
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
@@ -143,10 +144,21 @@ class Tuple {
 
   uint64_t id() const { return data[0]; }
 
+  uint64_t hash() const { return reinterpret_cast<uint64_t>(data); }
+
   std::chrono::system_clock::time_point timestamp() const {
     // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
       std::chrono::system_clock::duration(data[1]));
+  }
+
+  uint64_t nanoseconds() {
+    auto compile_time_point = get_compile_time_point();
+    auto duration_since_compile = timestamp() - compile_time_point;
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+             duration_since_compile)
+      .count();
   }
 
   std::string serialize_data() const {
@@ -170,8 +182,38 @@ class Tuple {
   uint64_t* operator[](uint64_t index) {
     return &data[schemas->get_relative_positions(id())[index]];
   }
+
+ private:
+  const static std::chrono::system_clock::time_point
+  get_compile_time_point() {
+    static const auto compile_time_point = []() {
+      std::istringstream compile_time_stream(__DATE__ " " __TIME__);
+      std::tm compile_time_tm = {};
+      compile_time_stream
+        >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
+
+      if (compile_time_stream.fail()) {
+        assert(false && "The compiler should be able to give the date and time of compilation!");
+      }
+
+      return std::chrono::system_clock::from_time_t(
+        std::mktime(&compile_time_tm));
+    }();
+
+    return compile_time_point;
+  }
 };
 
 }  // namespace RingTupleQueue
+
+namespace std {
+template <>
+class hash<RingTupleQueue::Tuple> {
+ public:
+  std::uint64_t operator()(const RingTupleQueue::Tuple& tuple) const {
+    return tuple.hash();
+  }
+};
+}  // namespace std
 
 #endif  // TUPLE_HPP

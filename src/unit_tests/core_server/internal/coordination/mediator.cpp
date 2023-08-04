@@ -5,7 +5,7 @@
 
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/event_type.hpp"
+#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
@@ -122,12 +122,26 @@ std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
          "FROM S1, S2\n"
-         "WHERE Ints1 \n"
-         "OR Mixed+\n"
+         "WHERE (Ints AS X) OR (Mixed AS X)\n"
          "FILTER\n"
          + filter_clause + "\n"
          "WITHIN 4 EVENTS\n";
   // clang-format on
+}
+
+std::vector<Types::ComplexEvent>
+complex_events_from_enumerator(Types::Enumerator enumerator) {
+  std::vector<Types::ComplexEvent> out;
+  for (auto val : enumerator) {
+    out.push_back(std::move(val));
+  }
+  return std::move(out);
+}
+
+std::vector<Types::ComplexEvent>
+complex_events_from_serialized_enumerator(std::string ser_enumerator) {
+  return complex_events_from_enumerator(
+    CerealSerializer<Types::Enumerator>::deserialize(ser_enumerator));
 }
 
 TEST_CASE(
@@ -159,12 +173,13 @@ TEST_CASE(
   std::string query = create_query(
     "Ints[Int1 >= 20 AND Int2 >= 1] AND "
     "Mixed[Int1 <= 30 OR Double1 >= 3.0]");
-  Types::ClientRequest create_dummy_streamer{
+  Types::ClientRequest create_query_evaluator{
     std::move(query), Types::ClientRequestType::AddQuery};
 
   ZMQMessageDealer dealer("tcp://localhost:5000");
+  INFO("Before creating the query evaluator");
   Types::ServerResponse response = send_request(dealer,
-                                                create_dummy_streamer);
+                                                create_query_evaluator);
   REQUIRE(response.response_type == Types::ServerResponseType::PortNumber);
   auto port_number = CerealSerializer<Types::PortNumber>::deserialize(
     response.serialized_response_data);
@@ -177,14 +192,21 @@ TEST_CASE(
     [&]() { message = subscriber.receive(); });
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-  Types::EventType event_to_send{event_type_id_1,
+  Types::Event event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
+  INFO("BEFORE sending the event");
   sender.send(CerealSerializer<Types::Stream>::serialize(
     Types::Stream(stream_type_id_1, {event_to_send})));
+  INFO("Event sent");
   subscriber_thread.join();
-  REQUIRE(message == "101");  // Is type 1 and first query.
+  INFO("Subscriber thread joined. (message was received.)");
+  Types::Enumerator
+    enumerator = CerealSerializer<Types::Enumerator>::deserialize(message);
   mediator.stop();
+  INFO("BEFORE echecking complex_events");
+  REQUIRE(complex_events_from_enumerator(enumerator).size() == 1);
+  INFO("Finished");
 }
 
 TEST_CASE(
@@ -252,7 +274,7 @@ TEST_CASE(
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
-  Types::EventType event_to_send{event_type_id_1,
+  Types::Event event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
   sender.send(CerealSerializer<Types::Stream>::serialize(
@@ -261,8 +283,11 @@ TEST_CASE(
     thread.join();
   }
   mediator.stop();
-  REQUIRE(messages[0] == "1101");
-  REQUIRE(messages[1] == "1");
-  REQUIRE(messages[2] == "1101");
+  REQUIRE(complex_events_from_serialized_enumerator(messages[0]).size()
+          == 1);
+  REQUIRE(complex_events_from_serialized_enumerator(messages[1]).size()
+          == 0);
+  REQUIRE(complex_events_from_serialized_enumerator(messages[2]).size()
+          == 1);
 }
 }  // namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests

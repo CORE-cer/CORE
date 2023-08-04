@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "shared/datatypes/event_type.hpp"
+#include "shared/datatypes/event.hpp"
 
 namespace CORE::Types {
 /**
@@ -13,22 +13,36 @@ namespace CORE::Types {
  * the corresponding stream S = ti...tj, it returns C[S]
  */
 struct ComplexEvent {
-  uint64_t id;
+  uint64_t start;
+  uint64_t end;
   std::vector<Event> events;
 
   ComplexEvent() noexcept = default;
 
-  ComplexEvent(std::vector<Event>&& events) noexcept
+  ComplexEvent(uint64_t start,
+               uint64_t end,
+               std::vector<Event>&& events) noexcept
+      : start(start), end(end), events(std::move(events)) {}
+
+  ComplexEvent(uint64_t start,
+               uint64_t end,
+               std::initializer_list<Event>&& events) noexcept
       : events(std::move(events)) {}
 
-  ComplexEvent(std::initializer_list<Event>&& events) noexcept
-      : events(std::move(events)) {}
+  std::string to_string() const {
+    std::string out = "[" + std::to_string(start) + ","
+                      + std::to_string(end) + "], [";
+    for (auto& event : events) {
+      out += event.to_string() + " ";
+    }
+    return out + "]";
+  }
 
   ~ComplexEvent() noexcept = default;
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(id, events);
+    archive(start, end, events);
   }
 };
 }  // namespace CORE::Types

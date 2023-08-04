@@ -15,7 +15,7 @@ namespace CORE::Internal::tECS {
 class MiniPool {
  private:
   size_t capacity_;
-  std::vector<Node> node_container;
+  std::vector<Node> node_container{};
   MiniPool* next_{nullptr};
   MiniPool* prev_{nullptr};
 

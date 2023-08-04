@@ -4,7 +4,10 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
 namespace CORE::Internal {
 
@@ -224,4 +227,71 @@ uint64_t Catalog::add_type_to_schema(
   }
   return tuple_schemas.add_schema(std::move(converted_types));
 }
+
+Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator enumerator) {
+  std::vector<Types::ComplexEvent> out;
+  std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
+  for (auto info : enumerator) {
+    out.push_back(tuples_to_complex_event(info.first.first,
+                                          info.first.second,
+                                          info.second,
+                                          event_memory));
+  }
+  return {std::move(out)};
+}
+
+Types::ComplexEvent Catalog::tuples_to_complex_event(
+  uint64_t start,
+  uint64_t end,
+  std::vector<RingTupleQueue::Tuple>& tuples,
+  std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) {
+  std::vector<Types::Event> converted_events;
+  for (auto& tuple : tuples) {
+    assert(tuple.id() < events_info.size());
+    if (event_memory.contains(tuple)) {
+      converted_events.push_back(event_memory[tuple]);
+    } else {
+      Types::EventInfo& event_info = events_info[tuple.id()];
+      converted_events.push_back(tuple_to_event(event_info, tuple));
+    }
+  }
+  return {start, end, std::move(converted_events)};
+}
+
+Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info,
+                                     RingTupleQueue::Tuple& tuple) {
+  assert(tuple.id() == event_info.id);
+  std::vector<std::shared_ptr<Types::Value>> values;
+  for (auto i = 0; i < event_info.attributes_info.size(); i++) {
+    Types::AttributeInfo& att_info = event_info.attributes_info[i];
+    std::shared_ptr<Types::Value> val;
+    switch (att_info.value_type) {
+      case Types::ValueTypes::INT64:
+        val = std::make_shared<Types::IntValue>(
+          RingTupleQueue::Value<int64_t>(tuple[i]).get());
+        break;
+      case Types::ValueTypes::DOUBLE:
+        val = std::make_shared<Types::DoubleValue>(
+          RingTupleQueue::Value<double>(tuple[i]).get());
+        break;
+      case Types::ValueTypes::BOOL:
+        val = std::make_shared<Types::BoolValue>(
+          RingTupleQueue::Value<bool>(tuple[i]).get());
+        break;
+      case Types::ValueTypes::STRING_VIEW:
+        val = std::make_shared<Types::StringValue>(
+          std::string(RingTupleQueue::Value<std::string>(tuple[i]).get()));
+        break;
+      case Types::ValueTypes::DATE:
+        val = std::make_shared<Types::DateValue>(
+          RingTupleQueue::Value<std::time_t>(tuple[i]).get());
+        break;
+      default:
+        assert(false && "Some Value Type was not implemented");
+    }
+    values.push_back(std::move(val));
+  }
+  return {event_info.id, std::move(values)};
+}
+
 }  // namespace CORE::Internal

@@ -29,7 +29,7 @@ class Evaluator {
 
   // Other auxiliary objects
 
-  tECS::tECS tecs;
+  tECS::tECS tecs{};
 
  public:
   Evaluator(CEA::DetCEA&& cea,
@@ -41,7 +41,6 @@ class Evaluator {
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     // current_time is j in the algorithm.
-    stream.insert(tuple);
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
@@ -67,7 +66,7 @@ class Evaluator {
 
   void exec_trans(RingTupleQueue::Tuple& tuple,
                   State* p,
-                  UnionList&& u1,
+                  UnionList&& ul,
                   mpz_class& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
@@ -77,7 +76,8 @@ class Evaluator {
     auto unmarked_state = next_states.unmarked_state;
     assert(marked_state != nullptr && unmarked_state != nullptr);
     if (!marked_state->is_empty) {
-      Node* new_node = tecs.new_extend(tecs.merge(u1), tuple, current_time);
+      tecs.pin(ul);
+      Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs.insert(
           std::move(current_union_list_map[marked_state]), new_node);
@@ -89,16 +89,17 @@ class Evaluator {
     }
     if (!unmarked_state->is_empty) {
       if (current_union_list_map.contains(unmarked_state)) {
-        Node* new_node = tecs.merge(u1);
+        tecs.pin(ul);
+        Node* new_node = tecs.merge(ul);
         current_union_list_map[unmarked_state] = tecs.insert(
           std::move(current_union_list_map[unmarked_state]), new_node);
       } else {
         current_ordered_keys.push_back(unmarked_state);
-        current_union_list_map[unmarked_state] = u1;
-        tecs.pin(u1);
+        tecs.pin(ul);
+        current_union_list_map[unmarked_state] = ul;
       }
     }
-    tecs.unpin(u1);
+    tecs.unpin(ul);
   }
 
   // Change to tECS::Enumerator.
@@ -107,6 +108,7 @@ class Evaluator {
     for (State* p : historic_ordered_keys) {
       if (p->is_final) {
         assert(historic_union_list_map.contains(p));
+        tecs.pin(historic_union_list_map[p]);
         Node* n = tecs.merge(historic_union_list_map[p]);
         // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
         if (out == nullptr) {

@@ -30,8 +30,6 @@ class tECS {
  public:
   tECS() : node_manager(2048) {}
 
-  ~tECS() = default;
-
   void pin(Node* node) { node_manager.increase_ref_count(node); }
 
   void pin(UnionList& ulist) {
@@ -83,7 +81,7 @@ class tECS {
     } else if (!node_2->is_union()) {
       return node_manager.alloc(node_2, node_1);
     } else {
-      return create_union_of_two_non_output_nodes(node_1, node_2);
+      return create_union_of_two_union_nodes(node_1, node_2);
     }
   }
 
@@ -135,13 +133,10 @@ class tECS {
    |             /   \                                    |
    |           nk-1   nk                                  |
    +-----------------------------------------------------*/
-  // And the nodes n0, n1, n2,...nk are pinned
   Node* merge(UnionList& ulist) {
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
-    pin(tail);
     for (int i = ulist.size() - 2; i >= 0; i--) {
-      pin(ulist[i]);
       tail = node_manager.alloc(ulist[i], tail);
     }
     return tail;
@@ -173,27 +168,28 @@ class tECS {
     |    /         |    \      then r(n1) is the left child|
     |   /         /|     \     of u2, if not, it is the    |
     |  /         / |      \    right child.                |
-    | /  n1     /  |   n2\ |                               |
+    | /  n1     /  |   n2  |                               |
     || /   \   /   | /    \|                               |
     |l(n1) r(n1)  l(n2)   r(n2)                            |
     +----------------------------------------------------- +
   */
-  Node* create_union_of_two_non_output_nodes(Node* node_1, Node* node_2) {
-    pin(node_1->left);
-    pin(node_1->right);
-    pin(node_2->left);
-    pin(node_2->right);
-    unpin(node_1);
-    unpin(node_2);
+  Node* create_union_of_two_union_nodes(Node* node_1, Node* node_2) {
+    /// Because the creation of the union gives ownership of the nodes,
+    /// the children of n1 and n2 are the ones that are referenced.
+    /// n1 and n2 are not going to be used, therefore they are unpined.
     Node* u2 = create_first_intermediate_union_node(node_1, node_2);
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
     Node* new_node = create_union_of_output_and_intermediate_node(node_1,
                                                                   u1);
+    unpin(node_1);
+    unpin(node_2);
     return new_node;
   }
 
   Node* create_first_intermediate_union_node(Node* node_1, Node* node_2) {
     Node* u2;
+    pin(node_2->right);
+    pin(node_1->right);
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
@@ -203,12 +199,14 @@ class tECS {
   }
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
+    pin(node_2->left);
     Node* u1 = node_manager.alloc(node_2->left, u2);
     return u1;
   }
 
   Node*
   create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
+    pin(node_1->left);
     Node* new_node = node_manager.alloc(node_1->left, u2);
     return new_node;
   }

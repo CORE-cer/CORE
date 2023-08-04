@@ -103,7 +103,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   INFO(visitor.current_cea.to_string());
   CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
   INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea = CEA::DetCEA(std::move(intermediate_cea));
+  CEA::DetCEA cea(std::move(intermediate_cea));
 
   Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
 
@@ -158,6 +158,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1900));
@@ -176,16 +177,20 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
+
   REQUIRE(outputs.size() == 4);
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
+
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));
+
   REQUIRE(is_the_same_as(outputs[2].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[2].second[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(outputs[2].second[2], 0, "AMZN", 1920));
+
   REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[3].second[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1920));
@@ -276,12 +281,12 @@ TEST_CASE("Evaluation on the example stream of the paper with within of 4 second
   }
   REQUIRE(outputs[0].first.first == 1);
   REQUIRE(outputs[0].first.second == 4);
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 4);
-
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+
+  REQUIRE(outputs[1].first.first == 0);
+  REQUIRE(outputs[1].first.second == 4);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1900));
@@ -300,14 +305,17 @@ TEST_CASE("Evaluation on the example stream of the paper with within of 4 second
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
+
   REQUIRE(outputs.size() == 2);
+
   REQUIRE(outputs[0].first.first == 1);
   REQUIRE(outputs[0].first.second == 6);
-  REQUIRE(outputs[1].first.first == 1);
-  REQUIRE(outputs[1].first.second == 6);
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
+
+  REQUIRE(outputs[1].first.first == 1);
+  REQUIRE(outputs[1].first.second == 6);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));

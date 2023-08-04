@@ -47,7 +47,6 @@ class ZMQMessageRouter : MessageRouter {
       }
       auto got_request = socket.recv(request);
       if (!got_request) {
-        //std::cout << "Did not get request after identity?" << std::endl;
         return;
       }
       std::string identityString = std::string(static_cast<char*>(
