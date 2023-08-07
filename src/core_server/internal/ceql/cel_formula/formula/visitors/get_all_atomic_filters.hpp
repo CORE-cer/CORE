@@ -22,6 +22,8 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(EventTypeFormula&)          override {return;}
   void visit(NonContiguousSequencingFormula& formula) override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
+  void visit(ContiguousSequencingFormula& formula) override {formula.left->accept_visitor(*this);
+                                                   formula.right->accept_visitor(*this);}
   void visit(IterationFormula& formula)  override {formula.formula->accept_visitor(*this);}
   void visit(ProjectionFormula& formula) override {formula.formula->accept_visitor(*this);}
   void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
