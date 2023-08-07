@@ -99,9 +99,9 @@ TEST_CASE("Example test", "[Where, Composite]") {
   auto query = create_where_query("( S>T ; H + ; T AS t2) AS all_events");
   auto expected_formula = make_unique<AsFormula>(
     make_unique<NonContiguousSequencingFormula>(
-      make_unique<NonContiguousSequencingFormula>(make_unique<EventTypeFormula>("S>T"),
-                                     make_unique<IterationFormula>(
-                                       make_unique<EventTypeFormula>("H"))),
+      make_unique<NonContiguousSequencingFormula>(
+        make_unique<EventTypeFormula>("S>T"),
+        make_unique<IterationFormula>(make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
   auto formula = parse_formula(query);

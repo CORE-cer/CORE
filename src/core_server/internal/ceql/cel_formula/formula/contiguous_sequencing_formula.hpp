@@ -13,14 +13,14 @@ struct ContiguousSequencingFormula : public Formula {
   std::unique_ptr<Formula> right;
 
   ContiguousSequencingFormula(std::unique_ptr<Formula>&& left,
-                    std::unique_ptr<Formula>&& right)
+                              std::unique_ptr<Formula>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
   ~ContiguousSequencingFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
     return std::make_unique<ContiguousSequencingFormula>(left->clone(),
-                                               right->clone());
+                                                         right->clone());
   }
 
   bool operator==(const ContiguousSequencingFormula& other) const {
@@ -29,7 +29,8 @@ struct ContiguousSequencingFormula : public Formula {
   }
 
   bool equals(Formula* other) const override {
-    if (auto other_formula = dynamic_cast<ContiguousSequencingFormula*>(other)) {
+    if (auto other_formula = dynamic_cast<ContiguousSequencingFormula*>(
+          other)) {
       return *this == *other_formula;
     } else
       return false;

@@ -4,14 +4,14 @@
 
 namespace CORE::Internal::CEQL {
 
-class EventTypeFormula;   //[[R]]
-class AsFormula;          // AS
-class FilterFormula;      // FILTER
-class OrFormula;          // OR
-class ContiguousSequencingFormula;  // ;
+class EventTypeFormula;                //[[R]]
+class AsFormula;                       // AS
+class FilterFormula;                   // FILTER
+class OrFormula;                       // OR
+class ContiguousSequencingFormula;     // ;
 class NonContiguousSequencingFormula;  // ;
-class IterationFormula;   // +
-class ProjectionFormula;  // π
+class IterationFormula;                // +
+class ProjectionFormula;               // π
 
 class FormulaVisitor {
  public:
