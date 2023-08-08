@@ -83,6 +83,16 @@ TEST_CASE("event;event", "[Where]") {
   REQUIRE(formula->equals(expected_formula.get()));
 }
 
+TEST_CASE("event:event", "[Where]") {
+  auto query = create_where_query("H:T");
+  auto expected_formula = make_unique<ContiguousSequencingFormula>(
+    make_unique<EventTypeFormula>("H"), make_unique<EventTypeFormula>("T"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
 TEST_CASE("event or event", "[Where]") {
   auto query = create_where_query("H OR T");
   auto expected_formula = make_unique<OrFormula>(
