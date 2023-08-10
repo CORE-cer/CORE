@@ -1,0 +1,5 @@
+services:
+  core-terminal:
+    image: nicobuzeta/core:latest
+    volumes:
+      - .:/CORE
