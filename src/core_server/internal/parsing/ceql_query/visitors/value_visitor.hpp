@@ -87,6 +87,13 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any
+  visitRegexp(CEQLQueryParser::RegexpContext* ctx) override {
+    value = std::make_unique<CEQL::RegexLiteral>(
+      ctx->regexp_alternation()->getText());
+    return {};
+  }
+
+  virtual std::any
   visitAttribute_name(CEQLQueryParser::Attribute_nameContext* ctx) override {
     value = std::make_unique<CEQL::Attribute>(ctx->getText());
     return {};
