@@ -6,7 +6,7 @@
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/evaluation/physical_predicate/compare_with_regex.hpp"
+#include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_strongly_typed.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
@@ -520,9 +520,9 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
     std::string_view right_str = get_val_from_literal<std::string_view>(
       right);
 
-    return std::make_unique<CEA::CompareWithRegex>(event_info.id,
-                                                   left_pos,
-                                                   right_str);
+    return std::make_unique<CEA::CompareWithRegexStronglyTyped>(event_info.id,
+                                                                left_pos,
+                                                                right_str);
   }
 };
 
