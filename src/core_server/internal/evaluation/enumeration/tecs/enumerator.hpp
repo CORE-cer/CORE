@@ -1,7 +1,7 @@
 #pragma once
+#include <algorithm>
 #include <stack>
 #include <vector>
-#include <algorithm>
 
 #include "node.hpp"
 
