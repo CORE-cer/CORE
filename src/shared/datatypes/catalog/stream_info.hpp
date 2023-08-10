@@ -33,6 +33,18 @@ struct StreamInfo {
 
   ~StreamInfo() noexcept = default;
 
+  bool operator==(const StreamInfo& other) const {
+    bool out = id == other.id && name == other.name
+               && events_info.size() == other.events_info.size();
+    if (!out) return false;
+    for (uint64_t i = 0; i < events_info.size(); i++) {
+      if (events_info.at(i) != other.events_info.at(i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(id, name, events_info);

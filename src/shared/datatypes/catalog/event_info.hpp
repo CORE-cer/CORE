@@ -26,6 +26,23 @@ struct EventInfo {
     }
   }
 
+  bool operator==(const EventInfo& other) const {
+    bool out = id == other.id && name == other.name
+               && attributes_info.size() == other.attributes_info.size()
+               && attribute_names_to_ids.size()
+                    == other.attribute_names_to_ids.size();
+    if (!out) {
+      return false;
+    }
+    for (uint64_t i = 0; i < attributes_info.size(); i++) {
+      out = out && (attributes_info.at(i) == other.attributes_info.at(i));
+    }
+    for (const auto& [key, value] : attribute_names_to_ids) {
+      out = out && other.attribute_names_to_ids.at(key) == value;
+    }
+    return out;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(id, name, attributes_info);
