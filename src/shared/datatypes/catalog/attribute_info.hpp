@@ -17,7 +17,7 @@ struct AttributeInfo {
   AttributeInfo(std::string name, ValueTypes value_type) noexcept
       : name(name), value_type(value_type) {}
 
-  bool operator==(AttributeInfo other) {
+  bool operator==(const AttributeInfo& other) const {
     return name == other.name && value_type == other.value_type;
   }
 
