@@ -1,11 +1,14 @@
 #pragma once
 
+#include <cassert>
+
 #include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type_with_catalog.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_weakly_typed.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
 
@@ -27,10 +30,11 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   Catalog& catalog;
   std::set<Types::EventTypeId> admissible_event_types;
   bool has_added_admissible_event_types = false;
+  DetermineFinalValueDataTypeWithCatalog final_data_type_visitor;
 
  public:
   CEQLWeaklyTypedPredicateToCEAPredicate(Catalog& catalog)
-      : catalog(catalog) {}
+      : catalog(catalog), final_data_type_visitor(catalog) {}
 
   void visit(InPredicate& in_predicate) override {
     throw std::logic_error("visit InPredicate not implemented.");
@@ -49,7 +53,6 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
                                          compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
-#include <memory>
       has_added_admissible_event_types = true;
     }
 
@@ -60,7 +63,23 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   void visit(LikePredicate& like_predicate) override {
-    throw std::logic_error("visit LikePredicate not implemented.");
+    ObtainCompatibleEventTypes determine_event_types(catalog);
+    like_predicate.left->accept_visitor(determine_event_types);
+    like_predicate.right->accept_visitor(determine_event_types);
+    std::set<Types::EventTypeId>
+      compatible_event_types = determine_event_types
+                                 .get_compatible_event_types();
+
+    if (has_added_admissible_event_types) {
+      admissible_event_types = intersect(admissible_event_types,
+                                         compatible_event_types);
+    } else {
+      admissible_event_types = compatible_event_types;
+      has_added_admissible_event_types = true;
+    }
+
+    predicate = compare_with_regex(like_predicate.left,
+                                   like_predicate.right);
   }
 
   void visit(NotPredicate& not_predicate) override {
@@ -124,7 +143,6 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   compare_math_exprs(std::unique_ptr<CEQL::Value>& left,
                      CEAComparison op,
                      std::unique_ptr<CEQL::Value>& right) {
-    DetermineFinalValueDataTypeWithCatalog final_data_type_visitor(catalog);
     left->accept_visitor(final_data_type_visitor);
     right->accept_visitor(final_data_type_visitor);
     auto combined_type = final_data_type_visitor.get_final_data_type();
@@ -235,7 +253,29 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     }
   }
 
- private:
+  std::unique_ptr<CEA::PhysicalPredicate>
+  compare_with_regex(std::unique_ptr<CEQL::Value>& left,
+                     std::unique_ptr<CEQL::Value>& right) {
+    assert(dynamic_cast<const CEQL::Attribute*>(left.get()) != nullptr);
+    auto left_value_attr = static_cast<CEQL::Attribute*>(left.get());
+    auto left_expr_attr = std::make_unique<
+      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value,
+                                                        catalog);
+
+    assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
+    auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());
+    std::string_view value = right_value_string->value;
+    auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(
+      value);
+
+    auto regex_string = right_expr_string->val;
+
+    return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(
+      admissible_event_types,
+      std::move(left_expr_attr),
+      std::move(regex_string));
+  }
+
   static std::set<Types::EventTypeId>
   intersect(std::set<Types::EventTypeId> left,
             std::set<Types::EventTypeId> right) {

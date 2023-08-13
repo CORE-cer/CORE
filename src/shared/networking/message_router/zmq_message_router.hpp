@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <zmq.hpp>
@@ -41,27 +42,33 @@ class ZMQMessageRouter : MessageRouter {
     zmq::message_t request;
 
     try {
-      auto got_identity = socket.recv(identity, zmq::recv_flags::dontwait);
-      if (!got_identity) {
-        return;
-      }
-      auto got_request = socket.recv(request);
-      if (!got_request) {
-        return;
-      }
-      std::string identityString = std::string(static_cast<char*>(
-                                                 identity.data()),
-                                               identity.size());
-      std::string requestString = std::string(static_cast<char*>(
-                                                request.data()),
-                                              request.size());
+      zmq::pollitem_t items[] = {{socket, 0, ZMQ_POLLIN, 0}};
+      std::chrono::milliseconds timeout_ms{100};
+      zmq::poll(&items[0], 1, timeout_ms);
 
-      std::string replyString = transformer(requestString);
-      zmq::message_t reply(replyString.size());
-      memcpy(reply.data(), replyString.c_str(), replyString.size());
+      if (items[0].revents & ZMQ_POLLIN) {
+        auto got_identity = socket.recv(identity);
+        if (!got_identity) {
+          return;
+        }
+        auto got_request = socket.recv(request);
+        if (!got_request) {
+          return;
+        }
+        std::string identityString = std::string(static_cast<char*>(
+                                                   identity.data()),
+                                                 identity.size());
+        std::string requestString = std::string(static_cast<char*>(
+                                                  request.data()),
+                                                request.size());
 
-      socket.send(identity, zmq::send_flags::sndmore);
-      socket.send(reply, zmq::send_flags::none);
+        std::string replyString = transformer(requestString);
+        zmq::message_t reply(replyString.size());
+        memcpy(reply.data(), replyString.c_str(), replyString.size());
+
+        socket.send(identity, zmq::send_flags::sndmore);
+        socket.send(reply, zmq::send_flags::none);
+      }
     } catch (const zmq::error_t& e) {
       if (e.num() != EAGAIN) throw;
     }

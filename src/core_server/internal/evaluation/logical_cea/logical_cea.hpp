@@ -9,6 +9,12 @@
 
 namespace CORE::Internal::CEA {
 struct LogicalCEA {
+  /**
+   * To obtain a LogicalCEA a string query is transformed into an
+   * internal structure called Query, then the query's formula is
+   * transformed to this LogicalCEA. Later on this LogicalCEA is
+   * transformed into a CEA and this is used in the DetCEA.
+   */
  public:
   using VariablesToMark = mpz_class;
   using NodeId = uint64_t;

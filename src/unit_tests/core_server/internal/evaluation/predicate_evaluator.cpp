@@ -235,5 +235,39 @@ TEST_CASE(
     evaluation = evaluator(tuple);
     REQUIRE(evaluation == 0b0010);
   }
+
+  SECTION("WeaklyTyped LIKE predicate matching") {
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"));
+    auto evaluator = Evaluation::PredicateEvaluator(
+      get_predicates(query, catalog));
+    RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
+                                                   "somestring",
+                                                   20,
+                                                   0,
+                                                   0.0,
+                                                   1.2);
+    auto evaluation = evaluator(tuple);
+    REQUIRE(evaluation == 0b0101);
+    tuple = add_event_type_2(ring_tuple_queue, 20, 5);
+    evaluation = evaluator(tuple);
+    REQUIRE(evaluation == 0b0010);
+  }
+
+  SECTION("WeaklyTyped LIKE predicate not matching") {
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"));
+    auto evaluator = Evaluation::PredicateEvaluator(
+      get_predicates(query, catalog));
+    RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
+                                                   "somestring",
+                                                   20,
+                                                   0,
+                                                   0.0,
+                                                   1.2);
+    auto evaluation = evaluator(tuple);
+    REQUIRE(evaluation == 0b0001);
+    tuple = add_event_type_2(ring_tuple_queue, 20, 5);
+    evaluation = evaluator(tuple);
+    REQUIRE(evaluation == 0b0010);
+  }
 }
 }  // namespace CORE::Internal::CEA::UnitTests
