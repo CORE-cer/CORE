@@ -44,6 +44,7 @@ EQ  : '==' | '='  ;
 NEQ : '!=' | '<>' ;
 
 SEMICOLON : ';' ;
+COLON : ':' ;
 COMMA : ',' ;
 DOUBLE_DOT : '..';
 LEFT_PARENTHESIS : '(' ;
