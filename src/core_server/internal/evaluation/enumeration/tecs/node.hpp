@@ -26,10 +26,9 @@ struct Node {
   // Change to templating and have TimeType maximum_start;
   uint64_t maximum_start;
 
-  union {
-    uint64_t ref_count{1};
-    Node* next_free_node;
-  };
+  // TODO: Try to change this back to union.
+  uint64_t ref_count{1};
+  Node* next_free_node{nullptr};
 
  public:
   /// The timestamp does not need to be the timestamp in the tuple. It
@@ -41,11 +40,13 @@ struct Node {
         maximum_start(timestamp) {}
 
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    node_type = NodeType::BOTTOM;
+    left = nullptr;
     this->tuple = tuple;
     this->timestamp = timestamp;
-    maximum_start = timestamp;
-    uint64_t ref_count = 1;
+    node_type = NodeType::BOTTOM;
+    this->maximum_start = timestamp;
+    this->ref_count = 1;
+    next_free_node = nullptr;  // TODO: Might change if making a union again.
   }
 
   Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp)
@@ -58,13 +59,15 @@ struct Node {
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    node_type = NodeType::LABEL;
+    std::cout << "Reseting extend node " << this << " extending node: " << node << std::endl;
+    this->left = node;
     this->tuple = tuple;
-    left = node;
     this->timestamp = timestamp;
+    node_type = NodeType::LABEL;
     assert(left != nullptr);
     maximum_start = left->maximum_start;
-    uint64_t ref_count = 1;
+    this->ref_count = 1;
+    next_free_node = nullptr;  // TODO: Might change if making a union again.
   }
 
   Node(Node* left, Node* right) : node_type(NodeType::UNION) {
@@ -92,9 +95,11 @@ struct Node {
       this->left = right;
       this->right = left;
     }
+    timestamp = {};
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
-    uint64_t ref_count = 1;
+    this->ref_count = 1;
+    next_free_node = nullptr;  // TODO: Might change if making a union again.
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
@@ -114,6 +119,7 @@ struct Node {
   }
 
   Node* next() const {
+    std::cout << "next of ptr: " << this << " gives ptr: " << left << std::endl;
     assert(is_output());
     assert(left != nullptr);
     return left;

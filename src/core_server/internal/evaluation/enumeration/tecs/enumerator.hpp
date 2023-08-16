@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "node.hpp"
+#include "tecs.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -14,6 +15,8 @@ class Enumerator {
   uint64_t last_time_to_consider;
   std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
     next_value;
+  Node* original_node;
+  tECS* tecs;
 
   class iterator {
    private:
@@ -42,21 +45,45 @@ class Enumerator {
   };
 
  public:
-  Enumerator(Node* node, uint64_t original_pos, uint64_t time_window)
+  Enumerator(Node* node,
+             uint64_t original_pos,
+             uint64_t time_window,
+             tECS& tecs)
       : original_pos(original_pos),
         last_time_to_consider(
-          (original_pos < time_window) ? 0 : original_pos - time_window) {
+          (original_pos < time_window) ? 0 : original_pos - time_window),
+        original_node(node),
+        tecs(&tecs) {
+    std::cout << "Creating Enumerator!" << std::endl;
     assert(node != nullptr);
     if (node->max() >= last_time_to_consider) {
       stack.push({node, {}});
     }
   }
 
-  Enumerator() {}  // Empty enumerator
+  // TODO: Prevent copy construction.
+
+  Enumerator()
+      : original_node(nullptr), tecs(nullptr) {}  // Empty enumerator
+
+  ~Enumerator() {
+    static int i = 1;
+    if (tecs != nullptr) {
+      std::cout << "Deallocating enumerator node. times done: " << i++
+                << std::endl;
+      // It is not an empty enumerator
+      tecs->unpin(original_node);
+    }
+  }
 
   iterator begin() { return iterator(*this, !has_next()); }
 
   iterator end() { return iterator(*this, true); }
+
+  void reset() {
+    stack = {};
+    stack.push({original_node, {}});
+  };
 
  private:
   bool has_next() {
@@ -70,6 +97,7 @@ class Enumerator {
           return true;
         } else if (current_node->is_output()) {
           tuples.push_back(current_node->get_tuple());
+          std::cout << "Is output, ptr: " <<  current_node << std::endl;
           current_node = current_node->next();
         } else if (current_node->is_union()) {
           if (current_node->right->max() >= last_time_to_consider) {

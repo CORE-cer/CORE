@@ -20,8 +20,8 @@ class NodeManager {
   size_t amount_of_recycled_nodes{0};
 
  private:
-  MiniPool* minipool_head;
-  Node* recyclable_node_head;
+  MiniPool* minipool_head = nullptr;
+  Node* recyclable_node_head = nullptr;
 
  public:
   NodeManager(size_t starting_size)
@@ -56,6 +56,7 @@ class NodeManager {
   }
 
   void decrease_ref_count(Node* node) {
+    assert(node != nullptr);
     node->ref_count--;
     try_to_mark_node_as_unused(node);
   }
@@ -63,6 +64,18 @@ class NodeManager {
   void increase_ref_count(Node* node) { node->ref_count++; }
 
   void add_to_list_of_free_memory(Node* node) {
+    static int i = 0;
+    i++;
+    static int bottoms = 1;
+    static int outputs = 1;
+    std::cout << "Added " << i
+              << " Nodes to free memory! Node ptr: " << node
+              << " type is: ";
+    if (node->is_bottom())
+      std::cout << "Bottom no." << bottoms++ << std::endl;
+    if (node->is_output())
+      std::cout << "output no." << outputs++ << std::endl;
+    if (node->is_union()) std::cout << "union" << std::endl;
     node->next_free_node = recyclable_node_head;
     recyclable_node_head = node;
   }
@@ -75,6 +88,7 @@ class NodeManager {
       return nullptr;
     }
     if (recyclable_node_head == nullptr) {
+      std::cout << "Increasing memory size! " << std::endl;
       increase_mempool_size();
       return nullptr;
     }
@@ -90,26 +104,29 @@ class NodeManager {
   }
 
   Node* get_node_to_recycle() {
+    static int i = 1;
+    static int bottom_nodes_recycled = 1;
+    static int extend_nodes_recycled = 1;
+    static int union_nodes_recycled = 1;
     Node* node_to_recycle = recyclable_node_head;
-    Node* children_of_the_recycled_node[2] = {nullptr, nullptr};
-    if (node_to_recycle->is_union()) {
-      children_of_the_recycled_node[0] = recyclable_node_head->right;
-      children_of_the_recycled_node[1] = recyclable_node_head->left;
-    } else {
-      children_of_the_recycled_node[0] = recyclable_node_head->left;
-    }
-
     advance_recyclable_nodes_list_head();
-    decrease_references_to_children(children_of_the_recycled_node);
-
-    return node_to_recycle;
-  }
-
-  void decrease_references_to_children(Node* children[2]) {
-    for (int i = 0; i < 2; i++) {
-      Node* node = children[i];
-      if (node != nullptr) decrease_ref_count(node);
+    std::cout << "Recycling node " << i++ << " ";
+    if (node_to_recycle->is_union()) {
+      std::cout << "union node no. " << union_nodes_recycled++ << std::endl;
+      decrease_ref_count(node_to_recycle->left);
+      decrease_ref_count(node_to_recycle->right);
+    } else if (node_to_recycle->is_output()) {
+      std::cout << "extend node ptr: " << node_to_recycle << " no. "
+                << extend_nodes_recycled++
+                << " with child ptr: " << node_to_recycle->left
+                << std::endl;
+      decrease_ref_count(node_to_recycle->left);
+    } else {
+      assert(node_to_recycle->is_bottom());
+      std::cout << "bottom node no. " << bottom_nodes_recycled++
+                << std::endl;
     }
+    return node_to_recycle;
   }
 
   void advance_recyclable_nodes_list_head() {

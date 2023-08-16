@@ -44,10 +44,12 @@ class Evaluator {
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
-    UnionList u1 = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
+    std::cout << "\n\nTransitions from initial state" << std::endl;
+    UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
-    exec_trans(tuple, q0, std::move(u1), predicates_satisfied, current_time);
+    exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
 
+    std::cout << "Transitions from historic states" << std::endl;
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
       exec_trans(tuple,
@@ -70,6 +72,15 @@ class Evaluator {
                   mpz_class& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
+    static int nodes_stored = 0;
+    static int all_exec_trans = 0;
+    all_exec_trans++;
+    if (nodes_stored % 1000 == 0) {
+      std::cout << "Nodes stored: " << nodes_stored << std::endl;
+    }
+    if (all_exec_trans % 1000 == 0) {
+      std::cout << "All exec_trans" << all_exec_trans << std::endl;
+    }
     assert(p != nullptr);
     States next_states = cea.next(p, t);
     auto marked_state = next_states.marked_state;
@@ -77,6 +88,7 @@ class Evaluator {
     assert(marked_state != nullptr && unmarked_state != nullptr);
     if (!marked_state->is_empty) {
       tecs.pin(ul);
+      nodes_stored++;
       Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs.insert(
@@ -88,6 +100,7 @@ class Evaluator {
       }
     }
     if (!unmarked_state->is_empty) {
+      nodes_stored++;
       if (current_union_list_map.contains(unmarked_state)) {
         tecs.pin(ul);
         Node* new_node = tecs.merge(ul);
@@ -104,6 +117,7 @@ class Evaluator {
 
   // Change to tECS::Enumerator.
   tECS::Enumerator output(uint64_t current_time) {
+    std::cout << "Calling output!" << std::endl;
     Node* out = nullptr;
     for (State* p : historic_ordered_keys) {
       if (p->is_final) {
@@ -122,7 +136,7 @@ class Evaluator {
     if (out == nullptr)
       return {};
     else
-      return {out, current_time, time_window};
+      return {out, current_time, time_window, tecs};
   }
 };
 }  // namespace CORE::Internal::Evaluation

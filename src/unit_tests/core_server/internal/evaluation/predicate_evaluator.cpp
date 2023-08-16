@@ -84,6 +84,7 @@ CEQL::Query parse_query(std::string query) {  // Only parses where correctly
   antlr4::tree::ParseTree* tree = parser.parse();
   Parsing::WhereVisitor where_visitor;
   where_visitor.visit(tree);
+  // TODO: Partitionby, within and consume_by
   CEQL::Query parsed_query(CEQL::Select(CEQL::Select::Strategy::ALL,
                                         {},
                                         true),
