@@ -125,5 +125,18 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     }
     return {};
   }
+
+  virtual std::any visitIn_range_predicate(
+    CEQLQueryParser::In_range_predicateContext* ctx) override {
+    value_visitor.visit(ctx->math_expr()[0]);
+    auto left = value_visitor.get_parsed_value();
+    value_visitor.visit(ctx->math_expr()[1]);
+    auto lower_bound = value_visitor.get_parsed_value();
+    value_visitor.visit(ctx->math_expr()[2]);
+    auto upper_bound = value_visitor.get_parsed_value();
+    predicate = std::make_unique<CEQL::InRangePredicate>(
+      std::move(left), std::move(lower_bound), std::move(upper_bound));
+    return {};
+  }
 };
 }  // namespace CORE::Internal::Parsing

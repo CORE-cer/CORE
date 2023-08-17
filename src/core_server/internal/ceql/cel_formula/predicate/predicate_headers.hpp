@@ -7,3 +7,4 @@
 #include "like_predicate.hpp"
 #include "not_predicate.hpp"
 #include "or_predicate.hpp"
+#include "in_range_predicate.hpp"
