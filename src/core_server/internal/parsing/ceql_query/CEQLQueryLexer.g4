@@ -22,6 +22,7 @@ K_NONE      : N O N E;
 K_NOT       : N O T;
 K_OR        : O R;
 K_PARTITION : P A R T I T I O N;
+K_RANGE     : R A N G E;
 K_SECONDS   : S E C O N D S?;
 K_SELECT    : S E L E C T;
 K_STREAM    : S T R E A M;

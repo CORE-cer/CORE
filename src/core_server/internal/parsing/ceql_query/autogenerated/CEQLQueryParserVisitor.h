@@ -77,6 +77,8 @@ public:
 
     virtual std::any visitRegex_predicate(CEQLQueryParser::Regex_predicateContext *context) = 0;
 
+    virtual std::any visitIn_range_predicate(CEQLQueryParser::In_range_predicateContext *context) = 0;
+
     virtual std::any visitIn_predicate(CEQLQueryParser::In_predicateContext *context) = 0;
 
     virtual std::any visitNot_predicate(CEQLQueryParser::Not_predicateContext *context) = 0;
