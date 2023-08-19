@@ -1,11 +1,12 @@
 #!/bin/bash
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NORMAL_OUTPUT='\033[0m'
 
 # Work at the root directory
 cd "$(dirname "$0")"
 cd ..
+
+# Include common
+source scripts/common.sh
+_setArgs "$@"
 
 # Flag indicating whether any files were changed
 changed_files=false
