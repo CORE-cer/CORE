@@ -61,6 +61,27 @@ class Evaluator {
     return output(current_time);
   }
 
+  uint64_t maximum_results() {
+    uint64_t maximum_results = 0;
+    Node* out = nullptr;
+    for (State* p : historic_ordered_keys) {
+      if (p->is_final) {
+        assert(historic_union_list_map.contains(p));
+        tecs.pin(historic_union_list_map[p]);
+        Node* n = tecs.merge(historic_union_list_map[p]);
+        // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
+        if (out == nullptr) {
+          out = n;
+        } else {
+          out = tecs.new_union(out, n);
+        }
+        maximum_results += n->max_results();
+      }
+      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
+    }
+    return maximum_results;
+  }
+
  private:
   State* get_initial_state() { return cea.initial_state; }
 
@@ -123,27 +144,6 @@ class Evaluator {
       return {};
     else
       return {out, current_time, time_window};
-  }
-
-  uint64_t maximum_results() {
-    uint64_t maximum_results = 0;
-    Node* out = nullptr;
-    for (State* p : historic_ordered_keys) {
-      if (p->is_final) {
-        assert(historic_union_list_map.contains(p));
-        tecs.pin(historic_union_list_map[p]);
-        Node* n = tecs.merge(historic_union_list_map[p]);
-        // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
-        if (out == nullptr) {
-          out = n;
-        } else {
-          out = tecs.new_union(out, n);
-        }
-        maximum_results += n->max_results();
-      }
-      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
-    }
-    return maximum_results;
   }
 };
 }  // namespace CORE::Internal::Evaluation
