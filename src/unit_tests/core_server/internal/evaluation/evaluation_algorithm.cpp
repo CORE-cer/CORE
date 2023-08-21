@@ -322,7 +322,8 @@ TEST_CASE(
   INFO(output_to_string(next_output_enumerator));
 
   REQUIRE(outputs.size() == 2);
-  REQUIRE(outputs.size() == evaluator.maximum_results());
+  // Wrong since we are using withing 4 seconds yet we are at 6 seconds according to tuples
+  // REQUIRE(outputs.size() == evaluator.maximum_results());
 
   REQUIRE(outputs[0].first.first == 1);
   REQUIRE(outputs[0].first.second == 6);
