@@ -424,7 +424,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(outputs.size() == 0);
   REQUIRE(outputs.size() == evaluator.maximum_results());
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 0);
+  next_output_enumerator = evaluator.next(tuple, 5);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
@@ -433,7 +433,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
+  next_output_enumerator = evaluator.next(tuple, 6);
   outputs = enumerator_to_vector(next_output_enumerator);
 
   INFO("SELL INTL 80");
@@ -443,7 +443,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
+  next_output_enumerator = evaluator.next(tuple, 7);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
@@ -453,15 +453,15 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   for (std::pair<std::pair<uint64_t, uint64_t>,
                  std::vector<RingTupleQueue::Tuple>> output : outputs) {
   }
-  REQUIRE(outputs[0].first.first == 0);
-  REQUIRE(outputs[0].first.second == 4);
+  REQUIRE(outputs[0].first.first == 5);
+  REQUIRE(outputs[0].first.second == 7);
 
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 5);
+  next_output_enumerator = evaluator.next(tuple, 8);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
@@ -470,7 +470,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 6);
+  next_output_enumerator = evaluator.next(tuple, 9);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
