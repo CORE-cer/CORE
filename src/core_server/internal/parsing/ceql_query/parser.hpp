@@ -62,7 +62,12 @@ class Parser {
 
     //return parsedQuery;
 
-    return {std::move(select), std::move(from), std::move(where), {}, {}, {}};
+    return {std::move(select),
+            std::move(from),
+            std::move(where),
+            {},
+            std::move(within),
+            {}};
   }
 };
 
