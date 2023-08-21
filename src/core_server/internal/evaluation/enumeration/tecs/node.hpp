@@ -86,7 +86,8 @@ struct Node {
     }
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
-    maximum_results = this->left->maximum_results + this->right->maximum_results;
+    maximum_results = this->left->maximum_results
+                      + this->right->maximum_results;
   }
 
   void reset(Node* left, Node* right) {
@@ -103,7 +104,8 @@ struct Node {
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
     uint64_t ref_count = 1;
-    maximum_results = this->left->maximum_results + this->right->maximum_results;
+    maximum_results = this->left->maximum_results
+                      + this->right->maximum_results;
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
