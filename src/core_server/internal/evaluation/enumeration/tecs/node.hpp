@@ -31,6 +31,9 @@ struct Node {
     Node* next_free_node;
   };
 
+  // Maximum number of results that can be returned by this node.
+  uint64_t maximum_results;
+
  public:
   /// The timestamp does not need to be the timestamp in the tuple. It
   /// could be for example the stream position.
@@ -38,7 +41,8 @@ struct Node {
       : node_type(NodeType::BOTTOM),
         tuple(tuple),
         timestamp(timestamp),
-        maximum_start(timestamp) {}
+        maximum_start(timestamp),
+        maximum_results(1) {}
 
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
     node_type = NodeType::BOTTOM;
@@ -46,6 +50,7 @@ struct Node {
     this->timestamp = timestamp;
     maximum_start = timestamp;
     uint64_t ref_count = 1;
+    maximum_results = 1;
   }
 
   Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp)
@@ -55,6 +60,7 @@ struct Node {
         timestamp(timestamp) {
     assert(node != nullptr);
     maximum_start = left->maximum_start;
+    maximum_results = left->maximum_results;
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -65,6 +71,7 @@ struct Node {
     assert(left != nullptr);
     maximum_start = left->maximum_start;
     uint64_t ref_count = 1;
+    maximum_results = left->maximum_results;
   }
 
   Node(Node* left, Node* right) : node_type(NodeType::UNION) {
@@ -79,6 +86,7 @@ struct Node {
     }
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
+    maximum_results = this->left->maximum_results + this->right->maximum_results;
   }
 
   void reset(Node* left, Node* right) {
@@ -95,6 +103,7 @@ struct Node {
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
     uint64_t ref_count = 1;
+    maximum_results = this->left->maximum_results + this->right->maximum_results;
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
@@ -120,6 +129,8 @@ struct Node {
   }
 
   uint64_t max() const { return maximum_start; }
+
+  uint64_t max_results() const { return maximum_results; }
 
   std::string to_string(size_t depth = 0) const {
     std::string out = "";
