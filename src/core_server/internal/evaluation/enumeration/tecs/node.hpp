@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include <cassert>
+#include <cstdint>
 #include <cwchar>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -31,6 +32,8 @@ struct Node {
     Node* next_free_node;
   };
 
+  std::vector<uint64_t> start_times;
+
  public:
   /// The timestamp does not need to be the timestamp in the tuple. It
   /// could be for example the stream position.
@@ -38,13 +41,15 @@ struct Node {
       : node_type(NodeType::BOTTOM),
         tuple(tuple),
         timestamp(timestamp),
-        maximum_start(timestamp) {}
+        maximum_start(timestamp),
+        start_times{timestamp} {}
 
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
     node_type = NodeType::BOTTOM;
     this->tuple = tuple;
     this->timestamp = timestamp;
     maximum_start = timestamp;
+    start_times = {timestamp};
     uint64_t ref_count = 1;
   }
 
@@ -55,6 +60,7 @@ struct Node {
         timestamp(timestamp) {
     assert(node != nullptr);
     maximum_start = left->maximum_start;
+    start_times = left->start_times;
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -64,6 +70,7 @@ struct Node {
     this->timestamp = timestamp;
     assert(left != nullptr);
     maximum_start = left->maximum_start;
+    start_times = left->start_times;
     uint64_t ref_count = 1;
   }
 
@@ -79,6 +86,11 @@ struct Node {
     }
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
+    std::merge(this->left->start_times.begin(),
+               this->left->start_times.end(),
+               this->right->start_times.begin(),
+               this->right->start_times.end(),
+               std::back_inserter(start_times));
   }
 
   void reset(Node* left, Node* right) {
@@ -94,6 +106,12 @@ struct Node {
     }
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
+    start_times.clear();
+    std::merge(this->left->start_times.begin(),
+               this->left->start_times.end(),
+               this->right->start_times.begin(),
+               this->right->start_times.end(),
+               std::back_inserter(start_times));
     uint64_t ref_count = 1;
   }
 
