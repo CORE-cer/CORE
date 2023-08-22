@@ -77,7 +77,12 @@ class Evaluator {
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
     }
-    return out->max_results();
+    if (out == nullptr) {
+      return 0;
+    }
+    else {
+      return out->max_results();
+    }
   }
 
  private:
