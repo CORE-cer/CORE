@@ -59,8 +59,6 @@ class tECS {
   new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
     static int i = 1;
     auto out = node_manager.alloc(tuple, timestamp);
-    std::cout << "Allocating bottom ptr: " << out
-              << ", Bottoms allocated: " << i++ << std::endl;
     return out;
   }
 
@@ -72,8 +70,6 @@ class tECS {
   [[nodiscard]] Node*
   new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
     static int i = 1;
-    std::cout << "Allocating extend, extends allocated: " << i++
-              << std::endl;
     return node_manager.alloc(node, tuple, timestamp);
   }
 
@@ -83,7 +79,6 @@ class tECS {
    */
   [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
     static int i = 1;
-    std::cout << "Allocating union, unions allocated: " << i++ << std::endl;
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {

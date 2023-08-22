@@ -30,9 +30,10 @@ class Evaluator {
   /**
    * All events less than event_time_of_expiration can have it's children
    * recycled and marked as a dead node. Note that this uint64_t is passed
-   * by reference to the tECS, and the tECS manages this behavior.
+   * by reference to the tECS, and the tECS manages this behavior. This
+   * uint64_t is a reference of the uint64_t stored at the mediator.
    */
-  uint64_t event_time_of_expiration;
+  uint64_t& event_time_of_expiration;
 
   // Other auxiliary objects
 
@@ -41,13 +42,14 @@ class Evaluator {
  public:
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
-            uint64_t time_bound)
+            uint64_t time_bound,
+            uint64_t& event_time_of_expiration
+            )
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
-        event_time_of_expiration(0),
+        event_time_of_expiration(event_time_of_expiration),
         tecs(event_time_of_expiration) {
-    std::cout << "Time bound: " << time_bound << std::endl;
   }
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
@@ -57,12 +59,10 @@ class Evaluator {
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
-    std::cout << "Transitions from initial state" << std::endl;
     UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
     exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
 
-    std::cout << "Transitions from historic states" << std::endl;
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
       exec_trans(tuple,
@@ -88,12 +88,6 @@ class Evaluator {
     static int nodes_stored = 0;
     static int all_exec_trans = 0;
     all_exec_trans++;
-    if (nodes_stored % 1000 == 0) {
-      std::cout << "Nodes stored: " << nodes_stored << std::endl;
-    }
-    if (all_exec_trans % 1000 == 0) {
-      std::cout << "All exec_trans" << all_exec_trans << std::endl;
-    }
     assert(p != nullptr);
     States next_states = cea.next(p, t);
     auto marked_state = next_states.marked_state;
@@ -130,7 +124,6 @@ class Evaluator {
 
   // Change to tECS::Enumerator.
   tECS::Enumerator output(uint64_t current_time) {
-    std::cout << "Calling output!" << std::endl;
     Node* out = nullptr;
     for (State* p : historic_ordered_keys) {
       if (p->is_final) {

@@ -137,15 +137,15 @@ time_span
  ;
 
 hour_span
- : integer K_HOURS
+ : number K_HOURS
  ;
 
 minute_span
- : integer K_MINUTES
+ : number K_MINUTES
  ;
 
 second_span
- : integer K_SECONDS
+ : number K_SECONDS
  ;
 
 custom_span

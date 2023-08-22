@@ -93,14 +93,15 @@ class NodeManager {
     if (!minipool_head->is_full()) {
       return nullptr;
     }
-    if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
-      while (
-        time_list_manager.remove_a_dead_node_if_possible(expiration_time))
-        ;
-      return get_node_to_recycle_or_increase_mempool_size_if_necessary();
-    };
     if (recyclable_node_head == nullptr) {
-      std::cout << "Increasing memory size! " << std::endl;
+      if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
+        while (
+          time_list_manager.remove_a_dead_node_if_possible(expiration_time))
+          ;
+        if (recyclable_node_head != nullptr) {
+          return get_node_to_recycle();
+        }
+      };
       increase_mempool_size();
       return nullptr;
     }
@@ -122,21 +123,13 @@ class NodeManager {
     static int union_nodes_recycled = 1;
     Node* node_to_recycle = recyclable_node_head;
     advance_recyclable_nodes_list_head();
-    std::cout << "Recycling node " << i++ << " ";
     if (node_to_recycle->is_union()) {
-      std::cout << "union node no. " << union_nodes_recycled++ << std::endl;
       decrease_ref_count(node_to_recycle->left);
       decrease_ref_count(node_to_recycle->right);
     } else if (node_to_recycle->is_output()) {
-      std::cout << "extend node ptr: " << node_to_recycle << " no. "
-                << extend_nodes_recycled++
-                << " with child ptr: " << node_to_recycle->left
-                << std::endl;
       decrease_ref_count(node_to_recycle->left);
     } else {
       assert(node_to_recycle->is_bottom());
-      std::cout << "bottom node no. " << bottom_nodes_recycled++
-                << std::endl;
     }
     time_list_manager.remove_node(node_to_recycle);
     return node_to_recycle;
@@ -160,18 +153,6 @@ class NodeManager {
   }
 
   void add_to_list_of_free_memory(Node* node) {
-    static int i = 0;
-    i++;
-    static int bottoms = 1;
-    static int outputs = 1;
-    std::cout << "Added " << i
-              << " Nodes to free memory! Node ptr: " << node
-              << " type is: ";
-    if (node->is_bottom())
-      std::cout << "Bottom no." << bottoms++ << std::endl;
-    if (node->is_output())
-      std::cout << "output no." << outputs++ << std::endl;
-    if (node->is_union()) std::cout << "union" << std::endl;
     node->next_free_node = recyclable_node_head;
     recyclable_node_head = node;
   }

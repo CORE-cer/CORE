@@ -10,12 +10,13 @@ using namespace CORE;
 
 std::string create_query(std::string filter_clause) {
   // clang-format off
+  // TODO: Query with :, 
   return "SELECT ALL * \n"
          "FROM S1, S2\n"
          "WHERE Ints as X; Mixed as X \n"
          "FILTER\n"
          + filter_clause + "\n"
-         "WITHIN 4 EVENTS\n";
+         "WITHIN 0.1 seconds\n";
   // clang-format on
 }
 

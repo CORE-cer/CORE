@@ -146,9 +146,16 @@ class Queue {
     //return ptr;
   }
 
-  void
-  update_overwrite_timepoint(std::chrono::system_clock::time_point millis) {
-    overwrite_timepoint = millis;
+  void update_overwrite_timepoint(
+    std::chrono::system_clock::time_point timepoint) {
+    overwrite_timepoint = timepoint;
+  }
+
+  void update_overwrite_timepoint(uint64_t ns_from_compile_time) {
+    auto compile_time_point = get_compile_time_point();
+    auto timepoint = compile_time_point
+                     + std::chrono::nanoseconds(ns_from_compile_time);
+    overwrite_timepoint = timepoint;
   }
 
  private:
@@ -186,6 +193,25 @@ class Queue {
     if (last_updated[start_buffer_index] <= overwrite_timepoint) {
       start_buffer_index = (start_buffer_index + 1) % buffers.size();
     }
+  }
+
+  const static std::chrono::system_clock::time_point
+  get_compile_time_point() {
+    static const auto compile_time_point = []() {
+      std::istringstream compile_time_stream(__DATE__ " " __TIME__);
+      std::tm compile_time_tm = {};
+      compile_time_stream
+        >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
+
+      if (compile_time_stream.fail()) {
+        assert(false && "The compiler should be able to give the date and time of compilation!");
+      }
+
+      return std::chrono::system_clock::from_time_t(
+        std::mktime(&compile_time_tm));
+    }();
+
+    return compile_time_point;
   }
 };
 

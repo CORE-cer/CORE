@@ -29,7 +29,6 @@ struct Query {
         partition_by(std::move(partition_by)),
         within(std::move(within)),
         consume_by(std::move(consume_by)) {
-    std::cout << "Query is: " << to_string() << std::endl;
   }
 
   std::string to_string() const {

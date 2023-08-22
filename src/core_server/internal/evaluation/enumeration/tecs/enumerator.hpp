@@ -54,7 +54,6 @@ class Enumerator {
           (original_pos < time_window) ? 0 : original_pos - time_window),
         original_node(node),
         tecs(&tecs) {
-    std::cout << "Creating Enumerator!" << std::endl;
     assert(node != nullptr);
     if (node->max() >= last_time_to_consider) {
       stack.push({node, {}});
@@ -69,8 +68,6 @@ class Enumerator {
   ~Enumerator() {
     static int i = 1;
     if (tecs != nullptr) {
-      std::cout << "Deallocating enumerator node. times done: " << i++
-                << std::endl;
       // It is not an empty enumerator
       tecs->unpin(original_node);
     }
@@ -97,7 +94,6 @@ class Enumerator {
           return true;
         } else if (current_node->is_output()) {
           tuples.push_back(current_node->get_tuple());
-          std::cout << "Is output, ptr: " << current_node << std::endl;
           current_node = current_node->next();
         } else if (current_node->is_union()) {
           if (current_node->get_right()->max() >= last_time_to_consider) {

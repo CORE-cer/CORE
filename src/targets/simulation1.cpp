@@ -97,9 +97,12 @@ int main(int argc, char** argv) {
   Types::PortNumber final_port_number = create_queries(client);
   subscribe_to_queries(client, initial_port_number, final_port_number);
 
+  std::cout << "Sending " + std::to_string(amount_of_messages) + " streams"
+            << std::endl;
   for (int i = 0; i < amount_of_messages; i++) {
     send_a_stream();
   }
+  std::cout << "Finished sending streams" << std::endl;
 
   client.stop_all_subscriptions();
   std::this_thread::sleep_for(std::chrono::milliseconds(10));

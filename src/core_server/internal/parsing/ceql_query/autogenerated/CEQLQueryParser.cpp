@@ -221,9 +221,9 @@ void ceqlqueryparserParserInitialize() {
   	60,30,0,377,378,5,9,0,0,378,39,1,0,0,0,379,381,3,42,21,0,380,379,1,0,
   	0,0,380,381,1,0,0,0,381,383,1,0,0,0,382,384,3,44,22,0,383,382,1,0,0,0,
   	383,384,1,0,0,0,384,386,1,0,0,0,385,387,3,46,23,0,386,385,1,0,0,0,386,
-  	387,1,0,0,0,387,41,1,0,0,0,388,389,3,60,30,0,389,390,5,12,0,0,390,43,
-  	1,0,0,0,391,392,3,60,30,0,392,393,5,17,0,0,393,45,1,0,0,0,394,395,3,60,
-  	30,0,395,396,5,23,0,0,396,47,1,0,0,0,397,398,3,60,30,0,398,399,5,46,0,
+  	387,1,0,0,0,387,41,1,0,0,0,388,389,3,64,32,0,389,390,5,12,0,0,390,43,
+  	1,0,0,0,391,392,3,64,32,0,392,393,5,17,0,0,393,45,1,0,0,0,394,395,3,64,
+  	32,0,395,396,5,23,0,0,396,47,1,0,0,0,397,398,3,60,30,0,398,399,5,46,0,
   	0,399,400,3,68,34,0,400,401,5,47,0,0,401,49,1,0,0,0,402,405,3,52,26,0,
   	403,404,5,4,0,0,404,406,3,54,27,0,405,403,1,0,0,0,405,406,1,0,0,0,406,
   	51,1,0,0,0,407,408,3,56,28,0,408,409,5,37,0,0,409,411,1,0,0,0,410,407,
@@ -3296,7 +3296,9 @@ CEQLQueryParser::Time_spanContext* CEQLQueryParser::time_span() {
     _errHandler->sync(this);
 
     _la = _input->LA(1);
-    if (_la == CEQLQueryParser::INTEGER_LITERAL) {
+    if (_la == CEQLQueryParser::DOUBLE_LITERAL
+
+    || _la == CEQLQueryParser::INTEGER_LITERAL) {
       setState(385);
       second_span();
     }
@@ -3317,8 +3319,8 @@ CEQLQueryParser::Hour_spanContext::Hour_spanContext(ParserRuleContext *parent, s
   : ParserRuleContext(parent, invokingState) {
 }
 
-CEQLQueryParser::IntegerContext* CEQLQueryParser::Hour_spanContext::integer() {
-  return getRuleContext<CEQLQueryParser::IntegerContext>(0);
+CEQLQueryParser::NumberContext* CEQLQueryParser::Hour_spanContext::number() {
+  return getRuleContext<CEQLQueryParser::NumberContext>(0);
 }
 
 tree::TerminalNode* CEQLQueryParser::Hour_spanContext::K_HOURS() {
@@ -3352,7 +3354,7 @@ CEQLQueryParser::Hour_spanContext* CEQLQueryParser::hour_span() {
   try {
     enterOuterAlt(_localctx, 1);
     setState(388);
-    integer();
+    number();
     setState(389);
     match(CEQLQueryParser::K_HOURS);
    
@@ -3372,8 +3374,8 @@ CEQLQueryParser::Minute_spanContext::Minute_spanContext(ParserRuleContext *paren
   : ParserRuleContext(parent, invokingState) {
 }
 
-CEQLQueryParser::IntegerContext* CEQLQueryParser::Minute_spanContext::integer() {
-  return getRuleContext<CEQLQueryParser::IntegerContext>(0);
+CEQLQueryParser::NumberContext* CEQLQueryParser::Minute_spanContext::number() {
+  return getRuleContext<CEQLQueryParser::NumberContext>(0);
 }
 
 tree::TerminalNode* CEQLQueryParser::Minute_spanContext::K_MINUTES() {
@@ -3407,7 +3409,7 @@ CEQLQueryParser::Minute_spanContext* CEQLQueryParser::minute_span() {
   try {
     enterOuterAlt(_localctx, 1);
     setState(391);
-    integer();
+    number();
     setState(392);
     match(CEQLQueryParser::K_MINUTES);
    
@@ -3427,8 +3429,8 @@ CEQLQueryParser::Second_spanContext::Second_spanContext(ParserRuleContext *paren
   : ParserRuleContext(parent, invokingState) {
 }
 
-CEQLQueryParser::IntegerContext* CEQLQueryParser::Second_spanContext::integer() {
-  return getRuleContext<CEQLQueryParser::IntegerContext>(0);
+CEQLQueryParser::NumberContext* CEQLQueryParser::Second_spanContext::number() {
+  return getRuleContext<CEQLQueryParser::NumberContext>(0);
 }
 
 tree::TerminalNode* CEQLQueryParser::Second_spanContext::K_SECONDS() {
@@ -3462,7 +3464,7 @@ CEQLQueryParser::Second_spanContext* CEQLQueryParser::second_span() {
   try {
     enterOuterAlt(_localctx, 1);
     setState(394);
-    integer();
+    number();
     setState(395);
     match(CEQLQueryParser::K_SECONDS);
    

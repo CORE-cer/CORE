@@ -34,20 +34,10 @@ void TimeListManager::add_node(Node* node) {
 
 bool TimeListManager::remove_a_dead_node_if_possible(
   uint64_t maximum_start_limit) {
-  std::cout << "Calling remove_a_dead_node_if_possible" << std::endl;
   if (tail->time_list_left->maximum_start < maximum_start_limit) {
-    std::cout << "removed a node!" << std::endl;
     remove_node(tail->time_list_left);
     return true;
   }
-  std::cout << "maximum start: " << tail->time_list_left->maximum_start
-            << " limit: " << maximum_start_limit;
-  std::cout << "Type: " << (uint64_t)tail->time_list_left->node_type
-            << std::endl;
-  std::cout << "Right of head:" << head->time_list_right->maximum_start
-            << " limit: " << maximum_start_limit;
-  std::cout << "Type: " << (uint64_t)head->time_list_right->node_type
-            << std::endl;
   return false;
 }
 
