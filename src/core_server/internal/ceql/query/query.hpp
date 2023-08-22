@@ -28,8 +28,7 @@ struct Query {
         where(std::move(where)),
         partition_by(std::move(partition_by)),
         within(std::move(within)),
-        consume_by(std::move(consume_by)) {
-  }
+        consume_by(std::move(consume_by)) {}
 
   std::string to_string() const {
     std::string out = select.to_string() + "\n" + from.to_string() + "\n"

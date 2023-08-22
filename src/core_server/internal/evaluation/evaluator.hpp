@@ -43,14 +43,12 @@ class Evaluator {
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
-            uint64_t& event_time_of_expiration
-            )
+            uint64_t& event_time_of_expiration)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
-        tecs(event_time_of_expiration) {
-  }
+        tecs(event_time_of_expiration) {}
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     event_time_of_expiration = current_time < time_window

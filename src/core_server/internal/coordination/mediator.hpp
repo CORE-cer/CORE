@@ -1,13 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "catalog.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_evaluator.hpp"
 #include "core_server/internal/coordination/router.hpp"
-#include <optional>
 #include "core_server/internal/coordination/streams_listener.hpp"
 #include "shared/datatypes/event.hpp"
 
