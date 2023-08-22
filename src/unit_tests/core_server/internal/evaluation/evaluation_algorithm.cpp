@@ -370,7 +370,10 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   CEA::DetCEA cea(std::move(intermediate_cea));
 
   uint64_t expiration_time = 0;
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20, expiration_time);
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      20,
+                      expiration_time);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
