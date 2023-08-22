@@ -62,7 +62,6 @@ class Evaluator {
   }
 
   uint64_t maximum_results() {
-    uint64_t maximum_results = 0;
     Node* out = nullptr;
     for (State* p : historic_ordered_keys) {
       if (p->is_final) {
@@ -75,11 +74,10 @@ class Evaluator {
         } else {
           out = tecs.new_union(out, n);
         }
-        maximum_results += n->max_results();
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
     }
-    return maximum_results;
+    return out->max_results();
   }
 
  private:
