@@ -79,8 +79,7 @@ class Evaluator {
     }
     if (out == nullptr) {
       return 0;
-    }
-    else {
+    } else {
       return out->max_results();
     }
   }
