@@ -46,8 +46,8 @@ struct LogicalCEA {
 
   static LogicalCEA atomic_cea(uint64_t event_type_id) {
     auto atomic_cea = LogicalCEA(2);
-    mpz_class position_of_event = (mpz_class)1 << event_type_id;
-    mpz_class predicate_mask = (mpz_class)1 << event_type_id;
+    mpz_class position_of_event = static_cast<mpz_class>(1) << event_type_id;
+    mpz_class predicate_mask = static_cast<mpz_class>(1) << event_type_id;
     atomic_cea.transitions[0].push_back(
       std::make_tuple(PredicateSet(position_of_event, predicate_mask),
                       position_of_event,

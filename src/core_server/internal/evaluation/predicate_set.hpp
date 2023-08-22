@@ -48,7 +48,7 @@ struct PredicateSet {
       case Tautology:
         return PredicateSet(Contradiction);
       default:
-        mpz_class unselective_mask = ((mpz_class)1 << (amount_of_bits + 1))
+        mpz_class unselective_mask = (static_cast<mpz_class>(1) << (amount_of_bits + 1))
                                      - 1;
         mpz_class new_mask = unselective_mask ^ mask;
         mpz_class new_predicates = ~predicates;
