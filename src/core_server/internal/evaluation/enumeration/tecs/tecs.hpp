@@ -28,7 +28,8 @@ class tECS {
   NodeManager node_manager;
 
  public:
-  tECS() : node_manager(2048) {}
+  tECS(uint64_t& event_time_of_expiration)
+      : node_manager(2048, event_time_of_expiration) {}
 
   void pin(Node* node) { node_manager.increase_ref_count(node); }
 

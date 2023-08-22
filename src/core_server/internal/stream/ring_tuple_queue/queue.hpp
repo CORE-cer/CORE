@@ -54,9 +54,11 @@ class Queue {
     assert(minimum_size < buffer_size);
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {
+      // Current buffer does have enough size.
       constant_section_index = current_index;
       current_index += minimum_size;
     } else {
+      // Current buffer does not have enough size.
       increase_size_if_necessary();
       current_buffer_index = (current_buffer_index + 1) % buffers.size();
       constant_section_buffer_index = current_buffer_index;

@@ -97,13 +97,13 @@ class Enumerator {
           return true;
         } else if (current_node->is_output()) {
           tuples.push_back(current_node->get_tuple());
-          std::cout << "Is output, ptr: " <<  current_node << std::endl;
+          std::cout << "Is output, ptr: " << current_node << std::endl;
           current_node = current_node->next();
         } else if (current_node->is_union()) {
-          if (current_node->right->max() >= last_time_to_consider) {
-            stack.push({current_node->right, tuples});
+          if (current_node->get_right()->max() >= last_time_to_consider) {
+            stack.push({current_node->get_right(), tuples});
           }
-          current_node = current_node->left;
+          current_node = current_node->get_left();
         }
       }
     }

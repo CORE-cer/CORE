@@ -27,9 +27,16 @@ class Evaluator {
   std::unordered_map<State*, UnionList> current_union_list_map;  // T'
   std::vector<State*> current_ordered_keys;
 
+  /**
+   * All events less than event_time_of_expiration can have it's children
+   * recycled and marked as a dead node. Note that this uint64_t is passed
+   * by reference to the tECS, and the tECS manages this behavior.
+   */
+  uint64_t event_time_of_expiration;
+
   // Other auxiliary objects
 
-  tECS::tECS tecs{};
+  tECS::tECS tecs;
 
  public:
   Evaluator(CEA::DetCEA&& cea,
@@ -37,14 +44,20 @@ class Evaluator {
             uint64_t time_bound)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
-        time_window(time_bound) {}
+        time_window(time_bound),
+        event_time_of_expiration(0),
+        tecs(event_time_of_expiration) {
+    std::cout << "Time bound: " << time_bound << std::endl;
+  }
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
-    // current_time is j in the algorithm.
+    event_time_of_expiration = current_time < time_window
+                                 ? 0
+                                 : current_time - time_window;
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
-    std::cout << "\n\nTransitions from initial state" << std::endl;
+    std::cout << "Transitions from initial state" << std::endl;
     UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
     exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);

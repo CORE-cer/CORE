@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+
 #include "consume_by.hpp"
 #include "from.hpp"
 #include "partition_by.hpp"
@@ -26,7 +28,9 @@ struct Query {
         where(std::move(where)),
         partition_by(std::move(partition_by)),
         within(std::move(within)),
-        consume_by(std::move(consume_by)) {}
+        consume_by(std::move(consume_by)) {
+    std::cout << "Query is: " << to_string() << std::endl;
+  }
 
   std::string to_string() const {
     std::string out = select.to_string() + "\n" + from.to_string() + "\n"

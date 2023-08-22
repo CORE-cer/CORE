@@ -4,6 +4,7 @@
 
 #include "minipool.hpp"
 #include "node.hpp"
+#include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -18,15 +19,19 @@ class NodeManager {
  public:
   size_t amount_of_nodes_used{0};
   size_t amount_of_recycled_nodes{0};
+  uint64_t& expiration_time;
 
  private:
   MiniPool* minipool_head = nullptr;
   Node* recyclable_node_head = nullptr;
+  TimeListManager time_list_manager;
 
  public:
-  NodeManager(size_t starting_size)
+  NodeManager(size_t starting_size, uint64_t& event_time_of_expiration)
       : minipool_head(new MiniPool(starting_size)),
-        recyclable_node_head(nullptr) {}
+        recyclable_node_head(nullptr),
+        time_list_manager(*this),
+        expiration_time(event_time_of_expiration) {}
 
   ~NodeManager() {
     for (MiniPool* mp = minipool_head; mp != nullptr;) {
@@ -38,13 +43,14 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
-    Node*
-      recycled_node = get_node_to_recycle_or_increase_mempool_size_if_necessary();
-    if (recycled_node != nullptr) {
-      recycled_node->reset(std::forward<Args>(args)...);
-      return recycled_node;
+    Node* out = get_node_to_recycle_or_increase_mempool_size_if_necessary();
+    if (out != nullptr) {
+      out->reset(std::forward<Args>(args)...);
+    } else {
+      out = allocate_a_new_node((args)...);
     }
-    return allocate_a_new_node((args)...);
+    time_list_manager.add_node(out);
+    return out;
   }
 
   size_t amount_of_nodes_allocated() const {
@@ -55,29 +61,29 @@ class NodeManager {
     return amount;
   }
 
+  void increase_ref_count(Node* node) { node->ref_count++; }
+
   void decrease_ref_count(Node* node) {
     assert(node != nullptr);
     node->ref_count--;
     try_to_mark_node_as_unused(node);
   }
 
-  void increase_ref_count(Node* node) { node->ref_count++; }
-
-  void add_to_list_of_free_memory(Node* node) {
-    static int i = 0;
-    i++;
-    static int bottoms = 1;
-    static int outputs = 1;
-    std::cout << "Added " << i
-              << " Nodes to free memory! Node ptr: " << node
-              << " type is: ";
-    if (node->is_bottom())
-      std::cout << "Bottom no." << bottoms++ << std::endl;
-    if (node->is_output())
-      std::cout << "output no." << outputs++ << std::endl;
-    if (node->is_union()) std::cout << "union" << std::endl;
-    node->next_free_node = recyclable_node_head;
-    recyclable_node_head = node;
+  void mark_as_dead(Node* node) {
+    assert(node != nullptr);
+    assert(node->node_type != Node::NodeType::DEAD);
+    switch (node->node_type) {
+      case Node::NodeType::UNION:
+        decrease_ref_count(node->right);
+        node->right = nullptr;
+        [[fallthrough]];
+      case Node::NodeType::OUTPUT:
+        decrease_ref_count(node->left);
+        node->left = nullptr;
+        [[fallthrough]];
+      default:
+        node->node_type = Node::NodeType::DEAD;
+    }
   }
 
   size_t get_amount_of_nodes_used() const { return amount_of_nodes_used; }
@@ -87,6 +93,12 @@ class NodeManager {
     if (!minipool_head->is_full()) {
       return nullptr;
     }
+    if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
+      while (
+        time_list_manager.remove_a_dead_node_if_possible(expiration_time))
+        ;
+      return get_node_to_recycle_or_increase_mempool_size_if_necessary();
+    };
     if (recyclable_node_head == nullptr) {
       std::cout << "Increasing memory size! " << std::endl;
       increase_mempool_size();
@@ -126,6 +138,7 @@ class NodeManager {
       std::cout << "bottom node no. " << bottom_nodes_recycled++
                 << std::endl;
     }
+    time_list_manager.remove_node(node_to_recycle);
     return node_to_recycle;
   }
 
@@ -144,6 +157,23 @@ class NodeManager {
     if (node->ref_count == 0) {
       add_to_list_of_free_memory(node);
     }
+  }
+
+  void add_to_list_of_free_memory(Node* node) {
+    static int i = 0;
+    i++;
+    static int bottoms = 1;
+    static int outputs = 1;
+    std::cout << "Added " << i
+              << " Nodes to free memory! Node ptr: " << node
+              << " type is: ";
+    if (node->is_bottom())
+      std::cout << "Bottom no." << bottoms++ << std::endl;
+    if (node->is_output())
+      std::cout << "output no." << outputs++ << std::endl;
+    if (node->is_union()) std::cout << "union" << std::endl;
+    node->next_free_node = recyclable_node_head;
+    recyclable_node_head = node;
   }
 };
 }  // namespace CORE::Internal::tECS
