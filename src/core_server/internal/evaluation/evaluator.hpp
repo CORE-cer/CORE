@@ -31,10 +31,10 @@ class Evaluator {
 
   tECS::tECS tecs{};
 
-  // Only in debug, check tuples are being sent in ascending order.
-  #ifdef CORE_DEBUG
-    uint64_t last_tuple_time = 0;
-  #endif
+// Only in debug, check tuples are being sent in ascending order.
+#ifdef CORE_DEBUG
+  uint64_t last_tuple_time = 0;
+#endif
 
  public:
   Evaluator(CEA::DetCEA&& cea,
@@ -45,11 +45,11 @@ class Evaluator {
         time_window(time_bound) {}
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
-    // If in debug, check tuples are being sent in ascending order.
-    #ifdef CORE_DEBUG
-      assert(current_time >= last_tuple_time);
-      last_tuple_time = current_time;
-    #endif
+// If in debug, check tuples are being sent in ascending order.
+#ifdef CORE_DEBUG
+    assert(current_time >= last_tuple_time);
+    last_tuple_time = current_time;
+#endif
     // current_time is j in the algorithm.
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
