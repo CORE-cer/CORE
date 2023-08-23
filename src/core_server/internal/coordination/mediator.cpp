@@ -42,12 +42,20 @@ Types::PortNumber Mediator::create_complex_event_stream(CEQL::Query query) {
   auto visitor = CEQL::FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::DetCEA cea(CEA::CEA(std::move(visitor.current_cea)));
-  uint64_t time_duration = query.within.time_window.mode
-                               == CEQL::Within::TimeWindowMode::NONE
-                             ? default_time_duration
-                             : query.within.time_window.duration;
+  uint64_t time_window = query.within.time_window.mode
+                             == CEQL::Within::TimeWindowMode::NONE
+                           ? default_time_duration
+                           : query.within.time_window.duration;
+
+  time_is_event_based.push_back(query.within.time_window.mode
+                                == CEQL::Within::TimeWindowMode::EVENTS);
+
+  query_events_expiration_time.push_back(std::make_unique<uint64_t>(0));
   auto evaluator = std::make_unique<Evaluation::Evaluator>(
-    std::move(cea), std::move(tuple_evaluator), time_duration);
+    std::move(cea),
+    std::move(tuple_evaluator),
+    time_window,
+    *query_events_expiration_time.back());
   query_evaluators.emplace_back(std::make_unique<QueryEvaluator>(
     std::move(evaluator),
     query.within.time_window.mode
@@ -65,28 +73,40 @@ Types::PortNumber Mediator::create_complex_event_stream(CEQL::Query query) {
   return current_next_port_number++;
 }
 
-//Types::PortNumber Mediator::create_dummy_complex_event_stream(
-//Evaluation::PredicateEvaluator&& evaluator) {
-//auto query_evaluator = std::make_unique<QueryEvaluator>(
-//std::move(evaluator),
-//current_next_port_number,
-//current_next_port_number,
-//queue);
-//query_evaluators.push_back(std::move(query_evaluator));
-//query_evaluators.back()->start();
-//std::string address = "inproc://"
-//+ std::to_string(current_next_port_number);
-//zmq::context_t& shared_context = query_evaluators.back()
-//->get_inner_thread_context();
-//inner_thread_event_senders.emplace_back(address, shared_context);
-//return current_next_port_number++;
-//}
-
 void Mediator::send_event_to_queries(Types::StreamTypeId stream_id,
                                      Types::Event event) {
-  // TODO: send events to specific queries
+  RingTupleQueue::Tuple tuple = event_to_tuple(event);
+  uint64_t ns = tuple.nanoseconds();
+  if (!previous_event_sent) {
+    previous_event_sent = ns;
+  }
+  maximum_historic_time_between_events = std::max(
+    maximum_historic_time_between_events, ns - previous_event_sent.value());
+  previous_event_sent = ns;
+  // TODO: send events to specific queries that require it.
   for (auto& sender : inner_thread_event_senders) {
-    sender.send(event_to_tuple(event).serialize_data());
+    sender.send(tuple.serialize_data());
+  }
+
+  // TODO: Don't do this always.
+  update_space_of_ring_tuple_queue();
+}
+
+void Mediator::update_space_of_ring_tuple_queue() {
+  if (query_events_expiration_time.size() != 0) {
+    assert(query_events_expiration_time.size()
+           == time_is_event_based.size());
+    uint64_t consensus = UINT64_MAX;
+    for (size_t i = 0; i < time_is_event_based.size(); i++) {
+      if (time_is_event_based[i]) {
+        consensus = std::min(*query_events_expiration_time[i]
+                               * maximum_historic_time_between_events,
+                             consensus);
+      } else {
+        consensus = std::min(*query_events_expiration_time[i], consensus);
+      }
+    }
+    queue.update_overwrite_timepoint(consensus);
   }
 }
 
@@ -180,4 +200,5 @@ void Mediator::write_date(std::shared_ptr<Types::Value>& attr) {
   std::time_t* time_ptr = queue.writer<std::time_t>();
   *time_ptr = val_ptr->val;
 }
+
 }  // namespace CORE::Internal

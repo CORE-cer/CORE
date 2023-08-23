@@ -105,7 +105,11 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   INFO(intermediate_cea.to_string());
   CEA::DetCEA cea(std::move(intermediate_cea));
 
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
+  uint64_t event_time_of_expiration;
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      20,
+                      event_time_of_expiration);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
@@ -236,7 +240,11 @@ TEST_CASE(
   INFO(intermediate_cea.to_string());
   CEA::DetCEA cea = CEA::DetCEA(std::move(intermediate_cea));
 
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 5);
+  uint64_t event_time_of_expiration;
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      5,
+                      event_time_of_expiration);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
@@ -361,7 +369,11 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   INFO(intermediate_cea.to_string());
   CEA::DetCEA cea(std::move(intermediate_cea));
 
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
+  uint64_t expiration_time = 0;
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      20,
+                      expiration_time);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
