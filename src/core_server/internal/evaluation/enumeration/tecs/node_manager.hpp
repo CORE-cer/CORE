@@ -145,7 +145,7 @@ class NodeManager {
   template <class... Args>
   Node* allocate_a_new_node(Args&&... args) {
     ++amount_of_nodes_used;
-    return minipool_head->alloc(std::forward<Args>(args)...);
+    return minipool_head->alloc((args)...);
   }
 
   void try_to_mark_node_as_unused(Node* node) {
