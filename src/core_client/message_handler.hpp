@@ -52,6 +52,11 @@ class Printer : public StaticMessageHandler<Printer> {
   }
 };
 
+class DummyHandler : public StaticMessageHandler<DummyHandler> {
+ public:
+  static void handle_complex_event(Types::Enumerator& enumerator) {}
+};
+
 class LimitedMessageStorer : public MessageHandler<LimitedMessageStorer> {
  public:
   std::vector<Types::Enumerator> storage;

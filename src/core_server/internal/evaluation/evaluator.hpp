@@ -27,9 +27,17 @@ class Evaluator {
   std::unordered_map<State*, UnionList> current_union_list_map;  // T'
   std::vector<State*> current_ordered_keys;
 
+  /**
+   * All events less than event_time_of_expiration can have it's children
+   * recycled and marked as a dead node. Note that this uint64_t is passed
+   * by reference to the tECS, and the tECS manages this behavior. This
+   * uint64_t is a reference of the uint64_t stored at the mediator.
+   */
+  uint64_t& event_time_of_expiration;
+
   // Other auxiliary objects
 
-  tECS::tECS tecs{};
+  tECS::tECS tecs;
 
 // Only in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
@@ -39,10 +47,13 @@ class Evaluator {
  public:
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
-            uint64_t time_bound)
+            uint64_t time_bound,
+            uint64_t& event_time_of_expiration)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
-        time_window(time_bound) {}
+        time_window(time_bound),
+        event_time_of_expiration(event_time_of_expiration),
+        tecs(event_time_of_expiration) {}
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
 // If in debug, check tuples are being sent in ascending order.
@@ -51,12 +62,15 @@ class Evaluator {
     last_tuple_time = current_time;
 #endif
     // current_time is j in the algorithm.
+    event_time_of_expiration = current_time < time_window
+                                 ? 0
+                                 : current_time - time_window;
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
-    UnionList u1 = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
+    UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
-    exec_trans(tuple, q0, std::move(u1), predicates_satisfied, current_time);
+    exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
 
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
@@ -80,6 +94,9 @@ class Evaluator {
                   mpz_class& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
+    static int nodes_stored = 0;
+    static int all_exec_trans = 0;
+    all_exec_trans++;
     assert(p != nullptr);
     States next_states = cea.next(p, t);
     auto marked_state = next_states.marked_state;
@@ -87,6 +104,7 @@ class Evaluator {
     assert(marked_state != nullptr && unmarked_state != nullptr);
     if (!marked_state->is_empty) {
       tecs.pin(ul);
+      nodes_stored++;
       Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs.insert(
@@ -98,6 +116,7 @@ class Evaluator {
       }
     }
     if (!unmarked_state->is_empty) {
+      nodes_stored++;
       if (current_union_list_map.contains(unmarked_state)) {
         tecs.pin(ul);
         Node* new_node = tecs.merge(ul);
@@ -132,7 +151,7 @@ class Evaluator {
     if (out == nullptr)
       return {};
     else
-      return {out, current_time, time_window};
+      return {out, current_time, time_window, tecs};
   }
 };
 }  // namespace CORE::Internal::Evaluation
