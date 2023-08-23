@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 
 #include "core_server/internal/ceql/cel_formula/filters/filter_headers.hpp"
