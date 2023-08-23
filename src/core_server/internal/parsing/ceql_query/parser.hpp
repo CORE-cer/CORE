@@ -9,6 +9,7 @@
 #include "visitors/from_visitor.hpp"
 #include "visitors/select_visitor.hpp"
 #include "visitors/where_visitor.hpp"
+#include "visitors/within_visitor.hpp"
 
 namespace CORE::Internal::Parsing {
 
@@ -18,7 +19,6 @@ class QueryVisitor : public CEQLQueryParserBaseVisitor {
 };
 
 class PartitionByVisitor;
-class WithinSegmentVisitor;
 class ConsumeByVisitor;
 
 class Parser {
@@ -53,12 +53,21 @@ class Parser {
     CEQL::Where where = where_visitor.get_parsed_where();
 
     // TODO: Add PartitionByVisitor
-    // TODO: Add WithinSegmentVisitor
+
+    WithinVisitor within_visitor;
+    within_visitor.visit(tree);
+    CEQL::Within within = within_visitor.get_parsed_within();
+
     // TODO: Add ConsumeByVisitor
 
     //return parsedQuery;
 
-    return {std::move(select), std::move(from), std::move(where), {}, {}, {}};
+    return {std::move(select),
+            std::move(from),
+            std::move(where),
+            {},
+            std::move(within),
+            {}};
   }
 };
 

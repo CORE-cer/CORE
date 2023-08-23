@@ -86,8 +86,8 @@ class QueryEvaluator {
     uint64_t time = time_is_stream_position ? current_stream_position++
                                             : tuple.nanoseconds();
     tECS::Enumerator enumerator;
-    enumerator = evaluator->next(tuple, time);
-    Types::Enumerator output = catalog.convert_enumerator(enumerator);
+    Types::Enumerator output = catalog.convert_enumerator(
+      evaluator->next(tuple, time));
 
     return CerealSerializer<Types::Enumerator>::serialize(output);
   }

@@ -25,6 +25,7 @@ class Modulo : public MathExpr<Type> {
   Type eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Modulo is only valid for arithmetic vals");
+      return {};
     } else if constexpr (std::is_same_v<Type, double>) {
       throw std::runtime_error("Cannot eval a modulo on double types");
     } else {
