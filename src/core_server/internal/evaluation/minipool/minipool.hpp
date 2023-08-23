@@ -8,7 +8,8 @@
 namespace CORE::Internal::MiniPool {
 
 /**
- * The NodeManager class stores its nodes through a linked list of MiniPools.
+ * Different Manager can use MiniPools to store their data. A MiniPool is a
+ * linked list of nodes, where each node is a chunk of memory.
  */
 template <typename item>
 class MiniPool {
