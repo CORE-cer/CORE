@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-#include "../../minipool/minipool.hpp"
+#include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
 #include "time_list_manager.hpp"
 
