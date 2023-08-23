@@ -58,6 +58,8 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(core PUBLIC CORE_DEBUG)
 endif()
 
+target_compile_options(core PUBLIC -Werror=old-style-cast)
+
 # executable target
 
 add_executable(simulation1 src/targets/simulation1.cpp)
