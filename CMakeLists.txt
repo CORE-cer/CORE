@@ -62,9 +62,13 @@ target_compile_options(core PUBLIC -Werror=old-style-cast)
 
 # executable target
 
+add_executable(simulation1 src/targets/simulation1.cpp)
+add_executable(simulation2 src/targets/simulation2.cpp)
 add_executable(client src/targets/client.cpp)
 add_executable(server src/targets/server.cpp)
 
+target_link_libraries(simulation1 core)
+target_link_libraries(simulation2 core)
 target_link_libraries(client core)
 target_link_libraries(server core)
 
