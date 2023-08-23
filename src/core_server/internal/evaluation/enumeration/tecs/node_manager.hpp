@@ -49,7 +49,7 @@ class NodeManager {
     if (out != nullptr) {
       out->reset(std::forward<Args>(args)...);
     } else {
-      out = allocate_a_new_node((args)...);
+      out = allocate_a_new_node(std::forward<Args>(args)...);
     }
     time_list_manager.add_node(out);
     return out;
@@ -145,7 +145,7 @@ class NodeManager {
   template <class... Args>
   Node* allocate_a_new_node(Args&&... args) {
     ++amount_of_nodes_used;
-    return minipool_head->alloc((args)...);
+    return minipool_head->alloc(std::forward<Args>(args)...);
   }
 
   void try_to_mark_node_as_unused(Node* node) {
