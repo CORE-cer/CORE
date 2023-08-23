@@ -38,11 +38,11 @@ class Node {
 
   Node* time_list_left;
   Node* time_list_right;
-  std::vector<uint64_t> start_times;
 
  public:
   uint64_t maximum_start;
   uint64_t timestamp;
+  std::vector<uint64_t> start_times;
 
   /**
    * The timestamp does not need to be the timestamp in the tuple. It
