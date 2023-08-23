@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "catalog.hpp"
@@ -16,7 +17,7 @@ namespace CORE::Internal {
 
 class Mediator {
  public:
-  Catalog catalog;
+  Catalog catalog = {};
   RingTupleQueue::Queue queue;
 
  private:
@@ -27,8 +28,12 @@ class Mediator {
   // unique_ptr is used because the QueryEvaluator has a ZMQMessageReceiver
   // and a ZMQMesssageBroadcaster. That is a problem because it doesn't
   // allow either move or copy constructions.
-  std::vector<std::unique_ptr<QueryEvaluator>> query_evaluators;
-  std::vector<ZMQMessageSender> inner_thread_event_senders;
+  std::vector<std::unique_ptr<QueryEvaluator>> query_evaluators = {};
+  std::vector<std::unique_ptr<uint64_t>> query_events_expiration_time = {};
+  std::vector<bool> time_is_event_based = {};
+  std::vector<ZMQMessageSender> inner_thread_event_senders = {};
+  uint64_t maximum_historic_time_between_events = 0;
+  std::optional<uint64_t> previous_event_sent;
   Types::PortNumber current_next_port_number;
 
  public:
@@ -40,6 +45,7 @@ class Mediator {
   //Evaluation::PredicateEvaluator&& evaluator);
   void
   send_event_to_queries(Types::StreamTypeId stream_id, Types::Event event);
+  void update_space_of_ring_tuple_queue();
 
  private:
   RingTupleQueue::Tuple event_to_tuple(Types::Event& event);
