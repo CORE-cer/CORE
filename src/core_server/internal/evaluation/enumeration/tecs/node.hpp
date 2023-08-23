@@ -7,9 +7,21 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
 namespace CORE::Internal::tECS {
-struct Node {
-  //RingTupleQueue::Tuple tuple;
+class Node {
   friend class NodeManager;
+  friend class TimeListManager;
+  friend class tECS;
+
+ private:
+  enum class NodeType {
+    BOTTOM,
+    UNION,
+    OUTPUT,
+    DEAD,
+    TIME_LIST_HEAD,
+    TIME_LIST_TAIL,
+  };
+  NodeType node_type;
 
   Node* left = nullptr;
 
@@ -18,25 +30,25 @@ struct Node {
     RingTupleQueue::Tuple tuple;
   };
 
-  uint64_t timestamp;
-
-  enum class NodeType { BOTTOM = 0, UNION = 1, LABEL = 2 };
-  NodeType node_type;
-
-  // Change to templating and have TimeType maximum_start;
-  uint64_t maximum_start;
-
   union {
     uint64_t ref_count{1};
     Node* next_free_node;
   };
 
+  Node* time_list_left;
+  Node* time_list_right;
+
   // Maximum number of results that can be returned by this node.
   uint64_t maximum_results;
 
  public:
-  /// The timestamp does not need to be the timestamp in the tuple. It
-  /// could be for example the stream position.
+  uint64_t maximum_start;
+  uint64_t timestamp;
+
+  /**
+   * The timestamp does not need to be the timestamp in the tuple. It
+   * could be for example the stream position.
+   */
   Node(RingTupleQueue::Tuple tuple, uint64_t timestamp)
       : node_type(NodeType::BOTTOM),
         tuple(tuple),
@@ -44,17 +56,20 @@ struct Node {
         maximum_start(timestamp),
         maximum_results(1) {}
 
+  // TODO: Check if I really need a tuple.
+
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    node_type = NodeType::BOTTOM;
+    left = nullptr;
     this->tuple = tuple;
     this->timestamp = timestamp;
-    maximum_start = timestamp;
-    uint64_t ref_count = 1;
+    node_type = NodeType::BOTTOM;
+    this->maximum_start = timestamp;
+    this->ref_count = 1;
     maximum_results = 1;
   }
 
   Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp)
-      : node_type(NodeType::LABEL),
+      : node_type(NodeType::OUTPUT),
         tuple(tuple),
         left(node),
         timestamp(timestamp) {
@@ -64,13 +79,13 @@ struct Node {
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    node_type = NodeType::LABEL;
+    this->left = node;
     this->tuple = tuple;
-    left = node;
     this->timestamp = timestamp;
+    node_type = NodeType::OUTPUT;
     assert(left != nullptr);
     maximum_start = left->maximum_start;
-    uint64_t ref_count = 1;
+    ref_count = 1;
     maximum_results = left->maximum_results;
   }
 
@@ -101,16 +116,30 @@ struct Node {
       this->left = right;
       this->right = left;
     }
+    timestamp = {};  // TODO: this is not neccessary right?
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
-    uint64_t ref_count = 1;
+    this->ref_count = 1;
+  }
+
+  Node(NodeType node_type) : node_type(node_type) {
+    assert(node_type == NodeType::TIME_LIST_HEAD
+           || node_type == NodeType::TIME_LIST_TAIL);
+    maximum_start = UINT64_MAX;
+  }
+
+  void reset(NodeType node_type) {
+    assert(node_type == NodeType::TIME_LIST_HEAD
+           || node_type == NodeType::TIME_LIST_TAIL);
+    this->node_type = node_type;
+    maximum_start = UINT64_MAX;
     maximum_results = this->left->maximum_results
                       + this->right->maximum_results;
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
 
-  bool is_output() const { return node_type == NodeType::LABEL; }
+  bool is_output() const { return node_type == NodeType::OUTPUT; }
 
   bool is_bottom() const { return node_type == NodeType::BOTTOM; }
 
@@ -128,6 +157,16 @@ struct Node {
     assert(is_output());
     assert(left != nullptr);
     return left;
+  }
+
+  Node* get_left() const {
+    assert(is_union());
+    return left;
+  }
+
+  Node* get_right() const {
+    assert(is_union());
+    return right;
   }
 
   uint64_t max() const { return maximum_start; }

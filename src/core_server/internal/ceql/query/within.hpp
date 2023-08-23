@@ -18,8 +18,9 @@ struct Within {
 
     TimeWindow() : mode(TimeWindowMode::NONE){};
 
-    TimeWindow(uint64_t time_interval)
-        : mode(TimeWindowMode::NANOSECONDS), duration(time_interval) {}
+    TimeWindow(uint64_t time_interval,
+               TimeWindowMode mode = TimeWindowMode::NANOSECONDS)
+        : mode(mode), duration(time_interval) {}
   };
 
   TimeWindow time_window;
