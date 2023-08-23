@@ -6,6 +6,7 @@
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/in_range_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_strongly_typed.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
@@ -122,6 +123,44 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
                                    like_predicate.right);
   }
 
+  void visit(InRangePredicate& in_range_predicate) override {
+    in_range_predicate.left->accept_visitor(final_data_type_visitor);
+    in_range_predicate.lower_bound->accept_visitor(final_data_type_visitor);
+    in_range_predicate.upper_bound->accept_visitor(final_data_type_visitor);
+    auto combined_type = final_data_type_visitor.get_final_data_type();
+    switch (combined_type) {
+      case FinalType::Integer:
+        predicate = create_in_range_predicate<int64_t>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+      case FinalType::Double:
+        predicate = create_in_range_predicate<double>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+      case FinalType::Date:
+        predicate = create_in_range_predicate<std::time_t>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+      case FinalType::String:
+        throw std::runtime_error("String data type not declared");
+      case FinalType::Undetermined:
+        throw std::runtime_error("No type was deduced from Value");
+      case FinalType::Invalid:
+        throw std::runtime_error("Invalid mix of types in value");
+      default:
+        throw std::logic_error(
+          "Non implemented Type in ceql_predicate_to_cea_predicate.hpp "
+          "compare_math_exprs");
+    }
+  }
+
+  // std::make_unique<CEA::InRangePredicate<ValueType>> create_in_range_predicate<ValueType>(std::unique_ptr<CEQL::Value>&){
+
+  // }
+
   void visit(NotPredicate& not_predicate) override {
     not_predicate.predicate->accept_visitor(*this);
     predicate = std::make_unique<CEA::NotPredicate>(event_info.id,
@@ -160,8 +199,6 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
                      std::unique_ptr<CEQL::Value>& right) {
     left->accept_visitor(final_data_type_visitor);
     auto left_type = final_data_type_visitor.get_final_data_type();
-    right->accept_visitor(final_data_type_visitor);
-    auto right_type = final_data_type_visitor.get_final_data_type();
 
     switch (left_type) {
       case FinalType::Integer:
@@ -523,6 +560,18 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
     return std::make_unique<CEA::CompareWithRegexStronglyTyped>(event_info.id,
                                                                 left_pos,
                                                                 right_str);
+  }
+
+  template <typename ValueType>
+  std::unique_ptr<CEA::InRangePredicate<ValueType>>
+  create_in_range_predicate(std::unique_ptr<CEQL::Value>& left,
+                            std::unique_ptr<CEQL::Value>& lower_bound,
+                            std::unique_ptr<CEQL::Value>& upper_bound) {
+    return std::make_unique<CEA::InRangePredicate<ValueType>>(
+      event_info.id,
+      std::move(get_expr<ValueType>(left)),
+      std::move(get_expr<ValueType>(lower_bound)),
+      std::move(get_expr<ValueType>(upper_bound)));
   }
 };
 
