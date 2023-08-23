@@ -43,4 +43,4 @@ class MiniPool {
     return &item_container.back();
   }
 };
-}  // namespace CORE::Internal::tECS
+}  // namespace CORE::Internal::MiniPool
