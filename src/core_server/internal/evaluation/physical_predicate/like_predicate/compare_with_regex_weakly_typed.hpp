@@ -20,7 +20,7 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
   CompareWithRegexWeaklyTyped(
     std::set<uint64_t> admissible_event_types,
     std::unique_ptr<NonStronglyTypedAttribute<std::string_view>>&& left,
-    std::string_view regex)
+    std::string&& regex)
       : PhysicalPredicate(admissible_event_types),
         left(std::move(left)),
         regex_string(regex),
