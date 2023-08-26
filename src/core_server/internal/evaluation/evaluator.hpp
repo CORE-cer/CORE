@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cwchar>
 #include <unordered_map>
 
@@ -83,6 +84,30 @@ class Evaluator {
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     return output(current_time);
+  }
+
+  uint64_t n_res(uint64_t current_time) {
+    uint64_t n_results = 0;
+    uint64_t last_time_to_consider = (current_time < time_window)
+                                       ? 0
+                                       : current_time - time_window;
+    Node* out = nullptr;
+    for (State* p : historic_ordered_keys) {
+      if (p->is_final) {
+        assert(historic_union_list_map.contains(p));
+        tecs.pin(historic_union_list_map[p]);
+        Node* n = tecs.merge(historic_union_list_map[p]);
+        n_results += std::count_if(n->start_times.begin(),
+                                   n->start_times.end(),
+                                   [last_time_to_consider](
+                                     uint64_t start_time) {
+                                     return start_time
+                                            >= last_time_to_consider;
+                                   });
+      }
+      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
+    }
+    return n_results;
   }
 
  private:
