@@ -17,6 +17,8 @@ struct Sequence final : public Value {
 
   Sequence() noexcept {}
 
+  ~Sequence() noexcept override {}
+
   Sequence(std::unique_ptr<Value>&& bound, Type type) noexcept
       : type(type) {
     switch (type) {
@@ -64,8 +66,6 @@ struct Sequence final : public Value {
 
   Sequence(std::vector<std::unique_ptr<Value>>&& values) noexcept
       : values(std::move(values)), type(SEQUENCE) {}
-
-  ~Sequence() noexcept {}
 
   std::string to_string() const noexcept override {
     switch (type) {
