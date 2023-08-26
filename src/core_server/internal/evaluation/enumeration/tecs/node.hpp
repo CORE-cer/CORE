@@ -38,6 +38,9 @@ class Node {
   Node* time_list_left;
   Node* time_list_right;
 
+  // Maximum number of results that can be returned by this node.
+  uint64_t maximum_results;
+
  public:
   uint64_t maximum_start;
   uint64_t timestamp;
@@ -50,7 +53,8 @@ class Node {
       : node_type(NodeType::BOTTOM),
         tuple(tuple),
         timestamp(timestamp),
-        maximum_start(timestamp) {}
+        maximum_start(timestamp),
+        maximum_results(1) {}
 
   // TODO: Check if I really need a tuple.
 
@@ -61,6 +65,7 @@ class Node {
     node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
     this->ref_count = 1;
+    maximum_results = 1;
   }
 
   Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp)
@@ -70,6 +75,7 @@ class Node {
         timestamp(timestamp) {
     assert(node != nullptr);
     maximum_start = left->maximum_start;
+    maximum_results = left->maximum_results;
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -79,7 +85,8 @@ class Node {
     node_type = NodeType::OUTPUT;
     assert(left != nullptr);
     maximum_start = left->maximum_start;
-    this->ref_count = 1;
+    ref_count = 1;
+    maximum_results = left->maximum_results;
   }
 
   Node(Node* left, Node* right) : node_type(NodeType::UNION) {
@@ -94,6 +101,8 @@ class Node {
     }
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
+    maximum_results = this->left->maximum_results
+                      + this->right->maximum_results;
   }
 
   void reset(Node* left, Node* right) {
@@ -124,6 +133,8 @@ class Node {
            || node_type == NodeType::TIME_LIST_TAIL);
     this->node_type = node_type;
     maximum_start = UINT64_MAX;
+    maximum_results = this->left->maximum_results
+                      + this->right->maximum_results;
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
@@ -159,6 +170,8 @@ class Node {
   }
 
   uint64_t max() const { return maximum_start; }
+
+  uint64_t max_results() const { return maximum_results; }
 
   std::string to_string(size_t depth = 0) const {
     std::string out = "";

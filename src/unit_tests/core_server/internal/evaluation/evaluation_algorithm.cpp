@@ -118,6 +118,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
   next_output_enumerator = evaluator.next(tuple, 1);
@@ -126,6 +127,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 2);
@@ -135,6 +137,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 3);
@@ -143,6 +146,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
   next_output_enumerator = evaluator.next(tuple, 4);
@@ -151,6 +155,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 2);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
   for (std::pair<std::pair<uint64_t, uint64_t>,
                  std::vector<RingTupleQueue::Tuple>> output : outputs) {
   }
@@ -174,6 +179,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
   next_output_enumerator = evaluator.next(tuple, 6);
@@ -183,6 +189,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   INFO(output_to_string(next_output_enumerator));
 
   REQUIRE(outputs.size() == 4);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
@@ -253,6 +260,7 @@ TEST_CASE(
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
   next_output_enumerator = evaluator.next(tuple, 1);
@@ -261,6 +269,7 @@ TEST_CASE(
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 2);
@@ -270,6 +279,7 @@ TEST_CASE(
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 3);
@@ -278,6 +288,7 @@ TEST_CASE(
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
   next_output_enumerator = evaluator.next(tuple, 4);
@@ -286,6 +297,7 @@ TEST_CASE(
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 2);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
   for (std::pair<std::pair<uint64_t, uint64_t>,
                  std::vector<RingTupleQueue::Tuple>> output : outputs) {
   }
@@ -308,6 +320,7 @@ TEST_CASE(
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
   next_output_enumerator = evaluator.next(tuple, 6);
@@ -317,6 +330,8 @@ TEST_CASE(
   INFO(output_to_string(next_output_enumerator));
 
   REQUIRE(outputs.size() == 2);
+  // Wrong since we are using withing 4 seconds yet we are at 6 seconds according to tuples
+  // REQUIRE(outputs.size() == evaluator.maximum_results());
 
   REQUIRE(outputs[0].first.first == 1);
   REQUIRE(outputs[0].first.second == 6);
@@ -382,6 +397,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
   next_output_enumerator = evaluator.next(tuple, 1);
@@ -390,6 +406,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 2);
@@ -399,6 +416,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 3);
@@ -407,6 +425,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
   next_output_enumerator = evaluator.next(tuple, 4);
@@ -415,6 +434,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   next_output_enumerator = evaluator.next(tuple, 5);
   outputs = enumerator_to_vector(next_output_enumerator);
@@ -422,6 +442,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 6);
@@ -431,6 +452,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
   next_output_enumerator = evaluator.next(tuple, 7);
@@ -439,6 +461,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 1);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
   for (std::pair<std::pair<uint64_t, uint64_t>,
                  std::vector<RingTupleQueue::Tuple>> output : outputs) {
   }
@@ -456,6 +479,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
   next_output_enumerator = evaluator.next(tuple, 9);
@@ -465,5 +489,6 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   INFO(output_to_string(next_output_enumerator));
 
   REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == evaluator.maximum_results());
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests

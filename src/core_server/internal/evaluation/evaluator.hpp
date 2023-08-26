@@ -85,6 +85,29 @@ class Evaluator {
     return output(current_time);
   }
 
+  uint64_t maximum_results() {
+    Node* out = nullptr;
+    for (State* p : historic_ordered_keys) {
+      if (p->is_final) {
+        assert(historic_union_list_map.contains(p));
+        tecs.pin(historic_union_list_map[p]);
+        Node* n = tecs.merge(historic_union_list_map[p]);
+        // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
+        if (out == nullptr) {
+          out = n;
+        } else {
+          out = tecs.new_union(out, n);
+        }
+      }
+      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
+    }
+    if (out == nullptr) {
+      return 0;
+    } else {
+      return out->max_results();
+    }
+  }
+
  private:
   State* get_initial_state() { return cea.initial_state; }
 
