@@ -52,6 +52,14 @@ target_link_libraries(core antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::
 
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
+# Set debug flag for core
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  target_compile_definitions(core PUBLIC CORE_DEBUG)
+endif()
+
+target_compile_options(core PUBLIC -Werror=old-style-cast)
+
 # executable target
 
 add_executable(simulation1 src/targets/simulation1.cpp)

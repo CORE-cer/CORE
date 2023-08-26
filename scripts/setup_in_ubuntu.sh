@@ -18,7 +18,7 @@ sudo apt install kitware-archive-keyring -y
 sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
 sudo apt update -y
 
-sudo apt install cmake -y
+sudo apt install cmake valgrind -y
 
 pip install conan
 
