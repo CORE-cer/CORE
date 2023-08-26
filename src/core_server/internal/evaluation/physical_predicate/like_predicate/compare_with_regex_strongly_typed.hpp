@@ -12,13 +12,13 @@ namespace CORE::Internal::CEA {
 class CompareWithRegexStronglyTyped : public PhysicalPredicate {
  private:
   size_t pos_to_compare;
-  std::string_view regex_string;
+  std::string regex_string;
   re2::RE2 regex_compiled;
 
  public:
   CompareWithRegexStronglyTyped(uint64_t event_type_id,
                                 size_t pos_to_compare,
-                                std::string_view regex)
+                                std::string&& regex)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
         regex_string(regex),
