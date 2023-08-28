@@ -76,7 +76,7 @@ class Catalog {
   uint64_t
   add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes);
 
-  Types::Enumerator convert_enumerator(tECS::Enumerator enumerator);
+  Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator);
 
  private:
   Types::ComplexEvent tuples_to_complex_event(

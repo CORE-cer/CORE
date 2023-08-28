@@ -13,7 +13,8 @@ namespace CORE::Internal::tECS {
 TimeListManager::TimeListManager(NodeManager& node_manager)
     : node_manager(node_manager),
       head(std::make_unique<Node>(Node::NodeType::TIME_LIST_HEAD)),
-      tail(std::make_unique<Node>(Node::NodeType::TIME_LIST_TAIL)) {
+      tail(std::make_unique<Node>(Node::NodeType::TIME_LIST_TAIL)),
+      time_reservator() {
   head->time_list_left = head.get();
   head->time_list_right = tail.get();
   tail->time_list_left = head.get();
@@ -34,7 +35,9 @@ void TimeListManager::add_node(Node* node) {
 
 bool TimeListManager::remove_a_dead_node_if_possible(
   uint64_t maximum_start_limit) {
-  if (tail->time_list_left->maximum_start < maximum_start_limit) {
+  uint64_t limit = std::min(maximum_start_limit,
+                            time_reservator.get_smallest_reserved_time());
+  if (tail->time_list_left->maximum_start < limit) {
     remove_node(tail->time_list_left);
     return true;
   }

@@ -228,7 +228,8 @@ uint64_t Catalog::add_type_to_schema(
   return tuple_schemas.add_schema(std::move(converted_types));
 }
 
-Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator enumerator) {
+Types::Enumerator
+Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
