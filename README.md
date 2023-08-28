@@ -45,6 +45,8 @@ Inside the docker terminal run:
 ./scripts/compile_and_test.sh
 ```
 
+For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/Installation.md).
+
 ## Target Files
 
 ### Client - Server in separate files:
