@@ -78,7 +78,7 @@ Contributions are welcome! See our [Developer's Guide](./docs/developers/CONTRIB
 
 ## License
 
-[License Name](./LICENSE)
+[License Name](./LICENSE.txt)
 
 ## Contact
 
