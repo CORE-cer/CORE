@@ -82,4 +82,4 @@ Contributions are welcome! See our [Developer's Guide](./docs/developers/CONTRIB
 
 ## Contact
 
-For additional details or feedback, feel free to [Contact Us](#).
+For additional details or feedback, feel free to [create an issue](https://github.com/CER-CORE/CORE/issues).
