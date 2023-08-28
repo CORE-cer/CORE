@@ -57,7 +57,7 @@ For more detailed installation and setup instructions, including manual installa
 - `src/targets/client.cpp`
 
 ### Simulation1 and Simulation2
-- **Files**: `src/targets/simulation1.cpp` `src/targets/simulation1.cpp`
+- **Files**: `src/targets/simulation1.cpp` `src/targets/simulation2.cpp`
 - Combines the server and client inside a single simulation.
 
 ## Detailed Documentation
