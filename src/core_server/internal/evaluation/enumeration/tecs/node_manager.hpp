@@ -90,6 +90,10 @@ class NodeManager {
 
   size_t get_amount_of_nodes_used() const { return amount_of_nodes_used; }
 
+  TimeReservator& get_time_reservator() {
+    return time_list_manager.get_time_reservator();
+  }
+
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
     if (!minipool_head->is_full()) {

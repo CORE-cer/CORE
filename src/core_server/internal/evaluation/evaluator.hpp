@@ -7,7 +7,6 @@
 #include "enumeration/tecs/enumerator.hpp"
 #include "enumeration/tecs/tecs.hpp"
 #include "predicate_evaluator.hpp"
-#include "stream_container.hpp"
 
 namespace CORE::Internal::Evaluation {
 class Evaluator {
@@ -18,7 +17,6 @@ class Evaluator {
   using Node = tECS::Node;
   //                                   // Name in paper
   CEA::DetCEA cea;                     // A
-  StreamContainer stream = {};         // S
   PredicateEvaluator tuple_evaluator;  // t generator
   uint64_t time_window;                // ε
 
@@ -151,7 +149,7 @@ class Evaluator {
     if (out == nullptr)
       return {};
     else
-      return {out, current_time, time_window, tecs};
+      return {out, current_time, time_window, tecs, tecs.time_reservator};
   }
 };
 }  // namespace CORE::Internal::Evaluation
