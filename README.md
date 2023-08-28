@@ -1,4 +1,3 @@
-```markdown
 # CORE: a Complex Event Recognition Engine
 
 ## Overview
@@ -82,4 +81,3 @@ Contributions are welcome! See our [Developer's Guide](./docs/developers/CONTRIB
 ## Contact
 
 For additional details or feedback, feel free to [Contact Us](#).
-```
