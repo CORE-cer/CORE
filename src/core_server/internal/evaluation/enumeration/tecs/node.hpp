@@ -132,6 +132,8 @@ class Node {
 
   bool is_bottom() const { return node_type == NodeType::BOTTOM; }
 
+  bool is_dead() const { return node_type == NodeType::DEAD; }
+
   uint64_t pos() const {
     assert(!is_union());
     return timestamp;

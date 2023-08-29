@@ -25,7 +25,8 @@ RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
 
 std::vector<std::pair<std::pair<uint64_t, uint64_t>,
                       std::vector<RingTupleQueue::Tuple>>>
-enumerator_to_vector(tECS::Enumerator enumerator) {
+enumerator_to_vector(tECS::Enumerator& enumerator) {
+  enumerator.reset();
   std::vector<std::pair<std::pair<uint64_t, uint64_t>,
                         std::vector<RingTupleQueue::Tuple>>>
     out;
@@ -35,7 +36,8 @@ enumerator_to_vector(tECS::Enumerator enumerator) {
   return out;
 }
 
-std::string output_to_string(tECS::Enumerator enumerator) {
+std::string output_to_string(tECS::Enumerator& enumerator) {
+  enumerator.reset();
   std::string out = "";
   for (std::pair<std::pair<uint64_t, uint64_t>,
                  std::vector<RingTupleQueue::Tuple>> info : enumerator) {
@@ -198,6 +200,7 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
   REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[3].second[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1920));
+  next_output_enumerator = {};  // To prevent segfault
 }
 
 TEST_CASE(
@@ -329,6 +332,7 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));
+  next_output_enumerator = {};  // To prevent segfault
 }
 
 TEST_CASE("Evaluation of a query with contiguous events") {
@@ -465,5 +469,6 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   INFO(output_to_string(next_output_enumerator));
 
   REQUIRE(outputs.size() == 0);
+  next_output_enumerator = {};  // To prevent segfault
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests

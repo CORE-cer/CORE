@@ -44,7 +44,8 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    assert(port_number == final_port_number++);
+    assert(port_number == final_port_number);
+    final_port_number++;
   }
 
   std::cout << "Created queries" << std::endl;
@@ -55,7 +56,7 @@ void subscribe_to_queries(Client& client,
                           Types::PortNumber initial_port,
                           Types::PortNumber final_port) {
   std::vector<std::unique_ptr<DummyHandler>> handlers;
-  for (size_t port = initial_port; port <= final_port; port++) {
+  for (size_t port = initial_port; port < final_port; port++) {
     std::cout << "Subscribing to port: " << port << std::endl;
     handlers.emplace_back(
       std::make_unique<DummyHandler>());  // Store one enumerator.
@@ -88,6 +89,8 @@ int main(int argc, char** argv) {
   do_declarations(client);
   Types::PortNumber initial_port_number = 5002;
   Types::PortNumber final_port_number = create_queries(client);
+  std::cout << "Initial por: " << initial_port_number
+            << " Final port: " << final_port_number << std::endl;
   subscribe_to_queries(client, initial_port_number, final_port_number);
 
   for (int i = 0; i < amount_of_messages; i++) {
