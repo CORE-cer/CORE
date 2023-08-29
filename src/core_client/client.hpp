@@ -170,7 +170,6 @@ class Client {
 
   void stop_all_subscriptions() {
     for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
-      std::cout << "Sending stop condition to id " << id << std::endl;
       stop_subscription(id);
     }
   }

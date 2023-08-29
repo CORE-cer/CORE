@@ -27,7 +27,7 @@ struct ComplexEvent {
   ComplexEvent(uint64_t start,
                uint64_t end,
                std::initializer_list<Event>&& events) noexcept
-      : events(std::move(events)) {}
+      : start(start), end(end), events(std::move(events)) {}
 
   std::string to_string() const {
     std::string out = "[" + std::to_string(start) + ","
