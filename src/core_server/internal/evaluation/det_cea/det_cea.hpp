@@ -28,8 +28,7 @@ class DetCEA {
   std::map<mpz_class, uint64_t> states_bitset_to_index;
 
  public:
-  DetCEA(CEA&& cea)
-      : cea(cea), state_manager() {
+  DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
     State* initial_state = state_manager.alloc(initial_bitset_1, cea);
     states.push_back(initial_state);

@@ -20,9 +20,9 @@ class StateManager {
   typedef MiniPool::MiniPool<State> StatePool;
 
  private:
-  size_t amount_of_used_states {0};
+  size_t amount_of_used_states{0};
   size_t amount_of_allowed_states;
-  size_t amount_of_created_states {0};
+  size_t amount_of_created_states{0};
   StatePool* minipool_head = nullptr;
   State* recyclable_state_head = nullptr;
 
@@ -31,11 +31,11 @@ class StateManager {
       : minipool_head(new StatePool(MEMORY_POOL_STARTING_SIZE)),
         amount_of_allowed_states(SIZE_MAX) {}
 
-  StateManager(StateManager&& other) noexcept:
-      amount_of_used_states(other.amount_of_used_states),
-      amount_of_allowed_states(other.amount_of_allowed_states),
-      amount_of_created_states(other.amount_of_created_states),
-      minipool_head(other.minipool_head) {
+  StateManager(StateManager&& other) noexcept
+      : amount_of_used_states(other.amount_of_used_states),
+        amount_of_allowed_states(other.amount_of_allowed_states),
+        amount_of_created_states(other.amount_of_created_states),
+        minipool_head(other.minipool_head) {
     other.minipool_head = nullptr;
   }
 
