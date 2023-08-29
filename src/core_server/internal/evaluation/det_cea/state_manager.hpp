@@ -7,7 +7,7 @@
 
 namespace CORE::Internal::CEA::Det {
 
-const size_t MEMORY_POOL_STARTING_SIZE = 2048;
+const size_t MEMORY_POOL_STARTING_SIZE = 1;
 const size_t MEMORY_POOL_MAX_SIZE = SIZE_MAX;
 const float EVICT_PERCENTAGE = 0.2;
 
@@ -41,7 +41,7 @@ class StateManager {
 
   ~StateManager() {
     for (StatePool* mp = minipool_head; mp != nullptr;) {
-      StatePool* next = mp->next();
+      StatePool* next = mp->prev();
       delete mp;
       mp = next;
     }
