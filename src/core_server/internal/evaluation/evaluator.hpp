@@ -27,6 +27,8 @@ class Evaluator {
   std::unordered_map<State*, UnionList> current_union_list_map;  // T'
   std::vector<State*> current_ordered_keys;
 
+  uint64_t current_iteration = 0;  // Current iteration of the algorithm as seen by next().
+
   /**
    * All events less than event_time_of_expiration can have it's children
    * recycled and marked as a dead node. Note that this uint64_t is passed
@@ -82,6 +84,7 @@ class Evaluator {
     }
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
+    current_iteration++;
     return output(current_time);
   }
 
@@ -98,7 +101,7 @@ class Evaluator {
     static int all_exec_trans = 0;
     all_exec_trans++;
     assert(p != nullptr);
-    States next_states = cea.next(p, t);
+    States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;
     auto unmarked_state = next_states.unmarked_state;
     assert(marked_state != nullptr && unmarked_state != nullptr);

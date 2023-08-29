@@ -26,7 +26,9 @@ class State {
     }
   };
 
-  State* next_free_state = nullptr;
+  State* _prev_evictable_state = nullptr;
+  State* _next_evictable_state = nullptr;
+  uint64_t _current_iteration;
 
  public:
   struct States {
@@ -47,17 +49,25 @@ class State {
   std::map<mpz_class, StatesData> transitions;
 
  public:
-  State(mpz_class states, CEA& cea)
+  State(mpz_class states, CEA& cea, const uint64_t& current_iteration)
       : id(IdCounter++),
         states(states),
         cea(cea),
+        _current_iteration(current_iteration),
         is_final((states & cea.final_states) != 0),
-        is_empty(states == 0) {}
+        is_empty(states == 0) {
+    // TODO: remove
+    std::cout << "State::State" << std::endl;
+    std::cout << "  id: " << id << std::endl;
+    std::cout << "  states: " << states << std::endl;
+    std::cout << "  current_iteration: " << current_iteration << std::endl;
+  }
 
-  void reset(mpz_class states, CEA& cea) {
+  void reset(mpz_class states, CEA& cea, const uint64_t& current_iteration) {
     this->id = IdCounter++;
     this->states = states;
     this->cea = cea;
+    this->_current_iteration = current_iteration;
     is_final = (states & cea.final_states) != 0;
     is_empty = states == 0;
     transitions.clear();

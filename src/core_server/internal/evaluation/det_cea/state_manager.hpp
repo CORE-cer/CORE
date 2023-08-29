@@ -24,7 +24,6 @@ class StateManager {
   size_t amount_of_allowed_states;
   size_t amount_of_created_states{0};
   StatePool* minipool_head = nullptr;
-  State* recyclable_state_head = nullptr;
 
  public:
   StateManager()
@@ -48,9 +47,9 @@ class StateManager {
   }
 
   template <class... Args>
-  State* alloc(Args&&... args) {
+  State* alloc(const uint64_t current_iteration, Args&&... args) {
     State* new_state;
-    new_state = allocate_state_if_possible((args)...);
+    new_state = allocate_new_state_if_possible((args)..., current_iteration);
     if (new_state == nullptr) {
       // TODO: evict state
       // clean_states();
@@ -64,7 +63,7 @@ class StateManager {
 
  private:
   template <class... Args>
-  State* allocate_state_if_possible(Args&&... args) {
+  State* allocate_new_state_if_possible(Args&&... args) {
     if (amount_of_created_states < amount_of_allowed_states) {
       if (minipool_head->is_full()) {
         increase_mempool_size();
@@ -72,12 +71,6 @@ class StateManager {
       amount_of_created_states++;
       amount_of_used_states++;
       return minipool_head->alloc((args)...);
-    } else if (recyclable_state_head != nullptr) {
-      amount_of_used_states++;
-      State* out = recyclable_state_head;
-      recyclable_state_head = recyclable_state_head->next_free_state;
-      out->reset(std::forward<Args>(args)...);
-      return out;
     } else {
       return nullptr;
     }
