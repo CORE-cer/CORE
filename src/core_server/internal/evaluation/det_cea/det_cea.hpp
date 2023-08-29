@@ -5,15 +5,18 @@
 #include <cwchar>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "state.hpp"
 #include "state_manager.hpp"
 
 namespace CORE::Internal::CEA {
 class DetCEA {
+  using UnionList = std::vector<tECS::Node*>;
   using State = Det::State;
   using States = Det::State::States;
   using StateManager = Det::StateManager;
@@ -28,43 +31,56 @@ class DetCEA {
   std::map<mpz_class, uint64_t> states_bitset_to_index;
 
  public:
-  DetCEA(CEA&& cea)
-      : cea(cea), state_manager() {
+  DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    State* initial_state = state_manager.alloc(initial_bitset_1, cea);
+    State* initial_state = state_manager.alloc(nullptr, initial_bitset_1, cea);
     states.push_back(initial_state);
     states_bitset_to_index.insert(std::make_pair(initial_bitset_1, 0));
     this->initial_state = states[0];
   }
 
-  States next(State* state, mpz_class evaluation) {
+  States
+  next(State* state,
+       mpz_class evaluation,
+       const std::unordered_map<State*, UnionList>* const historic_union_list_map) {
     assert(state != nullptr);
     auto next_states = state->next(evaluation);  // memoized
     if (next_states.marked_state == nullptr
         || next_states.unmarked_state == nullptr) {
-      next_states = compute_next_states(state, evaluation);
+      next_states = compute_next_states(state,
+                                        evaluation,
+                                        historic_union_list_map);
       state->add_transition(evaluation, next_states);
     }
     return next_states;
   }
 
  private:
-  States compute_next_states(State* state, mpz_class& evaluation) {
+  States compute_next_states(
+    State* state,
+    mpz_class& evaluation,
+    const std::unordered_map<State*, UnionList>* const historic_union_list_map) {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
     mpz_class marked_bitset = computed_bitsets.first;
     mpz_class unmarked_bitset = computed_bitsets.second;
-    State* marked_state = create_or_return_existing_state(marked_bitset);
-    State* unmarked_state = create_or_return_existing_state(unmarked_bitset);
+    State* marked_state = create_or_return_existing_state(
+      marked_bitset, historic_union_list_map);
+    State* unmarked_state = create_or_return_existing_state(
+      unmarked_bitset, historic_union_list_map);
     return {marked_state, unmarked_state};
   }
 
-  State* create_or_return_existing_state(mpz_class bitset) {
+  State* create_or_return_existing_state(
+    mpz_class bitset,
+    const std::unordered_map<State*, UnionList>* const historic_union_list_map) {
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());
       return states[it->second];
     } else {
-      State* state = state_manager.alloc(bitset, cea);
+      State* state = state_manager.alloc(historic_union_list_map,
+                                         bitset,
+                                         cea);
       states.push_back(state);
       states_bitset_to_index.insert(
         std::make_pair(bitset, states.size() - 1));
