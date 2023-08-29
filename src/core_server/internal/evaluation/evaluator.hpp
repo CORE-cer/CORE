@@ -88,13 +88,6 @@ class Evaluator {
  private:
   State* get_initial_state() { return cea.initial_state; }
 
-  // Return the maximum number of nodes that will be generated in the next iteration.
-  size_t maximum_number_of_nodes() {
-    size_t max_nodes = 2;
-    max_nodes += historic_ordered_keys.size() * 2;
-    return max_nodes;
-  }
-
   void exec_trans(RingTupleQueue::Tuple& tuple,
                   State* p,
                   UnionList&& ul,
@@ -105,7 +98,7 @@ class Evaluator {
     static int all_exec_trans = 0;
     all_exec_trans++;
     assert(p != nullptr);
-    States next_states = cea.next(p, t, &historic_union_list_map);
+    States next_states = cea.next(p, t);
     auto marked_state = next_states.marked_state;
     auto unmarked_state = next_states.unmarked_state;
     assert(marked_state != nullptr && unmarked_state != nullptr);

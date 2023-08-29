@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstdlib>
-#include <unordered_map>
 
-#include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "state.hpp"
 
@@ -11,7 +9,7 @@ namespace CORE::Internal::CEA::Det {
 
 const size_t MEMORY_POOL_STARTING_SIZE = 1;
 const size_t MEMORY_POOL_MAX_SIZE = SIZE_MAX;
-const long double EVICT_PERCENTAGE = 0.2;
+const float EVICT_PERCENTAGE = 0.2;
 
 /**
  * The Node Manager class stores the pointers to all allocated
@@ -20,12 +18,11 @@ const long double EVICT_PERCENTAGE = 0.2;
  */
 class StateManager {
   typedef MiniPool::MiniPool<State> StatePool;
-  using UnionList = std::vector<tECS::Node*>;
 
  private:
-  size_t amount_of_used_states{0};
+  size_t amount_of_used_states {0};
   size_t amount_of_allowed_states;
-  size_t amount_of_created_states{0};
+  size_t amount_of_created_states {0};
   StatePool* minipool_head = nullptr;
   State* recyclable_state_head = nullptr;
 
@@ -34,11 +31,11 @@ class StateManager {
       : minipool_head(new StatePool(MEMORY_POOL_STARTING_SIZE)),
         amount_of_allowed_states(SIZE_MAX) {}
 
-  StateManager(StateManager&& other) noexcept
-      : amount_of_used_states(other.amount_of_used_states),
-        amount_of_allowed_states(other.amount_of_allowed_states),
-        amount_of_created_states(other.amount_of_created_states),
-        minipool_head(other.minipool_head) {
+  StateManager(StateManager&& other) noexcept:
+      amount_of_used_states(other.amount_of_used_states),
+      amount_of_allowed_states(other.amount_of_allowed_states),
+      amount_of_created_states(other.amount_of_created_states),
+      minipool_head(other.minipool_head) {
     other.minipool_head = nullptr;
   }
 
@@ -51,14 +48,12 @@ class StateManager {
   }
 
   template <class... Args>
-  State* alloc(
-    const std::unordered_map<State*, UnionList>* const historic_union_list_map,
-    Args&&... args) {
+  State* alloc(Args&&... args) {
     State* new_state;
     new_state = allocate_state_if_possible((args)...);
     if (new_state == nullptr) {
       // TODO: evict state
-      // evict_states(historic_union_list_map);
+      // clean_states();
       // new_state = allocate_state_if_possible((args)...);
       // assert(new_state != nullptr);
       // return new_state;
@@ -85,28 +80,6 @@ class StateManager {
       return out;
     } else {
       return nullptr;
-    }
-  }
-
-  void evict_states(const std::unordered_map<State*, UnionList>* const historic_union_list_map) {
-    size_t amount_of_states_to_evict = static_cast<size_t>(amount_of_used_states * EVICT_PERCENTAGE);
-    for (auto& [state, union_list] : *historic_union_list_map) {
-      if (amount_of_states_to_evict == 0) {
-        break;
-      }
-      if (state->is_final) {
-        continue;
-      }
-      if (state->is_empty) {
-        continue;
-      }
-      if (union_list.size() == 1) {
-        continue;
-      }
-      amount_of_states_to_evict--;
-      amount_of_used_states--;
-      state->next_free_state = recyclable_state_head;
-      recyclable_state_head = state;
     }
   }
 
