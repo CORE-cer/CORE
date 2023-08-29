@@ -26,7 +26,7 @@ class State {
     }
   };
 
-  State* next_free_state = nullptr;
+  State *next_free_state = nullptr;
 
  public:
   struct States {
@@ -41,6 +41,7 @@ class State {
   CEA& cea;
   bool is_final;
   bool is_empty;
+
 
  private:
   inline static uint64_t IdCounter = 0;
@@ -62,6 +63,7 @@ class State {
     is_empty = states == 0;
     transitions.clear();
   }
+
 
   States next(mpz_class evaluation) {
     auto it = transitions.find(evaluation);

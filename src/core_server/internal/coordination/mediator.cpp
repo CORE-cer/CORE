@@ -12,8 +12,7 @@
 
 namespace CORE::Internal {
 
-Mediator::Mediator(Types::PortNumber port, //NOLINT
-                   uint64_t default_time_duration)
+Mediator::Mediator(Types::PortNumber port, uint64_t default_time_duration) //NOLINT
     : router(*this, port),
       streams_listener(this, port + 1),
       current_next_port_number(port + 2),
