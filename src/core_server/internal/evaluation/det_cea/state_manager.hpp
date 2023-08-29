@@ -50,6 +50,12 @@ class StateManager {
     }
   }
 
+  /**
+   * Allocate new state. Create new state if we have enough space, else evict
+   *
+   * @param historic_union_list_map Map of historic union lists, used to check 
+   * states that can be evicted
+   */
   template <class... Args>
   State* alloc(
     const std::unordered_map<State*, UnionList>* const historic_union_list_map,
