@@ -53,13 +53,13 @@ class StateManager {
   /**
    * Allocate new state. Create new state if we have enough space, else evict
    *
-   * @param historic_union_list_map Map of historic union lists, used to check 
+   * @param historic_union_list_map Map of historic union lists, used to check
    * states that can be evicted
    */
   template <class... Args>
-  State* alloc(
-    const std::unordered_map<State*, UnionList>* const historic_union_list_map,
-    Args&&... args) {
+  State* alloc(const std::unordered_map<State*, UnionList>* const
+                 historic_union_list_map,
+               Args&&... args) {
     State* new_state;
     new_state = allocate_state_if_possible((args)...);
     if (new_state == nullptr) {
@@ -94,8 +94,10 @@ class StateManager {
     }
   }
 
-  void evict_states(const std::unordered_map<State*, UnionList>* const historic_union_list_map) {
-    size_t amount_of_states_to_evict = static_cast<size_t>(amount_of_used_states * EVICT_PERCENTAGE);
+  void evict_states(const std::unordered_map<State*, UnionList>* const
+                      historic_union_list_map) {
+    size_t amount_of_states_to_evict = static_cast<size_t>(
+      amount_of_used_states * EVICT_PERCENTAGE);
     for (auto& [state, union_list] : *historic_union_list_map) {
       if (amount_of_states_to_evict == 0) {
         break;
