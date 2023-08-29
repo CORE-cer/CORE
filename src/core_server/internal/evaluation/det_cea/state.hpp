@@ -10,6 +10,8 @@
 namespace CORE::Internal::CEA::Det {
 
 class State {
+  friend class StateManager;
+
  private:
   struct StatesData {
     uint64_t marked_state_id;
@@ -23,6 +25,8 @@ class State {
              && (unmarked_state_id == unmarked_state->id);
     }
   };
+
+  State *next_free_state = nullptr;
 
  public:
   struct States {
@@ -38,6 +42,7 @@ class State {
   bool is_final;
   bool is_empty;
 
+
  private:
   inline static uint64_t IdCounter = 0;
   std::map<mpz_class, StatesData> transitions;
@@ -49,6 +54,16 @@ class State {
         cea(cea),
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
+
+  void reset(mpz_class states, CEA& cea) {
+    this->id = IdCounter++;
+    this->states = states;
+    this->cea = cea;
+    is_final = (states & cea.final_states) != 0;
+    is_empty = states == 0;
+    transitions.clear();
+  }
+
 
   States next(mpz_class evaluation) {
     auto it = transitions.find(evaluation);

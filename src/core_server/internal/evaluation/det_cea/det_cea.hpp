@@ -10,26 +10,31 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "state.hpp"
+#include "state_manager.hpp"
 
 namespace CORE::Internal::CEA {
 class DetCEA {
   using State = Det::State;
   using States = Det::State::States;
+  using StateManager = Det::StateManager;
 
  public:
   State* initial_state;
 
  private:
   CEA cea;
-  std::vector<std::unique_ptr<State>> states;
+  StateManager state_manager;
+  std::vector<State*> states;
   std::map<mpz_class, uint64_t> states_bitset_to_index;
 
  public:
-  DetCEA(CEA&& cea) : cea(cea) {
+  DetCEA(CEA&& cea)
+      : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    states.push_back(std::make_unique<State>(initial_bitset_1, cea));
+    State* initial_state = state_manager.alloc(initial_bitset_1, cea);
+    states.push_back(initial_state);
     states_bitset_to_index.insert(std::make_pair(initial_bitset_1, 0));
-    initial_state = states[0].get();
+    this->initial_state = states[0];
   }
 
   States next(State* state, mpz_class evaluation) {
@@ -57,12 +62,13 @@ class DetCEA {
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());
-      return states[it->second].get();
+      return states[it->second];
     } else {
-      states.push_back(std::make_unique<State>(bitset, cea));
+      State* state = state_manager.alloc(bitset, cea);
+      states.push_back(state);
       states_bitset_to_index.insert(
         std::make_pair(bitset, states.size() - 1));
-      return states.back().get();
+      return states.back();
     }
   }
 
