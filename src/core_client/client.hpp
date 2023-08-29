@@ -155,8 +155,10 @@ class Client {
     auto& stop_condition = stop_conditions[subscription_id];
     subscriber_threads.emplace_back([handler, subscriber, stop_condition]() {
       while (!*stop_condition && !handler->needs_to_stop()) {
-        std::string message = subscriber->receive();
-        handler->eval(EnumeratorSerializer::deserialize(message));
+        std::optional<std::string> message = subscriber->receive(100);
+        if (message.has_value()) {
+          handler->eval(EnumeratorSerializer::deserialize(message.value()));
+        }
       }
     });
     return subscription_id;
@@ -168,6 +170,7 @@ class Client {
 
   void stop_all_subscriptions() {
     for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
+      std::cout << "Sending stop condition to id " << id << std::endl;
       stop_subscription(id);
     }
   }

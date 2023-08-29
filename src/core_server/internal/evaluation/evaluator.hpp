@@ -146,10 +146,11 @@ class Evaluator {
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
     }
-    if (out == nullptr)
+    if (out == nullptr) {
       return {};
-    else
+    } else {
       return {out, current_time, time_window, tecs, tecs.time_reservator};
+    }
   }
 };
 }  // namespace CORE::Internal::Evaluation

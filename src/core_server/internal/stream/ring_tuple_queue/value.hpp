@@ -8,6 +8,10 @@
 namespace RingTupleQueue {
 template <typename T>
 class Value {
+  static_assert(!std::is_same_v<std::string, T>,
+                "Value does not support std::string, use std::string_view "
+                "instead!");
+
  private:
   uint64_t* const val_ptr;
 

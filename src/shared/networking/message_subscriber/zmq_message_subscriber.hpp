@@ -28,5 +28,23 @@ class ZMQMessageSubscriber {
       throw std::runtime_error("No message available");
     }
   }
+
+  std::optional<std::string> receive(int timeout_ms) {
+    zmq::message_t zmq_message;
+
+    // Set the receive timeout only for this specific receive call
+    socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
+    auto result = socket.recv(zmq_message);
+    // Reset the timeout to infinite
+    socket.set(zmq::sockopt::rcvtimeo, -1);
+
+    if (result) {
+      return std::optional<std::string>(
+        std::string(static_cast<char*>(zmq_message.data()),
+                    zmq_message.size()));
+    } else {
+      return std::nullopt;
+    }
+  }
 };
 }  // namespace CORE::Internal
