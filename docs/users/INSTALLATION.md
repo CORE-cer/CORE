@@ -83,7 +83,7 @@
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
     ```
 
-5. Setup Conan:
+5. Setup Conan With Your Computers Configs:
 
    ```
    conan profile detect
