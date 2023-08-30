@@ -512,7 +512,8 @@ TEST_CASE(
   INFO(intermediate_cea.to_string());
   CEA::DetCEA cea(std::move(intermediate_cea));
 
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 20);
+  uint64_t event_time_of_expiration;
+  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 100, event_time_of_expiration);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
