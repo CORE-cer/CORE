@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
@@ -26,6 +27,7 @@ class Multiplication : public MathExpr<Type> {
   Type eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Multiplication is only valid for arithmetic vals");
+      throw std::logic_error("Minus is only valid for arithmetic vals");
     } else
       return left->eval(tuple) * right->eval(tuple);
   }

@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-#include "minipool.hpp"
+#include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
 #include "time_list_manager.hpp"
 
@@ -16,26 +16,28 @@ const size_t MEMORY_POOL_STARTING_SIZE = 2048;
  * of references to it has become 0, that memory is available to be recycled.
  */
 class NodeManager {
+  typedef MiniPool::MiniPool<Node> NodePool;
+
  public:
   size_t amount_of_nodes_used{0};
   size_t amount_of_recycled_nodes{0};
   uint64_t& expiration_time;
 
  private:
-  MiniPool* minipool_head = nullptr;
+  NodePool* minipool_head = nullptr;
   Node* recyclable_node_head = nullptr;
   TimeListManager time_list_manager;
 
  public:
   NodeManager(size_t starting_size, uint64_t& event_time_of_expiration)
-      : minipool_head(new MiniPool(starting_size)),
+      : minipool_head(new NodePool(starting_size)),
         recyclable_node_head(nullptr),
         time_list_manager(*this),
         expiration_time(event_time_of_expiration) {}
 
   ~NodeManager() {
-    for (MiniPool* mp = minipool_head; mp != nullptr;) {
-      MiniPool* next = mp->next();
+    for (NodePool* mp = minipool_head; mp != nullptr;) {
+      NodePool* next = mp->next();
       delete mp;
       mp = next;
     }
@@ -55,7 +57,7 @@ class NodeManager {
 
   size_t amount_of_nodes_allocated() const {
     size_t amount = 0;
-    for (MiniPool* mpool = minipool_head; mpool != nullptr;
+    for (NodePool* mpool = minipool_head; mpool != nullptr;
          mpool = mpool->prev())
       amount += mpool->capacity();
     return amount;
@@ -88,6 +90,10 @@ class NodeManager {
 
   size_t get_amount_of_nodes_used() const { return amount_of_nodes_used; }
 
+  TimeReservator& get_time_reservator() {
+    return time_list_manager.get_time_reservator();
+  }
+
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
     if (!minipool_head->is_full()) {
@@ -109,7 +115,7 @@ class NodeManager {
   }
 
   void increase_mempool_size() {
-    MiniPool* new_minipool = new MiniPool(minipool_head->size() * 2);
+    NodePool* new_minipool = new NodePool(minipool_head->size() * 2);
     minipool_head->set_next(new_minipool);
     new_minipool->set_prev(minipool_head);
 
@@ -129,7 +135,7 @@ class NodeManager {
     } else if (node_to_recycle->is_output()) {
       decrease_ref_count(node_to_recycle->left);
     } else {
-      assert(node_to_recycle->is_bottom());
+      assert(node_to_recycle->is_bottom() || node_to_recycle->is_dead());
     }
     time_list_manager.remove_node(node_to_recycle);
     return node_to_recycle;
