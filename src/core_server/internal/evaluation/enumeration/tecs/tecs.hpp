@@ -7,6 +7,7 @@
 
 #include "node.hpp"
 #include "node_manager.hpp"
+#include "time_reservator.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -16,20 +17,16 @@ class tECS {
   using UnionList = std::vector<Node*>;
 
  public:
-  size_t get_amount_of_nodes_used() const {
-    return node_manager.get_amount_of_nodes_used();
-  }
-
-  size_t amount_of_nodes_allocated() const {
-    return node_manager.amount_of_nodes_allocated();
-  }
+  TimeReservator* time_reservator;
 
  private:
   NodeManager node_manager;
 
  public:
   tECS(uint64_t& event_time_of_expiration)
-      : node_manager(2048, event_time_of_expiration) {}
+      : node_manager(2048, event_time_of_expiration) {
+    time_reservator = &node_manager.get_time_reservator();
+  }
 
   void pin(Node* node) { node_manager.increase_ref_count(node); }
 

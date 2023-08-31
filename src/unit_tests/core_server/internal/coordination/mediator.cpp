@@ -91,6 +91,7 @@ TEST_CASE(
   // TODO: Change this to actual complex event, not queryEvaluator.
   Mediator mediator(5000);
   mediator.start();
+  INFO("Started mediator.");
 
   Client client{"tcp://localhost", 5000};
 

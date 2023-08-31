@@ -85,7 +85,6 @@ class QueryEvaluator {
     RingTupleQueue::Tuple tuple = queue.get_tuple(data);
     uint64_t time = time_is_stream_position ? current_stream_position++
                                             : tuple.nanoseconds();
-    tECS::Enumerator enumerator;
     Types::Enumerator output = catalog.convert_enumerator(
       evaluator->next(tuple, time));
 

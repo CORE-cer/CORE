@@ -90,6 +90,10 @@ class NodeManager {
 
   size_t get_amount_of_nodes_used() const { return amount_of_nodes_used; }
 
+  TimeReservator& get_time_reservator() {
+    return time_list_manager.get_time_reservator();
+  }
+
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
     if (!minipool_head->is_full()) {
@@ -131,7 +135,7 @@ class NodeManager {
     } else if (node_to_recycle->is_output()) {
       decrease_ref_count(node_to_recycle->left);
     } else {
-      assert(node_to_recycle->is_bottom());
+      assert(node_to_recycle->is_bottom() || node_to_recycle->is_dead());
     }
     time_list_manager.remove_node(node_to_recycle);
     return node_to_recycle;

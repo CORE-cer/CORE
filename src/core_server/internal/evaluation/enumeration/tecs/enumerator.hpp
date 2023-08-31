@@ -10,13 +10,6 @@ namespace CORE::Internal::tECS {
 
 class Enumerator {
   friend class iterator;
-  std::stack<std::pair<Node*, std::vector<RingTupleQueue::Tuple>>> stack;
-  uint64_t original_pos;
-  uint64_t last_time_to_consider;
-  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
-    next_value;
-  Node* original_node;
-  tECS* tecs;
 
   class iterator {
    private:
@@ -44,32 +37,55 @@ class Enumerator {
     }
   };
 
+  std::stack<std::pair<Node*, std::vector<RingTupleQueue::Tuple>>> stack;
+  uint64_t original_pos;
+  uint64_t last_time_to_consider;
+  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
+    next_value;
+  Node* original_node{nullptr};
+  tECS* tecs{nullptr};
+  TimeReservator* time_reservator{nullptr};
+  TimeReservator::Node* time_reserved_node{nullptr};
+
  public:
   Enumerator(Node* node,
              uint64_t original_pos,
              uint64_t time_window,
-             tECS& tecs)
+             tECS& tecs,
+             TimeReservator* time_reservator)
       : original_pos(original_pos),
         last_time_to_consider(
           (original_pos < time_window) ? 0 : original_pos - time_window),
         original_node(node),
-        tecs(&tecs) {
+        tecs(&tecs),
+        time_reservator(time_reservator) {
+    assert(time_reservator != nullptr);
+    time_reserved_node = time_reservator->reserve(last_time_to_consider);
     assert(node != nullptr);
     if (node->max() >= last_time_to_consider) {
       stack.push({node, {}});
     }
   }
 
-  // TODO: Prevent copy construction.
+  /// The copy constructor is deleted so that it does not inferfere with
+  /// the delete operator of the enumerator.
+  Enumerator(const Enumerator&) = delete;
 
   Enumerator()
-      : original_node(nullptr), tecs(nullptr) {}  // Empty enumerator
+      : original_node(nullptr),
+        tecs(nullptr),
+        time_reservator{nullptr},
+        time_reserved_node{nullptr} {}  // Empty enumerator
 
   ~Enumerator() {
-    static int i = 1;
     if (tecs != nullptr) {
       // It is not an empty enumerator
       tecs->unpin(original_node);
+      assert(time_reservator != nullptr);
+      assert(time_reserved_node != nullptr);
+      time_reservator->remove_node(time_reserved_node);
+      time_reserved_node = nullptr;
+      tecs = nullptr;
     }
   }
 
@@ -79,7 +95,9 @@ class Enumerator {
 
   void reset() {
     stack = {};
-    stack.push({original_node, {}});
+    if (original_node != nullptr) {
+      stack.push({original_node, {}});
+    }
   };
 
  private:
