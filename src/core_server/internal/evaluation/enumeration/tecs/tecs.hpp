@@ -40,9 +40,7 @@ class tECS {
    * If a node is no longer used, it should be unpinned, this allows the
    * memory manager to recycle the memory allocated to it.
    */
-  void unpin(Node* node) {
-    node_manager.decrease_ref_count(node);
-  }
+  void unpin(Node* node) { node_manager.decrease_ref_count(node); }
 
   void unpin(UnionList& ulist) {
     for (auto& node : ulist) {
