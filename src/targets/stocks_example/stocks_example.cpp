@@ -3,7 +3,7 @@
 #include "core_client/client.hpp"
 #include "core_server/internal/coordination/mediator.hpp"
 #include "core_streamer/streamer.hpp"
-#include "polkura_data.hpp"
+#include "stocks_data.hpp"
 
 using namespace CORE;
 
@@ -11,38 +11,14 @@ using namespace CORE;
 
 void do_declarations(Client& client) {
   std::vector<Types::EventTypeId> event_types{};
-  for (std::string name : {"WindSpeed",
-                           "WindDirection",
-                           "GustSpeed",
-                           "SoilTemperatureAt30CmDepth",
-                           "ApparentDielectricPermittivityAt30CmDepth",
-                           "AirTemperature",
-                           "RelativeAirHumidity",
-                           "BatteryVoltage",
-                           "LatinosDiagnosticCode",
-                           "ElectricConductivityOfWater",
-                           "WaterTemperature",
-                           "WaterLevel",
-                           "MicroflowSignalStability",
-                           "FlowSpeed",
-                           "Discharge",
-                           "MicroflowSignalStrength",
-                           "Rainfall",
-                           "Distance",
-                           "DistanceNc",
-                           "SnowdepthNc",
-                           "SnowDepth",
-                           "WindTemperature",
-                           "SoilTemperatureAt60CmDepth",
-                           "ApparentDielectricPermittivityAt60CmDepth",
-                           "SoilTemperatureAt90CmDepth",
-                           "ApparentDielectricPermittivityAt90CmDepth",
-                           "AtmosphericPressure"}) {
+  for (std::string name : {"BUY", "SELL"}) {
     event_types.push_back(client.declare_event_type(
       name,
       {Types::AttributeInfo("id", Types::ValueTypes::INT64),
-       Types::AttributeInfo("sitio", Types::ValueTypes::STRING_VIEW),
-       Types::AttributeInfo("value", Types::ValueTypes::DOUBLE)}));
+       Types::AttributeInfo("name", Types::ValueTypes::STRING_VIEW),
+       Types::AttributeInfo("volume", Types::ValueTypes::INT64),
+       Types::AttributeInfo("price", Types::ValueTypes::DOUBLE),
+       Types::AttributeInfo("stock_time", Types::ValueTypes::INT64)}));
   }
   auto stream_type_id = client.declare_stream_type("S",
                                                    std::move(event_types));
@@ -52,10 +28,26 @@ Types::PortNumber create_queries(Client& client) {
   std::vector<std::string> queries;
   // clang-format off
   queries.push_back(
-    "SELECT ApparentDielectricPermittivityAt30CmDepth\n"
-    "FROM S\n"
-    "WHERE ( BatteryVoltage ; ApparentDielectricPermittivityAt30CmDepth AS a2 )\n"
-    "FILTER ( (BatteryVoltage[value > 5.5 or value < 4.5] OR a2[value > 4]))\n");
+    "SELECT * FROM S\n"
+    "WHERE (SELL as T1; BUY as T2; BUY as T3)\n"
+    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] \n"
+    "WITHIN TIMESTAMP [stock_time]\n");
+  queries.push_back(
+    "SELECT * FROM S\n"
+    "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
+    "    SELL as T4; BUY as T5; BUY as T6)\n"
+    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
+    "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO']\n"
+    "WITHIN 100 EVENTS");
+  queries.push_back(
+    "SELECT * FROM S\n"
+    "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
+    "    SELL as T4; BUY as T5; BUY as T6;\n"
+    "    SELL as T7; BUY as T8; BUY as T9)\n"
+    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
+    "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO'] AND\n"
+    "    T7[name = 'YHOO'] AND T8[name = 'DELL'] AND T9[name = 'ORCL']\n"
+    "WITHIN 100 EVENTS\n");
   // clang-format on
 
   Types::PortNumber final_port_number = 5002;
@@ -81,14 +73,16 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream(PolkuraData::Data data) {
+void send_a_stream(StocksData::Data data) {
   Streamer streamer("tcp://localhost", 5001);
   // clang-format off
   Types::Event event_to_send{
     data.event_type,
-    {std::make_shared<Types::IntValue>(data.id),
-     std::make_shared<Types::StringValue>(data.sitio),
-     std::make_shared<Types::DoubleValue>(data.value)}
+      {std::make_shared<Types::IntValue>(data.id),
+       std::make_shared<Types::StringValue>(data.name),
+       std::make_shared<Types::IntValue>(data.volume),
+       std::make_shared<Types::DoubleValue>(data.price),
+       std::make_shared<Types::IntValue>(data.stock_time)}
   };
   // clang-format on
   streamer.send_stream(0, event_to_send);
@@ -104,8 +98,8 @@ int main(int argc, char** argv) {
   Types::PortNumber final_port_number = create_queries(client);
   subscribe_to_queries(client, initial_port_number, final_port_number);
 
-  for (int i = 0; i < PolkuraData::stream.size(); i++) {
-    send_a_stream(PolkuraData::stream[i]);
+  for (int i = 0; i < StocksData::stream.size(); i++) {
+    send_a_stream(StocksData::stream[i]);
   }
 
   client.stop_all_subscriptions();

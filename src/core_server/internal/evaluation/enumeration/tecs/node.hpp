@@ -58,7 +58,7 @@ class Node {
     left = nullptr;
     this->tuple = tuple;
     this->timestamp = timestamp;
-    node_type = NodeType::BOTTOM;
+    this->node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
     this->ref_count = 1;
   }
@@ -76,7 +76,7 @@ class Node {
     this->left = node;
     this->tuple = tuple;
     this->timestamp = timestamp;
-    node_type = NodeType::OUTPUT;
+    this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);
     maximum_start = left->maximum_start;
     this->ref_count = 1;
@@ -97,7 +97,7 @@ class Node {
   }
 
   void reset(Node* left, Node* right) {
-    node_type = NodeType::UNION;
+    this->node_type = NodeType::UNION;
     assert(left != nullptr);
     assert(right != nullptr);
     if (left->maximum_start >= right->maximum_start) {
@@ -124,6 +124,7 @@ class Node {
            || node_type == NodeType::TIME_LIST_TAIL);
     this->node_type = node_type;
     maximum_start = UINT64_MAX;
+    this->ref_count = 1;
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
