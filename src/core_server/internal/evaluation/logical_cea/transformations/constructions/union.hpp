@@ -23,7 +23,8 @@ class Union : public LogicalCEATransformer<Union> {
                           std::get<2>(transition) + left.amount_of_states));
       }
       for (EndNodeId end_node_id : right.epsilon_transitions[i]) {
-        out.epsilon_transitions[i].insert(end_node_id);
+        out.epsilon_transitions[i].insert(end_node_id
+                                          + left.amount_of_states);
       }
     }
     return out;
