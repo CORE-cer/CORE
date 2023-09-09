@@ -16,7 +16,8 @@
 # Configure clang-tidy for this project.
 
 # Disabled:
-#  -google-readability-namespace-comments the *_CLIENT_NS is a macro, and
+ # -google-readability-namespace-comments the *_CLIENT_NS is a macro, and
+ -bugprone-easily-swappable-parameters
 #   clang-tidy fails to match it against the initial value.
 Checks: >
   bugprone-*,
