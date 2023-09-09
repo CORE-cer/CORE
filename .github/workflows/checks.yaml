@@ -126,3 +126,13 @@ jobs:
         run: |
           chmod +x ./scripts/clang_format_all_files.sh
           ./scripts/clang_format_all_files.sh
+  check-clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Check clang tidy
+        run: |
+          chmod +x ./scripts/clang_tidy_check_all_files.sh
+          ./scripts/clang_tidy_check_all_files.sh
