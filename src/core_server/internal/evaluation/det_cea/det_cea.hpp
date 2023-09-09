@@ -23,11 +23,14 @@ class DetCEA {
 
  private:
   CEA cea;
-  StateManager state_manager;
   std::vector<State*> states;
   std::map<mpz_class, uint64_t> states_bitset_to_index;
+  uint64_t n_nexts = 0;
+  uint64_t n_hits = 0;
 
  public:
+  StateManager state_manager;
+
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
     State* initial_state = state_manager.alloc(0, initial_bitset_1, cea);
@@ -40,12 +43,20 @@ class DetCEA {
               mpz_class evaluation,
               const uint64_t& current_iteration) {
     assert(state != nullptr);
-    auto next_states = state->next(evaluation);  // memoized
+    n_nexts++;
+    auto next_states = state->next(evaluation, n_hits);  // memoized
     if (next_states.marked_state == nullptr
         || next_states.unmarked_state == nullptr) {
       next_states = compute_next_states(state, evaluation, current_iteration);
       state->add_transition(evaluation, next_states);
     }
+    state_manager.update_last_used_iteration_state(next_states.marked_state,
+                                                   current_iteration);
+    state_manager.update_last_used_iteration_state(next_states.unmarked_state,
+                                                   current_iteration);
+    std::cout << "Hits: " << n_hits << std::endl;
+    std::cout << "Hit rate: " << static_cast<double>(n_hits) / n_nexts
+              << std::endl;
     return next_states;
   }
 

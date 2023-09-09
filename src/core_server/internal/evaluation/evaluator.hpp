@@ -80,6 +80,12 @@ class Evaluator {
                  predicates_satisfied,
                  current_time);  // Send the tuple in exec_trans.
     }
+    // Update last used q0 so it can be used in the next iteration.
+    cea.state_manager.update_last_used_iteration_state(q0,
+                                                       current_iteration);
+    // Update the evicted states.
+    cea.state_manager.update_evicated_states(historic_ordered_keys,
+                                             current_iteration);
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;

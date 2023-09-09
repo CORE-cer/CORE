@@ -513,7 +513,8 @@ TEST_CASE("Evaluation of long query") {
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
+    "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL "
+    "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
@@ -533,7 +534,10 @@ TEST_CASE("Evaluation of long query") {
   CEA::DetCEA cea(std::move(intermediate_cea));
 
   uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea), std::move(tuple_evaluator), 100, event_time_of_expiration);
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      100,
+                      event_time_of_expiration);
 
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   auto next_output_enumerator = evaluator.next(tuple, 0);
@@ -633,7 +637,7 @@ TEST_CASE("Evaluation of long query") {
   INFO(output_to_string(next_output_enumerator));
   next_output_enumerator = {};
   REQUIRE(outputs.size() == 0);
-  
+
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
   next_output_enumerator = evaluator.next(tuple, 11);
   outputs = enumerator_to_vector(next_output_enumerator);
@@ -695,6 +699,7 @@ TEST_CASE("Evaluation of long query") {
   next_output_enumerator = {};  // To prevent segfault
   REQUIRE(outputs.size() == 0);
 }
+
 // TEST_CASE(
 //   "Evaluation of a query with mix of continuous, contiguous, kleene, and "
 //   "OR") {
