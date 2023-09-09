@@ -24,14 +24,14 @@ void do_declarations(Client& client) {
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = client.declare_stream_type("S1",
+  client.declare_stream_type("S1",
                                                      {event_type_id_1});
   auto event_type_id_2 = client.declare_event_type(
     "Mixed",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  auto stream_type_id_2 = client.declare_stream_type("S2",
+  client.declare_stream_type("S2",
                                                      {event_type_id_1,
                                                       event_type_id_2});
 }
@@ -81,38 +81,43 @@ void send_a_stream() {
 }
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cout << "There must be 1 argument: The amount of messages."
+  try {
+    if (argc != 2) {
+      std::cout << "There must be 1 argument: The amount of messages."
+                << std::endl;
+      return 1;
+    }
+    int amount_of_messages = std::stoi(argv[1]);
+
+    Internal::Mediator mediator(5000);
+    mediator.start();
+    Client client{"tcp://localhost", 5000};
+
+    do_declarations(client);
+    Types::PortNumber initial_port_number = 5002;
+    Types::PortNumber final_port_number = create_queries(client);
+    subscribe_to_queries(client, initial_port_number, final_port_number);
+
+    std::cout << "Sending " + std::to_string(amount_of_messages) + " streams"
               << std::endl;
+    for (int i = 0; i < amount_of_messages; i++) {
+      send_a_stream();
+    }
+    std::cout << "Finished sending streams" << std::endl;
+
+    client.stop_all_subscriptions();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    send_a_stream();
+
+    std::cout << "Joining threads" << std::endl;
+
+    client.join_all_threads();
+    mediator.stop();
+
+    return 0;
+  } catch (std::exception& e) {
+    std::cout << "Exception: " << e.what() << std::endl;
     return 1;
   }
-  int amount_of_messages = std::stoi(argv[1]);
-
-  Internal::Mediator mediator(5000);
-  mediator.start();
-  Client client{"tcp://localhost", 5000};
-
-  do_declarations(client);
-  Types::PortNumber initial_port_number = 5002;
-  Types::PortNumber final_port_number = create_queries(client);
-  subscribe_to_queries(client, initial_port_number, final_port_number);
-
-  std::cout << "Sending " + std::to_string(amount_of_messages) + " streams"
-            << std::endl;
-  for (int i = 0; i < amount_of_messages; i++) {
-    send_a_stream();
-  }
-  std::cout << "Finished sending streams" << std::endl;
-
-  client.stop_all_subscriptions();
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-  send_a_stream();
-
-  std::cout << "Joining threads" << std::endl;
-
-  client.join_all_threads();
-  mediator.stop();
-
-  return 0;
 }
