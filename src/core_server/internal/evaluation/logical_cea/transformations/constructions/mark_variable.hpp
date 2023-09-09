@@ -12,7 +12,7 @@ class MarkVariable : public LogicalCEATransformer<MarkVariable> {
   VariablesToMark variables_to_mark;
 
  public:
-  MarkVariable(int64_t variable_to_mark)
+  MarkVariable(uint64_t variable_to_mark)
       : variables_to_mark(1 << variable_to_mark) {}
 
   LogicalCEA eval(LogicalCEA&& cea) {
