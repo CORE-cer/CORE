@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <set>
+#include <tuple>
 #include <vector>
 
 #include "core_server/internal/evaluation/predicate_set.hpp"
