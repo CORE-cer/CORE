@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -9,7 +10,8 @@ namespace CORE::Internal::CEQL {
 
 struct Predicate {
  public:
-  int physical_predicate_id = -1;
+  // Max uint64_t corresponds to unset
+  uint64_t physical_predicate_id = std::numeric_limits<uint64_t>::max();
   virtual ~Predicate() = default;
   virtual std::unique_ptr<Predicate> clone() const = 0;
   virtual std::unique_ptr<Predicate> negate() const = 0;

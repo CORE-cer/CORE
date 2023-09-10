@@ -17,27 +17,27 @@ namespace RingTupleQueue {
 #ifndef SupportedTypes_HPP
 #define SupportedTypes_HPP
 
-struct _Type {
+struct StructType {
   enum Type { INT64, DOUBLE, BOOL, STRING_VIEW, DATE };
 
-  static size_t type_size(_Type::Type type) {
+  static size_t type_size(StructType::Type type) {
     size_t size_in_bytes;
     switch (type) {
-      case _Type::Type::INT64:
+      case StructType::Type::INT64:
         size_in_bytes = sizeof(int64_t);
         break;
-      case _Type::Type::DOUBLE:
+      case StructType::Type::DOUBLE:
         size_in_bytes = sizeof(double);
         break;
-      case _Type::Type::BOOL:
+      case StructType::Type::BOOL:
         size_in_bytes = sizeof(bool);
         break;
-      case _Type::Type::STRING_VIEW:
+      case StructType::Type::STRING_VIEW:
         // For std::string_view we store pointer to the start and end of the string,
         // hence 2 * sizeof(uint64_t)
         size_in_bytes = 2 * sizeof(uint64_t);
         break;
-      case _Type::Type::DATE:
+      case StructType::Type::DATE:
         size_in_bytes = sizeof(std::time_t);
         break;
       default:
@@ -48,8 +48,8 @@ struct _Type {
   }
 };
 
-using SupportedTypes = _Type::Type;
-using Type = _Type;
+using SupportedTypes = StructType::Type;
+using Type = StructType;
 
 #endif
 
@@ -96,11 +96,11 @@ class TupleSchemas {
     return relative_positions[id];
   }
 
-  int64_t get_constant_section_size(uint64_t id) const {
+  uint64_t get_constant_section_size(uint64_t id) const {
     auto& relative_positions_of_id = relative_positions[id];
-    int64_t last_position = relative_positions_of_id.back();
+    uint64_t last_position = relative_positions_of_id.back();
     auto& schema = get_schema(id);
-    int64_t size_of_last_element = Type::type_size(schema.back());
+    uint64_t size_of_last_element = Type::type_size(schema.back());
     return last_position + size_of_last_element;
   }
 

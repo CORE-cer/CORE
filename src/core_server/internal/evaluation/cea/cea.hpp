@@ -21,7 +21,7 @@ struct CEA {
   using Transition = std::tuple<PredicateSet, IsMarked, NodeId>;
   using States = mpz_class;
 
-  int64_t amount_of_states;
+  uint64_t amount_of_states;
   std::vector<std::set<Transition>> transitions;
   NodeId initial_state;
   States final_states;
