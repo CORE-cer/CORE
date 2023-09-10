@@ -21,6 +21,11 @@ struct ComplexEvent {
 
   ComplexEvent(uint64_t start,
                uint64_t end,
+               std::vector<Event> events) noexcept
+      : start(start), end(end), events(events) {}
+
+  ComplexEvent(uint64_t start,
+               uint64_t end,
                std::vector<Event>&& events) noexcept
       : start(start), end(end), events(std::move(events)) {}
 
