@@ -94,7 +94,7 @@ TEST_CASE("A broadcast message is received exactly as it was sent.",
   ZMQMessageBroadcaster message_sender("tcp://*:5555");
   std::thread publisher_thread([&]() {
     // Receive all messages from 5555
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     message_sender.broadcast(sent_message1);
   });
 
@@ -192,7 +192,7 @@ TEST_CASE(
     });
   }
   // Rerun the publisher_thread
-  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  std::this_thread::sleep_for(std::chrono::milliseconds(400));
   message_sender.broadcast(sent_message);
 
   for (int i = 0; i < amount_of_threads; i++) {
