@@ -24,16 +24,13 @@ void do_declarations(Client& client) {
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  client.declare_stream_type("S1",
-                                                     {event_type_id_1});
+  client.declare_stream_type("S1", {event_type_id_1});
   auto event_type_id_2 = client.declare_event_type(
     "Mixed",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  client.declare_stream_type("S2",
-                                                     {event_type_id_1,
-                                                      event_type_id_2});
+  client.declare_stream_type("S2", {event_type_id_1, event_type_id_2});
 }
 
 Types::PortNumber create_queries(Client& client) {

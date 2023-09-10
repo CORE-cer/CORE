@@ -51,7 +51,8 @@ class Queue {
         overwrite_timepoint(std::chrono::system_clock::now()) {}
 
   uint64_t* start_tuple(uint64_t tuple_type_id) {
-    uint64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
+    uint64_t minimum_size = schemas->get_constant_section_size(
+      tuple_type_id);
     assert(minimum_size < buffer_size);
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {

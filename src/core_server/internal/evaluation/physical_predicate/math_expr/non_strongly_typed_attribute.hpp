@@ -64,7 +64,8 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      stored_string = std::to_string(val.get());  // It is not a string already.
+      stored_string = std::to_string(
+        val.get());  // It is not a string already.
       return stored_string;
     } else if constexpr (std::is_same_v<LocalType, std::string_view>) {
       assert(false && "Local Type is string and global type is not, this should never happen.");
