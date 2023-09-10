@@ -151,7 +151,7 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: setup compile commands
-        run: chmod +x ./scripts/create_text_editor_metadata.sh && ./scripts/create_text_editor_metadata.sh
+        run: ln -s -r build/Debug/compile_commands.json compile_commands.json
 
       - name: Check clang tidy
         run: |
