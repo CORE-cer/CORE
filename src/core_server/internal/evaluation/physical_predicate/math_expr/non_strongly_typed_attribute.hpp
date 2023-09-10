@@ -14,6 +14,12 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
   std::string name;
   Catalog& catalog;
 
+  // If Type == std::string_view, then the underlying string is stored, if not
+  // a char is stored.
+  typename std::conditional<std::is_same_v<GlobalType, std::string_view>,
+                            std::string,
+                            char>::type stored_string;
+
   NonStronglyTypedAttribute(std::string name, Catalog& catalog)
       : name(name), catalog(catalog) {}
 
@@ -58,7 +64,8 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      return std::to_string(val.get());  // It is not a string already.
+      stored_string = std::to_string(val.get());  // It is not a string already.
+      return stored_string;
     } else if constexpr (std::is_same_v<LocalType, std::string_view>) {
       assert(false && "Local Type is string and global type is not, this should never happen.");
       return {};

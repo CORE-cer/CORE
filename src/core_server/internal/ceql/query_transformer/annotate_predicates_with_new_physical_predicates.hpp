@@ -46,7 +46,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
       physical_predicates.push_back(
         std::make_unique<CEA::CheckTypePredicate>(event_type_id));
     }
-    for (int64_t i = 0, predicate_id = physical_predicates.size();
+    for (uint64_t i = 0, predicate_id = physical_predicates.size();
          i < filters.size();
          i++, predicate_id++) {
       std::string event_name = filters[i]->variable_name;

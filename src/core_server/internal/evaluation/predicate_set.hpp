@@ -2,6 +2,7 @@
 #include <gmpxx.h>
 
 #include <iostream>
+#include <cstdint>
 
 namespace CORE::Internal::CEA {
 
@@ -93,7 +94,7 @@ struct PredicateSet {
     std::string out = predicates.get_str(2);
     std::string mask_string = mask.get_str(2);
 
-    int buffer_length = out.size() > mask_string.size()
+    uint64_t buffer_length = out.size() > mask_string.size()
                           ? out.size() - mask_string.size()
                           : mask_string.size() - out.size();
     std::string buffer = "";

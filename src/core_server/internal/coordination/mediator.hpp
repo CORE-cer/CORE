@@ -11,8 +11,6 @@
 #include "core_server/internal/coordination/streams_listener.hpp"
 #include "shared/datatypes/event.hpp"
 
-class CEA;
-
 namespace CORE::Internal {
 
 class Mediator {

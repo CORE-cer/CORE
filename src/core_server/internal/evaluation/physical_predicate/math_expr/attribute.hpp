@@ -12,6 +12,12 @@ class Attribute : public MathExpr<GlobalType> {
  public:
   size_t pos;
 
+  // If Type == std::string_view, then the underlying string is stored, if not
+  // a char is stored.
+  typename std::conditional<std::is_same_v<GlobalType, std::string_view>,
+                            std::string,
+                            char>::type stored_string;
+
   Attribute(size_t pos) : pos(pos) {}
 
   std::unique_ptr<MathExpr<GlobalType>> clone() const override {
@@ -25,7 +31,8 @@ class Attribute : public MathExpr<GlobalType> {
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      return std::to_string(val.get());  // It is not a string already.
+      stored_string = std::to_string(val.get());  // It is not a string already.
+      return stored_string;
     } else {
       return static_cast<GlobalType>(val.get());
     }
