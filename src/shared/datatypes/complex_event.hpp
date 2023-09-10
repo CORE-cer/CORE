@@ -17,7 +17,7 @@ struct ComplexEvent {
   uint64_t end;
   std::vector<Event> events;
 
-  ComplexEvent() noexcept = default;
+  ComplexEvent() : start(0), end(0), events() {}
 
   ComplexEvent(uint64_t start,
                uint64_t end,
