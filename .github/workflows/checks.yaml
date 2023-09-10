@@ -150,6 +150,9 @@ jobs:
       - name: build with grammar
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
+      - name: setup compile commands
+        run: chmod +x ./scripts/create_text_editor_metadata.sh && ./scripts/create_text_editor_metadata.sh
+
       - name: Check clang tidy
         run: |
           chmod +x ./scripts/clang_tidy_check_all_files.sh
