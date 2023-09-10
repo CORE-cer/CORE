@@ -15,7 +15,7 @@ class MessageHandler {
     static_cast<Derived*>(this)->handle_complex_event(enumerator);
   }
 
-  void handle_complex_event(Types::ComplexEvent) {
+  void handle_complex_event(Types::Enumerator) {
     assert(false && "handle_complex_event is not implemented");
   }
 

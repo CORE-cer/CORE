@@ -10,12 +10,12 @@
 
 namespace CORE::Internal::CEQL {
 struct Query {
-  Select select;
-  From from;
+  Select select; // TODO Projection
+  From from; // TODO: Routing.
   Where where;
-  PartitionBy partition_by;
+  PartitionBy partition_by; // TODO
   Within within;
-  ConsumeBy consume_by;
+  ConsumeBy consume_by; // TODO
 
   Query(Select&& select,
         From&& from,

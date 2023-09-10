@@ -1,3 +1,5 @@
+This documentation only talks baout the internal code of CORE. That is, anything under the namespace CORE::Internal.
+
 # Project development.
 
 ## clang-format

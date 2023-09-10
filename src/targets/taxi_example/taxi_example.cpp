@@ -81,7 +81,8 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    assert(port_number == final_port_number++);
+    final_port_number++;
+    assert(port_number == final_port_number);
   }
 
   std::cout << "Created queries" << std::endl;
@@ -94,8 +95,7 @@ void subscribe_to_queries(Client& client,
   std::vector<std::unique_ptr<Printer>> handlers;
   for (size_t port = initial_port; port < final_port; port++) {
     std::cout << "Subscribing to port: " << port << std::endl;
-    handlers.emplace_back(
-      std::make_unique<Printer>());  // Store one enumerator.
+    handlers.emplace_back(std::make_unique<Printer>());
     client.subscribe_to_complex_event<Printer>(handlers.back().get(), port);
   }
   std::cout << "Created handlers" << std::endl;
