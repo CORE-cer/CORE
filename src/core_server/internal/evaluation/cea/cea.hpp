@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <set>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
