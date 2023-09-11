@@ -1043,7 +1043,6 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(outputs[1].second[2], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[1].second[3], 0, "AMZN", 1900));
-
 }
 
 TEST_CASE(
