@@ -701,7 +701,7 @@ TEST_CASE("Evaluation of long query") {
   REQUIRE(outputs.size() == 0);
 }
 
-TEST_CASE("Evaluation of long query with OR") {
+TEST_CASE("Evaluation of long query with continuous and OR") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
