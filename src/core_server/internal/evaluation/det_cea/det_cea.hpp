@@ -34,6 +34,7 @@ class DetCEA {
 
   States next(State* state, mpz_class evaluation) {
     assert(state != nullptr);
+    std::string eval = evaluation.get_str(2);
     auto next_states = state->next(evaluation);  // memoized
     if (next_states.marked_state == nullptr
         || next_states.unmarked_state == nullptr) {
@@ -41,6 +42,17 @@ class DetCEA {
       state->add_transition(evaluation, next_states);
     }
     return next_states;
+  }
+
+  std::string to_string() {
+    std::string out = "";
+    out +=  "Initial state: " + initial_state->states.get_str(2) + "\n";
+    out += "Number of states: " + std::to_string(states.size()) + "\n";
+    out += "States:\n";
+    for (auto& state : states) {
+      out += state->states.get_str(2);
+    }
+    return out;
   }
 
  private:
