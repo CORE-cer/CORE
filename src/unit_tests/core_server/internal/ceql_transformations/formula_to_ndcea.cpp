@@ -118,7 +118,26 @@ TEST_CASE("Sequencing Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.final_states == 0b1000);
 }
 
-TEST_CASE("Iteration Formula", "[CEQL To LogicalCEA]") {
+TEST_CASE("Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto query = Parsing::Parser::parse_query(create_query("H:+"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 1);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.epsilon_transitions[1].contains(0));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+}
+
+TEST_CASE("Non-Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type("H", {});
   auto query = Parsing::Parser::parse_query(create_query("H+"));
