@@ -19,14 +19,14 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
  public:
   ApplyAtomicFilter(uint64_t variable_id_to_filter,
                     CEQL::AtomicFilter& atomic_filter)
-      : variables_to_filter(1 << variable_id_to_filter),
+      : variables_to_filter(mpz_class(1) << variable_id_to_filter),
         physical_predicate_id(
           atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
     assert(physical_predicate_id != -1 && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(1 << physical_predicate_id,
-                                 1 << physical_predicate_id);
+    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
+                                 mpz_class(1) << physical_predicate_id);
   }
 
   LogicalCEA eval(LogicalCEA&& cea) {
