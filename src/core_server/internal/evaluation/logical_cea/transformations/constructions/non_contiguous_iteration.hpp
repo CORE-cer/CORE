@@ -5,7 +5,7 @@
 namespace CORE::Internal::CEA {
 
 /**
- * This construction takes a CEA A, creates a new state with a tautology loop 
+ * This construction takes a CEA A, creates a new state with a tautology loop
  * to itself and then adds epsilon transitions from all the final states from
  * A to the new state and from the new state to all the initial states of A
  */
