@@ -46,7 +46,7 @@ class DetCEA {
 
   std::string to_string() {
     std::string out = "";
-    out +=  "Initial state: " + initial_state->states.get_str(2) + "\n";
+    out += "Initial state: " + initial_state->states.get_str(2) + "\n";
     out += "Number of states: " + std::to_string(states.size()) + "\n";
     out += "States:\n";
     for (auto& state : states) {

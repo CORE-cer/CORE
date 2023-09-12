@@ -517,7 +517,8 @@ TEST_CASE("Evaluation of long query") {
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
+    "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL "
+    "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
 
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
@@ -720,7 +721,8 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
+    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
@@ -867,7 +869,10 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "WHERE (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
+    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
+    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
+    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);

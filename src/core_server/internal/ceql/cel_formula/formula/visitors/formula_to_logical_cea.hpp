@@ -87,7 +87,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     mpz_class variables_to_project = 0;
     for (const std::string& var_name : formula.variables) {
       if (variables_to_id.contains(var_name)) {
-        variables_to_project |= mpz_class(1) << variables_to_id.find(var_name)->second;
+        variables_to_project |= mpz_class(1)
+                                << variables_to_id.find(var_name)->second;
       }  // If not, then the variable was not added to any transitions,
          // so no variables should be projected.
     }
