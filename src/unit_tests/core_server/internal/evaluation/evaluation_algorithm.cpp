@@ -1101,7 +1101,7 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+ as msft; (SELL OR BUY) as intel; SELL as amzn\n"
+    "WHERE (SELL):+ as msft; (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
@@ -1333,7 +1333,7 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
+    "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
@@ -1442,7 +1442,7 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
+    "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
