@@ -47,12 +47,12 @@ cel_formula
  : LEFT_PARENTHESIS cel_formula RIGHT_PARENTHESIS     # par_cel_formula
  | s_event_name                                       # event_type_cel_formula
  | cel_formula K_AS event_name                        # as_cel_formula
- | cel_formula PLUS                                   # kleene_cel_formula
+ | cel_formula PLUS                                   # non_contiguous_iteration_cel_formula
+ | cel_formula COLON_PLUS                             # contiguous_iteration_cel_formula
  | cel_formula SEMICOLON cel_formula                  # non_contiguous_sequencing_cel_formula
  | cel_formula COLON cel_formula                      # contiguous_sequencing_cel_formula
  | cel_formula K_OR cel_formula                       # or_cel_formula
  | cel_formula K_FILTER filter                        # filter_cel_formula
- | cel_formula COLON_PLUS                             # contiguous_iteration_cel_formula
  ;
 
 partition_list
