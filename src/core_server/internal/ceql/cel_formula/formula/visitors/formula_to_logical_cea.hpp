@@ -10,7 +10,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/sequencing.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/strict_kleene.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
 #include "formula_visitor.hpp"
@@ -78,14 +78,14 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     current_cea = CEA::Concat()(left_cea, right_cea);
   }
 
-  void visit(IterationFormula& formula) override {
+  void visit(NonContiguousIterationFormula& formula) override {
     formula.formula->accept_visitor(*this);  // updates current_cea
     current_cea = CEA::NonContiguousIteration()(std::move(current_cea));
   }
 
   void visit(ContiguousIterationFormula& formula) override {
     formula.formula->accept_visitor(*this);
-    current_cea = CEA::StrictKleene()(std::move(current_cea));
+    current_cea = CEA::ContiguousIteration()(std::move(current_cea));
   }
 
   void visit(ProjectionFormula& formula) override {

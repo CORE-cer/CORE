@@ -7,24 +7,24 @@
 
 namespace CORE::Internal::CEQL {
 
-struct IterationFormula : public Formula {
+struct NonContiguousIterationFormula : public Formula {
   std::unique_ptr<Formula> formula;
 
-  IterationFormula(std::unique_ptr<Formula>&& formula)
+  NonContiguousIterationFormula(std::unique_ptr<Formula>&& formula)
       : formula(std::move(formula)) {}
 
-  ~IterationFormula() override = default;
+  ~NonContiguousIterationFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<IterationFormula>(formula->clone());
+    return std::make_unique<NonContiguousIterationFormula>(formula->clone());
   }
 
-  bool operator==(const IterationFormula& other) const {
+  bool operator==(const NonContiguousIterationFormula& other) const {
     return formula->equals(other.formula.get());
   }
 
   bool equals(Formula* other) const override {
-    if (auto other_formula = dynamic_cast<IterationFormula*>(other)) {
+    if (auto other_formula = dynamic_cast<NonContiguousIterationFormula*>(other)) {
       return *this == *other_formula;
     } else
       return false;

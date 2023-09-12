@@ -167,13 +167,13 @@ void ceqlqueryparserParserInitialize() {
   	0,183,181,1,0,0,0,184,175,1,0,0,0,184,185,1,0,0,0,185,11,1,0,0,0,186,
   	187,6,6,-1,0,187,188,5,45,0,0,188,189,3,12,6,0,189,190,5,46,0,0,190,193,
   	1,0,0,0,191,193,3,52,26,0,192,186,1,0,0,0,192,191,1,0,0,0,193,215,1,0,
-  	0,0,194,195,10,5,0,0,195,196,5,41,0,0,196,214,3,12,6,6,197,198,10,4,0,
-  	0,198,199,5,42,0,0,199,214,3,12,6,5,200,201,10,3,0,0,201,202,5,21,0,0,
-  	202,214,3,12,6,4,203,204,10,7,0,0,204,205,5,4,0,0,205,214,3,54,27,0,206,
-  	207,10,6,0,0,207,214,5,31,0,0,208,209,10,2,0,0,209,210,5,10,0,0,210,214,
-  	3,20,10,0,211,212,10,1,0,0,212,214,5,51,0,0,213,194,1,0,0,0,213,197,1,
+  	0,0,194,195,10,4,0,0,195,196,5,41,0,0,196,214,3,12,6,5,197,198,10,3,0,
+  	0,198,199,5,42,0,0,199,214,3,12,6,4,200,201,10,2,0,0,201,202,5,21,0,0,
+  	202,214,3,12,6,3,203,204,10,7,0,0,204,205,5,4,0,0,205,214,3,54,27,0,206,
+  	207,10,6,0,0,207,214,5,31,0,0,208,209,10,5,0,0,209,214,5,51,0,0,210,211,
+  	10,1,0,0,211,212,5,10,0,0,212,214,3,20,10,0,213,194,1,0,0,0,213,197,1,
   	0,0,0,213,200,1,0,0,0,213,203,1,0,0,0,213,206,1,0,0,0,213,208,1,0,0,0,
-  	213,211,1,0,0,0,214,217,1,0,0,0,215,213,1,0,0,0,215,216,1,0,0,0,216,13,
+  	213,210,1,0,0,0,214,217,1,0,0,0,215,213,1,0,0,0,215,216,1,0,0,0,216,13,
   	1,0,0,0,217,215,1,0,0,0,218,219,5,47,0,0,219,220,3,16,8,0,220,226,5,48,
   	0,0,221,222,5,43,0,0,222,223,5,47,0,0,223,224,3,16,8,0,224,225,5,48,0,
   	0,225,227,1,0,0,0,226,221,1,0,0,0,226,227,1,0,0,0,227,15,1,0,0,0,228,
@@ -1095,25 +1095,6 @@ std::any CEQLQueryParser::Par_cel_formulaContext::accept(tree::ParseTreeVisitor 
   else
     return visitor->visitChildren(this);
 }
-//----------------- Kleene_cel_formulaContext ------------------------------------------------------------------
-
-CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::Kleene_cel_formulaContext::cel_formula() {
-  return getRuleContext<CEQLQueryParser::Cel_formulaContext>(0);
-}
-
-tree::TerminalNode* CEQLQueryParser::Kleene_cel_formulaContext::PLUS() {
-  return getToken(CEQLQueryParser::PLUS, 0);
-}
-
-CEQLQueryParser::Kleene_cel_formulaContext::Kleene_cel_formulaContext(Cel_formulaContext *ctx) { copyFrom(ctx); }
-
-
-std::any CEQLQueryParser::Kleene_cel_formulaContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<CEQLQueryParserVisitor*>(visitor))
-    return parserVisitor->visitKleene_cel_formula(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- Filter_cel_formulaContext ------------------------------------------------------------------
 
 CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::Filter_cel_formulaContext::cel_formula() {
@@ -1206,6 +1187,25 @@ std::any CEQLQueryParser::Non_contiguous_sequencing_cel_formulaContext::accept(t
   else
     return visitor->visitChildren(this);
 }
+//----------------- Non_contiguous_iteration_cel_formulaContext ------------------------------------------------------------------
+
+CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext::cel_formula() {
+  return getRuleContext<CEQLQueryParser::Cel_formulaContext>(0);
+}
+
+tree::TerminalNode* CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext::PLUS() {
+  return getToken(CEQLQueryParser::PLUS, 0);
+}
+
+CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext::Non_contiguous_iteration_cel_formulaContext(Cel_formulaContext *ctx) { copyFrom(ctx); }
+
+
+std::any CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<CEQLQueryParserVisitor*>(visitor))
+    return parserVisitor->visitNon_contiguous_iteration_cel_formula(this);
+  else
+    return visitor->visitChildren(this);
+}
 
 CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula() {
    return cel_formula(0);
@@ -1279,11 +1279,11 @@ CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula(int precedence
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
           setState(194);
 
-          if (!(precpred(_ctx, 5))) throw FailedPredicateException(this, "precpred(_ctx, 5)");
+          if (!(precpred(_ctx, 4))) throw FailedPredicateException(this, "precpred(_ctx, 4)");
           setState(195);
           match(CEQLQueryParser::SEMICOLON);
           setState(196);
-          cel_formula(6);
+          cel_formula(5);
           break;
         }
 
@@ -1293,11 +1293,11 @@ CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula(int precedence
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
           setState(197);
 
-          if (!(precpred(_ctx, 4))) throw FailedPredicateException(this, "precpred(_ctx, 4)");
+          if (!(precpred(_ctx, 3))) throw FailedPredicateException(this, "precpred(_ctx, 3)");
           setState(198);
           match(CEQLQueryParser::COLON);
           setState(199);
-          cel_formula(5);
+          cel_formula(4);
           break;
         }
 
@@ -1307,11 +1307,11 @@ CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula(int precedence
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
           setState(200);
 
-          if (!(precpred(_ctx, 3))) throw FailedPredicateException(this, "precpred(_ctx, 3)");
+          if (!(precpred(_ctx, 2))) throw FailedPredicateException(this, "precpred(_ctx, 2)");
           setState(201);
           match(CEQLQueryParser::K_OR);
           setState(202);
-          cel_formula(4);
+          cel_formula(3);
           break;
         }
 
@@ -1330,7 +1330,7 @@ CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula(int precedence
         }
 
         case 5: {
-          auto newContext = _tracker.createInstance<Kleene_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
+          auto newContext = _tracker.createInstance<Non_contiguous_iteration_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
           setState(206);
@@ -1342,28 +1342,28 @@ CEQLQueryParser::Cel_formulaContext* CEQLQueryParser::cel_formula(int precedence
         }
 
         case 6: {
-          auto newContext = _tracker.createInstance<Filter_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
+          auto newContext = _tracker.createInstance<Contiguous_iteration_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
           setState(208);
 
-          if (!(precpred(_ctx, 2))) throw FailedPredicateException(this, "precpred(_ctx, 2)");
+          if (!(precpred(_ctx, 5))) throw FailedPredicateException(this, "precpred(_ctx, 5)");
           setState(209);
-          match(CEQLQueryParser::K_FILTER);
-          setState(210);
-          filter(0);
+          match(CEQLQueryParser::COLON_PLUS);
           break;
         }
 
         case 7: {
-          auto newContext = _tracker.createInstance<Contiguous_iteration_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
+          auto newContext = _tracker.createInstance<Filter_cel_formulaContext>(_tracker.createInstance<Cel_formulaContext>(parentContext, parentState));
           _localctx = newContext;
           pushNewRecursionContext(newContext, startState, RuleCel_formula);
-          setState(211);
+          setState(210);
 
           if (!(precpred(_ctx, 1))) throw FailedPredicateException(this, "precpred(_ctx, 1)");
+          setState(211);
+          match(CEQLQueryParser::K_FILTER);
           setState(212);
-          match(CEQLQueryParser::COLON_PLUS);
+          filter(0);
           break;
         }
 
@@ -6335,12 +6335,12 @@ bool CEQLQueryParser::sempred(RuleContext *context, size_t ruleIndex, size_t pre
 
 bool CEQLQueryParser::cel_formulaSempred(Cel_formulaContext *_localctx, size_t predicateIndex) {
   switch (predicateIndex) {
-    case 0: return precpred(_ctx, 5);
-    case 1: return precpred(_ctx, 4);
-    case 2: return precpred(_ctx, 3);
+    case 0: return precpred(_ctx, 4);
+    case 1: return precpred(_ctx, 3);
+    case 2: return precpred(_ctx, 2);
     case 3: return precpred(_ctx, 7);
     case 4: return precpred(_ctx, 6);
-    case 5: return precpred(_ctx, 2);
+    case 5: return precpred(_ctx, 5);
     case 6: return precpred(_ctx, 1);
 
   default:

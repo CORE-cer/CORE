@@ -1081,7 +1081,7 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
 }
 
 TEST_CASE(
-  "Evaluation of a query with mix of contiguous, kleene, and "
+  "Evaluation of a query with mix of contiguous sequencing, contiguous iteration, and "
   "OR") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
@@ -1313,7 +1313,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "Evaluation of a query with mix of continuous, contiguous, kleene, and "
+  "Evaluation of a query with mix of contiguous iteration, contiguous sequencing, non contiguous sequencing, and "
   "OR") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
@@ -1422,7 +1422,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "Evaluation of a query with mix of continuous, contiguous, kleene, and "
+  "Evaluation of a query with mix of contiguous iteration, contiguous sequencing, non contiguous sequencing, and "
   "OR v2") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
