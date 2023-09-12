@@ -88,11 +88,13 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
   States map_states(States states, std::vector<int64_t> new_mapping) {
     States out = 0;
     NodeId current_node = 0;
+    mpz_class shifter = 1;
     while (states != 0) {
       if ((states & 1) == 1) {
+        assert(current_node < new_mapping.size());
         NodeId new_state = new_mapping[current_node];
         if (new_state != -1) {
-          out |= 1 << new_state;
+          out |= shifter << new_state;
         }
       }
       current_node++;
