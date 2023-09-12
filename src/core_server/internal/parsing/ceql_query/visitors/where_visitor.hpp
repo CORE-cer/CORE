@@ -87,5 +87,13 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
       std::move(formula), filter_visitor.get_parsed_filter());
     return {};
   }
+
+  virtual std::any visitContiguous_iteration_cel_formula(
+    CEQLQueryParser::Contiguous_iteration_cel_formulaContext* ctx) override {
+    visit(ctx->cel_formula());
+    formula = std::make_unique<CEQL::ContiguousIterationFormula>(
+      std::move(formula));
+    return {};
+  }
 };
 }  // namespace CORE::Internal::Parsing
