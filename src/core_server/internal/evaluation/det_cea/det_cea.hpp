@@ -93,9 +93,9 @@ class DetCEA {
           bool is_marked = std::get<1>(transition);
           uint64_t target_node = std::get<2>(transition);
           if (is_marked) {
-            new_marked_states |= 1 << target_node;
+            new_marked_states |= mpz_class(1) << target_node;
           } else {
-            new_unmarked_states |= 1 << target_node;
+            new_unmarked_states |= mpz_class(1) << target_node;
           }
         }
       }
