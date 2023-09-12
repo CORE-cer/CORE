@@ -20,7 +20,7 @@ struct PredicateEvaluator {
     mpz_class out = 0;
     for (size_t i = 0; i < predicates.size(); i++) {
       if ((*predicates[i])(tuple)) {
-        out |= 1 << i;
+        out |= mpz_class(1) << i;
       }
     }
     return out;
