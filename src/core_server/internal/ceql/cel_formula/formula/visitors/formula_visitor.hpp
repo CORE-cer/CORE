@@ -12,6 +12,7 @@ class ContiguousSequencingFormula;     // ;
 class NonContiguousSequencingFormula;  // ;
 class IterationFormula;                // +
 class ProjectionFormula;               // π
+class ContiguousIterationFormula;      // :+
 
 class FormulaVisitor {
  public:
@@ -26,6 +27,7 @@ class FormulaVisitor {
   virtual void visit(NonContiguousSequencingFormula&) {throw std::logic_error("visit SequencingFormula not implemented.");}
   virtual void visit(IterationFormula&)  {throw std::logic_error("visit IterationFormula not implemented.");}
   virtual void visit(ProjectionFormula&) {throw std::logic_error("visit ProjectionFormula not implemented.");}
+  virtual void visit(ContiguousIterationFormula&) {throw std::logic_error("visit ContiguousIterationFormula not implemented");}
 
   // clang-format on
 };
