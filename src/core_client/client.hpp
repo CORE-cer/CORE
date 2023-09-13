@@ -147,9 +147,8 @@ class Client {
   SubscriptionId
   subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
     static_assert(
-      std::is_base_of_v<
-        MessageHandler<Handler>,
-        Handler> || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
+      std::is_base_of_v<MessageHandler<Handler>, Handler>
+      || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
 
     auto subscription_id = create_subscribers_and_stop_conditions(port);
     auto subscriber = subscribers[subscription_id].get();
