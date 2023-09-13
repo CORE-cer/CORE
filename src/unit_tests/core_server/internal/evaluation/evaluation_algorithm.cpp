@@ -1535,8 +1535,7 @@ TEST_CASE(
 
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
-  "sequencing, non contiguous sequencing, and "
-  "OR") {
+  "sequencing, and non contiguous sequencing") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
@@ -1555,10 +1554,7 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
-    "FILTER msft[name='MSFT']\n"
-    "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+    "WHERE (SELL)+: BUY: SELL";
 
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
@@ -1605,22 +1601,13 @@ TEST_CASE(
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  REQUIRE(outputs.size() == 1);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
   next_output_enumerator = evaluator.next(tuple, 3);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
-
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
-  INFO("SELL INTL 80");
-  // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
   next_output_enumerator = {};
   REQUIRE(outputs.size() == 0);
@@ -1651,4 +1638,91 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[1].second[2], 1, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[1].second[3], 0, "AMZN", 1900));
 }
+
+TEST_CASE(
+  "Evaluation of a query with mix of non contiguous iteration, OR, and weakly typed") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type(
+    "SELL",
+    {{"name", Types::ValueTypes::STRING_VIEW},
+     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = catalog.add_event_type(
+    "BUY",
+    {{"name", Types::ValueTypes::STRING_VIEW},
+     {"price", Types::ValueTypes::INT64}});
+
+  auto stream_type = catalog.add_stream_type("Stock",
+                                             {event_type_id_1,
+                                              event_type_id_2});
+
+  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL OR BUY)+ as msft\n"
+    "FILTER msft[name='MSFT']";
+
+  CEQL::Query query = Parsing::Parser::parse_query(string_query);
+  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
+  query = transformer(std::move(query));
+  auto predicates = std::move(transformer.physical_predicates);
+  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
+  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+
+  auto visitor = CEQL::FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  INFO(visitor.current_cea.to_string());
+  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
+  INFO(intermediate_cea.to_string());
+  CEA::DetCEA cea(std::move(intermediate_cea));
+
+  uint64_t event_time_of_expiration;
+  Evaluator evaluator(std::move(cea),
+                      std::move(tuple_evaluator),
+                      100,
+                      event_time_of_expiration);
+
+  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
+  auto next_output_enumerator = evaluator.next(tuple, 0);
+  auto outputs = enumerator_to_vector(next_output_enumerator);
+  INFO("SELL MSFT 101");
+  // 1001101 <- tuple evaluator
+  INFO(output_to_string(next_output_enumerator));
+  next_output_enumerator = {};
+  REQUIRE(outputs.size() == 1);
+
+  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
+  next_output_enumerator = evaluator.next(tuple, 1);
+  outputs = enumerator_to_vector(next_output_enumerator);
+  INFO("BUY INTL 80");
+  // 1000001 <- tuple evaluator
+  INFO(output_to_string(next_output_enumerator));
+  next_output_enumerator = {};
+  REQUIRE(outputs.size() == 0);
+
+  tuple = add_event(ring_tuple_queue, 1, "MSFT", 102);
+  next_output_enumerator = evaluator.next(tuple, 2);
+  outputs = enumerator_to_vector(next_output_enumerator);
+  INFO("SELL MSFT 102");
+  // 1001101 <- Tuple evaluator
+  INFO(output_to_string(next_output_enumerator));
+  next_output_enumerator = {};
+  REQUIRE(outputs.size() == 2);
+  for (std::pair<std::pair<uint64_t, uint64_t>,
+                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
+  }
+
+  REQUIRE(outputs[0].first.first == 2);
+  REQUIRE(outputs[0].first.second == 2);
+
+  REQUIRE(outputs[1].first.first == 0);
+  REQUIRE(outputs[1].first.second == 2);
+
+  REQUIRE(is_the_same_as(outputs[0].second[0], 1, "MSFT", 102));
+
+  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(outputs[1].second[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(outputs[1].second[2], 1, "MSFT", 102));
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests
