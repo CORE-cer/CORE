@@ -144,16 +144,24 @@ TEST_CASE("Non-Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
-  REQUIRE(cea.amount_of_states == 2);
+
+  REQUIRE(cea.amount_of_states == 3);
+  REQUIRE(cea.initial_states == 0b001);
+  REQUIRE(cea.final_states == 0b010);
+
   REQUIRE(cea.transitions[0].size() == 1);
   REQUIRE(cea.transitions[1].size() == 0);
-  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.transitions[2].size() == 1);
+
+  REQUIRE(std::count(cea.transitions[0].begin(), cea.transitions[0].end(),
+                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(cea.transitions[2].begin(), cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
+
   REQUIRE(cea.epsilon_transitions[1].size() == 1);
-  REQUIRE(cea.transitions[0][0]
-          == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
-  REQUIRE(cea.epsilon_transitions[1].contains(0));
-  REQUIRE(cea.initial_states == 0b1);
-  REQUIRE(cea.final_states == 0b10);
+  REQUIRE(cea.epsilon_transitions[2].size() == 1);
+  REQUIRE(cea.epsilon_transitions[1].contains(2));
+  REQUIRE(cea.epsilon_transitions[2].contains(0));
 }
 
 TEST_CASE("Projection Formula", "[CEQL To LogicalCEA]") {

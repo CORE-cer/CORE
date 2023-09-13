@@ -59,22 +59,41 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
   CEA::LogicalCEA logical_cea = visitor.current_cea;
   INFO(logical_cea.to_string());
 
+  REQUIRE(logical_cea.amount_of_states == 3);
+  REQUIRE(logical_cea.initial_states == 0b001);
+  REQUIRE(logical_cea.final_states == 0b010);
+
+  REQUIRE(logical_cea.transitions[0].size() == 1);
+  REQUIRE(logical_cea.transitions[1].size() == 0);
+  REQUIRE(logical_cea.transitions[2].size() == 1);
+
+  REQUIRE(std::count(logical_cea.transitions[0].begin(), logical_cea.transitions[0].end(),
+                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(logical_cea.transitions[2].begin(), logical_cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
+
+  REQUIRE(logical_cea.epsilon_transitions[1].size() == 1);
+  REQUIRE(logical_cea.epsilon_transitions[2].size() == 1);
   REQUIRE(logical_cea.epsilon_transitions[1].contains(2));
   REQUIRE(logical_cea.epsilon_transitions[2].contains(0));
 
   auto cea = CEA::CEA(std::move(logical_cea));
 
   INFO(cea.to_string());
+  // NOTE: Construction after logical cea not checked
   REQUIRE(cea.amount_of_states == 3);
-  REQUIRE(cea.transitions[0].size() == 1);
-  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0].size() == 2);
+  REQUIRE(cea.transitions[1].size() == 2);
   REQUIRE(cea.transitions[2].size() == 1);
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
   // clang-format on
-  REQUIRE(cea.initial_state == 1);
-  REQUIRE(cea.final_states == 0b010);
+  REQUIRE(cea.initial_state == 0b010);
+  REQUIRE(cea.final_states == 0b001);
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA
