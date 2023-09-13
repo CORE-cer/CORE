@@ -121,7 +121,8 @@ TEST_CASE("Example test NonContiguous", "[Where, Composite] NonContiguous") {
     make_unique<NonContiguousSequencingFormula>(
       make_unique<NonContiguousSequencingFormula>(
         make_unique<EventTypeFormula>("S>T"),
-        make_unique<NonContiguousIterationFormula>(make_unique<EventTypeFormula>("H"))),
+        make_unique<NonContiguousIterationFormula>(
+          make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
   auto formula = parse_formula(query);
@@ -136,7 +137,8 @@ TEST_CASE("Example test Contiguous", "[Where, Composite]") {
     make_unique<NonContiguousSequencingFormula>(
       make_unique<NonContiguousSequencingFormula>(
         make_unique<EventTypeFormula>("S>T"),
-        make_unique<ContiguousIterationFormula>(make_unique<EventTypeFormula>("H"))),
+        make_unique<ContiguousIterationFormula>(
+          make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
   auto formula = parse_formula(query);

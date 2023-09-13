@@ -65,16 +65,30 @@ TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
   REQUIRE(cea.transitions[1].size() == 2);
   REQUIRE(cea.transitions[2].size() == 2);
 
-  REQUIRE(std::count(cea.transitions[0].begin(), cea.transitions[0].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
-  REQUIRE(std::count(cea.transitions[2].begin(), cea.transitions[2].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
-  REQUIRE(std::count(cea.transitions[2].begin(), cea.transitions[2].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(
+    std::count(cea.transitions[0].begin(),
+               cea.transitions[0].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(cea.transitions[2].begin(),
+                     cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[2].begin(),
+               cea.transitions[2].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
 
   // All epsilon transitions should be removed
   for (auto epsilon_transition : cea.epsilon_transitions) {
@@ -149,8 +163,9 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   REQUIRE(cea.final_states == 0b1000);
 }
 
-TEST_CASE("Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
-          "[LogicalCEA Optimizations]") {
+TEST_CASE(
+  "Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
+  "[LogicalCEA Optimizations]") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type("H", {});
   auto event_type_id_2 = catalog.add_event_type("S", {});
@@ -172,37 +187,74 @@ TEST_CASE("Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
   REQUIRE(cea.transitions[4].size() == 2);
   REQUIRE(cea.transitions[5].size() == 2);
 
-  REQUIRE(std::count(cea.transitions[0].begin(), cea.transitions[0].end(),
+  REQUIRE(std::count(cea.transitions[0].begin(),
+                     cea.transitions[0].end(),
                      std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1)));
 
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 3)));
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
-  REQUIRE(std::count(cea.transitions[1].begin(), cea.transitions[1].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     3)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
 
-  REQUIRE(std::count(cea.transitions[2].begin(), cea.transitions[2].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 2)));
-  REQUIRE(std::count(cea.transitions[2].begin(), cea.transitions[2].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+  REQUIRE(std::count(cea.transitions[2].begin(),
+                     cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[2].begin(),
+               cea.transitions[2].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
 
-  REQUIRE(std::count(cea.transitions[3].begin(), cea.transitions[3].end(),
-                     std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
-  REQUIRE(std::count(cea.transitions[3].begin(), cea.transitions[3].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 3)));
+  REQUIRE(
+    std::count(cea.transitions[3].begin(),
+               cea.transitions[3].end(),
+               std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
+  REQUIRE(std::count(cea.transitions[3].begin(),
+                     cea.transitions[3].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     3)));
 
-  REQUIRE(std::count(cea.transitions[4].begin(), cea.transitions[4].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 5)));
-  REQUIRE(std::count(cea.transitions[4].begin(), cea.transitions[4].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+  REQUIRE(std::count(cea.transitions[4].begin(),
+                     cea.transitions[4].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     5)));
+  REQUIRE(
+    std::count(cea.transitions[4].begin(),
+               cea.transitions[4].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
 
-  REQUIRE(std::count(cea.transitions[5].begin(), cea.transitions[5].end(),
-                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 5)));
-  REQUIRE(std::count(cea.transitions[5].begin(), cea.transitions[5].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+  REQUIRE(std::count(cea.transitions[5].begin(),
+                     cea.transitions[5].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     5)));
+  REQUIRE(
+    std::count(cea.transitions[5].begin(),
+               cea.transitions[5].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
 
   // All epsilon transitions should be removed
   for (auto epsilon_transition : cea.epsilon_transitions) {

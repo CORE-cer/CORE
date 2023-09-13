@@ -42,9 +42,11 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNon_contiguous_iteration_cel_formula(
-    CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext* ctx) override {
+    CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext* ctx)
+    override {
     visit(ctx->cel_formula());
-    formula = std::make_unique<CEQL::NonContiguousIterationFormula>(std::move(formula));
+    formula = std::make_unique<CEQL::NonContiguousIterationFormula>(
+      std::move(formula));
     return {};
   }
 

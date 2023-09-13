@@ -7,11 +7,11 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/concat.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/sequencing.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
 #include "formula_visitor.hpp"
 

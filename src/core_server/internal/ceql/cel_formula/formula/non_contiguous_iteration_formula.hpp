@@ -24,7 +24,8 @@ struct NonContiguousIterationFormula : public Formula {
   }
 
   bool equals(Formula* other) const override {
-    if (auto other_formula = dynamic_cast<NonContiguousIterationFormula*>(other)) {
+    if (auto other_formula = dynamic_cast<NonContiguousIterationFormula*>(
+          other)) {
       return *this == *other_formula;
     } else
       return false;
