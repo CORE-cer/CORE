@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "node.hpp"
+#include "time_reservator.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -19,6 +20,7 @@ class NodeManager;
 
 class TimeListManager {
   NodeManager& node_manager;
+  TimeReservator time_reservator;
   std::unique_ptr<Node> head;
   std::unique_ptr<Node> tail;
 
@@ -28,5 +30,7 @@ class TimeListManager {
   void add_node(Node* node);
   bool remove_a_dead_node_if_possible(uint64_t maximum_start_limit);
   void remove_node(Node* node);
+
+  TimeReservator& get_time_reservator() { return time_reservator; }
 };
 }  // namespace CORE::Internal::tECS

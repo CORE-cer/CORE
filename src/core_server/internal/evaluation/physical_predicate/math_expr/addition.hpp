@@ -26,6 +26,7 @@ class Addition : public MathExpr<Type> {
   Type eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Addition is only valid for arithmetic vals");
+      throw std::logic_error("Addition is only valid for arithmetic vals");
     } else
       return left->eval(tuple) + right->eval(tuple);
   }
