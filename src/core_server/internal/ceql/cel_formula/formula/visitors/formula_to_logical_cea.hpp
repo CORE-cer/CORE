@@ -32,6 +32,9 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   FormulaToLogicalCEA(Catalog& catalog) : catalog(catalog) {
     for (uint64_t event_id = 0; event_id < catalog.number_of_events();
          event_id++) {
+      std::cout << "event_id: " << event_id << std::endl;
+      std::cout << "catalog.get_event_info(event_id).name: "
+                << catalog.get_event_info(event_id).name << std::endl;
       variables_to_id[catalog.get_event_info(event_id).name] = event_id;
     }
   }
@@ -89,9 +92,13 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(ProjectionFormula& formula) override {
-    formula.formula->accept_visitor(*this);
     mpz_class variables_to_project = 0;
+    std::cout << "formula.variables.size(): " << formula.variables.size()
+              << std::endl;
     for (const std::string& var_name : formula.variables) {
+      std::cout << "var_name: " << var_name << std::endl;
+      std::cout << "var_id: " << variables_to_id.find(var_name)->second
+                << std::endl;
       if (variables_to_id.contains(var_name)) {
         variables_to_project |= mpz_class(1)
                                 << variables_to_id.find(var_name)->second;

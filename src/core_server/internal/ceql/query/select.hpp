@@ -1,7 +1,9 @@
 #pragma once
 #include <cassert>
+#include <memory>
 #include <set>
 #include <string>
+#include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 
 namespace CORE::Internal::CEQL {
 
@@ -16,16 +18,15 @@ struct Select {
     DEFAULT = Strategy::ALL
   };
 
+  std::unique_ptr<Formula> formula;
   Strategy strategy;
-  std::set<std::string> variable_names;
   bool is_star;
 
   Select(Strategy&& strategy,
-         std::set<std::string>&& variable_names,
-         bool is_star)
+         bool is_star, std::unique_ptr<Formula>&& formula)
       : strategy(std::move(strategy)),
-        variable_names(std::move(variable_names)),
-        is_star(is_star) {}
+        is_star(is_star),
+        formula(std::move(formula)){}
 
   std::string to_string() const {
     std::string out = "Select " + strategy_to_string(strategy);
@@ -33,9 +34,9 @@ struct Select {
       return out + " * ";
     }
     out += " {";
-    for (auto& var : variable_names) {
-      out += var + " ";
-    }
+    // for (auto& var : variable_names) {
+    //   out += var + " ";
+    // }
     return out + "}";
   }
 

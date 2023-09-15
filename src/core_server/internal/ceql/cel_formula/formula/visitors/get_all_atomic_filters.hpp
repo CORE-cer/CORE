@@ -25,7 +25,7 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(ContiguousSequencingFormula& formula) override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
   void visit(NonContiguousIterationFormula& formula)  override {formula.formula->accept_visitor(*this);}
-  void visit(ProjectionFormula& formula) override {formula.formula->accept_visitor(*this);}
+  void visit(ProjectionFormula& formula) override {return;}
   void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
   void visit(OrFormula& formula)         override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
