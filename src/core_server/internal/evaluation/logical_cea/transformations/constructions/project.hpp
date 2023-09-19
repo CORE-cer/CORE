@@ -1,7 +1,8 @@
 #pragma once
+#include <tuple>
+
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
-#include <tuple>
 
 namespace CORE::Internal::CEA {
 
