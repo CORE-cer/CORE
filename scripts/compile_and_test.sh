@@ -6,8 +6,8 @@ cd "$(dirname "$0")"
 cd ..
 
 # Include common
-# source scripts/common.sh
-_setArgs "$@"
+source scripts/common.sh
+# _setArgs "$@"
 
 # Compile the project under "Debug"
 ./scripts/build.sh --build_type=Debug "$@"
