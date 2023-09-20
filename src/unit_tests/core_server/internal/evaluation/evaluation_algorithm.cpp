@@ -73,7 +73,8 @@ bool is_the_same_as(RingTupleQueue::Tuple tuple,
   return (tuple_name == name && tuple_val == value);
 }
 
-CEQL::FormulaToLogicalCEA query_to_logical_cea(Catalog& catalog, CEQL::Query& query) {
+CEQL::FormulaToLogicalCEA
+query_to_logical_cea(Catalog& catalog, CEQL::Query& query) {
   CEQL::FormulaToLogicalCEA visitor = CEQL::FormulaToLogicalCEA(catalog);
 
   query.where.formula->accept_visitor(visitor);
@@ -527,7 +528,8 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(outputs.size() == 0);
 }
 
-TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {
+TEST_CASE(
+  "Evaluation of a query with contiguous events Projection all filters") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
@@ -673,7 +675,8 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
   REQUIRE(outputs.size() == 0);
 }
 
-TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel") {
+TEST_CASE(
+  "Evaluation of a query with contiguous events Projection msft, intel") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
@@ -2446,7 +2449,6 @@ TEST_CASE(
   REQUIRE(outputs[1].second.size() == 2);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
-
 }
 
 TEST_CASE(

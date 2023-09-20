@@ -3,6 +3,7 @@
 #include <memory>
 #include <set>
 #include <string>
+
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 
 namespace CORE::Internal::CEQL {
@@ -23,10 +24,11 @@ struct Select {
   bool is_star;
 
   Select(Strategy&& strategy,
-         bool is_star, std::unique_ptr<Formula>&& formula)
+         bool is_star,
+         std::unique_ptr<Formula>&& formula)
       : strategy(std::move(strategy)),
         is_star(is_star),
-        formula(std::move(formula)){}
+        formula(std::move(formula)) {}
 
   std::string to_string() const {
     std::string out = "Select " + strategy_to_string(strategy);

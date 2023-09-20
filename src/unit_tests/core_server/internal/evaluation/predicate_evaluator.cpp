@@ -84,7 +84,9 @@ CEQL::Query parse_query(std::string query) {  // Only parses where correctly
   antlr4::tree::ParseTree* tree = parser.parse();
   Parsing::WhereVisitor where_visitor;
   where_visitor.visit(tree);
-  std::unique_ptr<CEQL::ProjectionFormula> formula = std::make_unique<CEQL::ProjectionFormula>(std::set<std::string>{""});
+  std::unique_ptr<CEQL::ProjectionFormula>
+    formula = std::make_unique<CEQL::ProjectionFormula>(
+      std::set<std::string>{""});
 
   // TODO: Partitionby, within and consume_by
   CEQL::Query parsed_query(CEQL::Select(CEQL::Select::Strategy::ALL,
