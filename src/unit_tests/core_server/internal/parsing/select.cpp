@@ -58,28 +58,33 @@ TEST_CASE("Select captures list_of_variables correctly",
   std::set<std::string> vars;
   bool condition;
 
-  formula = static_cast<ProjectionFormula*>(parse_select(create_select_query("", "A")).formula.get());
+  Select select = parse_select(create_select_query("", "A"));
+  formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
   condition = vars.contains("A") && vars.size() == 1;
   REQUIRE(condition);
 
-  formula = static_cast<ProjectionFormula*>(parse_select(create_select_query("", "A, B")).formula.get());
+  select = parse_select(create_select_query("", "A, B"));
+  formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
   condition = vars.contains("A") && vars.contains("B") && vars.size() == 2;
   REQUIRE(condition);
 
-  formula = static_cast<ProjectionFormula*>(parse_select(create_select_query("", "A, B, C")).formula.get());
+  select = parse_select(create_select_query("", "A, B, C"));
+  formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
   condition = vars.contains("A") && vars.contains("B") && vars.contains("C")
               && vars.size() == 3;
   REQUIRE(condition);
 
-  formula = static_cast<ProjectionFormula*>(parse_select(create_select_query("", "*")).formula.get());
+  select = parse_select(create_select_query("", "*"));
+  formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
   condition = vars.size() == 0;
   REQUIRE(condition);
 
-  formula = static_cast<ProjectionFormula*>(parse_select(create_select_query("", "A, A")).formula.get());
+  select = parse_select(create_select_query("", "A, A"));
+  formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
   condition = vars.contains("A") && vars.size() == 1;
   REQUIRE(condition);
