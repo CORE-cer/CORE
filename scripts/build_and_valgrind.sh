@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
