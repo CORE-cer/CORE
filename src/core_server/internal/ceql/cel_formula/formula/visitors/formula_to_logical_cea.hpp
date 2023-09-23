@@ -92,6 +92,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     mpz_class variables_to_project = 0;
     for (const std::string& var_name : formula.variables) {
       if (!variables_to_id.contains(var_name)) {
+        // TODO: Move this to client warning
         std::cout << "Projecting on new variable, output will be empty"
                   << std::endl;
         variables_to_id[var_name] = next_variable_id++;
