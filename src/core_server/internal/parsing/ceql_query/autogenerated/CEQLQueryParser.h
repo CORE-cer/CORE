@@ -292,6 +292,15 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  S_noneContext : public List_of_variablesContext {
+  public:
+    S_noneContext(List_of_variablesContext *ctx);
+
+    antlr4::tree::TerminalNode *K_NONE();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   List_of_variablesContext* list_of_variables();
 
   class  From_clauseContext : public antlr4::ParserRuleContext {

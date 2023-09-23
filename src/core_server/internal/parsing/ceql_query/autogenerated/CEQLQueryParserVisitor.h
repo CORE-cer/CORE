@@ -39,6 +39,8 @@ public:
 
     virtual std::any visitS_star(CEQLQueryParser::S_starContext *context) = 0;
 
+    virtual std::any visitS_none(CEQLQueryParser::S_noneContext *context) = 0;
+
     virtual std::any visitS_list_of_variables(CEQLQueryParser::S_list_of_variablesContext *context) = 0;
 
     virtual std::any visitFrom_clause(CEQLQueryParser::From_clauseContext *context) = 0;

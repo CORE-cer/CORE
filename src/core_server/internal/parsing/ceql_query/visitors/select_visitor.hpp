@@ -39,6 +39,12 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any
+  visitS_none(CEQLQueryParser::S_noneContext* ctx) override {
+    assert(variable_names.empty());
+    return {};
+  }
+
+  virtual std::any
   visitAny_name(CEQLQueryParser::Any_nameContext* ctx) override {
     variable_names.insert(ctx->getText());
     return {};
