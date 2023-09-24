@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 
 #include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"

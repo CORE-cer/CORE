@@ -48,7 +48,7 @@ pip install conan
 ```
 sudo apt remove --purge --auto-remove cmake
 sudo apt update && \
-    sudo apt install -y software-properties-common lsb-release && \
+    sudo apt install -y software-properties-common lsb-release valgrind && \
     sudo apt clean all
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
@@ -77,6 +77,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
 ## Setup conan with autodetected configs of your computer
 
 `conan profile detect`
+
+It is important to note we also provide known working conan profiles, located at `./conan_profiles`.
 
 ## Compile the project
 

@@ -9,24 +9,20 @@
 namespace CORE::Internal::CEQL {
 
 struct ProjectionFormula : public Formula {
-  std::unique_ptr<Formula> formula;
   std::set<std::string> variables;
 
-  ProjectionFormula(std::unique_ptr<Formula>&& formula,
-                    std::set<std::string>&& variables)
-      : formula(std::move(formula)), variables(variables) {}
+  ProjectionFormula(std::set<std::string>&& variables)
+      : variables(variables) {}
 
   ~ProjectionFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
     std::set<std::string> new_variables = variables;
-    return std::make_unique<ProjectionFormula>(formula->clone(),
-                                               std::move(new_variables));
+    return std::make_unique<ProjectionFormula>(std::move(new_variables));
   }
 
   bool operator==(const ProjectionFormula& other) const {
-    return formula->equals(other.formula.get())
-           && variables == other.variables;
+    return variables == other.variables;
   }
 
   bool equals(Formula* other) const override {
@@ -45,7 +41,7 @@ struct ProjectionFormula : public Formula {
         variables_str += "," + var;
       }
     }
-    return "π⟨" + variables_str + "⟩(" + formula->to_string() + ")";
+    return "π⟨" + variables_str + "⟩";
   }
 
   void accept_visitor(FormulaVisitor& visitor) override {

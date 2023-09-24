@@ -20,7 +20,7 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
  public:
   ApplyAtomicFilter(uint64_t variable_id_to_filter,
                     CEQL::AtomicFilter& atomic_filter)
-      : variables_to_filter(1 << variable_id_to_filter),
+      : variables_to_filter(mpz_class(1) << variable_id_to_filter),
         physical_predicate_id(
           atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned

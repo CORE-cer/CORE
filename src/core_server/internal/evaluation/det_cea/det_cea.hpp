@@ -60,6 +60,17 @@ class DetCEA {
     return next_states;
   }
 
+  std::string to_string() {
+    std::string out = "";
+    out += "Initial state: " + initial_state->states.get_str(2) + "\n";
+    out += "Number of states: " + std::to_string(states.size()) + "\n";
+    out += "States:\n";
+    for (auto& state : states) {
+      out += state->states.get_str(2);
+    }
+    return out;
+  }
+
  private:
   States compute_next_states(State* state,
                              mpz_class& evaluation,
@@ -104,9 +115,9 @@ class DetCEA {
           bool is_marked = std::get<1>(transition);
           uint64_t target_node = std::get<2>(transition);
           if (is_marked) {
-            new_marked_states |= 1 << target_node;
+            new_marked_states |= mpz_class(1) << target_node;
           } else {
-            new_unmarked_states |= 1 << target_node;
+            new_unmarked_states |= mpz_class(1) << target_node;
           }
         }
       }
