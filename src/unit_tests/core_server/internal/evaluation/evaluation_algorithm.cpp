@@ -1640,7 +1640,8 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "Evaluation of a query with mix of non contiguous iteration, OR, and AS") {
+  "Evaluation of a query with mix of non contiguous iteration, OR, and "
+  "AS") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type(
     "SELL",
