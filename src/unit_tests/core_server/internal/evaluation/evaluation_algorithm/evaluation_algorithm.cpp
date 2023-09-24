@@ -1541,8 +1541,8 @@ TEST_CASE(
   auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
   INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
 
-  auto visitor = CEQL::FormulaToLogicalCEA(catalog);
-  query.where.formula->accept_visitor(visitor);
+  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+
   INFO(visitor.current_cea.to_string());
   CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
   INFO(intermediate_cea.to_string());
@@ -1590,8 +1590,10 @@ TEST_CASE(
   REQUIRE(outputs[1].first.first == 0);
   REQUIRE(outputs[1].first.second == 2);
 
+  REQUIRE(outputs[0].second.size() == 1);
   REQUIRE(is_the_same_as(outputs[0].second[0], 1, "MSFT", 102));
 
+  REQUIRE(outputs[0].second.size() == 2);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 1, "MSFT", 102));
 }
@@ -1626,8 +1628,8 @@ TEST_CASE(
   auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
   INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
 
-  auto visitor = CEQL::FormulaToLogicalCEA(catalog);
-  query.where.formula->accept_visitor(visitor);
+  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+
   INFO(visitor.current_cea.to_string());
   CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
   INFO(intermediate_cea.to_string());
@@ -1675,8 +1677,10 @@ TEST_CASE(
   REQUIRE(outputs[1].first.first == 0);
   REQUIRE(outputs[1].first.second == 2);
 
+  REQUIRE(outputs[0].second.size() == 1);
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
 
+  REQUIRE(outputs[0].second.size() == 2);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
 }
