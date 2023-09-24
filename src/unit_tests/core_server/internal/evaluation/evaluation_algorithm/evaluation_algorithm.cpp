@@ -10,7 +10,6 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
-
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the paper.") {
   Catalog catalog;
@@ -1288,7 +1287,6 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[9].second[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(outputs[9].second[2], 0, "AMZN", 1901));
 }
-
 
 TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "

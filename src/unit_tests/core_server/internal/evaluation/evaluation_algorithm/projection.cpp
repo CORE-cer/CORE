@@ -10,7 +10,6 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
-
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE(
   "Evaluation of a query with contiguous events Projection all filters") {

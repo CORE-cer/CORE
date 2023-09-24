@@ -84,4 +84,4 @@ query_to_logical_cea(Catalog& catalog, CEQL::Query& query) {
 
   return visitor;
 }
-}
+}  // namespace CORE::Internal::Evaluation::UnitTests
