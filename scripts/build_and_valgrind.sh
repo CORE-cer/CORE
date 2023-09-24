@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
@@ -5,10 +7,10 @@ cd ..
 
 # Include common
 source scripts/common.sh
-_setArgs "$@"
+# _setArgs "$@"
 
 # Compile the project under "Debug"
-./scripts/build.sh --build_type=Debug
+./scripts/build.sh --build_type=Debug "$@"
 build_result=$?
 
 if [ $build_result -ne 0 ]; then

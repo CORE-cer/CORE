@@ -55,6 +55,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitS_none(CEQLQueryParser::S_noneContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitS_list_of_variables(CEQLQueryParser::S_list_of_variablesContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -71,11 +75,11 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitPar_cel_formula(CEQLQueryParser::Par_cel_formulaContext *ctx) override {
+  virtual std::any visitContiguous_iteration_cel_formula(CEQLQueryParser::Contiguous_iteration_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitKleene_cel_formula(CEQLQueryParser::Kleene_cel_formulaContext *ctx) override {
+  virtual std::any visitPar_cel_formula(CEQLQueryParser::Par_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -92,6 +96,10 @@ public:
   }
 
   virtual std::any visitNon_contiguous_sequencing_cel_formula(CEQLQueryParser::Non_contiguous_sequencing_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNon_contiguous_iteration_cel_formula(CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 

@@ -1,4 +1,6 @@
 #pragma once
+#include <tuple>
+
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 
@@ -18,6 +20,9 @@ class MarkVariable : public LogicalCEATransformer<MarkVariable> {
   LogicalCEA eval(LogicalCEA&& cea) {
     for (int i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
+        if (std::get<1>(transition) == 0) {
+          continue;
+        }
         transition = std::make_tuple(std::get<0>(transition),
                                      std::get<1>(transition)
                                        | variables_to_mark,
