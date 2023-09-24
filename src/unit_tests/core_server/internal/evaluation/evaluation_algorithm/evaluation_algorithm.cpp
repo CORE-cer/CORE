@@ -1591,7 +1591,7 @@ TEST_CASE(
   REQUIRE(outputs[0].second.size() == 1);
   REQUIRE(is_the_same_as(outputs[0].second[0], 1, "MSFT", 102));
 
-  REQUIRE(outputs[0].second.size() == 2);
+  REQUIRE(outputs[1].second.size() == 2);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 1, "MSFT", 102));
 }
@@ -1678,7 +1678,7 @@ TEST_CASE(
   REQUIRE(outputs[0].second.size() == 1);
   REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
 
-  REQUIRE(outputs[0].second.size() == 2);
+  REQUIRE(outputs[1].second.size() == 2);
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
 }
