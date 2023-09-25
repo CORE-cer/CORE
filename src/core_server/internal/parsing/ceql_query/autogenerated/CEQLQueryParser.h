@@ -19,20 +19,20 @@ public:
     K_SECONDS = 24, K_SELECT = 25, K_STREAM = 26, K_STRICT = 27, K_UNLESS = 28, 
     K_WHERE = 29, K_WITHIN = 30, PERCENT = 31, PLUS = 32, MINUS = 33, STAR = 34, 
     SLASH = 35, LE = 36, LEQ = 37, GE = 38, GEQ = 39, EQ = 40, NEQ = 41, 
-    SEMICOLON = 42, COMMA = 43, DOUBLE_DOT = 44, LEFT_PARENTHESIS = 45, 
-    RIGHT_PARENTHESIS = 46, LEFT_SQUARE_BRACKET = 47, RIGHT_SQUARE_BRACKET = 48, 
-    LEFT_CURLY_BRACKET = 49, RIGHT_CURLY_BRACKET = 50, IDENTIFIER = 51, 
-    DOUBLE_LITERAL = 52, INTEGER_LITERAL = 53, NUMERICAL_EXPONENT = 54, 
-    STRING_LITERAL = 55, SINGLE_LINE_COMMENT = 56, MULTILINE_COMMENT = 57, 
-    SPACES = 58, UNEXPECTED_CHAR = 59, REGEX_START = 60, REGEX_END = 61, 
-    REGEX_END_ESCAPED = 62, REGEX_PIPE = 63, REGEX_EXCLAMAITON = 64, REGEX_L_CURLY = 65, 
-    REGEX_R_CURLY = 66, REGEX_L_PAR = 67, REGEX_R_PAR = 68, REGEX_COMMA = 69, 
-    REGEX_QUESTION = 70, REGEX_PLUS = 71, REGEX_STAR = 72, REGEX_HAT = 73, 
-    REGEX_HYPHEN = 74, REGEX_L_BRACK = 75, REGEX_R_BRACK = 76, REGEX_BACKSLASH = 77, 
-    REGEX_ALPHA = 78, REGEX_DOT = 79, REGEX_DOUBLED_DOT = 80, UNRECOGNIZED = 81, 
-    REGEX_DECIMAL_DIGIT = 82, REGEX_NOT_DECIMAL_DIGIT = 83, REGEX_WHITESPACE = 84, 
-    REGEX_NOT_WHITESPACE = 85, REGEX_ALPHANUMERIC = 86, REGEX_NOT_ALPHANUMERIC = 87, 
-    REGEX_DIGIT = 88
+    SEMICOLON = 42, COLON = 43, COMMA = 44, DOUBLE_DOT = 45, LEFT_PARENTHESIS = 46, 
+    RIGHT_PARENTHESIS = 47, LEFT_SQUARE_BRACKET = 48, RIGHT_SQUARE_BRACKET = 49, 
+    LEFT_CURLY_BRACKET = 50, RIGHT_CURLY_BRACKET = 51, COLON_PLUS = 52, 
+    IDENTIFIER = 53, DOUBLE_LITERAL = 54, INTEGER_LITERAL = 55, NUMERICAL_EXPONENT = 56, 
+    STRING_LITERAL = 57, SINGLE_LINE_COMMENT = 58, MULTILINE_COMMENT = 59, 
+    SPACES = 60, UNEXPECTED_CHAR = 61, REGEX_START = 62, REGEX_END = 63, 
+    REGEX_END_ESCAPED = 64, REGEX_PIPE = 65, REGEX_EXCLAMAITON = 66, REGEX_L_CURLY = 67, 
+    REGEX_R_CURLY = 68, REGEX_L_PAR = 69, REGEX_R_PAR = 70, REGEX_COMMA = 71, 
+    REGEX_QUESTION = 72, REGEX_PLUS = 73, REGEX_STAR = 74, REGEX_HAT = 75, 
+    REGEX_HYPHEN = 76, REGEX_L_BRACK = 77, REGEX_R_BRACK = 78, REGEX_BACKSLASH = 79, 
+    REGEX_ALPHA = 80, REGEX_DOT = 81, REGEX_DOUBLED_DOT = 82, UNRECOGNIZED = 83, 
+    REGEX_DECIMAL_DIGIT = 84, REGEX_NOT_DECIMAL_DIGIT = 85, REGEX_WHITESPACE = 86, 
+    REGEX_NOT_WHITESPACE = 87, REGEX_ALPHANUMERIC = 88, REGEX_NOT_ALPHANUMERIC = 89, 
+    REGEX_DIGIT = 90
   };
 
   enum {
@@ -293,6 +293,15 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  S_noneContext : public List_of_variablesContext {
+  public:
+    S_noneContext(List_of_variablesContext *ctx);
+
+    antlr4::tree::TerminalNode *K_NONE();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   List_of_variablesContext* list_of_variables();
 
   class  From_clauseContext : public antlr4::ParserRuleContext {
@@ -325,11 +334,32 @@ public:
    
   };
 
+  class  Contiguous_sequencing_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Contiguous_sequencing_cel_formulaContext(Cel_formulaContext *ctx);
+
+    std::vector<Cel_formulaContext *> cel_formula();
+    Cel_formulaContext* cel_formula(size_t i);
+    antlr4::tree::TerminalNode *COLON();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  Event_type_cel_formulaContext : public Cel_formulaContext {
   public:
     Event_type_cel_formulaContext(Cel_formulaContext *ctx);
 
     S_event_nameContext *s_event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Contiguous_iteration_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Contiguous_iteration_cel_formulaContext(Cel_formulaContext *ctx);
+
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *COLON_PLUS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -341,27 +371,6 @@ public:
     antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
     Cel_formulaContext *cel_formula();
     antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Sequencing_cel_formulaContext : public Cel_formulaContext {
-  public:
-    Sequencing_cel_formulaContext(Cel_formulaContext *ctx);
-
-    std::vector<Cel_formulaContext *> cel_formula();
-    Cel_formulaContext* cel_formula(size_t i);
-    antlr4::tree::TerminalNode *SEMICOLON();
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  Kleene_cel_formulaContext : public Cel_formulaContext {
-  public:
-    Kleene_cel_formulaContext(Cel_formulaContext *ctx);
-
-    Cel_formulaContext *cel_formula();
-    antlr4::tree::TerminalNode *PLUS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -395,6 +404,27 @@ public:
     Cel_formulaContext *cel_formula();
     antlr4::tree::TerminalNode *K_AS();
     Event_nameContext *event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Non_contiguous_sequencing_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Non_contiguous_sequencing_cel_formulaContext(Cel_formulaContext *ctx);
+
+    std::vector<Cel_formulaContext *> cel_formula();
+    Cel_formulaContext* cel_formula(size_t i);
+    antlr4::tree::TerminalNode *SEMICOLON();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Non_contiguous_iteration_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Non_contiguous_iteration_cel_formulaContext(Cel_formulaContext *ctx);
+
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *PLUS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -920,7 +950,7 @@ public:
   public:
     Hour_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    IntegerContext *integer();
+    NumberContext *number();
     antlr4::tree::TerminalNode *K_HOURS();
 
 
@@ -934,7 +964,7 @@ public:
   public:
     Minute_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    IntegerContext *integer();
+    NumberContext *number();
     antlr4::tree::TerminalNode *K_MINUTES();
 
 
@@ -948,7 +978,7 @@ public:
   public:
     Second_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    IntegerContext *integer();
+    NumberContext *number();
     antlr4::tree::TerminalNode *K_SECONDS();
 
 
