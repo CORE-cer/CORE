@@ -2,8 +2,9 @@
 
 #include <cstdlib>
 
-#include "minipool.hpp"
+#include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
+#include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -15,22 +16,28 @@ const size_t MEMORY_POOL_STARTING_SIZE = 2048;
  * of references to it has become 0, that memory is available to be recycled.
  */
 class NodeManager {
+  typedef MiniPool::MiniPool<Node> NodePool;
+
  public:
   size_t amount_of_nodes_used{0};
   size_t amount_of_recycled_nodes{0};
+  uint64_t& expiration_time;
 
  private:
-  MiniPool* minipool_head;
-  Node* recyclable_node_head;
+  NodePool* minipool_head = nullptr;
+  Node* recyclable_node_head = nullptr;
+  TimeListManager time_list_manager;
 
  public:
-  NodeManager(size_t starting_size)
-      : minipool_head(new MiniPool(starting_size)),
-        recyclable_node_head(nullptr) {}
+  NodeManager(size_t starting_size, uint64_t& event_time_of_expiration)
+      : minipool_head(new NodePool(starting_size)),
+        recyclable_node_head(nullptr),
+        time_list_manager(*this),
+        expiration_time(event_time_of_expiration) {}
 
   ~NodeManager() {
-    for (MiniPool* mp = minipool_head; mp != nullptr;) {
-      MiniPool* next = mp->next();
+    for (NodePool* mp = minipool_head; mp != nullptr;) {
+      NodePool* next = mp->next();
       delete mp;
       mp = next;
     }
@@ -38,36 +45,54 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
-    Node*
-      recycled_node = get_node_to_recycle_or_increase_mempool_size_if_necessary();
-    if (recycled_node != nullptr) {
-      recycled_node->reset(std::forward<Args>(args)...);
-      return recycled_node;
+    Node* out = get_node_to_recycle_or_increase_mempool_size_if_necessary();
+    if (out != nullptr) {
+      out->reset(std::forward<Args>(args)...);
+    } else {
+      out = allocate_a_new_node((args)...);
     }
-    return allocate_a_new_node((args)...);
+    time_list_manager.add_node(out);
+    return out;
   }
 
   size_t amount_of_nodes_allocated() const {
     size_t amount = 0;
-    for (MiniPool* mpool = minipool_head; mpool != nullptr;
+    for (NodePool* mpool = minipool_head; mpool != nullptr;
          mpool = mpool->prev())
       amount += mpool->capacity();
     return amount;
   }
 
+  void increase_ref_count(Node* node) { node->ref_count++; }
+
   void decrease_ref_count(Node* node) {
+    assert(node != nullptr);
     node->ref_count--;
     try_to_mark_node_as_unused(node);
   }
 
-  void increase_ref_count(Node* node) { node->ref_count++; }
-
-  void add_to_list_of_free_memory(Node* node) {
-    node->next_free_node = recyclable_node_head;
-    recyclable_node_head = node;
+  void mark_as_dead(Node* node) {
+    assert(node != nullptr);
+    assert(node->node_type != Node::NodeType::DEAD);
+    switch (node->node_type) {
+      case Node::NodeType::UNION:
+        decrease_ref_count(node->right);
+        node->right = nullptr;
+        [[fallthrough]];
+      case Node::NodeType::OUTPUT:
+        decrease_ref_count(node->left);
+        node->left = nullptr;
+        [[fallthrough]];
+      default:
+        node->node_type = Node::NodeType::DEAD;
+    }
   }
 
   size_t get_amount_of_nodes_used() const { return amount_of_nodes_used; }
+
+  TimeReservator& get_time_reservator() {
+    return time_list_manager.get_time_reservator();
+  }
 
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
@@ -75,6 +100,14 @@ class NodeManager {
       return nullptr;
     }
     if (recyclable_node_head == nullptr) {
+      if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
+        while (
+          time_list_manager.remove_a_dead_node_if_possible(expiration_time))
+          ;
+        if (recyclable_node_head != nullptr) {
+          return get_node_to_recycle();
+        }
+      };
       increase_mempool_size();
       return nullptr;
     }
@@ -82,7 +115,7 @@ class NodeManager {
   }
 
   void increase_mempool_size() {
-    MiniPool* new_minipool = new MiniPool(minipool_head->size() * 2);
+    NodePool* new_minipool = new NodePool(minipool_head->size() * 2);
     minipool_head->set_next(new_minipool);
     new_minipool->set_prev(minipool_head);
 
@@ -90,26 +123,22 @@ class NodeManager {
   }
 
   Node* get_node_to_recycle() {
+    static int i = 1;
+    static int bottom_nodes_recycled = 1;
+    static int extend_nodes_recycled = 1;
+    static int union_nodes_recycled = 1;
     Node* node_to_recycle = recyclable_node_head;
-    Node* children_of_the_recycled_node[2] = {nullptr, nullptr};
-    if (node_to_recycle->is_union()) {
-      children_of_the_recycled_node[0] = recyclable_node_head->right;
-      children_of_the_recycled_node[1] = recyclable_node_head->left;
-    } else {
-      children_of_the_recycled_node[0] = recyclable_node_head->left;
-    }
-
     advance_recyclable_nodes_list_head();
-    decrease_references_to_children(children_of_the_recycled_node);
-
-    return node_to_recycle;
-  }
-
-  void decrease_references_to_children(Node* children[2]) {
-    for (int i = 0; i < 2; i++) {
-      Node* node = children[i];
-      if (node != nullptr) decrease_ref_count(node);
+    if (node_to_recycle->is_union()) {
+      decrease_ref_count(node_to_recycle->left);
+      decrease_ref_count(node_to_recycle->right);
+    } else if (node_to_recycle->is_output()) {
+      decrease_ref_count(node_to_recycle->left);
+    } else {
+      assert(node_to_recycle->is_bottom() || node_to_recycle->is_dead());
     }
+    time_list_manager.remove_node(node_to_recycle);
+    return node_to_recycle;
   }
 
   void advance_recyclable_nodes_list_head() {
@@ -127,6 +156,11 @@ class NodeManager {
     if (node->ref_count == 0) {
       add_to_list_of_free_memory(node);
     }
+  }
+
+  void add_to_list_of_free_memory(Node* node) {
+    node->next_free_node = recyclable_node_head;
+    recyclable_node_head = node;
   }
 };
 }  // namespace CORE::Internal::tECS

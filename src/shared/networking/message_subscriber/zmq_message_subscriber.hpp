@@ -1,3 +1,5 @@
+#pragma once
+#include <iostream>
 #include <zmq.hpp>
 
 #include "shared/networking/message_subscriber/message_subscriber.hpp"

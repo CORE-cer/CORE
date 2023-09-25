@@ -3,12 +3,19 @@
 
 #include <cstdint>
 #include <set>
+#include <tuple>
 #include <vector>
 
 #include "core_server/internal/evaluation/predicate_set.hpp"
 
 namespace CORE::Internal::CEA {
 struct LogicalCEA {
+  /**
+   * To obtain a LogicalCEA a string query is transformed into an
+   * internal structure called Query, then the query's formula is
+   * transformed to this LogicalCEA. Later on this LogicalCEA is
+   * transformed into a CEA and this is used in the DetCEA.
+   */
  public:
   using VariablesToMark = mpz_class;
   using NodeId = uint64_t;
@@ -40,14 +47,14 @@ struct LogicalCEA {
 
   static LogicalCEA atomic_cea(uint64_t event_type_id) {
     auto atomic_cea = LogicalCEA(2);
-    mpz_class position_of_event = (mpz_class)1 << event_type_id;
-    mpz_class predicate_mask = (mpz_class)1 << event_type_id;
+    mpz_class position_of_event = mpz_class(1) << event_type_id;
+    mpz_class predicate_mask = mpz_class(1) << event_type_id;
     atomic_cea.transitions[0].push_back(
       std::make_tuple(PredicateSet(position_of_event, predicate_mask),
                       position_of_event,
                       1));
-    atomic_cea.initial_states = 1 << 0;
-    atomic_cea.final_states = 1 << 1;
+    atomic_cea.initial_states = mpz_class(1) << 0;
+    atomic_cea.final_states = mpz_class(1) << 1;
     return atomic_cea;
   }
 

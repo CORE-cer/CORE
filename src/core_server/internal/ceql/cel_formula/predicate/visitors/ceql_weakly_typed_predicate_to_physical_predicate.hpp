@@ -318,7 +318,8 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(
       value);
 
-    auto regex_string = right_expr_string->val;
+    // Pass in string as it is one time cost and CompareWithRegex should have the direct object
+    std::string regex_string(right_expr_string->val);
 
     return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(
       admissible_event_types,

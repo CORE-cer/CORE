@@ -558,12 +558,14 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
     auto left_ptr = static_cast<CEQL::Attribute*>(left.get());
     size_t left_pos = get_pos_from_name(left_ptr->value);
 
-    std::string_view right_str = get_val_from_literal<std::string_view>(
+    std::string_view right_str_view = get_val_from_literal<std::string_view>(
       right);
 
-    return std::make_unique<CEA::CompareWithRegexStronglyTyped>(event_info.id,
-                                                                left_pos,
-                                                                right_str);
+    // Pass in string as it is one time cost and CompareWithRegex should have the direct object
+    std::string right_str(right_str_view);
+
+    return std::make_unique<CEA::CompareWithRegexStronglyTyped>(
+      event_info.id, left_pos, std::move(right_str));
   }
 
   template <typename ValueType>

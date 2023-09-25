@@ -3,14 +3,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-#include "shared/datatypes/client_request.hpp"
-#include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/event.hpp"
+#include "core_client/client.hpp"
+#include "core_streamer/streamer.hpp"
 #include "shared/datatypes/stream.hpp"
-#include "shared/networking/message_dealer/zmq_message_dealer.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
-#include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
-#include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests {
 
@@ -25,97 +20,39 @@ send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
 }
 
 Types::EventTypeId declare_and_check_for_event(
+  Client& client,
   std::string name,
   std::vector<Types::AttributeInfo> attribute_info) {
-  ZMQMessageDealer dealer("tcp://localhost:5000");
-
-  Types::ClientRequest event_declaration(
-    CerealSerializer<std::pair<std::string, std::vector<Types::AttributeInfo>>>::
-      serialize(std::pair(name, attribute_info)),
-    Types::ClientRequestType::EventDeclaration);
-
-  Types::ServerResponse id_response = send_request(dealer,
-                                                   event_declaration);
-  REQUIRE(id_response.response_type
-          == Types::ServerResponseType::EventTypeId);
-
-  // Event info from id works
-  auto id = CerealSerializer<Types::EventTypeId>::deserialize(
-    id_response.serialized_response_data);
-  Types::ClientRequest
-    request(CerealSerializer<Types::EventTypeId>::serialize(id),
-            Types::ClientRequestType::EventInfoFromId);
-  Types::ServerResponse response = send_request(dealer, request);
-  REQUIRE(response.response_type == Types::ServerResponseType::EventInfo);
-  auto event_info = CerealSerializer<Types::EventInfo>::deserialize(
-    response.serialized_response_data);
-  REQUIRE(event_info.name == name);
-  REQUIRE(event_info.attributes_info.size() == attribute_info.size());
-  for (int i = 0; i < attribute_info.size(); i++) {
-    REQUIRE(event_info.attributes_info[i] == attribute_info[i]);
+  try {
+    auto id = client.declare_event_type(name, std::move(attribute_info));
+    Types::EventInfo event_info_from_id = client.get_event_info(id);
+    Types::EventInfo event_info_from_name = client.get_event_info(id);
+    REQUIRE(event_info_from_id == event_info_from_name);
+    REQUIRE(event_info_from_id.id == id);
+    REQUIRE(event_info_from_id.name == name);
+    return id;
+  } catch (std::runtime_error) {
+    REQUIRE((false && "A response gave an error"));
+    return -1;
   }
-
-  // Event info from name works too
-  request = Types::ClientRequest(CerealSerializer<std::string>::serialize(
-                                   name),
-                                 Types::ClientRequestType::EventInfoFromName);
-  response = send_request(dealer, request);
-  REQUIRE(response.response_type == Types::ServerResponseType::EventInfo);
-  event_info = CerealSerializer<Types::EventInfo>::deserialize(
-    response.serialized_response_data);
-  REQUIRE(event_info.name == name);
-  REQUIRE(event_info.attributes_info.size() == attribute_info.size());
-  for (int i = 0; i < attribute_info.size(); i++) {
-    REQUIRE(event_info.attributes_info[i] == attribute_info[i]);
-  }
-  return id;
 }
 
 Types::EventTypeId
-declare_and_check_for_stream(std::string name,
+declare_and_check_for_stream(Client& client,
+                             std::string name,
                              std::vector<Types::EventTypeId> ids) {
-  ZMQMessageDealer dealer("tcp://localhost:5000");
-
-  Types::ClientRequest stream_declaration(
-    CerealSerializer<std::pair<std::string, std::vector<Types::EventTypeId>>>::
-      serialize(std::pair(name, ids)),
-    Types::ClientRequestType::StreamDeclaration);
-
-  Types::ServerResponse id_response = send_request(dealer,
-                                                   stream_declaration);
-  REQUIRE(id_response.response_type
-          == Types::ServerResponseType::StreamTypeId);
-
-  // Stream info from id works
-  auto id = CerealSerializer<Types::StreamTypeId>::deserialize(
-    id_response.serialized_response_data);
-  Types::ClientRequest
-    request(CerealSerializer<Types::EventTypeId>::serialize(id),
-            Types::ClientRequestType::StreamInfoFromId);
-  Types::ServerResponse response = send_request(dealer, request);
-  REQUIRE(response.response_type == Types::ServerResponseType::StreamInfo);
-  auto stream_info = CerealSerializer<Types::StreamInfo>::deserialize(
-    response.serialized_response_data);
-  REQUIRE(stream_info.name == name);
-  REQUIRE(stream_info.events_info.size() == ids.size());
-  for (int i = 0; i < stream_info.events_info.size(); i++) {
-    REQUIRE(stream_info.events_info[i].id == ids[i]);
+  try {
+    auto id = client.declare_stream_type(name, std::move(ids));
+    Types::StreamInfo stream_info_from_id = client.get_stream_info(id);
+    Types::StreamInfo stream_info_from_name = client.get_stream_info(id);
+    REQUIRE(stream_info_from_id == stream_info_from_name);
+    REQUIRE(stream_info_from_id.id == id);
+    REQUIRE(stream_info_from_id.name == name);
+    return id;
+  } catch (std::runtime_error) {
+    REQUIRE((false && "A response gave an error"));
+    return -1;
   }
-
-  // Event info from name works too
-  request = Types::ClientRequest(
-    CerealSerializer<std::string>::serialize(name),
-    Types::ClientRequestType::StreamInfoFromName);
-  response = send_request(dealer, request);
-  REQUIRE(response.response_type == Types::ServerResponseType::StreamInfo);
-  stream_info = CerealSerializer<Types::StreamInfo>::deserialize(
-    response.serialized_response_data);
-  REQUIRE(stream_info.name == name);
-  REQUIRE(stream_info.events_info.size() == ids.size());
-  for (int i = 0; i < stream_info.events_info.size(); i++) {
-    REQUIRE(stream_info.events_info[i].id == ids[i]);
-  }
-  return id;
 }
 
 std::string create_query(std::string filter_clause) {
@@ -154,19 +91,26 @@ TEST_CASE(
   // TODO: Change this to actual complex event, not queryEvaluator.
   Mediator mediator(5000);
   mediator.start();
+  INFO("Started mediator.");
+
+  Client client{"tcp://localhost", 5000};
 
   auto event_type_id_1 = declare_and_check_for_event(
+    client,
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = declare_and_check_for_stream("S1",
+  auto stream_type_id_1 = declare_and_check_for_stream(client,
+                                                       "S1",
                                                        {event_type_id_1});
   auto event_type_id_2 = declare_and_check_for_event(
+    client,
     "Mixed",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  auto stream_type_id_2 = declare_and_check_for_stream("S2",
+  auto stream_type_id_2 = declare_and_check_for_stream(client,
+                                                       "S2",
                                                        {event_type_id_1,
                                                         event_type_id_2});
 
@@ -217,18 +161,24 @@ TEST_CASE(
   Mediator mediator(5000);
   mediator.start();
 
+  Client client{"tcp://localhost", 5000};
+
   auto event_type_id_1 = declare_and_check_for_event(
+    client,
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = declare_and_check_for_stream("S1",
+  auto stream_type_id_1 = declare_and_check_for_stream(client,
+                                                       "S1",
                                                        {event_type_id_1});
   auto event_type_id_2 = declare_and_check_for_event(
+    client,
     "Mixed",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  auto stream_type_id_2 = declare_and_check_for_stream("S2",
+  auto stream_type_id_2 = declare_and_check_for_stream(client,
+                                                       "S2",
                                                        {event_type_id_1,
                                                         event_type_id_2});
 
@@ -243,51 +193,44 @@ TEST_CASE(
   queries.push_back(
     create_query("Ints[Int2 <= 4 AND Int2 >= 1] AND "
                  "X[Double1 == 30 OR Int2 >= 1.0]"));
-  ZMQMessageDealer dealer("tcp://localhost:5000");
+
   Types::PortNumber expected_port_number = 5002;
   for (auto& query : queries) {
-    Types::ClientRequest create_streamer{std::move(query),
-                                         Types::ClientRequestType::AddQuery};
-    Types::ServerResponse response = send_request(dealer, create_streamer);
-    REQUIRE(response.response_type == Types::ServerResponseType::PortNumber);
-    auto port_number = CerealSerializer<Types::PortNumber>::deserialize(
-      response.serialized_response_data);
+    auto port_number = client.add_query(query);
     REQUIRE(port_number == expected_port_number++);
   }
 
-  std::vector<ZMQMessageSubscriber> subscribers;
-  std::vector<std::string> messages(queries.size());
-  std::vector<std::thread> subscriber_threads;
+  std::vector<std::unique_ptr<LimitedMessageStorer>> handlers{};
 
   for (size_t port = 5002; port < expected_port_number; port++) {
-    subscribers.emplace_back("tcp://localhost:" + std::to_string(port));
+    handlers.emplace_back(
+      std::make_unique<LimitedMessageStorer>(1));  // Store one enumerator.
+    client.subscribe_to_complex_event<LimitedMessageStorer>(
+      handlers.back().get(), port);
   }
 
-  // Separately because of the parallel nature of this test case.
-  std::atomic<Types::PortNumber> port_num{5002};
-  for (size_t i = 0; i < queries.size(); i++) {
-    subscriber_threads.emplace_back([&]() {
-      auto port = port_num++;  // Atomic
-      messages[port - 5002] = subscribers[port - 5002].receive();
-    });
-  }
+  INFO("Created handlers");
+
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  client.stop_all_subscriptions();
 
-  ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
+  Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
-  sender.send(CerealSerializer<Types::Stream>::serialize(
-    Types::Stream(stream_type_id_1, {event_to_send})));
-  for (auto& thread : subscriber_threads) {
-    thread.join();
-  }
+
+  streamer.send_stream(stream_type_id_1, event_to_send);
+
+  client.join_all_threads();
   mediator.stop();
-  REQUIRE(complex_events_from_serialized_enumerator(messages[0]).size()
+
+  INFO("Stopped mediators and joined clients");
+
+  REQUIRE(complex_events_from_enumerator(handlers[0]->storage[0]).size()
           == 1);
-  REQUIRE(complex_events_from_serialized_enumerator(messages[1]).size()
+  REQUIRE(complex_events_from_enumerator(handlers[1]->storage[0]).size()
           == 0);
-  REQUIRE(complex_events_from_serialized_enumerator(messages[2]).size()
+  REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
           == 1);
 }
 }  // namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests

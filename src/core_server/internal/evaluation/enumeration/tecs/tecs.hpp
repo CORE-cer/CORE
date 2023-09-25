@@ -7,6 +7,7 @@
 
 #include "node.hpp"
 #include "node_manager.hpp"
+#include "time_reservator.hpp"
 
 namespace CORE::Internal::tECS {
 
@@ -16,19 +17,16 @@ class tECS {
   using UnionList = std::vector<Node*>;
 
  public:
-  size_t get_amount_of_nodes_used() const {
-    return node_manager.get_amount_of_nodes_used();
-  }
-
-  size_t amount_of_nodes_allocated() const {
-    return node_manager.amount_of_nodes_allocated();
-  }
+  TimeReservator* time_reservator;
 
  private:
   NodeManager node_manager;
 
  public:
-  tECS() : node_manager(2048) {}
+  tECS(uint64_t& event_time_of_expiration)
+      : node_manager(2048, event_time_of_expiration) {
+    time_reservator = &node_manager.get_time_reservator();
+  }
 
   void pin(Node* node) { node_manager.increase_ref_count(node); }
 
@@ -45,7 +43,7 @@ class tECS {
   void unpin(Node* node) { node_manager.decrease_ref_count(node); }
 
   void unpin(UnionList& ulist) {
-    for (auto node : ulist) {
+    for (auto& node : ulist) {
       unpin(node);
     }
   }
@@ -56,7 +54,9 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    return node_manager.alloc(tuple, timestamp);
+    static int i = 1;
+    auto out = node_manager.alloc(tuple, timestamp);
+    return out;
   }
 
   /**
@@ -66,6 +66,7 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
+    static int i = 1;
     return node_manager.alloc(node, tuple, timestamp);
   }
 
@@ -74,6 +75,7 @@ class tECS {
    * single node.
    */
   [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
+    static int i = 1;
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {

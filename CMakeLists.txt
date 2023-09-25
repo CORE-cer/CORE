@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=thread -fPIE -pie")
+
 project (core CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -49,13 +52,23 @@ target_link_libraries(core antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::
 
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
+# Set debug flag for core
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  target_compile_definitions(core PUBLIC CORE_DEBUG)
+endif()
+
+target_compile_options(core PUBLIC -Werror=old-style-cast)
+
 # executable target
 
-add_executable(simulation src/targets/main.cpp)
+add_executable(simulation1 src/targets/simulation1.cpp)
+add_executable(simulation2 src/targets/simulation2.cpp)
 add_executable(client src/targets/client.cpp)
 add_executable(server src/targets/server.cpp)
 
-target_link_libraries(simulation core)
+target_link_libraries(simulation1 core)
+target_link_libraries(simulation2 core)
 target_link_libraries(client core)
 target_link_libraries(server core)
 

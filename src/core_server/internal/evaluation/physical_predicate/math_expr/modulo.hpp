@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
@@ -25,6 +26,7 @@ class Modulo : public MathExpr<Type> {
   Type eval(RingTupleQueue::Tuple& tuple) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Modulo is only valid for arithmetic vals");
+      throw std::logic_error("Modulo is only valid for arithmetic vals");
     } else if constexpr (std::is_same_v<Type, double>) {
       throw std::runtime_error("Cannot eval a modulo on double types");
     } else {

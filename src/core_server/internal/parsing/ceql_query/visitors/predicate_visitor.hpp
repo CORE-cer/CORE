@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 
 #include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
@@ -118,6 +119,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
       value_visitor.get_parsed_value().release());
     assert(right_ptr != nullptr);
     CEQL::Sequence right = std::move(*right_ptr);
+    delete right_ptr;
     predicate = std::make_unique<CEQL::InPredicate>(std::move(left),
                                                     std::move(right));
     if (ctx->K_NOT()) {
