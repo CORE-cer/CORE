@@ -23,6 +23,24 @@ RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
   return ring_tuple_queue.get_tuple(data);
 }
 
+// Overload of add_event for events with 4 attributes
+RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
+                                uint64_t event_type_id,
+                                std::string val1,
+                                int64_t val2,
+                                int64_t val3) {
+  uint64_t* data = ring_tuple_queue.start_tuple(event_type_id);
+  char* chars = ring_tuple_queue.writer<std::string>(val1.size());
+  memcpy(chars, &val1[0], val1.size());
+  int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
+  *integer_ptr = val2;
+  int64_t* integer_ptr_2 = ring_tuple_queue.writer<int64_t>();
+  *integer_ptr_2 = val3;
+
+  return ring_tuple_queue.get_tuple(data);
+}
+
+
 std::vector<std::pair<std::pair<uint64_t, uint64_t>,
                       std::vector<RingTupleQueue::Tuple>>>
 enumerator_to_vector(tECS::Enumerator& enumerator) {
@@ -73,6 +91,22 @@ bool is_the_same_as(RingTupleQueue::Tuple tuple,
   return (tuple_name == name && tuple_val == value);
 }
 
+// Overload of is_the_same_as for events with 4 attributes
+bool is_the_same_as(RingTupleQueue::Tuple tuple,
+                    uint64_t event_type_id,
+                    std::string name,
+                    int64_t value,
+                    int64_t quantity) {
+  if (tuple.id() != event_type_id) {
+    return false;
+  }
+  std::string_view
+    tuple_name = RingTupleQueue::Value<std::string_view>(tuple[0]).get();
+  int64_t tuple_val = RingTupleQueue::Value<int64_t>(tuple[1]).get();
+  int64_t tuple_quantity = RingTupleQueue::Value<int64_t>(tuple[2]).get();
+  return (tuple_name == name && tuple_val == value && tuple_quantity == quantity);
+}
+
 CEQL::FormulaToLogicalCEA
 query_to_logical_cea(Catalog& catalog, CEQL::Query& query) {
   CEQL::FormulaToLogicalCEA visitor = CEQL::FormulaToLogicalCEA(catalog);
@@ -84,4 +118,14 @@ query_to_logical_cea(Catalog& catalog, CEQL::Query& query) {
 
   return visitor;
 }
+
+std::string get_evaluation_info(std::string string_query, CORE::Internal::Catalog catalog, RingTupleQueue::Tuple tuple){
+    CEQL::Query query_test = Parsing::Parser::parse_query(string_query);
+    CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer_test(catalog);
+    query_test = transformer_test(std::move(query_test));
+    auto predicates_test = std::move(transformer_test.physical_predicates);
+    auto tuple_evaluator_test = PredicateEvaluator(std::move(predicates_test));
+    return tuple_evaluator_test(tuple).get_str(2);
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests
