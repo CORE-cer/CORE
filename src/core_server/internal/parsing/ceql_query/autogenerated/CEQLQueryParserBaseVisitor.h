@@ -143,6 +143,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitIn_range_predicate(CEQLQueryParser::In_range_predicateContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitIn_predicate(CEQLQueryParser::In_predicateContext *ctx) override {
     return visitChildren(ctx);
   }

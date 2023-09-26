@@ -71,21 +71,22 @@ consumption_policy
  ;
 
 filter
- : LEFT_PARENTHESIS filter RIGHT_PARENTHESIS            # par_filter
+ : LEFT_PARENTHESIS filter RIGHT_PARENTHESIS                                 # par_filter
  | event_name LEFT_SQUARE_BRACKET predicate RIGHT_SQUARE_BRACKET             # atomic_filter
- | filter K_AND filter                                  # and_filter
- | filter K_OR filter                                   # or_filter
+ | filter K_AND filter                                                       # and_filter
+ | filter K_OR filter                                                        # or_filter
  ;
 
 predicate
- : LEFT_PARENTHESIS predicate RIGHT_PARENTHESIS                # par_predicate
- | K_NOT predicate                                             # not_predicate
- | math_expr ( LE | LEQ | GE | GEQ | EQ | NEQ) math_expr       # inequality_predicate
- | string_literal ( EQ | NEQ ) string_literal_or_regexp        # equality_string_predicate
- | predicate K_AND predicate                                   # and_predicate
- | predicate K_OR predicate                                    # or_predicate
- | attribute_name K_LIKE regexp                                # regex_predicate
- | attribute_name ( K_IN | K_NOT K_IN ) value_seq              # in_predicate
+ : LEFT_PARENTHESIS predicate RIGHT_PARENTHESIS                                             # par_predicate
+ | K_NOT predicate                                                                          # not_predicate
+ | math_expr ( LE | LEQ | GE | GEQ | EQ | NEQ) math_expr                                    # inequality_predicate
+ | string_literal ( EQ | NEQ ) string_literal_or_regexp                                     # equality_string_predicate
+ | predicate K_AND predicate                                                                # and_predicate
+ | predicate K_OR predicate                                                                 # or_predicate
+ | attribute_name K_LIKE regexp                                                             # regex_predicate
+ | attribute_name ( K_IN | K_NOT K_IN ) value_seq                                           # in_predicate
+ | math_expr K_IN K_RANGE LEFT_PARENTHESIS math_expr COMMA math_expr RIGHT_PARENTHESIS      # in_range_predicate
  ;
 
 string_literal
@@ -219,6 +220,7 @@ keyword
  | K_NOT
  | K_OR
  | K_PARTITION
+ | K_RANGE
  | K_SECONDS
  | K_SELECT
  | K_STREAM

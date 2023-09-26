@@ -374,8 +374,29 @@ TEST_CASE("NOT IN {Lower Bound... Upper Bound} physical_predicate",
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("math_expr IN math_expr_sequence", "[Predicate]") {
-  // TODO
+TEST_CASE("math_expr IN RANGE (math_expr, math_expr)", "[Predicate]") {
+  auto query = create_query(
+    "t1[((price - 3) / 10) % 5 IN RANGE (temp / 3 + 1, temp * 5 - 3)]");
+  std::unique_ptr<Predicate> predicate = parse_predicate(query);
+  // clang-format off
+  auto expected_predicate = make_unique<InRangePredicate>(
+    make_unique<Modulo>(
+      make_unique<Division>(
+        make_unique<Subtraction>(make_unique<Attribute>("price"),
+                                 make_unique<IntegerLiteral>(3)),
+        make_unique<IntegerLiteral>(10)),
+      make_unique<IntegerLiteral>(5)),
+    make_unique<Addition>(make_unique<Division>(make_unique<Attribute>("temp"),
+                                                make_unique<IntegerLiteral>(3)),
+                          make_unique<IntegerLiteral>(1)),
+    make_unique<Subtraction>(
+      make_unique<Multiplication>(make_unique<Attribute>("temp"),
+                                  make_unique<IntegerLiteral>(5)),
+      make_unique<IntegerLiteral>(3)));
+  // clang-format on
+  INFO("Expected: " + expected_predicate->to_string());
+  INFO("Got: " + predicate->to_string());
+  REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
 TEST_CASE("Like", "[Predicate]") {
