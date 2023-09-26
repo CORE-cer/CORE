@@ -34,7 +34,6 @@ struct ComplexEvent {
                std::vector<Event>& events) noexcept
       : start(start), end(end), events(events) {}
 
-
   std::string to_string() const {
     std::string out = "[" + std::to_string(start) + ","
                       + std::to_string(end) + "], [";
