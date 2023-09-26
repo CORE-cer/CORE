@@ -38,10 +38,9 @@ class CompareWithAttribute : public PhysicalPredicate {
     uint64_t* pos2 = tuple[second_pos];
     RingTupleQueue::Value<LeftValueType> first_val(pos1);
     RingTupleQueue::Value<RightValueType> second_val(pos2);
-    if constexpr (
-      !std::is_same_v<
-        LeftValueType,
-        RightValueType> && (std::is_same_v<LeftValueType, std::string_view> || std::is_same_v<RightValueType, std::string_view>)) {
+    if constexpr (!std::is_same_v<LeftValueType, RightValueType>
+                  && (std::is_same_v<LeftValueType, std::string_view>
+                      || std::is_same_v<RightValueType, std::string_view>)) {
       return false;  // Cannot compare string with non string.
     } else {
       if constexpr (Comp == ComparisonType::EQUALS)
