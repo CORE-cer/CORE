@@ -68,11 +68,11 @@ std::string create_query(std::string filter_clause) {
 
 std::vector<Types::ComplexEvent>
 complex_events_from_enumerator(Types::Enumerator enumerator) {
-  std::vector<Types::ComplexEvent> out;
+  std::vector<Types::ComplexEvent> out{};
   for (auto val : enumerator) {
-    out.push_back(std::move(val));
+    out.push_back(val);
   }
-  return std::move(out);
+  return out;
 }
 
 std::vector<Types::ComplexEvent>
