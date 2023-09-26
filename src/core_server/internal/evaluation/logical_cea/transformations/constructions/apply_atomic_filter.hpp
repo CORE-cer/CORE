@@ -26,8 +26,8 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
     assert(physical_predicate_id != std::numeric_limits<uint64_t>::max() && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(1 << physical_predicate_id,
-                                 1 << physical_predicate_id);
+    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
+                                 mpz_class(1) << physical_predicate_id);
   }
 
   LogicalCEA eval(LogicalCEA&& cea) {
