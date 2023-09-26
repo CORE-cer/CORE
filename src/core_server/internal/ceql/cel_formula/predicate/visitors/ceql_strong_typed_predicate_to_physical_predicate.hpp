@@ -134,19 +134,19 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::Double:
         predicate = create_in_range_predicate<double>(
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::Date:
         predicate = create_in_range_predicate<std::time_t>(
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::String:
         throw std::runtime_error(
           "Invalid Value data type String for InRangePredicate");

@@ -33,9 +33,7 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
     return out;
   }
 
-  void reset() {
-    final_value_datatype = Undetermined;
-  }
+  void reset() { final_value_datatype = Undetermined; }
 
   void visit(Attribute& attribute) override {
     auto value_types = catalog.get_possible_attribute_types(attribute.value);

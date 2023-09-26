@@ -82,14 +82,17 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
                                    like_predicate.right);
   }
 
-  void visit(InRangePredicate& in_range_predicate) override { 
+  void visit(InRangePredicate& in_range_predicate) override {
     ObtainCompatibleEventTypes determine_event_types(catalog);
     in_range_predicate.left->accept_visitor(determine_event_types);
     in_range_predicate.lower_bound->accept_visitor(determine_event_types);
     in_range_predicate.upper_bound->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId> compatible_event_types = determine_event_types.get_compatible_event_types();
-    if (has_added_admissible_event_types){
-      admissible_event_types = intersect(admissible_event_types, compatible_event_types);
+    std::set<Types::EventTypeId>
+      compatible_event_types = determine_event_types
+                                 .get_compatible_event_types();
+    if (has_added_admissible_event_types) {
+      admissible_event_types = intersect(admissible_event_types,
+                                         compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
       has_added_admissible_event_types = true;
@@ -105,19 +108,19 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::Double:
         predicate = create_in_range_predicate<double>(
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::Date:
         predicate = create_in_range_predicate<std::time_t>(
           in_range_predicate.left,
           in_range_predicate.lower_bound,
           in_range_predicate.upper_bound);
-          break;
+        break;
       case FinalType::String:
         throw std::runtime_error(
           "Invalid Value data type String for InRangePredicate");
