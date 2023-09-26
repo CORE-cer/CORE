@@ -82,6 +82,59 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
                                    like_predicate.right);
   }
 
+  void visit(InRangePredicate& in_range_predicate) override {
+    ObtainCompatibleEventTypes determine_event_types(catalog);
+    in_range_predicate.left->accept_visitor(determine_event_types);
+    in_range_predicate.lower_bound->accept_visitor(determine_event_types);
+    in_range_predicate.upper_bound->accept_visitor(determine_event_types);
+    std::set<Types::EventTypeId>
+      compatible_event_types = determine_event_types
+                                 .get_compatible_event_types();
+    if (has_added_admissible_event_types) {
+      admissible_event_types = intersect(admissible_event_types,
+                                         compatible_event_types);
+    } else {
+      admissible_event_types = compatible_event_types;
+      has_added_admissible_event_types = true;
+    }
+    final_data_type_visitor.reset();
+    in_range_predicate.left->accept_visitor(final_data_type_visitor);
+    in_range_predicate.lower_bound->accept_visitor(final_data_type_visitor);
+    in_range_predicate.upper_bound->accept_visitor(final_data_type_visitor);
+    auto combined_type = final_data_type_visitor.get_final_data_type();
+    switch (combined_type) {
+      case FinalType::Integer:
+        predicate = create_in_range_predicate<int64_t>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+        break;
+      case FinalType::Double:
+        predicate = create_in_range_predicate<double>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+        break;
+      case FinalType::Date:
+        predicate = create_in_range_predicate<std::time_t>(
+          in_range_predicate.left,
+          in_range_predicate.lower_bound,
+          in_range_predicate.upper_bound);
+        break;
+      case FinalType::String:
+        throw std::runtime_error(
+          "Invalid Value data type String for InRangePredicate");
+      case FinalType::Undetermined:
+        throw std::runtime_error("No type was deduced from Value");
+      case FinalType::Invalid:
+        throw std::runtime_error("Invalid mix of types in value");
+      default:
+        throw std::logic_error(
+          "Non implemented Type in ceql_predicate_to_cea_predicate.hpp "
+          "compare_math_exprs");
+    }
+  }
+
   void visit(NotPredicate& not_predicate) override {
     not_predicate.predicate->accept_visitor(*this);
     if (has_added_admissible_event_types)
@@ -275,6 +328,18 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
       admissible_event_types,
       std::move(left_expr_attr),
       std::move(regex_string));
+  }
+
+  template <typename ValueType>
+  std::unique_ptr<CEA::InRangePredicate<ValueType>>
+  create_in_range_predicate(std::unique_ptr<CEQL::Value>& left,
+                            std::unique_ptr<CEQL::Value>& lower_bound,
+                            std::unique_ptr<CEQL::Value>& upper_bound) {
+    return std::make_unique<CEA::InRangePredicate<ValueType>>(
+      admissible_event_types,
+      std::move(get_expr<ValueType>(left)),
+      std::move(get_expr<ValueType>(lower_bound)),
+      std::move(get_expr<ValueType>(upper_bound)));
   }
 
   static std::set<Types::EventTypeId>
