@@ -18,6 +18,12 @@ RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
                                 std::string val1,
                                 int64_t val2);
 
+RingTupleQueue::Tuple add_event(RingTupleQueue::Queue& ring_tuple_queue,
+                                uint64_t event_type_id,
+                                std::string val1,
+                                int64_t val2,
+                                int64_t val3);
+
 std::vector<std::pair<std::pair<uint64_t, uint64_t>,
                       std::vector<RingTupleQueue::Tuple>>>
 enumerator_to_vector(tECS::Enumerator& enumerator);
@@ -29,6 +35,15 @@ bool is_the_same_as(RingTupleQueue::Tuple tuple,
                     std::string name,
                     int64_t value);
 
+bool is_the_same_as(RingTupleQueue::Tuple tuple,
+                    uint64_t event_type_id,
+                    std::string name,
+                    int64_t value,
+                    int64_t quantity);
+
 CEQL::FormulaToLogicalCEA
 query_to_logical_cea(Catalog& catalog, CEQL::Query& query);
+std::string get_evaluation_info(std::string string_query,
+                                CORE::Internal::Catalog catalog,
+                                RingTupleQueue::Tuple tuple);
 }  // namespace CORE::Internal::Evaluation::UnitTests

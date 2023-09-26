@@ -11,6 +11,7 @@ class LikePredicate;
 class NotPredicate;
 class OrPredicate;
 class ConstantBooleanPredicate;
+class InRangePredicate;
 
 class PredicateVisitor {
  public:
@@ -24,6 +25,7 @@ class PredicateVisitor {
   virtual void visit(NotPredicate&)                     {throw std::logic_error("visit NotPredicate not implemented.");}
   virtual void visit(OrPredicate&)                      {throw std::logic_error("visit OrPredicate not implemented.");}
   virtual void visit(ConstantBooleanPredicate&)         {throw std::logic_error("visit ConstantBooleanPredicate not implemented.");}
+  virtual void visit(InRangePredicate&)                 {throw std::logic_error("visit InRangePredicate not implemented.");}
 
   // clang-format on
 };
