@@ -211,8 +211,8 @@ TEST_CASE(
 
   INFO("Created handlers");
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  client.stop_all_subscriptions();
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  //client.stop_all_subscriptions();
 
   Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{event_type_id_1,
