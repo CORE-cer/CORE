@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <set>
+#include <tuple>
 #include <vector>
 
 #include "core_server/internal/evaluation/predicate_set.hpp"
@@ -52,8 +53,8 @@ struct LogicalCEA {
       std::make_tuple(PredicateSet(position_of_event, predicate_mask),
                       position_of_event,
                       1));
-    atomic_cea.initial_states = 1 << 0;
-    atomic_cea.final_states = 1 << 1;
+    atomic_cea.initial_states = mpz_class(1) << 0;
+    atomic_cea.final_states = mpz_class(1) << 1;
     return atomic_cea;
   }
 

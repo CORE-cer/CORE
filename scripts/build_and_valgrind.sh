@@ -1,14 +1,16 @@
 #!/bin/bash
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-PURPLE='\033[0;35m'
-NORMAL_OUTPUT='\033[0m'
 
-# Change to parent directory
-cd "$(dirname "$0")/.."
+# Work at the root directory
+# Should have conanfile.py present there.
+cd "$(dirname "$0")"
+cd ..
+
+# Include common
+source scripts/common.sh
+# _setArgs "$@"
 
 # Compile the project under "Debug"
-./scripts/build.sh
+./scripts/build.sh --build_type=Debug "$@"
 build_result=$?
 
 if [ $build_result -ne 0 ]; then

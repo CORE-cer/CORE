@@ -23,11 +23,11 @@ std::string create_query(std::string clause) {
   // clang-format on
 }
 
-TEST_CASE("Remove Epsilons of Simple Iteration",
+TEST_CASE("Remove Epsilons of Simple Contiguous Iteration",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto query = Parsing::Parser::parse_query(create_query("H+"));
+  auto query = Parsing::Parser::parse_query(create_query("H:+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -44,6 +44,56 @@ TEST_CASE("Remove Epsilons of Simple Iteration",
           == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
+}
+
+TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
+          "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto query = Parsing::Parser::parse_query(create_query("H+"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  // NOTE: Construction assumed correct
+  INFO(cea.to_string());
+  REQUIRE(cea.amount_of_states == 3);
+  REQUIRE(cea.initial_states == 0b001);
+  REQUIRE(cea.final_states == 0b010);
+
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 2);
+  REQUIRE(cea.transitions[2].size() == 2);
+
+  REQUIRE(
+    std::count(cea.transitions[0].begin(),
+               cea.transitions[0].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(cea.transitions[2].begin(),
+                     cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[2].begin(),
+               cea.transitions[2].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+
+  // All epsilon transitions should be removed
+  for (auto epsilon_transition : cea.epsilon_transitions) {
+    REQUIRE(epsilon_transition.size() == 0);
+  }
 }
 
 TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
@@ -75,12 +125,12 @@ TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
   REQUIRE(cea.final_states == 0b1000);
 }
 
-TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
+TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type("H", {});
   auto event_type_id_2 = catalog.add_event_type("S", {});
-  auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
+  auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -111,6 +161,105 @@ TEST_CASE("Remove Epsilons of Sequencing and Iteration Combined",
           == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b1000);
+}
+
+TEST_CASE(
+  "Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
+  "[LogicalCEA Optimizations]") {
+  Catalog catalog;
+  auto event_type_id_1 = catalog.add_event_type("H", {});
+  auto event_type_id_2 = catalog.add_event_type("S", {});
+  auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
+  auto visitor = FormulaToLogicalCEA(catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
+  // NOTE: Construction assumed correct
+  INFO(cea.to_string());
+  REQUIRE(cea.amount_of_states == 6);
+  REQUIRE(cea.initial_states == 0b001);
+  REQUIRE(cea.final_states == 0b010000);
+
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 4);
+  REQUIRE(cea.transitions[2].size() == 2);
+  REQUIRE(cea.transitions[3].size() == 2);
+  REQUIRE(cea.transitions[4].size() == 2);
+  REQUIRE(cea.transitions[5].size() == 2);
+
+  REQUIRE(std::count(cea.transitions[0].begin(),
+                     cea.transitions[0].end(),
+                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1)));
+
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     3)));
+  REQUIRE(std::count(cea.transitions[1].begin(),
+                     cea.transitions[1].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[1].begin(),
+               cea.transitions[1].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+
+  REQUIRE(std::count(cea.transitions[2].begin(),
+                     cea.transitions[2].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     2)));
+  REQUIRE(
+    std::count(cea.transitions[2].begin(),
+               cea.transitions[2].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+
+  REQUIRE(
+    std::count(cea.transitions[3].begin(),
+               cea.transitions[3].end(),
+               std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 4)));
+  REQUIRE(std::count(cea.transitions[3].begin(),
+                     cea.transitions[3].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     3)));
+
+  REQUIRE(std::count(cea.transitions[4].begin(),
+                     cea.transitions[4].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     5)));
+  REQUIRE(
+    std::count(cea.transitions[4].begin(),
+               cea.transitions[4].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+
+  REQUIRE(std::count(cea.transitions[5].begin(),
+                     cea.transitions[5].end(),
+                     std::make_tuple(CEA::PredicateSet(
+                                       CEA::PredicateSet::Type::Tautology),
+                                     false,
+                                     5)));
+  REQUIRE(
+    std::count(cea.transitions[5].begin(),
+               cea.transitions[5].end(),
+               std::make_tuple(CEA::PredicateSet(0b01, 0b01), 0b01, 1)));
+
+  // All epsilon transitions should be removed
+  for (auto epsilon_transition : cea.epsilon_transitions) {
+    REQUIRE(epsilon_transition.size() == 0);
+  }
 }
 
 TEST_CASE(
