@@ -1,6 +1,7 @@
+#include <string.h>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
-#include <string.h>
 #include <memory>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
@@ -38,7 +39,6 @@ TEST_CASE("Evaluation of in-range predicate") {
     "   AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-
   CEQL::Query query = Parsing::Parser::parse_query(string_query);
   CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
   query = transformer(std::move(query));
@@ -59,8 +59,13 @@ TEST_CASE("Evaluation of in-range predicate") {
                       20,
                       expiration_time);
 
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 150, 200);
-  INFO("Evaluation event 1: " + get_evaluation_info(string_query, catalog, tuple));
+  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue,
+                                          0,
+                                          "MSFT",
+                                          150,
+                                          200);
+  INFO("Evaluation event 1: "
+       + get_evaluation_info(string_query, catalog, tuple));
   auto next_output_enumerator = evaluator.next(tuple, 0);
   auto outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL MSFT 150 200");
@@ -70,7 +75,8 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 292, 350);
-  INFO("Evaluation event 2: " + get_evaluation_info(string_query, catalog, tuple));
+  INFO("Evaluation event 2: "
+       + get_evaluation_info(string_query, catalog, tuple));
   next_output_enumerator = evaluator.next(tuple, 1);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL MSFT 292 350");
@@ -80,7 +86,8 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80, 100);
-  INFO("Evaluation event 3: " + get_evaluation_info(string_query, catalog, tuple));
+  INFO("Evaluation event 3: "
+       + get_evaluation_info(string_query, catalog, tuple));
   next_output_enumerator = evaluator.next(tuple, 2);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL INTL 80 100");
@@ -90,7 +97,8 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "AMZN", 100, 120);
-  INFO("Evaluation event 4: " + get_evaluation_info(string_query, catalog, tuple));
+  INFO("Evaluation event 4: "
+       + get_evaluation_info(string_query, catalog, tuple));
   next_output_enumerator = evaluator.next(tuple, 3);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("BUY AMZN 100 120");
@@ -100,7 +108,8 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 50, 75);
-  INFO("Evaluation event 5: " + get_evaluation_info(string_query, catalog, tuple));
+  INFO("Evaluation event 5: "
+       + get_evaluation_info(string_query, catalog, tuple));
   next_output_enumerator = evaluator.next(tuple, 4);
   outputs = enumerator_to_vector(next_output_enumerator);
   INFO("SELL AMZN 50 75");
@@ -147,4 +156,3 @@ TEST_CASE("Evaluation of in-range predicate") {
   next_output_enumerator = {};  // To prevent segfault
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests
-

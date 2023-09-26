@@ -43,5 +43,7 @@ bool is_the_same_as(RingTupleQueue::Tuple tuple,
 
 CEQL::FormulaToLogicalCEA
 query_to_logical_cea(Catalog& catalog, CEQL::Query& query);
-std::string get_evaluation_info(std::string string_query, CORE::Internal::Catalog catalog, RingTupleQueue::Tuple tuple);
+std::string get_evaluation_info(std::string string_query,
+                                CORE::Internal::Catalog catalog,
+                                RingTupleQueue::Tuple tuple);
 }  // namespace CORE::Internal::Evaluation::UnitTests
