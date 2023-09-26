@@ -226,10 +226,13 @@ TEST_CASE(
 
   INFO("Stopped mediators and joined clients");
 
+  REQUIRE(handlers[0]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[0]->storage[0]).size()
           == 1);
+  REQUIRE(handlers[1]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[1]->storage[0]).size()
           == 0);
+  REQUIRE(handlers[2]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
           == 1);
 }

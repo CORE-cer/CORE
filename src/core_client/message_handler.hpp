@@ -59,7 +59,7 @@ class DummyHandler : public StaticMessageHandler<DummyHandler> {
 
 class LimitedMessageStorer : public MessageHandler<LimitedMessageStorer> {
  public:
-  std::vector<Types::Enumerator> storage;
+  std::vector<Types::Enumerator> storage{};
 
  private:
   uint64_t current_index = 0;
