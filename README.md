@@ -1,145 +1,85 @@
-# How to build the project:
+# CORE: a Complex Event Recognition Engine
 
-## Easy Install Docker
+## Overview
 
-Dependencies: Docker.
+This is a C++ reimplementation of the CORE engine, as presented in the paper ["CORE: a Complex Event Recognition Engine"](https://arxiv.org/abs/2111.04635) by Marco Bucchi, Alejandro Grez, Andrés Quintana, Cristian Riveros, and Stijn Vansummeren. This engine is designed for the efficient evaluation of complex event queries over large data streams in real time.
 
-First pull repo
+## Features
 
-`git pull https://github.com/CER-CORE/CORE`
+- **Efficient Query Evaluation**: Specialized in evaluating a broad array of complex event queries, including those featuring the 'within time' operator.
+  
+- **Automaton-based Algorithm**: Utilizes an innovative automaton-based evaluation algorithm that maintains a data structure to represent the set of partial matches in constant time per input event.
 
-CD in to directory
+- **Stable Performance**: Exhibits consistent performance regardless of query size or time window size.
 
-`cd CORE`
+- **High Scalability**: Aims to outperform state-of-the-art CER systems across multiple workloads.
 
-If the docker daemon is not running:
+- **Test Driven Development**: Developed using unit tests with the Catch2 framework.
 
-`systemctl start docker`
+- **Conan Package Manager**
 
-Run docker-compose with bash
+### In Development
 
-`sudo docker-compose run core-terminal bash`
+- **Partition-by Operator**: The feature to support the partition-by event correlation operator is currently under development.
 
-Now you have a terminal with all the necessary tools installed. To compile for the first time run:
+- **Support for UDP**: TCP network transport is the current bottleneck.
 
-`chmod +x ./scripts/* && ./scripts/build.sh && ./scripts/build_grammar.sh`
+## Quick Start
 
-Now you can compile and test with
+To get started quickly, a Docker setup is available:
 
-`./scripts/compile_and_test.sh`
+```bash
+# Clone the repository
+git clone https://github.com/CER-CORE/CORE
 
-## Manual Install
+# Navigate into the directory
+cd CORE
 
-We utilize conan for package managing. In ubuntu this is how it could be done:
-
-## Update packages
-
-`sudo apt update -y`
-
-## Conan
-
-```
-sudo apt install python3-pip -y
-pip install conan
+# Start the Docker container
+sudo docker-compose run core-terminal bash
 ```
 
-## Install the latest version of cmake:
+Inside the docker terminal run:
 
-```
-sudo apt remove --purge --auto-remove cmake
-sudo apt update && \
-    sudo apt install -y software-properties-common lsb-release valgrind && \
-    sudo apt clean all
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-sudo apt update
-sudo apt install kitware-archive-keyring -y
-sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
-sudo apt update -y
-sudo apt install cmake -y
-source ~/.profile # Or reboot your terminal
+```bash
+./scripts/compile_and_test.sh
 ```
 
-If you are using WSL, you might need to reboot your terminal for this to work.
+For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/Installation.md).
 
-## Install version 11 of g++, or later.
+## Target Files
 
-if `g++ --version` is >= 11, then you can skip this step.
+### Client - Server in separate files:
 
-```
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt install g++-11
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
-```
+#### Files:
 
-## Setup conan with autodetected configs of your computer
+- `src/targets/server.cpp`
+- `src/targets/client.cpp`
 
-`conan profile detect`
+### Simulation1 and Simulation2
+- **Files**: `src/targets/simulation1.cpp` `src/targets/simulation2.cpp`
+- Combines the server and client inside a single simulation.
 
-It is important to note we also provide known working conan profiles, located at `./conan_profiles`.
+## Detailed Documentation
 
-## Compile the project
+For comprehensive documentation:
 
-First we need to install the third party dependencies:
+- **Users**: Navigate to [User Documentation](./docs/users/README.md).
+  
+- **Developers**: Navigate to [Developer Documentation](./docs/developers/README.md).
 
-```
-mkdir -p build
-mkdir -p build/Debug
-conan source .
-conan install . -s build_type=Debug -s:h compiler=gcc \
-                -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
-                --build missing -vquiet
-```
+## Related Work
 
-Next, we need to compile the projects code:
+- The original paper can be found [here](https://arxiv.org/abs/2111.04635).
 
-```
-conan build . -s build_type=Debug -s:h compiler=gcc \
-              -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
-              --build missing -vquiet
-```
+## Contributing
 
-If changes were done to the grammar it can be rebuilt using:
+Contributions are welcome! See our [Developer's Guide](./docs/developers/CONTRIBUTING.md) for details.
 
-```
-cd build/Debug
-make grammar
-cd ../../
-conan build . -s build_type=Debug -s:h compiler=gcc \
-              -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2\
-              --build missing -vquiet
-```
+## License
 
-There are multiple scripts with self explanatory names in the `./scripts`
-directory.  If you are planning on modifying the code, it is recommended
-to use the compile_and_test.sh script to make sure the unit tests are
-working correctly.
+[GNU GENERAL PUBLIC LICENSE](./LICENSE.txt)
 
-## Project development.
+## Contact
 
-### clang-format
-
-it is crucial that your clang-format version is version 15 so that it
-is the same that is used in github actions. To download this version and set it as default you can use these commands in ubuntu:
-
-```
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" | sudo tee -a /etc/apt/sources.list
-sudo apt-get update
-sudo apt-get install -y clang-format-15
-sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-15 1000
-```
-
-And after that, `clang-format --version` should be 15. Use the script: `./scripts/clang_format_all_files.sh` before merging with main to pass that individual github action. 
-
-Note that if you wish to not use clang-format somewhere in your code, you just need to add these comments:
-
-```c++
-// clang-format off
-
-// ... Code that is not formatted...
-
-// clang-format on
-```
+For additional details or feedback, feel free to [create an issue](https://github.com/CER-CORE/CORE/issues).

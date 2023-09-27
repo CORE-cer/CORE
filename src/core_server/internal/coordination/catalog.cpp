@@ -280,8 +280,8 @@ Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info,
           RingTupleQueue::Value<bool>(tuple[i]).get());
         break;
       case Types::ValueTypes::STRING_VIEW:
-        val = std::make_shared<Types::StringValue>(
-          std::string(RingTupleQueue::Value<std::string>(tuple[i]).get()));
+        val = std::make_shared<Types::StringValue>(std::string(
+          RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
         break;
       case Types::ValueTypes::DATE:
         val = std::make_shared<Types::DateValue>(

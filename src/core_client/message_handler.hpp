@@ -15,7 +15,7 @@ class MessageHandler {
     static_cast<Derived*>(this)->handle_complex_event(enumerator);
   }
 
-  void handle_complex_event(Types::ComplexEvent) {
+  void handle_complex_event(Types::Enumerator) {
     assert(false && "handle_complex_event is not implemented");
   }
 
@@ -59,7 +59,7 @@ class DummyHandler : public StaticMessageHandler<DummyHandler> {
 
 class LimitedMessageStorer : public MessageHandler<LimitedMessageStorer> {
  public:
-  std::vector<Types::Enumerator> storage;
+  std::vector<Types::Enumerator> storage{};
 
  private:
   uint64_t current_index = 0;

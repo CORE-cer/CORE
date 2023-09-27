@@ -16,7 +16,7 @@ namespace CORE::Types {
  * TODO: Think aboout how to enumerate this correctly
  */
 struct Enumerator {
-  std::vector<ComplexEvent> complex_events;  // TODO: Create it with tecs.
+  std::vector<ComplexEvent> complex_events{};  // TODO: Create it with tecs.
 
   Enumerator() noexcept = default;
 
