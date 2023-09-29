@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a C++ reimplementation of the CORE engine, as presented in the paper ["CORE: a Complex Event Recognition Engine"](https://arxiv.org/abs/2111.04635) by Marco Bucchi, Alejandro Grez, Andrés Quintana, Cristian Riveros, and Stijn Vansummeren. This engine is designed for the efficient evaluation of complex event queries over large data streams in real time.
+This is a C++ reimplementation of the CORE engine, as presented in the paper ["CORE: a Complex Event Recognition Engine"](https://www.vldb.org/pvldb/vol15/p1951-riveros.pdf) by Marco Bucchi, Alejandro Grez, Andrés Quintana, Cristian Riveros, and Stijn Vansummeren. This engine is designed for the efficient evaluation of complex event queries over large data streams in real time.
 
 ## Features
 
@@ -45,7 +45,7 @@ Inside the docker terminal run:
 ./scripts/compile_and_test.sh
 ```
 
-For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/Installation.md).
+For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/INSTALLATION.md).
 
 ## Target Files
 
