@@ -70,11 +70,11 @@ For comprehensive documentation:
 
 ## Related Work
 
-- The original paper can be found [here](https://arxiv.org/abs/2111.04635).
+- The original paper can be found [here](https://www.vldb.org/pvldb/vol15/p1951-riveros.pdf).
 
 ## Contributing
 
-Contributions are welcome! See our [Developer's Guide](./docs/developers/CONTRIBUTING.md) for details.
+Contributions are welcome! See our [Contributing's Guide](docs/users/CONTRIBUTING.md) for details.
 
 ## License
 
