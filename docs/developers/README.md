@@ -127,7 +127,7 @@ interface from the base class.
 6. message_sender: The CORE Streamer uses this communication framework
     inside of the `Streamer::send_stream` function.
 
-## Other important details:
+## Other important details
 
 - The router is opened on the first port, the second port goes to the
   StreamsListener, and the rest to individual QueryEvaluators.
