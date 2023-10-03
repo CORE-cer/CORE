@@ -68,11 +68,11 @@ std::string create_query(std::string filter_clause) {
 
 std::vector<Types::ComplexEvent>
 complex_events_from_enumerator(Types::Enumerator enumerator) {
-  std::vector<Types::ComplexEvent> out;
+  std::vector<Types::ComplexEvent> out{};
   for (auto val : enumerator) {
-    out.push_back(std::move(val));
+    out.push_back(val);
   }
-  return std::move(out);
+  return out;
 }
 
 std::vector<Types::ComplexEvent>
@@ -211,9 +211,6 @@ TEST_CASE(
 
   INFO("Created handlers");
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  client.stop_all_subscriptions();
-
   Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{event_type_id_1,
                              {std::make_shared<Types::IntValue>(20),
@@ -226,10 +223,13 @@ TEST_CASE(
 
   INFO("Stopped mediators and joined clients");
 
+  REQUIRE(handlers[0]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[0]->storage[0]).size()
           == 1);
+  REQUIRE(handlers[1]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[1]->storage[0]).size()
           == 0);
+  REQUIRE(handlers[2]->storage.size() == 1);
   REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
           == 1);
 }

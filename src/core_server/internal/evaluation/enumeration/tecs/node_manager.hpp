@@ -123,12 +123,9 @@ class NodeManager {
   }
 
   Node* get_node_to_recycle() {
-    static int i = 1;
-    static int bottom_nodes_recycled = 1;
-    static int extend_nodes_recycled = 1;
-    static int union_nodes_recycled = 1;
     Node* node_to_recycle = recyclable_node_head;
     advance_recyclable_nodes_list_head();
+    time_list_manager.remove_node(node_to_recycle);
     if (node_to_recycle->is_union()) {
       decrease_ref_count(node_to_recycle->left);
       decrease_ref_count(node_to_recycle->right);
@@ -137,7 +134,6 @@ class NodeManager {
     } else {
       assert(node_to_recycle->is_bottom() || node_to_recycle->is_dead());
     }
-    time_list_manager.remove_node(node_to_recycle);
     return node_to_recycle;
   }
 
@@ -161,6 +157,24 @@ class NodeManager {
   void add_to_list_of_free_memory(Node* node) {
     node->next_free_node = recyclable_node_head;
     recyclable_node_head = node;
+  }
+
+ private:
+  /// For debugging.
+  std::string print_free_node_list() {
+    std::string out;
+    out += "Free memory list: ";
+    for (Node* node = recyclable_node_head; node != nullptr;
+         node = node->next_free_node) {
+      // Transform the node pointer to string
+      std::stringstream ss;
+      ss << node;
+      std::string node_as_string = ss.str();
+      out += node_as_string;
+      out += "-> ";
+    }
+    out += "\n";
+    return out;
   }
 };
 }  // namespace CORE::Internal::tECS
