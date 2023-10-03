@@ -7,6 +7,7 @@
 #include "enumeration/tecs/enumerator.hpp"
 #include "enumeration/tecs/tecs.hpp"
 #include "predicate_evaluator.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Evaluation {
 class Evaluator {
@@ -54,6 +55,7 @@ class Evaluator {
         tecs(event_time_of_expiration) {}
 
   tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
+    ZoneScopedN("Evaluator::next");
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
     assert(current_time >= last_tuple_time);

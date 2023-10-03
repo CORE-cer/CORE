@@ -14,6 +14,7 @@
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace CORE::Internal {
 
@@ -50,6 +51,7 @@ class QueryEvaluator {
 
   void start() {
     worker_thread = std::thread([&]() {
+      ZoneScopedN("QueryEvaluator::start::worker_thread");
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
         broadcaster.broadcast(handle_message(serialized_message));

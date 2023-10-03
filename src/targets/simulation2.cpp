@@ -3,6 +3,7 @@
 #include "core_client/client.hpp"
 #include "core_server/internal/coordination/mediator.hpp"
 #include "core_streamer/streamer.hpp"
+#include "tracy/Tracy.hpp"
 
 using namespace CORE;
 
@@ -67,6 +68,7 @@ void subscribe_to_queries(Client& client,
 }
 
 void send_a_stream() {
+  ZoneScoped;
   Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{0,
                              {std::make_shared<Types::IntValue>(20),
@@ -75,6 +77,7 @@ void send_a_stream() {
 }
 
 int main(int argc, char** argv) {
+  FrameMark;
   if (argc != 2) {
     std::cout << "There must be 1 argument: The amount of messages."
               << std::endl;

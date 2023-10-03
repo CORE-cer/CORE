@@ -22,6 +22,7 @@
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace CORE {
 class Client {
@@ -154,6 +155,7 @@ class Client {
     auto subscriber = subscribers[subscription_id].get();
     auto& stop_condition = stop_conditions[subscription_id];
     subscriber_threads.emplace_back([handler, subscriber, stop_condition]() {
+      ZoneScopedN("Client::subscribe_to_complex_event::thread");
       while (!*stop_condition && !handler->needs_to_stop()) {
         std::optional<std::string> message = subscriber->receive(100);
         if (message.has_value()) {
