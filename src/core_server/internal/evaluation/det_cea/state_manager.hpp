@@ -80,6 +80,7 @@ class StateManager {
   }
 
   void update_evicated_states(const std::vector<State*>& evicted_states,
+  void update_evicted_states(const std::vector<State*>& evicted_states,
                               const uint64_t& current_iteration) {
     for (State* state : evicted_states) {
       std::cout << "Trying to evict state: " << state->id << std::endl;
