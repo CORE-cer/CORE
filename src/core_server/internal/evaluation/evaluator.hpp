@@ -85,7 +85,7 @@ class Evaluator {
                                                        current_iteration);
     // Update the evicted states.
     cea.state_manager.update_evicted_states(historic_ordered_keys,
-                                             current_iteration);
+                                            current_iteration);
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;

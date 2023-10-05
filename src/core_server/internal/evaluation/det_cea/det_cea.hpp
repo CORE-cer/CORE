@@ -31,7 +31,8 @@ class DetCEA {
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1, 0, cea);
+    State* initial_state = state_manager.create_or_return_existing_state(
+      initial_bitset_1, 0, cea);
     this->initial_state = initial_state;
   }
 
@@ -71,10 +72,10 @@ class DetCEA {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
     mpz_class marked_bitset = computed_bitsets.first;
     mpz_class unmarked_bitset = computed_bitsets.second;
-    State* marked_state = state_manager.create_or_return_existing_state(marked_bitset,
-                                                          current_iteration, cea);
-    State* unmarked_state = state_manager.create_or_return_existing_state(unmarked_bitset,
-                                                            current_iteration, cea);
+    State* marked_state = state_manager.create_or_return_existing_state(
+      marked_bitset, current_iteration, cea);
+    State* unmarked_state = state_manager.create_or_return_existing_state(
+      unmarked_bitset, current_iteration, cea);
     return {marked_state, unmarked_state};
   }
 
