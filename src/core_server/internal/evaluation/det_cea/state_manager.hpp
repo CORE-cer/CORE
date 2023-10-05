@@ -8,7 +8,7 @@
 namespace CORE::Internal::CEA::Det {
 
 const size_t STATE_MANAGER_STARTING_SIZE = 1;
-const size_t STATE_MANAGER_MAX_SIZE = 2;
+const size_t STATE_MANAGER_MAX_SIZE = 1;
 
 /**
  * The Node Manager class stores the pointers to all allocated
@@ -25,6 +25,8 @@ class StateManager {
   StatePool* minipool_head = nullptr;
   State* evictable_state_head = nullptr;
   State* evictable_state_tail = nullptr;
+  std::vector<State*> states;
+  std::map<mpz_class, uint64_t> states_bitset_to_index;
 
  public:
   StateManager()
@@ -46,28 +48,6 @@ class StateManager {
     }
   }
 
-  template <class... Args>
-  State* alloc(const uint64_t current_iteration, Args&&... args) {
-    State* new_state;
-    new_state = allocate_state((args)..., current_iteration);
-    if (new_state == nullptr) {
-      new_state = evictable_state_head;
-      if (new_state != nullptr) {
-        unset_evictable_state(new_state);
-        new_state->reset((args)..., current_iteration);
-      } else {
-        size_t amount_force_added_states = increase_mempool_size();
-        amount_of_allowed_states += amount_force_added_states;
-        std::cout << "Forcing memory pool increase, increasing allowed "
-                     "states to "
-                  << amount_of_allowed_states << std::endl;
-        new_state = allocate_state((args)..., current_iteration);
-      }
-    }
-    assert(new_state != nullptr);
-    return new_state;
-  }
-
   // Update the last used iteration of the states in the transition
   void update_iteration_states(const States& next_states,
                                const uint64_t& current_iteration) {
@@ -79,7 +59,6 @@ class StateManager {
                                      current_iteration);
   }
 
-  void update_evicated_states(const std::vector<State*>& evicted_states,
   void update_evicted_states(const std::vector<State*>& evicted_states,
                               const uint64_t& current_iteration) {
     for (State* state : evicted_states) {
@@ -100,7 +79,53 @@ class StateManager {
     unset_evictable_state(state);
   }
 
+  std::string to_string() {
+    std::string out = "";
+    out += "Number of initialized states: " + std::to_string(states.size()) + "\n";
+    out += "Initialized States:\n";
+    for (auto& state : states) {
+      out += state->states.get_str(2);
+    }
+    return out;
+  }
+
+  State* create_or_return_existing_state(mpz_class bitset,
+                                         const uint64_t& current_iteration, CEA& cea) {
+    auto it = states_bitset_to_index.find(bitset);
+    if (it != states_bitset_to_index.end()) {
+      assert(it->second < states.size());
+      return states[it->second];
+    } else {
+      State* state = alloc(current_iteration, bitset, cea);
+      return state;
+    }
+  }
  private:
+  template <class... Args>
+  State* alloc(const uint64_t current_iteration, Args&&... args) {
+    State* new_state;
+    new_state = allocate_state(std::forward<Args>(args)..., current_iteration);
+    if (new_state == nullptr) {
+      // Not enough memory, try to evict a state.
+      new_state = evictable_state_head;
+      if (new_state != nullptr) {
+        // Successfully evicted a state, reset it and return it.
+        reset_state(new_state, current_iteration, std::forward<Args>(args)...);
+      } else {
+        // Not enough memory, force increase the memory pool.
+        size_t amount_force_added_states = increase_mempool_size();
+        amount_of_allowed_states += amount_force_added_states;
+        std::cout << "Forcing memory pool increase, increasing allowed "
+                     "states to "
+                  << amount_of_allowed_states << std::endl;
+        new_state = allocate_state(std::forward<Args>(args)..., current_iteration);
+      }
+    } else {
+    }
+    assert(new_state != nullptr);
+    return new_state;
+  }
+
   template <class... Args>
   State* allocate_state(Args&&... args) {
     std::cout << "Amount of used states: " << amount_of_used_states
@@ -112,7 +137,11 @@ class StateManager {
         increase_mempool_size();
       }
       amount_of_used_states++;
-      return minipool_head->alloc((args)...);
+      State* state = minipool_head->alloc(std::forward<Args>(args)...);
+      // Add the state to the list of states as is a new state.
+      states.push_back(state);
+      states_bitset_to_index[state->states] = states.size() - 1;
+      return state;
     } else {
       return nullptr;
     }
@@ -153,6 +182,15 @@ class StateManager {
       evictable_state_tail = nullptr;
     }
     state->unset_evictable();
+  }
+
+  template <class... Args>
+  void reset_state(State* const& state, const uint64_t current_iteration, Args&&... args) {
+    mpz_class old_states = state->states;
+    unset_evictable_state(state);
+    state->reset(std::forward<Args>(args)..., current_iteration);
+    states_bitset_to_index[state->states] = states_bitset_to_index[old_states];
+    states_bitset_to_index.erase(old_states);
   }
 };
 }  // namespace CORE::Internal::CEA::Det

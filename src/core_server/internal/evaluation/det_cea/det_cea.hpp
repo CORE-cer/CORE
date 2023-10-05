@@ -23,8 +23,6 @@ class DetCEA {
 
  private:
   CEA cea;
-  std::vector<State*> states;
-  std::map<mpz_class, uint64_t> states_bitset_to_index;
   uint64_t n_nexts = 0;
   uint64_t n_hits = 0;
 
@@ -33,10 +31,8 @@ class DetCEA {
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    State* initial_state = state_manager.alloc(0, initial_bitset_1, cea);
-    states.push_back(initial_state);
-    states_bitset_to_index.insert(std::make_pair(initial_bitset_1, 0));
-    this->initial_state = states[0];
+    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1, 0, cea);
+    this->initial_state = initial_state;
   }
 
   States next(State* state,
@@ -63,11 +59,8 @@ class DetCEA {
   std::string to_string() {
     std::string out = "";
     out += "Initial state: " + initial_state->states.get_str(2) + "\n";
-    out += "Number of states: " + std::to_string(states.size()) + "\n";
-    out += "States:\n";
-    for (auto& state : states) {
-      out += state->states.get_str(2);
-    }
+    out += "State manager:\n";
+    out += state_manager.to_string();
     return out;
   }
 
@@ -78,26 +71,11 @@ class DetCEA {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
     mpz_class marked_bitset = computed_bitsets.first;
     mpz_class unmarked_bitset = computed_bitsets.second;
-    State* marked_state = create_or_return_existing_state(marked_bitset,
-                                                          current_iteration);
-    State* unmarked_state = create_or_return_existing_state(unmarked_bitset,
-                                                            current_iteration);
+    State* marked_state = state_manager.create_or_return_existing_state(marked_bitset,
+                                                          current_iteration, cea);
+    State* unmarked_state = state_manager.create_or_return_existing_state(unmarked_bitset,
+                                                            current_iteration, cea);
     return {marked_state, unmarked_state};
-  }
-
-  State* create_or_return_existing_state(mpz_class bitset,
-                                         const uint64_t& current_iteration) {
-    auto it = states_bitset_to_index.find(bitset);
-    if (it != states_bitset_to_index.end()) {
-      assert(it->second < states.size());
-      return states[it->second];
-    } else {
-      State* state = state_manager.alloc(current_iteration, bitset, cea);
-      states.push_back(state);
-      states_bitset_to_index.insert(
-        std::make_pair(bitset, states.size() - 1));
-      return states.back();
-    }
   }
 
   std::pair<mpz_class, mpz_class>
