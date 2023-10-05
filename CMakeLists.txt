@@ -98,7 +98,6 @@ target_link_libraries(client PRIVATE core)
 target_link_libraries(server PRIVATE core)
 
 target_link_libraries(core PUBLIC TracyClient)
-# target_compile_definitions(core PUBLIC TRACY_NO_EXIT TRACY_ENABLE TRACY_DEBUGINFOD)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
