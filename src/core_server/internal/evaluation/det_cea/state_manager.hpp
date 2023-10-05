@@ -7,8 +7,8 @@
 
 namespace CORE::Internal::CEA::Det {
 
-const size_t STATE_MANAGER_STARTING_SIZE = 1;
-const size_t STATE_MANAGER_MAX_SIZE = 1;
+const size_t STATE_MANAGER_STARTING_SIZE = 1000;
+const size_t STATE_MANAGER_MAX_SIZE = 1000;
 
 /**
  * The Node Manager class stores the pointers to all allocated
