@@ -62,10 +62,8 @@ class StateManager {
   void update_evicted_states(const std::vector<State*>& evicted_states,
                              const uint64_t& current_iteration) {
     for (State* state : evicted_states) {
-      std::cout << "Trying to evict state: " << state->id << std::endl;
       if (state->is_evictable(current_iteration)) {
-        std::cout << "Evicting state: " << state->id << std::endl;
-        state->set_evictable(this->evictable_state_head);
+        set_evictable_state(state);
         if (this->evictable_state_head == nullptr) {
           this->evictable_state_head = state;
         }
@@ -135,10 +133,6 @@ class StateManager {
 
   template <class... Args>
   State* allocate_state(Args&&... args) {
-    std::cout << "Amount of used states: " << amount_of_used_states
-              << std::endl;
-    std::cout << "Amount of allowed states: " << amount_of_allowed_states
-              << std::endl;
     if (amount_of_used_states < amount_of_allowed_states) {
       if (minipool_head->is_full()) {
         increase_mempool_size();
@@ -171,6 +165,7 @@ class StateManager {
   }
 
   void set_evictable_state(State* const& state) {
+    assert_state_list_consistency();
     if (evictable_state_head == nullptr) {
       evictable_state_head = state;
     }
@@ -179,17 +174,47 @@ class StateManager {
     }
     state->set_evictable(evictable_state_tail);
     evictable_state_tail = state;
+    assert_state_list_consistency();
   }
 
   void unset_evictable_state(State* const& state) {
+    assert_state_list_consistency();
     if (evictable_state_head == state) {
       evictable_state_head = state->prev_evictable_state;
     }
     if (evictable_state_tail == state) {
-      evictable_state_tail = nullptr;
+      evictable_state_tail = state->next_evictable_state;
     }
     state->unset_evictable();
+    assert_state_list_consistency();
   }
+
+ 
+  inline void assert_state_list_consistency() {
+    // Check that either both are nullptr or both are not nullptr and evicted
+    assert(
+      (evictable_state_head == nullptr && evictable_state_tail == nullptr)
+      || (evictable_state_head != nullptr && evictable_state_tail != nullptr));
+
+    assert(amount_of_used_states <= amount_of_allowed_states);
+
+    State* state = evictable_state_head;
+#ifdef CORE_DEBUG
+    while (state != nullptr) {
+      if (state->prev_evictable_state != nullptr) {
+        assert(state->prev_evictable_state->next_evictable_state == state);
+      }
+      if (state->next_evictable_state != nullptr) {
+        assert(state->next_evictable_state->prev_evictable_state == state);
+      }
+      if (state->prev_evictable_state == nullptr) {
+        assert(state == evictable_state_tail);
+      }
+      state = state->prev_evictable_state;
+    }
+#endif
+  }
+
 
   template <class... Args>
   void reset_state(State* const& state,
