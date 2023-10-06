@@ -51,9 +51,6 @@ class DetCEA {
                                                    current_iteration);
     state_manager.update_last_used_iteration_state(next_states.unmarked_state,
                                                    current_iteration);
-    std::cout << "Hits: " << n_hits << std::endl;
-    std::cout << "Hit rate: " << static_cast<long double>(n_hits) / n_nexts
-              << std::endl;
     return next_states;
   }
 

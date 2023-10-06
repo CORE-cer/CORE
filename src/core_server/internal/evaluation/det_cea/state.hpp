@@ -57,13 +57,7 @@ class State {
         cea(cea),
         last_used_iteration(current_iteration),
         is_final((states & cea.final_states) != 0),
-        is_empty(states == 0) {
-    // TODO: remove
-    std::cout << "State::State" << std::endl;
-    std::cout << "  id: " << id << std::endl;
-    std::cout << "  states: " << states << std::endl;
-    std::cout << "  current_iteration: " << current_iteration << std::endl;
-  }
+        is_empty(states == 0) {}
 
   void reset(mpz_class states, CEA& cea, const uint64_t& current_iteration) {
     this->id = IdCounter++;
@@ -76,10 +70,6 @@ class State {
   }
 
   States next(mpz_class evaluation, uint64_t& n_hits) {
-    if (next_evictable_state != nullptr || prev_evictable_state != nullptr) {
-      std::cout << "State::next" << std::endl;
-      std::cout << "  id: " << id << std::endl;
-    }
     assert(next_evictable_state == nullptr
            && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
