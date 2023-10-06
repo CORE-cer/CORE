@@ -189,12 +189,12 @@ class StateManager {
     assert_state_list_consistency();
   }
 
- 
   inline void assert_state_list_consistency() {
     // Check that either both are nullptr or both are not nullptr and evicted
     assert(
       (evictable_state_head == nullptr && evictable_state_tail == nullptr)
-      || (evictable_state_head != nullptr && evictable_state_tail != nullptr));
+      || (evictable_state_head != nullptr
+          && evictable_state_tail != nullptr));
 
     assert(amount_of_used_states <= amount_of_allowed_states);
 
@@ -214,7 +214,6 @@ class StateManager {
     }
 #endif
   }
-
 
   template <class... Args>
   void reset_state(State* const& state,
