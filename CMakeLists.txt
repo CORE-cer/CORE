@@ -31,9 +31,15 @@ FetchContent_Declare (
   GIT_PROGRESS TRUE
 )
 
-set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
-set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
-set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+OPTION(Enable Profiling "Enable Profiling" ON)
+
+if (Enable Profiling)
+  set(TRACY_ENABLE OFF CACHE BOOL "Enable Tracy" FORCE)
+  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
+  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+else()
+  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
+endif()
 
 FetchContent_MakeAvailable (tracy)
 
@@ -67,6 +73,9 @@ add_library(core STATIC
             ${STREAMER_FILES})
 
 target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 debuginfod)
+if (Enable Profiling)
+  target_link_libraries(core PUBLIC debuginfod TracyClient)
+endif()
 
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
@@ -96,8 +105,6 @@ target_link_libraries(stocks_example PRIVATE core)
 target_link_libraries(taxi_example PRIVATE core)
 target_link_libraries(client PRIVATE core)
 target_link_libraries(server PRIVATE core)
-
-target_link_libraries(core PUBLIC TracyClient)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
