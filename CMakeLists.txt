@@ -31,9 +31,9 @@ FetchContent_Declare (
   GIT_PROGRESS TRUE
 )
 
-OPTION(Enable Profiling "Enable Profiling" OFF)
+OPTION(ENABLE_PROFILING "Enable Profiling" OFF)
 
-if (Enable Profiling)
+if (ENABLE_PROFILING)
   set(TRACY_ENABLE OFF CACHE BOOL "Enable Tracy" FORCE)
   set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
   set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
@@ -73,7 +73,7 @@ add_library(core STATIC
             ${STREAMER_FILES})
 
 target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2)
-if (Enable Profiling)
+if (ENABLE_PROFILING)
   target_link_libraries(core PUBLIC debuginfod TracyClient)
 endif()
 
