@@ -98,6 +98,9 @@ int main(int argc, char** argv) {
       send_a_stream(streamer);
     }
 
+    // Just for simulation so next finishes processing all messages
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     mediator.stop();
 
     client.stop_all_subscriptions();
