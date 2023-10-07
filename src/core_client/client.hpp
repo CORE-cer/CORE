@@ -158,7 +158,7 @@ class Client {
       ZoneScopedN("Client::subscribe_to_complex_event::thread");
       while (!*stop_condition && !handler->needs_to_stop()) {
         std::optional<std::string> message = subscriber->receive(100);
-        if (message.has_value()) {
+        if (message.has_value() and message.value().size() > 0) {
           handler->eval(EnumeratorSerializer::deserialize(message.value()));
         }
       }

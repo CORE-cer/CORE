@@ -64,9 +64,8 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream() {
+void send_a_stream(Streamer& streamer) {
   ZoneScoped;
-  Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{0,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
@@ -94,19 +93,18 @@ int main(int argc, char** argv) {
               << " Final port: " << final_port_number << std::endl;
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < amount_of_messages; i++) {
-      send_a_stream();
+      send_a_stream(streamer);
     }
 
-    client.stop_all_subscriptions();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    mediator.stop();
 
-    send_a_stream();
+    client.stop_all_subscriptions();
 
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {

@@ -80,8 +80,7 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream(PolkuraData::Data data) {
-  Streamer streamer("tcp://localhost", 5001);
+void send_a_stream(PolkuraData::Data data, Streamer& streamer) {
   // clang-format off
   Types::Event event_to_send{
     data.event_type,
@@ -104,17 +103,18 @@ int main(int argc, char** argv) {
     Types::PortNumber final_port_number = create_queries(client);
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < PolkuraData::stream.size(); i++) {
-      send_a_stream(PolkuraData::stream[i]);
+      send_a_stream(PolkuraData::stream[i], streamer);
     }
 
+    mediator.stop();
+
     client.stop_all_subscriptions();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {
