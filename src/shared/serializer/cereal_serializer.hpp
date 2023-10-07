@@ -32,11 +32,14 @@
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
 
+#include "tracy/Tracy.hpp"
+
 namespace CORE::Internal {
 template <typename StructName>
 class CerealSerializer : Serializer<StructName> {
  public:
   static std::string serialize(const StructName& data) {
+    ZoneScopedN("CerealSerializer::serialize");
     std::stringstream ss;
     cereal::BinaryOutputArchive oarchive(ss);
     oarchive(data);
@@ -44,6 +47,7 @@ class CerealSerializer : Serializer<StructName> {
   }
 
   static StructName deserialize(const std::string& message) {
+    ZoneScopedN("CerealSerializer::deserialize");
     std::stringstream ss(message);
     StructName data;
     cereal::BinaryInputArchive iarchive(ss);
