@@ -35,7 +35,7 @@ FetchContent_Declare (
   GIT_PROGRESS TRUE
 )
 
-set(ENABLE_PROFILING ON CACHE BOOL "Enable Profiling" FORCE)
+set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)
 
 if (ENABLE_PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
