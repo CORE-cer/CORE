@@ -46,10 +46,6 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final
     inequality_predicate.right->accept_visitor(value_type_visitor);
     auto second_val_type = value_type_visitor.get_value_type();
 
-    inequality_predicate.left->accept_visitor(final_data_type_visitor);
-    inequality_predicate.right->accept_visitor(final_data_type_visitor);
-    auto combined_type = final_data_type_visitor.get_final_data_type();
-
     /**
      * This double switch case basically determines what type of comparison
      * is going to be used.

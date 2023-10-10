@@ -49,7 +49,7 @@ class NodeManager {
     if (out != nullptr) {
       out->reset(std::forward<Args>(args)...);
     } else {
-      out = allocate_a_new_node((args)...);
+      out = allocate_a_new_node(std::forward<Args>(args)...);
     }
     time_list_manager.add_node(out);
     return out;

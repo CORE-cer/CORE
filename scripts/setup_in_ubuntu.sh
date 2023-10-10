@@ -5,7 +5,7 @@ sudo apt install python3-pip -y
 sudo apt remove --purge --auto-remove cmake
 
 sudo apt update && \
-    sudo apt install -y software-properties-common lsb-release && \
+    sudo apt install -y software-properties-common lsb-release cargo && \
     sudo apt clean all
 
 sudo apt install default-jdk -y
@@ -19,6 +19,8 @@ sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
 sudo apt update -y
 
 sudo apt install cmake valgrind -y
+
+cargo install run-clang-tidy
 
 pip install conan
 

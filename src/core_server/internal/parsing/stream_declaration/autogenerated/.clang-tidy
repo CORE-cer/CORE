@@ -1,0 +1,5 @@
+# Disable all checks in this folder.
+# Do random check so that it doesn't error saying no checks
+Checks: '-*,misc-definitions-in-headers'
+CheckOptions:
+  - { key: HeaderFileExtensions,          value: "x" }

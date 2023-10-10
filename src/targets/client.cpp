@@ -22,16 +22,13 @@ void do_declarations(Client& client) {
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = client.declare_stream_type("S1",
-                                                     {event_type_id_1});
+  client.declare_stream_type("S1", {event_type_id_1});
   auto event_type_id_2 = client.declare_event_type(
     "Mixed",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  auto stream_type_id_2 = client.declare_stream_type("S2",
-                                                     {event_type_id_1,
-                                                      event_type_id_2});
+  client.declare_stream_type("S2", {event_type_id_1, event_type_id_2});
 }
 
 Types::PortNumber create_queries(Client& client) {
@@ -77,20 +74,25 @@ void send_a_stream() {
 }
 
 int main(int argc, char** argv) {
-  Client client{"tcp://localhost", 5000};
+  try {
+    Client client{"tcp://localhost", 5000};
 
-  do_declarations(client);
-  Types::PortNumber initial_port_number = 5002;
-  Types::PortNumber final_port_number = create_queries(client);
-  subscribe_to_queries(client, initial_port_number, final_port_number);
+    do_declarations(client);
+    Types::PortNumber initial_port_number = 5002;
+    Types::PortNumber final_port_number = create_queries(client);
+    subscribe_to_queries(client, initial_port_number, final_port_number);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  client.stop_all_subscriptions();  // To only print 1 event.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    client.stop_all_subscriptions();  // To only print 1 event.
 
-  send_a_stream();
+    send_a_stream();
 
-  std::cout << "Joining threads" << std::endl;
-  client.join_all_threads();
+    std::cout << "Joining threads" << std::endl;
+    client.join_all_threads();
 
-  return 0;
+    return 0;
+  } catch (std::exception& e) {
+    std::cout << "Exception: " << e.what() << std::endl;
+    return 1;
+  }
 }

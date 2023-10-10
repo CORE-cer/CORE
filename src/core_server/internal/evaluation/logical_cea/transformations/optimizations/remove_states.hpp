@@ -49,7 +49,7 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
    */
   void create_new_mapping(LogicalCEA& cea) {
     mapping = std::vector<int64_t>(cea.amount_of_states, -1);
-    uint64_t new_state_id = 0;
+    int64_t new_state_id = 0;
     for (uint64_t previous_state_id = 0;
          previous_state_id < cea.amount_of_states;
          previous_state_id++) {

@@ -138,8 +138,8 @@ class tECS {
   Node* merge(UnionList& ulist) {
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
-    for (int i = ulist.size() - 2; i >= 0; i--) {
-      tail = node_manager.alloc(ulist[i], tail);
+    for (auto rit = ulist.rbegin() + 1; rit != ulist.rend(); ++rit) {
+      tail = node_manager.alloc(*rit, tail);
     }
     return tail;
   }

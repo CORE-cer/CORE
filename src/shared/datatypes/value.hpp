@@ -65,7 +65,7 @@ struct BoolValue final : public Value {
 
   BoolValue() {}
 
-  BoolValue(double val) : val(val) {}
+  BoolValue(bool val) : val(val) {}
 
   ~BoolValue() override = default;
 

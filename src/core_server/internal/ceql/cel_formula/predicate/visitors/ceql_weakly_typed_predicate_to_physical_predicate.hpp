@@ -8,6 +8,7 @@
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/in_range_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_weakly_typed.hpp"
 #include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
 #include "predicate_visitor.hpp"
@@ -345,6 +346,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   static std::set<Types::EventTypeId>
   intersect(std::set<Types::EventTypeId> left,
             std::set<Types::EventTypeId> right) {
+    // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);
@@ -354,6 +356,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   static std::set<Types::EventTypeId>
   unite(std::set<Types::EventTypeId>&& left,
         std::set<Types::EventTypeId>&& right) {
+    // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out = std::move(left);
     for (auto& elem : right) out.insert(elem);
     return out;

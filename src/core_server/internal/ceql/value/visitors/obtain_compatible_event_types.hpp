@@ -79,6 +79,7 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   static std::set<Types::EventTypeId>
   intersect(std::set<Types::EventTypeId> left,
             std::set<Types::EventTypeId> right) {
+    // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);

@@ -31,7 +31,8 @@ class WithinVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any
   visitHour_span(CEQLQueryParser::Hour_spanContext* ctx) override {
     double hours = std::stod(ctx->number()->getText());
-    uint64_t ns = hours * 60 * 60 * 1000 * 1000 * 1000;
+    uint64_t ns = static_cast<uint64_t>(hours) * 60 * 60 * 1000 * 1000
+                  * 1000;
     within.time_window = {ns, CEQL::Within::TimeWindowMode::NANOSECONDS};
     return {};
   }
@@ -39,7 +40,7 @@ class WithinVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any
   visitMinute_span(CEQLQueryParser::Minute_spanContext* ctx) override {
     double minutes = std::stod(ctx->number()->getText());
-    uint64_t ns = minutes * 60 * 1000 * 1000 * 1000;
+    uint64_t ns = static_cast<uint64_t>(minutes) * 60 * 1000 * 1000 * 1000;
     within.time_window = {ns, CEQL::Within::TimeWindowMode::NANOSECONDS};
     return {};
   }
@@ -47,7 +48,7 @@ class WithinVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any
   visitSecond_span(CEQLQueryParser::Second_spanContext* ctx) override {
     double seconds = std::stod(ctx->number()->getText());
-    uint64_t ns = seconds * 1000 * 1000 * 1000;
+    uint64_t ns = static_cast<uint64_t>(seconds) * 1000 * 1000 * 1000;
     within.time_window = {ns, CEQL::Within::TimeWindowMode::NANOSECONDS};
     return {};
   }

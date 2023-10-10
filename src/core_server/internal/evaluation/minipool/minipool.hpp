@@ -39,7 +39,7 @@ class MiniPool {
   void set_prev(MiniPool* mp) { prev_ = mp; }
 
   template <class... Args>
-  item* alloc(Args... args) {
+  item* alloc(Args&&... args) {
     item_container.emplace_back(std::forward<Args>(args)...);
     return &item_container.back();
   }

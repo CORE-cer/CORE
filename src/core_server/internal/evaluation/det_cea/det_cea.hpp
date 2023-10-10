@@ -10,72 +10,70 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "state.hpp"
+#include "state_manager.hpp"
 
 namespace CORE::Internal::CEA {
 class DetCEA {
   using State = Det::State;
   using States = Det::State::States;
+  using StateManager = Det::StateManager;
 
  public:
   State* initial_state;
 
  private:
   CEA cea;
-  std::vector<std::unique_ptr<State>> states;
-  std::map<mpz_class, uint64_t> states_bitset_to_index;
+  uint64_t n_nexts = 0;
+  uint64_t n_hits = 0;
 
  public:
-  DetCEA(CEA&& cea) : cea(cea) {
+  StateManager state_manager;
+
+  DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    states.push_back(std::make_unique<State>(initial_bitset_1, cea));
-    states_bitset_to_index.insert(std::make_pair(initial_bitset_1, 0));
-    initial_state = states[0].get();
+    State* initial_state = state_manager.create_or_return_existing_state(
+      initial_bitset_1, 0, cea);
+    this->initial_state = initial_state;
   }
 
-  States next(State* state, mpz_class evaluation) {
+  States next(State* state,
+              mpz_class evaluation,
+              const uint64_t& current_iteration) {
     assert(state != nullptr);
-    std::string eval = evaluation.get_str(2);
-    auto next_states = state->next(evaluation);  // memoized
+    n_nexts++;
+    auto next_states = state->next(evaluation, n_hits);  // memoized
     if (next_states.marked_state == nullptr
         || next_states.unmarked_state == nullptr) {
-      next_states = compute_next_states(state, evaluation);
+      next_states = compute_next_states(state, evaluation, current_iteration);
       state->add_transition(evaluation, next_states);
     }
+    state_manager.update_last_used_iteration_state(next_states.marked_state,
+                                                   current_iteration);
+    state_manager.update_last_used_iteration_state(next_states.unmarked_state,
+                                                   current_iteration);
     return next_states;
   }
 
   std::string to_string() {
     std::string out = "";
     out += "Initial state: " + initial_state->states.get_str(2) + "\n";
-    out += "Number of states: " + std::to_string(states.size()) + "\n";
-    out += "States:\n";
-    for (auto& state : states) {
-      out += state->states.get_str(2);
-    }
+    out += "State manager:\n";
+    out += state_manager.to_string();
     return out;
   }
 
  private:
-  States compute_next_states(State* state, mpz_class& evaluation) {
+  States compute_next_states(State* state,
+                             mpz_class& evaluation,
+                             const uint64_t& current_iteration) {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
     mpz_class marked_bitset = computed_bitsets.first;
     mpz_class unmarked_bitset = computed_bitsets.second;
-    State* marked_state = create_or_return_existing_state(marked_bitset);
-    State* unmarked_state = create_or_return_existing_state(unmarked_bitset);
+    State* marked_state = state_manager.create_or_return_existing_state(
+      marked_bitset, current_iteration, cea);
+    State* unmarked_state = state_manager.create_or_return_existing_state(
+      unmarked_bitset, current_iteration, cea);
     return {marked_state, unmarked_state};
-  }
-
-  State* create_or_return_existing_state(mpz_class bitset) {
-    auto it = states_bitset_to_index.find(bitset);
-    if (it != states_bitset_to_index.end()) {
-      assert(it->second < states.size());
-      return states[it->second].get();
-    } else {
-      states.push_back(std::make_unique<State>(bitset, cea));
-      states_bitset_to_index.insert(
-        std::make_pair(bitset, states.size() - 1));
-      return states.back().get();
-    }
   }
 
   std::pair<mpz_class, mpz_class>

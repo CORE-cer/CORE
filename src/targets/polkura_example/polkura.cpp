@@ -44,8 +44,7 @@ void do_declarations(Client& client) {
        Types::AttributeInfo("sitio", Types::ValueTypes::STRING_VIEW),
        Types::AttributeInfo("value", Types::ValueTypes::DOUBLE)}));
   }
-  auto stream_type_id = client.declare_stream_type("S",
-                                                   std::move(event_types));
+  client.declare_stream_type("S", std::move(event_types));
 }
 
 Types::PortNumber create_queries(Client& client) {
@@ -95,26 +94,31 @@ void send_a_stream(PolkuraData::Data data) {
 }
 
 int main(int argc, char** argv) {
-  Internal::Mediator mediator(5000);
-  mediator.start();
-  Client client{"tcp://localhost", 5000};
+  try {
+    Internal::Mediator mediator(5000);
+    mediator.start();
+    Client client{"tcp://localhost", 5000};
 
-  do_declarations(client);
-  Types::PortNumber initial_port_number = 5002;
-  Types::PortNumber final_port_number = create_queries(client);
-  subscribe_to_queries(client, initial_port_number, final_port_number);
+    do_declarations(client);
+    Types::PortNumber initial_port_number = 5002;
+    Types::PortNumber final_port_number = create_queries(client);
+    subscribe_to_queries(client, initial_port_number, final_port_number);
 
-  for (int i = 0; i < PolkuraData::stream.size(); i++) {
-    send_a_stream(PolkuraData::stream[i]);
+    for (int i = 0; i < PolkuraData::stream.size(); i++) {
+      send_a_stream(PolkuraData::stream[i]);
+    }
+
+    client.stop_all_subscriptions();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    std::cout << "Joining threads" << std::endl;
+
+    client.join_all_threads();
+    mediator.stop();
+
+    return 0;
+  } catch (std::exception& e) {
+    std::cout << "Exception: " << e.what() << std::endl;
+    return 1;
   }
-
-  client.stop_all_subscriptions();
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-  std::cout << "Joining threads" << std::endl;
-
-  client.join_all_threads();
-  mediator.stop();
-
-  return 0;
 }

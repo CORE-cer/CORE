@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <limits>
 
 #include "core_server/internal/ceql/cel_formula/filters/atomic_filter.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
@@ -24,7 +25,7 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
           atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
-    assert(physical_predicate_id != -1 && "Physical predicate ID should be added to query before creating the automaton.");
+    assert(physical_predicate_id != std::numeric_limits<uint64_t>::max() && "Physical predicate ID should be added to query before creating the automaton.");
     predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
                                  mpz_class(1) << physical_predicate_id);
   }

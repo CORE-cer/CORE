@@ -1,6 +1,7 @@
 #pragma once
 
 #include "comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
 #include "physical_predicate.hpp"
 
 namespace CORE::Internal::CEA {

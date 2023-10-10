@@ -24,7 +24,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
  private:
   Catalog& catalog;
   std::map<std::string, uint64_t> variables_to_id;
-  int64_t next_variable_id = catalog.number_of_events();
+  uint64_t next_variable_id = catalog.number_of_events();
 
  public:
   CEA::LogicalCEA current_cea{0};
@@ -44,7 +44,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    int64_t event_type_id = catalog.get_event_info(formula.event_type_name).id;
+    uint64_t event_type_id = catalog.get_event_info(formula.event_type_name)
+                               .id;
     current_cea = CEA::LogicalCEA::atomic_cea(event_type_id);
   }
 
@@ -111,7 +112,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     if (!variables_to_id.contains(formula.variable_name)) {
       variables_to_id[formula.variable_name] = next_variable_id++;
     }
-    int64_t variable_id = variables_to_id[formula.variable_name];
+    uint64_t variable_id = variables_to_id[formula.variable_name];
     current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
   }
 };

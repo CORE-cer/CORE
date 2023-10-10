@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <cstring>
 #include <queue>
@@ -50,7 +51,8 @@ class Queue {
         overwrite_timepoint(std::chrono::system_clock::now()) {}
 
   uint64_t* start_tuple(uint64_t tuple_type_id) {
-    int64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
+    uint64_t minimum_size = schemas->get_constant_section_size(
+      tuple_type_id);
     assert(minimum_size < buffer_size);
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {
@@ -105,7 +107,7 @@ class Queue {
     auto& current_buffer = buffers[current_buffer_index];
     auto& constant_section_buffer = buffers[constant_section_buffer_index];
     uint64_t size = (size_in_bytes + 7) / 8;  // Ceiling
-    int64_t index_to_write_in;
+    uint64_t index_to_write_in;
     if (current_index < current_buffer.size() - size) {
       index_to_write_in = current_index;
       current_index += size;
@@ -171,14 +173,26 @@ class Queue {
 
   void insert_a_buffer_after(uint64_t buffer_index) {
     assert(buffer_index < buffers.size());
-    buffers.insert(buffers.begin() + buffer_index + 1,
-                   std::vector<uint64_t>(buffer_size));
-    last_updated.insert(last_updated.begin() + buffer_index + 1,
-                        overwrite_timepoint);
+    // NOTE: Added due to buffers.begin not being uint64_t. To remove need to refactor.
+    if (buffer_index <= static_cast<size_t>(
+          std::numeric_limits<std::ptrdiff_t>::max() - 1)) {
+      std::ptrdiff_t buffer_index_ptrdiff = static_cast<std::ptrdiff_t>(
+        buffer_index);
+
+      buffers.insert(buffers.begin() + buffer_index_ptrdiff + 1,
+                     std::vector<uint64_t>(buffer_size));
+
+      last_updated.insert(last_updated.begin() + buffer_index_ptrdiff + 1,
+                          overwrite_timepoint);
+    } else {
+      std::raise(SIGINT);
+    }
     assert(last_updated.size() == buffers.size());
+
     if (start_buffer_index > buffer_index) {
       start_buffer_index++;
     }
+
     assert(current_buffer_index <= buffer_index
            && constant_section_buffer_index <= buffer_index);
   }

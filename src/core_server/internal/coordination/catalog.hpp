@@ -65,7 +65,7 @@ class Catalog {
   get_query_info(Types::QueryInfoId query_info_id) const noexcept;
   const std::vector<Types::QueryInfo>& get_all_query_infos() const noexcept;
 
-  int64_t number_of_events() const { return events_info.size(); }
+  uint64_t number_of_events() const { return events_info.size(); }
 
   std::set<Types::ValueTypes>
   get_possible_attribute_types(std::string attribute_name) const noexcept;
