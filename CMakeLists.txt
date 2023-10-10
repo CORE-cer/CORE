@@ -23,6 +23,10 @@ find_package(re2 REQUIRED)
 
 
 # Profiler
+message("Fetching Tracy")
+
+Set(FETCHCONTENT_QUIET FALSE)
+
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
