@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(FetchContent)
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=thread -fPIE -pie")
 
@@ -18,6 +20,32 @@ find_package(cppzmq REQUIRED)
 find_package(libpqxx REQUIRED)
 find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
+
+
+# Profiler
+message("Fetching Tracy")
+
+Set(FETCHCONTENT_QUIET FALSE)
+
+FetchContent_Declare (
+  tracy
+  GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+
+set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)
+
+if (ENABLE_PROFILING)
+  set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
+  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
+  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+else()
+  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
+endif()
+
+FetchContent_MakeAvailable (tracy)
 
 # Target in Makefile for generation of grammar from .g4 file.
 add_custom_target(
@@ -48,7 +76,10 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 TracyClient)
+if (ENABLE_PROFILING)
+  target_link_libraries(core PUBLIC debuginfod)
+endif()
 
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
@@ -58,6 +89,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(core PUBLIC CORE_DEBUG)
 endif()
 
+# add_compile_options("-include tracy/Tracy.hpp")
 target_compile_options(core PUBLIC -Werror=old-style-cast)
 
 # executable target
@@ -70,13 +102,13 @@ add_executable(taxi_example src/targets/taxi_example/taxi_example.cpp)
 add_executable(client src/targets/client.cpp)
 add_executable(server src/targets/server.cpp)
 
-target_link_libraries(simulation1 core)
-target_link_libraries(simulation2 core)
-target_link_libraries(polkura_example core)
-target_link_libraries(stocks_example core)
-target_link_libraries(taxi_example core)
-target_link_libraries(client core)
-target_link_libraries(server core)
+target_link_libraries(simulation1 PRIVATE core)
+target_link_libraries(simulation2 PRIVATE core)
+target_link_libraries(polkura_example PRIVATE core)
+target_link_libraries(stocks_example PRIVATE core)
+target_link_libraries(taxi_example PRIVATE core)
+target_link_libraries(client PRIVATE core)
+target_link_libraries(server PRIVATE core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
