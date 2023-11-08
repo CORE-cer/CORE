@@ -54,7 +54,6 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    static int i = 1;
     auto out = node_manager.alloc(tuple, timestamp);
     return out;
   }
@@ -66,7 +65,6 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    static int i = 1;
     return node_manager.alloc(node, tuple, timestamp);
   }
 
@@ -75,7 +73,6 @@ class tECS {
    * single node.
    */
   [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
-    static int i = 1;
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {
@@ -108,10 +105,16 @@ class tECS {
     // TODO: binary search would be better on large lists.
     for (size_t i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        ulist[i] = new_union(ulist[i], node);
+        pin(node); // Se pinea el nodo que se inserta
+        // Se crea un nuevo union node, se le hace pin, y entra a la 
+        // union list la cual ya deberia estar pineada segun exec_trans
+        Node* union_node = new_union(ulist[i], node);
+        pin(union_node);
+        ulist[i] = union_node;
         break;
       }
       if (ulist[i]->max() < node->max()) {
+        pin(node); // Se pinea el nodo que se inserta
         ulist.insert(ulist.begin() + 1, node);
         break;
       }
@@ -179,19 +182,20 @@ class tECS {
     /// Because the creation of the union gives ownership of the nodes,
     /// the children of n1 and n2 are the ones that are referenced.
     /// n1 and n2 are not going to be used, therefore they are unpined.
-    Node* u2 = create_first_intermediate_union_node(node_1, node_2);
+    Node* u2 = create_first_intermediate_union_node(node_1, node_2); 
+    //Antes en cada funcion que creaba un union node se hacia pin a cada hijo (quedo comentado)
+    //debido a que se cambio el constructor y los hijos una vez se hace alloc
+    //no pierden la referencia, se saco los pin
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
     Node* new_node = create_union_of_output_and_intermediate_node(node_1,
                                                                   u1);
-    unpin(node_1);
-    unpin(node_2);
     return new_node;
   }
 
   Node* create_first_intermediate_union_node(Node* node_1, Node* node_2) {
     Node* u2;
-    pin(node_2->right);
-    pin(node_1->right);
+    // pin(node_2->right);
+    // pin(node_1->right);
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
@@ -201,14 +205,14 @@ class tECS {
   }
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
-    pin(node_2->left);
+    // pin(node_2->left);
     Node* u1 = node_manager.alloc(node_2->left, u2);
     return u1;
   }
 
   Node*
   create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
-    pin(node_1->left);
+    // pin(node_1->left);
     Node* new_node = node_manager.alloc(node_1->left, u2);
     return new_node;
   }

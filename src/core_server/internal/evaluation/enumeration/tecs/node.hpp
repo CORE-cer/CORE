@@ -31,7 +31,7 @@ class Node {
   };
 
   union {
-    uint64_t ref_count{1};
+    uint64_t ref_count{0};
     Node* next_free_node;
   };
 
@@ -46,12 +46,12 @@ class Node {
    * The timestamp does not need to be the timestamp in the tuple. It
    * could be for example the stream position.
    */
-  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp)
-      : node_type(NodeType::BOTTOM),
-        tuple(tuple),
-        timestamp(timestamp),
-        maximum_start(timestamp) {}
 
+  /* BOTTOM Node */
+  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp){
+    reset(tuple, timestamp); //Se llama a reset para evitar repetir codigo
+  }
+  
   // TODO: Check if I really need a tuple.
 
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -60,16 +60,13 @@ class Node {
     this->timestamp = timestamp;
     this->node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
-    this->ref_count = 1;
+    this->ref_count = 0; // Ahora parte con ref_count 0 (lo mismo para los demas casos)
   }
 
-  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp)
-      : node_type(NodeType::OUTPUT),
-        tuple(tuple),
-        left(node),
-        timestamp(timestamp) {
+  /* OUTPUT Node */
+  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp){
     assert(node != nullptr);
-    maximum_start = left->maximum_start;
+    reset(node, tuple, timestamp); //Se llama a reset para evitar repetir codigo
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -78,28 +75,24 @@ class Node {
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);
+    node->ref_count += 1; // Se suma la referencia al nodo hijo para no reciclarla (como antes)
     maximum_start = left->maximum_start;
-    this->ref_count = 1;
+    this->ref_count = 0;
   }
 
-  Node(Node* left, Node* right) : node_type(NodeType::UNION) {
+  /* UNION Node */
+  Node(Node* left, Node* right){
     assert(left != nullptr);
     assert(right != nullptr);
-    if (left->maximum_start >= right->maximum_start) {
-      this->left = left;
-      this->right = right;
-    } else {
-      this->left = right;
-      this->right = left;
-    }
-    assert(this->left->maximum_start >= this->right->maximum_start);
-    maximum_start = this->left->maximum_start;
+    reset(left, right);
   }
 
   void reset(Node* left, Node* right) {
     this->node_type = NodeType::UNION;
     assert(left != nullptr);
     assert(right != nullptr);
+    left->ref_count += 1; // Se suma la referencia a cada hijo para no reciclarlas
+    right->ref_count += 1;
     if (left->maximum_start >= right->maximum_start) {
       this->left = left;
       this->right = right;
@@ -110,13 +103,12 @@ class Node {
     timestamp = {};  // TODO: this is not neccessary right?
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
-    this->ref_count = 1;
+    this->ref_count = 0;
   }
 
+ /* TIME_LIST_HEAD/TAIL Nodes */
   Node(NodeType node_type) : node_type(node_type) {
-    assert(node_type == NodeType::TIME_LIST_HEAD
-           || node_type == NodeType::TIME_LIST_TAIL);
-    maximum_start = UINT64_MAX;
+    reset(node_type);
   }
 
   void reset(NodeType node_type) {
@@ -124,7 +116,7 @@ class Node {
            || node_type == NodeType::TIME_LIST_TAIL);
     this->node_type = node_type;
     maximum_start = UINT64_MAX;
-    this->ref_count = 1;
+    this->ref_count = 1; // Se mantiene en 1 dado que en teoria se ocupa siempre
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }
