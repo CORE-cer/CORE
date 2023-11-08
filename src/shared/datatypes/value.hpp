@@ -10,7 +10,7 @@ struct Value {
 };
 
 struct StringValue final : public Value {
-  std::string val;
+  std::string val{""};
 
   StringValue() {}
 
@@ -27,7 +27,7 @@ struct StringValue final : public Value {
 };
 
 struct IntValue final : public Value {
-  int64_t val;
+  int64_t val{0};
 
   IntValue() {}
 
@@ -44,7 +44,7 @@ struct IntValue final : public Value {
 };
 
 struct DoubleValue final : public Value {
-  double val;
+  double val{0.0};
 
   DoubleValue() {}
 
@@ -61,7 +61,7 @@ struct DoubleValue final : public Value {
 };
 
 struct BoolValue final : public Value {
-  bool val;
+  bool val{false};
 
   BoolValue() {}
 
@@ -78,7 +78,7 @@ struct BoolValue final : public Value {
 };
 
 struct DateValue final : public Value {
-  std::time_t val;
+  std::time_t val{0};
 
   DateValue() {}
 
