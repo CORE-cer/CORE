@@ -93,7 +93,9 @@ class Queue {
     typename std::enable_if<std::is_trivially_copyable<T>::value, T*>::type {
     auto& current_buffer = buffers[constant_section_buffer_index];
     auto ptr = &current_buffer[constant_section_index];
-    constant_section_index += sizeof(T) / sizeof(uint64_t);
+    // Advance, ceiling so that we can actually fit if not multiple of sizeof(uin64_t)
+    constant_section_index += (sizeof(T) + sizeof(uint64_t) - 1)
+                              / sizeof(uint64_t);
     return reinterpret_cast<T*>(ptr);
   }
 

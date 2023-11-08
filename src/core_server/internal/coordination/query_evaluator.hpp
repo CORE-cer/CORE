@@ -51,7 +51,7 @@ class QueryEvaluator {
 
   void start() {
     worker_thread = std::thread([&]() {
-      ZoneScopedN("QueryEvaluator::start::worker_thread");
+      ZoneScopedN("QueryEvaluator::start::worker_thread");  //NOLINT
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
         broadcaster.broadcast(handle_message(serialized_message));
