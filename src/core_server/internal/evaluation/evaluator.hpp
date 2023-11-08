@@ -111,19 +111,22 @@ class Evaluator {
     if (!marked_state->is_empty) {
       Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
-        tecs.pin(ul); // Se hace pin a la ul debido a que se va a actualizar y meter dentro de T'[q]
+        tecs.pin(
+          ul);  // Se hace pin a la ul debido a que se va a actualizar y meter dentro de T'[q]
         current_union_list_map[marked_state] = tecs.insert(
           std::move(current_union_list_map[marked_state]), new_node);
       } else {
         // Aca no se usa new_node, por lo que no hay que hacer pin
         UnionList new_ulist = tecs.new_ulist(new_node);
-        tecs.pin(new_ulist); // Se hace pin a la nueva ulist que se va a insertar en T'[q]
+        tecs.pin(
+          new_ulist);  // Se hace pin a la nueva ulist que se va a insertar en T'[q]
         current_ordered_keys.push_back(marked_state);
         current_union_list_map[marked_state] = new_ulist;
       }
     }
     if (!unmarked_state->is_empty) {
-      tecs.pin(ul); // Para este caso, en el primer if ul se modifica y se inserta en T'[q],
+      tecs.pin(
+        ul);  // Para este caso, en el primer if ul se modifica y se inserta en T'[q],
       // en el segundo if, se inserta directamente, por lo que ul debe ser pineado en ambos casos
       if (current_union_list_map.contains(unmarked_state)) {
         Node* new_node = tecs.merge(ul);
@@ -134,8 +137,8 @@ class Evaluator {
         current_union_list_map[unmarked_state] = ul;
       }
     }
-    tecs.unpin(ul); 
-    // Se hace unpin de T[p] (ul) ya que se va a reemplazar (independientemente cual sea su resultado) 
+    tecs.unpin(ul);
+    // Se hace unpin de T[p] (ul) ya que se va a reemplazar (independientemente cual sea su resultado)
     // por T'[p] con sus ulists con sus pins respectivos
   }
 

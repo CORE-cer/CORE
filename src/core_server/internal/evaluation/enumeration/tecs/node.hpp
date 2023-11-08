@@ -48,10 +48,10 @@ class Node {
    */
 
   /* BOTTOM Node */
-  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp){
-    reset(tuple, timestamp); //Se llama a reset para evitar repetir codigo
+  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+    reset(tuple, timestamp);  //Se llama a reset para evitar repetir codigo
   }
-  
+
   // TODO: Check if I really need a tuple.
 
   void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -60,13 +60,15 @@ class Node {
     this->timestamp = timestamp;
     this->node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
-    this->ref_count = 0; // Ahora parte con ref_count 0 (lo mismo para los demas casos)
+    this->ref_count = 0;  // Ahora parte con ref_count 0 (lo mismo para los demas casos)
   }
 
   /* OUTPUT Node */
-  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp){
+  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
     assert(node != nullptr);
-    reset(node, tuple, timestamp); //Se llama a reset para evitar repetir codigo
+    reset(node,
+          tuple,
+          timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
   void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
@@ -75,13 +77,13 @@ class Node {
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);
-    node->ref_count += 1; // Se suma la referencia al nodo hijo para no reciclarla (como antes)
+    node->ref_count += 1;  // Se suma la referencia al nodo hijo para no reciclarla (como antes)
     maximum_start = left->maximum_start;
     this->ref_count = 0;
   }
 
   /* UNION Node */
-  Node(Node* left, Node* right){
+  Node(Node* left, Node* right) {
     assert(left != nullptr);
     assert(right != nullptr);
     reset(left, right);
@@ -91,7 +93,7 @@ class Node {
     this->node_type = NodeType::UNION;
     assert(left != nullptr);
     assert(right != nullptr);
-    left->ref_count += 1; // Se suma la referencia a cada hijo para no reciclarlas
+    left->ref_count += 1;  // Se suma la referencia a cada hijo para no reciclarlas
     right->ref_count += 1;
     if (left->maximum_start >= right->maximum_start) {
       this->left = left;
@@ -106,17 +108,15 @@ class Node {
     this->ref_count = 0;
   }
 
- /* TIME_LIST_HEAD/TAIL Nodes */
-  Node(NodeType node_type) : node_type(node_type) {
-    reset(node_type);
-  }
+  /* TIME_LIST_HEAD/TAIL Nodes */
+  Node(NodeType node_type) : node_type(node_type) { reset(node_type); }
 
   void reset(NodeType node_type) {
     assert(node_type == NodeType::TIME_LIST_HEAD
            || node_type == NodeType::TIME_LIST_TAIL);
     this->node_type = node_type;
     maximum_start = UINT64_MAX;
-    this->ref_count = 1; // Se mantiene en 1 dado que en teoria se ocupa siempre
+    this->ref_count = 1;  // Se mantiene en 1 dado que en teoria se ocupa siempre
   }
 
   bool is_union() const { return node_type == NodeType::UNION; }

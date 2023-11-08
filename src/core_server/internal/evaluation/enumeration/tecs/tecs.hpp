@@ -105,8 +105,8 @@ class tECS {
     // TODO: binary search would be better on large lists.
     for (size_t i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        pin(node); // Se pinea el nodo que se inserta
-        // Se crea un nuevo union node, se le hace pin, y entra a la 
+        pin(node);  // Se pinea el nodo que se inserta
+        // Se crea un nuevo union node, se le hace pin, y entra a la
         // union list la cual ya deberia estar pineada segun exec_trans
         Node* union_node = new_union(ulist[i], node);
         pin(union_node);
@@ -114,7 +114,7 @@ class tECS {
         break;
       }
       if (ulist[i]->max() < node->max()) {
-        pin(node); // Se pinea el nodo que se inserta
+        pin(node);  // Se pinea el nodo que se inserta
         ulist.insert(ulist.begin() + 1, node);
         break;
       }
@@ -182,7 +182,7 @@ class tECS {
     /// Because the creation of the union gives ownership of the nodes,
     /// the children of n1 and n2 are the ones that are referenced.
     /// n1 and n2 are not going to be used, therefore they are unpined.
-    Node* u2 = create_first_intermediate_union_node(node_1, node_2); 
+    Node* u2 = create_first_intermediate_union_node(node_1, node_2);
     //Antes en cada funcion que creaba un union node se hacia pin a cada hijo (quedo comentado)
     //debido a que se cambio el constructor y los hijos una vez se hace alloc
     //no pierden la referencia, se saco los pin
