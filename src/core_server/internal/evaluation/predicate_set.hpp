@@ -72,7 +72,8 @@ struct PredicateSet {
   bool operator==(const PredicateSet other) const {
     if (type != other.type || mask != other.mask) return false;
     if (type == Contradiction || type == Tautology) return true;
-    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates)) & mask;
+    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates))
+                     & mask;
     return conflicts == 0;
   }
 
