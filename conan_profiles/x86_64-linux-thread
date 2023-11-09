@@ -1,8 +1,0 @@
-[settings]
-arch=x86_64
-compiler=gcc
-compiler.cppstd=gnu20
-compiler.libcxx=libstdc++11
-compiler.version=12.2
-compiler.sanitizer=thread
-os=Linux

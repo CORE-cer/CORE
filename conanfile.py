@@ -61,12 +61,12 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    # options = ...
-    # default_options = ...
+    options = {"sanitizer": ["address", "thread", None]}
+    default_options = {"sanitizer": None}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
-    generators = "CMakeDeps" , "CMakeToolchain"
+    generators = "CMakeDeps"
 
     # Optional metadata
     # license = ...
@@ -109,13 +109,20 @@ class CORE(ConanFile):
         self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
 
+    def generate(self):
+        tc = CMakeToolchain(self)
+        if self.options.sanitizer == "address":
+            tc.cache_variables["ADDRESS_SANITIZER"] = True
+            tc.cache_variables["THREAD_SANITIZER"] = False
+        elif self.options.sanitizer == "thread":
+            tc.cache_variables["THREAD_SANITIZER"] = True
+            tc.cache_variables["ADDRESS_SANITIZER"] = False
+        else:
+            tc.cache_variables["ADDRESS_SANITIZER"] = False
+            tc.cache_variables["THREAD_SANITIZER"] = False
+        tc.generate()
+
     def build(self):
         cmake = CMake(self)
-        if self.settings.compiler.sanitizer == "address":
-            cmake.definitions["CMAKE_CXX_FLAGS"] = "-fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak"
-            cmake.definitions["CMAKE_LINKER_FLAGS"] = "-fsanitize=address"
-        elif self.settings.compiler.sanitizer == "thread":
-            cmake.definitions["CMAKE_CXX_FLAGS"] = "-fsanitize=thread"
-            cmake.definitions["CMAKE_LINKER_FLAGS"] = "-fsanitize=thread"
         cmake.configure()
         cmake.build()

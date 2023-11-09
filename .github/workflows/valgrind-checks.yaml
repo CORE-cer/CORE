@@ -1,0 +1,181 @@
+name: Requirements for merging
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-valgrind-debug:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug
+
+  run-valgrind-debug-address:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -s address
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -s address
+
+  run-valgrind-debug-thread:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -s thread
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -s thread
+
+  run-valgrind-release:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release
+
+  run-valgrind-debug-address:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s address
+
+  run-valgrind-debug-thread:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s thread
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+
+      - name: run valgrind
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s thread
