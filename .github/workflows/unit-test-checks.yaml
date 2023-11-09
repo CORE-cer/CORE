@@ -33,13 +33,13 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: run tests
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Debug -s thread
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
 
       - name: run tests with address sanitizer
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Debug -s address
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
 
       - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Debug -s thread
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
 
   run-unit-tests-release:
     # Containers must run in Linux based operating systems
@@ -68,10 +68,10 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: run tests
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Release
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release
 
       - name: run tests with address sanitizer
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Release -s address
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
 
       - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Release -s thread
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
