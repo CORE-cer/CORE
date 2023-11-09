@@ -111,5 +111,11 @@ class CORE(ConanFile):
 
     def build(self):
         cmake = CMake(self)
+        if self.settings.compiler.sanitizer == "address":
+            cmake.definitions["CMAKE_CXX_FLAGS"] = "-fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak"
+            cmake.definitions["CMAKE_LINKER_FLAGS"] = "-fsanitize=address"
+        elif self.settings.compiler.sanitizer == "thread":
+            cmake.definitions["CMAKE_CXX_FLAGS"] = "-fsanitize=thread"
+            cmake.definitions["CMAKE_LINKER_FLAGS"] = "-fsanitize=thread"
         cmake.configure()
         cmake.build()
