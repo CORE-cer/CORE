@@ -64,7 +64,7 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Debug -s address
 
-  run-unit-tests-debug-address:
+  run-unit-tests-debug-thread:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
@@ -151,7 +151,7 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/compile_and_test.sh && ./scripts/compile_and_test.sh -b Release -s address
 
-  run-unit-tests-release-address:
+  run-unit-tests-release-thread:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:

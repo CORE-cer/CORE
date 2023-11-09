@@ -122,7 +122,7 @@ jobs:
       - name: run valgrind
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release
 
-  run-valgrind-debug-address:
+  run-valgrind-release-address:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
@@ -151,7 +151,7 @@ jobs:
       - name: run valgrind
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s address
 
-  run-valgrind-debug-thread:
+  run-valgrind-release-thread:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
