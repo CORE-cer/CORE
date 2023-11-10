@@ -16,7 +16,7 @@ echo -e "${PURPLE}Internal Tests with Valgrind${NORMAL_OUTPUT}"
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 
 valgrind --leak-check=full --suppressions=./valgrind_suppressions.txt \
-    --exit-on-first-error=yes --error-exitcode=1  ./build/${BUILD_TYPE}/tests
+    --exit-on-first-error=yes --error-exitcode=1 --gen-suppressions=all ./build/${BUILD_TYPE}/tests
 valgrind_unit_test_result=$?
 
 
