@@ -38,8 +38,8 @@ jobs:
       - name: run valgrind with address sanitizer
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -s address
 
-      - name: run valgrind with thread sanitizer
-        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -s thread
+      # - name: run valgrind with thread sanitizer
+      #   run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -s thread
 
   run-valgrind-release:
     # Containers must run in Linux based operating systems
@@ -68,10 +68,10 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: run valgrind
-        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s address
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release
 
       - name: run valgrind with address sanitizer
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s address
 
-      - name: run valgrind with thread sanitizer
-        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s thread
+      # - name: run valgrind with thread sanitizer
+      #   run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release -s thread

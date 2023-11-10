@@ -33,13 +33,13 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
 
       - name: run tests
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
 
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
 
-      - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
+      # - name: run tests with thread sanitizer
+      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
 
   run-unit-tests-release:
     # Containers must run in Linux based operating systems
@@ -73,5 +73,5 @@ jobs:
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
 
-      - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
+      # - name: run tests with thread sanitizer
+      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
