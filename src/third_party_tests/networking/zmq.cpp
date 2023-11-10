@@ -192,7 +192,8 @@ TEST_CASE(
     });
   }
   // Rerun the publisher_thread
-  std::this_thread::sleep_for(std::chrono::milliseconds(400));
+  // Need long sleep due to slow joiner syndrome on threads to receive
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   message_sender.broadcast(sent_message);
 
   for (int i = 0; i < amount_of_threads; i++) {
@@ -226,7 +227,7 @@ TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
   std::unique_ptr<std::thread> threads[amount_of_threads];
   std::atomic<int> counter = 0;
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   for (int i = 0; i < amount_of_threads; i++) {
     threads[i] = std::make_unique<std::thread>([&]() {
       int j = counter.fetch_add(1);
