@@ -216,6 +216,10 @@ TEST_CASE(
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
 
+  // Mitigate slow joiner syndrome where events gets processed and sent before
+  // clients are fully connected. Done for test due to low impact on real usage
+  // due to the fact that we are not guaranteed a client will be connected.
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
   streamer.send_stream(stream_type_id_1, event_to_send);
 
   client.join_all_threads();
