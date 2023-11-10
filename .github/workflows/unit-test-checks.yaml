@@ -27,10 +27,10 @@ jobs:
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -s thread
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug
 
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
@@ -65,7 +65,7 @@ jobs:
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
 
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release

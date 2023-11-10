@@ -30,7 +30,7 @@ jobs:
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug
 
       - name: run valgrind with no sanitizer
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug
@@ -65,7 +65,7 @@ jobs:
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
 
       - name: run valgrind
         run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Release
