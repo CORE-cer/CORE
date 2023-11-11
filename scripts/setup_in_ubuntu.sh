@@ -5,7 +5,7 @@ sudo apt install python3-pip -y
 sudo apt remove --purge --auto-remove cmake
 
 sudo apt update && \
-    sudo apt install -y software-properties-common lsb-release parallel && \
+    sudo apt install -y software-properties-common lsb-release parallel ninja-build && \
     sudo apt clean all
 
 sudo apt install default-jdk -y
