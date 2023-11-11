@@ -38,7 +38,7 @@ function build() {
 
 # Default values
 BUILD_TYPE="Debug"
-CONAN_PROFILE="conan_profiles/x86_64-linux"
+CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
