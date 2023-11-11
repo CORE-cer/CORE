@@ -1,4 +1,4 @@
-_setArgs(){
+function _setArgs() {
   while [ "${1:-}" != "" ]; do
     case "$1" in
       "-p" | "--profile")
@@ -9,11 +9,34 @@ _setArgs(){
         shift
         BUILD_TYPE=$1
         ;;
+      "-s" | "--sanitizer")
+        shift
+        SANITIZER=$1
+        ;;
     esac
     shift
   done
 }
 
+function build() {
+  if [ ! -z "$SANITIZER" ]; then
+      conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
+          -s build_type=${BUILD_TYPE}\
+          --build missing -o sanitizer=${SANITIZER}
+  else
+      conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
+          -s build_type=${BUILD_TYPE}\
+          --build missing
+  fi 
+
+  build_result=$?
+  if [ $build_result -ne 0 ]; then
+      echo -e "${RED}Build failed!${NORMAL_OUTPUT}"
+      exit 1
+  fi
+}
+
+# Default values
 BUILD_TYPE="Debug"
 CONAN_PROFILE="conan_profiles/x86_64-linux"
 

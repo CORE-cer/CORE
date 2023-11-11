@@ -9,8 +9,5 @@ cd ..
 source scripts/common.sh
 _setArgs "$@"
 
-echo $CONAN_PROFILE
-
-conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
-              -s build_type=${BUILD_TYPE}\
-              --build missing
+# Call build function from common
+build

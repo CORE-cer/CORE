@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(FetchContent)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -fsanitize=thread -fPIE -pie")
 
 project (core CXX)
 
@@ -84,13 +83,25 @@ endif()
 set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
 # Set debug flag for core
-
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(core PUBLIC CORE_DEBUG)
 endif()
 
-# add_compile_options("-include tracy/Tracy.hpp")
+# Add compiler and linker flags to core
 target_compile_options(core PUBLIC -Werror=old-style-cast)
+
+if (ADDRESS_SANITIZER)
+  message("Address sanitizer enabled")
+  target_compile_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak)
+  target_link_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak)
+endif()
+
+if (THREAD_SANITIZER)
+  message("Thread sanitizer enabled")
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+endif()
+
 
 # executable target
 
