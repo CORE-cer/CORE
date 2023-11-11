@@ -110,7 +110,7 @@ class CORE(ConanFile):
         self.requires("re2/" + CORE.RE2_VERSION)
 
     def generate(self):
-        tc = CMakeToolchain(self)
+        tc = CMakeToolchain(self, generator="Ninja")
         if self.options.sanitizer == "address":
             tc.cache_variables["ADDRESS_SANITIZER"] = True
             tc.cache_variables["THREAD_SANITIZER"] = False
