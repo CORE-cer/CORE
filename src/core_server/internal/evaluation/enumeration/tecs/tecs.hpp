@@ -90,6 +90,7 @@ class tECS {
    */
   UnionList new_ulist(Node* node) {
     assert(!node->is_union());
+    pin(node);
     return {node};
   }
 
@@ -99,23 +100,23 @@ class tECS {
     assert(node->max() <= ulist[0]->max());
     if (ulist.size() == 1) {
       ulist.push_back(node);
+      pin(node);
       assert_required_properties_of_union_list(ulist);
       return std::move(ulist);
     }
     // TODO: binary search would be better on large lists.
     for (size_t i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        pin(node);  // Se pinea el nodo que se inserta
-        // Se crea un nuevo union node, se le hace pin, y entra a la
-        // union list la cual ya deberia estar pineada segun exec_trans
+        pin(node);
         Node* union_node = new_union(ulist[i], node);
         pin(union_node);
+        unpin(ulist[i]);
         ulist[i] = union_node;
         break;
       }
       if (ulist[i]->max() < node->max()) {
         pin(node);  // Se pinea el nodo que se inserta
-        ulist.insert(ulist.begin() + 1, node);
+        ulist.insert(ulist.begin() + i, node);  // Cambio a i en vez de 1
         break;
       }
     }

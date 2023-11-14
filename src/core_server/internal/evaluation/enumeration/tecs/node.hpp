@@ -95,13 +95,8 @@ class Node {
     assert(right != nullptr);
     left->ref_count += 1;  // Se suma la referencia a cada hijo para no reciclarlas
     right->ref_count += 1;
-    if (left->maximum_start >= right->maximum_start) {
-      this->left = left;
-      this->right = right;
-    } else {
-      this->left = right;
-      this->right = left;
-    }
+    this->left = left;
+    this->right = right;
     timestamp = {};  // TODO: this is not neccessary right?
     assert(this->left->maximum_start >= this->right->maximum_start);
     maximum_start = this->left->maximum_start;
