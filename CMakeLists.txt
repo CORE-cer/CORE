@@ -34,7 +34,7 @@ FetchContent_Declare (
   GIT_PROGRESS TRUE
 )
 
-set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)
+set(ENABLE_PROFILING ON CACHE BOOL "Enable Profiling" FORCE)
 
 if (ENABLE_PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
@@ -112,6 +112,8 @@ add_executable(stocks_example src/targets/stocks_example/stocks_example.cpp)
 add_executable(taxi_example src/targets/taxi_example/taxi_example.cpp)
 add_executable(client src/targets/client.cpp)
 add_executable(server src/targets/server.cpp)
+add_executable(offlinesimulation2 src/targets/offlinesimulation2.cpp)
+add_executable(offline_stocks_example src/targets/stocks_example/offline_stocks_example.cpp)
 
 target_link_libraries(simulation1 PRIVATE core)
 target_link_libraries(simulation2 PRIVATE core)
@@ -120,6 +122,8 @@ target_link_libraries(stocks_example PRIVATE core)
 target_link_libraries(taxi_example PRIVATE core)
 target_link_libraries(client PRIVATE core)
 target_link_libraries(server PRIVATE core)
+target_link_libraries(offlinesimulation2 PRIVATE core)
+target_link_libraries(offline_stocks_example PRIVATE core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:

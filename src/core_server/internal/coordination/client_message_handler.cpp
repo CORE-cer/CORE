@@ -139,7 +139,9 @@ ClientMessageHandler::add_query(std::string s_query_info) {
   // TODO: Change this to a CEA. Right now it's a query string that might
   // Not be correct.
   // TODO: Check if it is possible to parse it.
+  std::cout << "Query: " << s_query_info << std::endl;
   CEQL::Query query = Parsing::Parser::parse_query(s_query_info);
+  std::cout << "Parsed Query: " << query.to_string() << std::endl;
   Types::PortNumber port = mediator.create_complex_event_stream(
     std::move(query));
   return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(

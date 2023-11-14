@@ -29,24 +29,23 @@ Types::PortNumber create_queries(Client& client) {
   queries.push_back(
     "SELECT * FROM S\n"
     "WHERE (SELL as T1; BUY as T2; BUY as T3)\n"
-    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] \n"
-    "WITHIN TIMESTAMP [stock_time]\n");
-  queries.push_back(
-    "SELECT * FROM S\n"
-    "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
-    "    SELL as T4; BUY as T5; BUY as T6)\n"
-    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
-    "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO']\n"
-    "WITHIN 100 EVENTS");
-  queries.push_back(
-    "SELECT * FROM S\n"
-    "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
-    "    SELL as T4; BUY as T5; BUY as T6;\n"
-    "    SELL as T7; BUY as T8; BUY as T9)\n"
-    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
-    "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO'] AND\n"
-    "    T7[name = 'YHOO'] AND T8[name = 'DELL'] AND T9[name = 'ORCL']\n"
-    "WITHIN 100 EVENTS\n");
+    "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] \n");
+  // queries.push_back(
+  //   "SELECT * FROM S\n"
+  //   "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
+  //   "    SELL as T4; BUY as T5; BUY as T6)\n"
+  //   "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
+  //   "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO']\n"
+  //   "WITHIN 100 EVENTS");
+  // queries.push_back(
+  //   "SELECT * FROM S\n"
+  //   "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
+  //   "    SELL as T4; BUY as T5; BUY as T6;\n"
+  //   "    SELL as T7; BUY as T8; BUY as T9)\n"
+  //   "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND\n"
+  //   "    T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO'] AND\n"
+  //   "    T7[name = 'YHOO'] AND T8[name = 'DELL'] AND T9[name = 'ORCL']\n"
+  //   "WITHIN 100 EVENTS\n");
   // clang-format on
 
   Types::PortNumber final_port_number = 5002;
@@ -73,8 +72,7 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream(StocksData::Data data) {
-  Streamer streamer("tcp://localhost", 5001);
+void send_a_stream(Streamer& streamer, StocksData::Data data) {
   // clang-format off
   Types::Event event_to_send{
     data.event_type,
@@ -99,8 +97,9 @@ int main(int argc, char** argv) {
     Types::PortNumber final_port_number = create_queries(client);
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < StocksData::stream.size(); i++) {
-      send_a_stream(StocksData::stream[i]);
+      send_a_stream(streamer, StocksData::stream[i]);
     }
 
     client.stop_all_subscriptions();
