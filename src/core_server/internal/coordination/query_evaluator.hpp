@@ -34,12 +34,12 @@ class QueryEvaluator {
 
   ~QueryEvaluator() {}
 
-  Types::Enumerator next_data(uint64_t *data) {
+  tECS::Enumerator next_data(uint64_t *data) {
     RingTupleQueue::Tuple tuple = queue.get_tuple(data);
     uint64_t time = time_is_stream_position ? current_stream_position++
                                             : tuple.nanoseconds();
-    Types::Enumerator output = catalog.convert_enumerator(
-      evaluator->next(tuple, time));
+
+    tECS::Enumerator output = evaluator->next(tuple, time);
 
     return output;
   }

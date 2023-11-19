@@ -71,6 +71,39 @@ class Enumerator {
   /// the delete operator of the enumerator.
   Enumerator(const Enumerator&) = delete;
 
+  // Allow move constructor
+  Enumerator(Enumerator&& other) noexcept
+      : stack(std::move(other.stack)),
+        original_pos(other.original_pos),
+        last_time_to_consider(other.last_time_to_consider),
+        next_value(std::move(other.next_value)),
+        original_node(other.original_node),
+        tecs(other.tecs),
+        time_reservator(other.time_reservator),
+        time_reserved_node(other.time_reserved_node) {
+    other.tecs = nullptr;
+    other.time_reservator = nullptr;
+    other.time_reserved_node = nullptr;
+  }
+
+  // Allow move assignment
+  Enumerator& operator=(Enumerator&& other) noexcept {
+    if (this != &other) {
+      stack = std::move(other.stack);
+      original_pos = other.original_pos;
+      last_time_to_consider = other.last_time_to_consider;
+      next_value = std::move(other.next_value);
+      original_node = other.original_node;
+      tecs = other.tecs;
+      time_reservator = other.time_reservator;
+      time_reserved_node = other.time_reserved_node;
+      other.tecs = nullptr;
+      other.time_reservator = nullptr;
+      other.time_reserved_node = nullptr;
+    }
+    return *this;
+  }
+
   Enumerator()
       : original_node(nullptr),
         tecs(nullptr),

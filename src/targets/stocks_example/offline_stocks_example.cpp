@@ -54,10 +54,10 @@ int main(int argc, char** argv) {
            std::make_shared<Types::DoubleValue>(data.price),
            std::make_shared<Types::IntValue>(data.stock_time)}
       };
-      enumerator = mediator.send_event_to_query(0, event_to_send);
-      for (auto& event : enumerator) {
-        std::cout << event.to_string() << std::endl;
-      }
+      // enumerator = mediator.send_event_to_query(0, event_to_send);
+      // for (auto& event : enumerator) {
+      //   std::cout << event.to_string() << std::endl;
+      // }
     }
 
     return 0;

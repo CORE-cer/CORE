@@ -1,6 +1,7 @@
 #pragma once
 
-#include <atomic> #include <iostream>
+#include <atomic>
+#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -28,15 +29,15 @@ class OnlineQueryEvaluator {
   ZMQMessageBroadcaster broadcaster;
   std::atomic<bool> stop_condition = false;
   QueryEvaluator query_evaluator;
-
+  Catalog& catalog;
 
  public:
   OnlineQueryEvaluator(std::unique_ptr<Evaluation::Evaluator>&& evaluator,
-                 bool time_is_stream_position,
-                 Types::PortNumber inner_thread_receiver_port,
-                 Types::PortNumber broadcaster_port,
-                 RingTupleQueue::Queue& queue,
-                 Catalog& catalog)
+                       bool time_is_stream_position,
+                       Types::PortNumber inner_thread_receiver_port,
+                       Types::PortNumber broadcaster_port,
+                       RingTupleQueue::Queue& queue,
+                       Catalog& catalog)
       : inner_thread_address("inproc://"
                              + std::to_string(inner_thread_receiver_port)),
         receiver(inner_thread_address),
@@ -44,8 +45,8 @@ class OnlineQueryEvaluator {
         query_evaluator(std::move(evaluator),
                         time_is_stream_position,
                         queue,
-                        catalog) {}
-
+                        catalog),
+        catalog(catalog) {}
 
   ~OnlineQueryEvaluator() {}
 
@@ -77,7 +78,6 @@ class OnlineQueryEvaluator {
   // a string representing the output is sent back.
   std::string handle_message(std::string& serialized_message) {
     static uint64_t counter = 0;
-    std::cout << "Received message counnter: " << counter++ << std::endl;
     if (serialized_message == "NOP") {
       return "";
     }
@@ -87,12 +87,10 @@ class OnlineQueryEvaluator {
     uint64_t* data;
     memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
 
-    Types::Enumerator output = query_evaluator.next_data(data);
-    for (auto& event : output) {
-      std::cout << "Event: " << event.to_string() << std::endl;
-    }
+    tECS::Enumerator output = query_evaluator.next_data(data);
+    Types::Enumerator output_enumerator = catalog.convert_enumerator(std::move(output));
 
-    return CerealSerializer<Types::Enumerator>::serialize(output);
+    return CerealSerializer<Types::Enumerator>::serialize(output_enumerator);
   }
 };
 

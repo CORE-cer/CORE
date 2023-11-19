@@ -35,14 +35,6 @@ void do_declarations(Internal::OfflineSingleMediator& mediator) {
                                                     event_type_id_2});
 }
 
-Types::Enumerator send_event(Internal::OfflineSingleMediator& mediator) {
-  ZoneScoped;
-  Types::Event event_to_send{0,
-                             {std::make_shared<Types::IntValue>(20),
-                              std::make_shared<Types::IntValue>(2)}};
-  return mediator.send_event_to_query(0, event_to_send);
-}
-
 int main(int argc, char** argv) {
   FrameMark;
   try {
@@ -73,8 +65,8 @@ int main(int argc, char** argv) {
         Types::Event event_to_send{0,
                                    {std::make_shared<Types::IntValue>(20),
                                     std::make_shared<Types::IntValue>(2)}};
-        enumerator = mediator.send_event_to_query(0, event_to_send);
-        enumerators.push_back(std::move(enumerator));
+        // enumerator = mediator.send_event_to_query(0, event_to_send);
+        // enumerators.push_back(std::move(enumerator));
       }
     }
     for (auto& enumerator : enumerators) {
