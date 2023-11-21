@@ -131,7 +131,7 @@ class Evaluator {
         recycle_ulist = true;
       }
     }
-    if (!recycle_ulist){
+    if (!recycle_ulist) {
       tecs.unpin(ul);
     }
   }
@@ -140,7 +140,9 @@ class Evaluator {
   tECS::Enumerator output(uint64_t current_time) {
     Node* out = nullptr;
     // Recorrer en inverso
-    for (auto it = historic_ordered_keys.rbegin(); it != historic_ordered_keys.rend(); ++it) {
+    for (auto it = historic_ordered_keys.rbegin();
+         it != historic_ordered_keys.rend();
+         ++it) {
       State* p = *it;
       if (p->is_final) {
         assert(historic_union_list_map.contains(p));
@@ -149,7 +151,7 @@ class Evaluator {
         if (out == nullptr) {
           out = n;
         } else {
-          out = tecs.new_union(n, out); // Cambiar a n, out
+          out = tecs.new_union(n, out);  // Cambiar a n, out
         }
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
