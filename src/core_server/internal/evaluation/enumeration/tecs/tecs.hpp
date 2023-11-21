@@ -105,9 +105,9 @@ class tECS {
       return std::move(ulist);
     }
     // TODO: binary search would be better on large lists.
-    for (size_t i = 1; i < ulist.size(); i++) {
+    int64_t i;
+    for (i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        pin(node);
         Node* union_node = new_union(ulist[i], node);
         pin(union_node);
         unpin(ulist[i]);
@@ -120,6 +120,11 @@ class tECS {
         break;
       }
     }
+    if (i == ulist.size()){
+      pin(node);
+      ulist.push_back(node);
+    }
+
     assert_required_properties_of_union_list(ulist);
     return std::move(ulist);
   }
