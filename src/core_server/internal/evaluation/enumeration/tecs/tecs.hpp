@@ -120,7 +120,7 @@ class tECS {
         break;
       }
     }
-    if (i == ulist.size()){
+    if (i == ulist.size()) {
       pin(node);
       ulist.push_back(node);
     }
