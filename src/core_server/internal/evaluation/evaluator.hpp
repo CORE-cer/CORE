@@ -103,17 +103,13 @@ class Evaluator {
                   mpz_class& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
-    static int nodes_stored = 0;
-    static int all_exec_trans = 0;
-    all_exec_trans++;
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;
     auto unmarked_state = next_states.unmarked_state;
     assert(marked_state != nullptr && unmarked_state != nullptr);
+    bool recycle_ulist = false;
     if (!marked_state->is_empty) {
-      tecs.pin(ul);
-      nodes_stored++;
       Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs.insert(
@@ -125,34 +121,37 @@ class Evaluator {
       }
     }
     if (!unmarked_state->is_empty) {
-      nodes_stored++;
       if (current_union_list_map.contains(unmarked_state)) {
-        tecs.pin(ul);
         Node* new_node = tecs.merge(ul);
         current_union_list_map[unmarked_state] = tecs.insert(
           std::move(current_union_list_map[unmarked_state]), new_node);
       } else {
         current_ordered_keys.push_back(unmarked_state);
-        tecs.pin(ul);
         current_union_list_map[unmarked_state] = ul;
+        recycle_ulist = true;
       }
     }
-    tecs.unpin(ul);
+    if (!recycle_ulist) {
+      tecs.unpin(ul);
+    }
   }
 
   // Change to tECS::Enumerator.
   tECS::Enumerator output(uint64_t current_time) {
     Node* out = nullptr;
-    for (State* p : historic_ordered_keys) {
+    // Recorrer en inverso
+    for (auto it = historic_ordered_keys.rbegin();
+         it != historic_ordered_keys.rend();
+         ++it) {
+      State* p = *it;
       if (p->is_final) {
         assert(historic_union_list_map.contains(p));
-        tecs.pin(historic_union_list_map[p]);
         Node* n = tecs.merge(historic_union_list_map[p]);
         // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
         if (out == nullptr) {
           out = n;
         } else {
-          out = tecs.new_union(out, n);
+          out = tecs.new_union(n, out);  // Cambiar a n, out
         }
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
@@ -160,6 +159,7 @@ class Evaluator {
     if (out == nullptr) {
       return {};
     } else {
+      tecs.pin(out);
       return {out, current_time, time_window, tecs, tecs.time_reservator};
     }
   }

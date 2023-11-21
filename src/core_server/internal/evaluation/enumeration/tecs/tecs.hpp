@@ -54,7 +54,6 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    static int i = 1;
     auto out = node_manager.alloc(tuple, timestamp);
     return out;
   }
@@ -66,7 +65,6 @@ class tECS {
    */
   [[nodiscard]] Node*
   new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    static int i = 1;
     return node_manager.alloc(node, tuple, timestamp);
   }
 
@@ -75,7 +73,6 @@ class tECS {
    * single node.
    */
   [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
-    static int i = 1;
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {
@@ -93,6 +90,7 @@ class tECS {
    */
   UnionList new_ulist(Node* node) {
     assert(!node->is_union());
+    pin(node);
     return {node};
   }
 
@@ -102,20 +100,31 @@ class tECS {
     assert(node->max() <= ulist[0]->max());
     if (ulist.size() == 1) {
       ulist.push_back(node);
+      pin(node);
       assert_required_properties_of_union_list(ulist);
       return std::move(ulist);
     }
     // TODO: binary search would be better on large lists.
-    for (size_t i = 1; i < ulist.size(); i++) {
+    int64_t i;
+    for (i = 1; i < ulist.size(); i++) {
       if (ulist[i]->max() == node->max()) {
-        ulist[i] = new_union(ulist[i], node);
+        Node* union_node = new_union(ulist[i], node);
+        pin(union_node);
+        unpin(ulist[i]);
+        ulist[i] = union_node;
         break;
       }
       if (ulist[i]->max() < node->max()) {
-        ulist.insert(ulist.begin() + 1, node);
+        pin(node);  // Se pinea el nodo que se inserta
+        ulist.insert(ulist.begin() + i, node);  // Cambio a i en vez de 1
         break;
       }
     }
+    if (i == ulist.size()) {
+      pin(node);
+      ulist.push_back(node);
+    }
+
     assert_required_properties_of_union_list(ulist);
     return std::move(ulist);
   }
@@ -180,18 +189,19 @@ class tECS {
     /// the children of n1 and n2 are the ones that are referenced.
     /// n1 and n2 are not going to be used, therefore they are unpined.
     Node* u2 = create_first_intermediate_union_node(node_1, node_2);
+    //Antes en cada funcion que creaba un union node se hacia pin a cada hijo (quedo comentado)
+    //debido a que se cambio el constructor y los hijos una vez se hace alloc
+    //no pierden la referencia, se saco los pin
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
     Node* new_node = create_union_of_output_and_intermediate_node(node_1,
                                                                   u1);
-    unpin(node_1);
-    unpin(node_2);
     return new_node;
   }
 
   Node* create_first_intermediate_union_node(Node* node_1, Node* node_2) {
     Node* u2;
-    pin(node_2->right);
-    pin(node_1->right);
+    // pin(node_2->right);
+    // pin(node_1->right);
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
@@ -201,14 +211,14 @@ class tECS {
   }
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
-    pin(node_2->left);
+    // pin(node_2->left);
     Node* u1 = node_manager.alloc(node_2->left, u2);
     return u1;
   }
 
   Node*
   create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
-    pin(node_1->left);
+    // pin(node_1->left);
     Node* new_node = node_manager.alloc(node_1->left, u2);
     return new_node;
   }
