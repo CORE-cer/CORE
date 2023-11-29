@@ -33,7 +33,7 @@ class OnlineQueryEvaluator {
 
  public:
   OnlineQueryEvaluator(std::unique_ptr<Evaluation::Evaluator>&& evaluator,
-                       bool time_is_stream_position,
+                       CEQL::Within::TimeWindowMode window_mode,
                        Types::PortNumber inner_thread_receiver_port,
                        Types::PortNumber broadcaster_port,
                        RingTupleQueue::Queue& queue,
@@ -42,10 +42,7 @@ class OnlineQueryEvaluator {
                              + std::to_string(inner_thread_receiver_port)),
         receiver(inner_thread_address),
         broadcaster("tcp://*:" + std::to_string(broadcaster_port)),
-        query_evaluator(std::move(evaluator),
-                        time_is_stream_position,
-                        queue,
-                        catalog),
+        query_evaluator(std::move(evaluator), window_mode, queue, catalog),
         catalog(catalog) {}
 
   ~OnlineQueryEvaluator() {}
@@ -88,7 +85,8 @@ class OnlineQueryEvaluator {
     memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
 
     tECS::Enumerator output = query_evaluator.next_data(data);
-    Types::Enumerator output_enumerator = catalog.convert_enumerator(std::move(output));
+    Types::Enumerator output_enumerator = catalog.convert_enumerator(
+      std::move(output));
 
     return CerealSerializer<Types::Enumerator>::serialize(output_enumerator);
   }

@@ -50,8 +50,7 @@ Mediator::create_complex_event_stream(CEQL::Query&& query) {
   online_query_evaluators.emplace_back(
     std::make_unique<OnlineQueryEvaluator>(
       std::move(evaluator),
-      product.query.within.time_window.mode
-        != CEQL::Within::TimeWindowMode::NANOSECONDS,
+      product.query.within.time_window.mode,
       current_next_port_number,
       current_next_port_number,
       queue,

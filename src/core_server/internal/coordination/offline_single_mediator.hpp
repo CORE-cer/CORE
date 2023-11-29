@@ -61,8 +61,7 @@ class OfflineSingleMediator {
 
     query_evaluator = std::make_unique<QueryEvaluator>(
       std::move(evaluator),
-      product.query.within.time_window.mode
-        != CEQL::Within::TimeWindowMode::NANOSECONDS,
+      product.query.within.time_window.mode,
       queue,
       catalog);
   }

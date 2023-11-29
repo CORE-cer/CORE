@@ -1,25 +1,9 @@
 #include <thread>
 
-#include "core_server/internal/coordination/offline_single_mediator.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "stocks_data.hpp"
 
 using namespace CORE;
-
-void do_declarations(Internal::OfflineSingleMediator& mediator) {
-  std::vector<Types::EventTypeId> event_types{};
-  for (std::string name : {"BUY", "SELL"}) {
-    event_types.push_back(mediator.add_event_type(
-      name,
-      {Types::AttributeInfo("id", Types::ValueTypes::INT64),
-       Types::AttributeInfo("name", Types::ValueTypes::STRING_VIEW),
-       Types::AttributeInfo("volume", Types::ValueTypes::INT64),
-       Types::AttributeInfo("price", Types::ValueTypes::DOUBLE),
-       Types::AttributeInfo("stock_time", Types::ValueTypes::INT64)}));
-  }
-  mediator.add_stream_type("S", std::move(event_types));
-}
-
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cout << "There must be 2 arguments: The query path and the data path."
@@ -34,21 +18,23 @@ int main(int argc, char** argv) {
   try {
     Internal::OfflineSingleMediator mediator;
 
-    do_declarations(mediator);
+    auto stream_id = StocksData::do_declaration(mediator, "Stocks",
+                                                StocksData::event_types,
+                                                StocksData::attributes);
 
     StocksData::DataReader reader(query_path, data_path);
     reader.read_query();
     reader.read_csv();
     reader.to_events();
 
-    // clang-format off
     std::string query_string = reader.query;
-    // clang-format on
 
     std::cout << "Query: " << query_string << std::endl;
 
     Internal::CEQL::Query query = Internal::Parsing::Parser::parse_query(
       query_string);
+    
+    std::cin.get();
 
     mediator.add_query(std::move(query));
 

@@ -1,4 +1,0 @@
-SELECT * FROM S
-WHERE (SELL as T1; BUY as T2; BUY as T3)
-FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ']
-WITHIN 1000 [stock_time]
