@@ -1,0 +1,8 @@
+SELECT * FROM S
+WHERE (SELL as T1; BUY as T2; BUY as T3;
+	SELL as T4; BUY as T5; BUY as T6;
+	SELL as T7; BUY as T8; BUY as T9; BUY as NE)
+FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND
+	T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO'] AND
+	T7[name = 'YHOO'] AND T8[name = 'DELL'] AND T9[name = 'ORCL'] AND NE[name = 'NotExists'] 
+WITHIN TIMESTAMP [stock_time]

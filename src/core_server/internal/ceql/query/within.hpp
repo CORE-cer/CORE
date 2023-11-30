@@ -9,18 +9,24 @@ struct Within {
   enum TimeWindowMode {
     NANOSECONDS,
     EVENTS,
+    ATTRIBUTE,
     NONE,
   };
 
   struct TimeWindow {
     TimeWindowMode mode;
     uint64_t duration;
+    std::string attribute_name;
 
     TimeWindow() : mode(TimeWindowMode::NONE){};
 
     TimeWindow(uint64_t time_interval,
                TimeWindowMode mode = TimeWindowMode::NANOSECONDS)
         : mode(mode), duration(time_interval) {}
+    TimeWindow(uint64_t time_interval,
+               std::string_view attribute_name,
+               TimeWindowMode mode = TimeWindowMode::ATTRIBUTE)
+        : mode(mode), attribute_name(attribute_name), duration(time_interval) {}
   };
 
   TimeWindow time_window;

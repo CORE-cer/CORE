@@ -18,7 +18,8 @@ Mediator::Mediator(Types::PortNumber port,
       streams_listener(this, port + 1),
       current_next_port_number(port + 2),
       queue(100000, &catalog.tuple_schemas),
-      default_time_duration(default_time_duration) {}
+      default_time_duration(default_time_duration),
+      cea_factory{catalog, default_time_duration} {}
 
 void Mediator::start() {
   router.start();
@@ -28,47 +29,36 @@ void Mediator::start() {
 void Mediator::stop() {
   router.stop();
   streams_listener.stop();
-  for (auto& complex_event_streamer : query_evaluators) {
+  for (auto& complex_event_streamer : online_query_evaluators) {
     complex_event_streamer->stop();
   }
 }
 
-Types::PortNumber Mediator::create_complex_event_stream(CEQL::Query query) {
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = Evaluation::PredicateEvaluator(
-    std::move(predicates));
+Types::PortNumber
+Mediator::create_complex_event_stream(CEQL::Query&& query) {
+  CEAFactoryProduct product = cea_factory.create(std::move(query));
 
-  auto visitor = CEQL::FormulaToLogicalCEA(catalog);
-  query.where.formula->accept_visitor(visitor);
-  CEA::DetCEA cea(CEA::CEA(std::move(visitor.current_cea)));
-  uint64_t time_window = query.within.time_window.mode
-                             == CEQL::Within::TimeWindowMode::NONE
-                           ? default_time_duration
-                           : query.within.time_window.duration;
-
-  time_is_event_based.push_back(query.within.time_window.mode
+  time_is_event_based.push_back(product.query.within.time_window.mode
                                 == CEQL::Within::TimeWindowMode::EVENTS);
 
   query_events_expiration_time.push_back(std::make_unique<uint64_t>(0));
   auto evaluator = std::make_unique<Evaluation::Evaluator>(
-    std::move(cea),
-    std::move(tuple_evaluator),
-    time_window,
+    std::move(product.cea),
+    std::move(product.tuple_evaluator),
+    product.time_window,
     *query_events_expiration_time.back());
-  query_evaluators.emplace_back(std::make_unique<QueryEvaluator>(
-    std::move(evaluator),
-    query.within.time_window.mode
-      != CEQL::Within::TimeWindowMode::NANOSECONDS,
-    current_next_port_number,
-    current_next_port_number,
-    queue,
-    catalog));
-  query_evaluators.back()->start();
+  online_query_evaluators.emplace_back(
+    std::make_unique<OnlineQueryEvaluator>(
+      std::move(evaluator),
+      product.query.within.time_window.mode,
+      current_next_port_number,
+      current_next_port_number,
+      queue,
+      catalog));
+  online_query_evaluators.back()->start();
   std::string address = "inproc://"
                         + std::to_string(current_next_port_number);
-  zmq::context_t& shared_context = query_evaluators.back()
+  zmq::context_t& shared_context = online_query_evaluators.back()
                                      ->get_inner_thread_context();
   inner_thread_event_senders.emplace_back(address, shared_context);
   return current_next_port_number++;

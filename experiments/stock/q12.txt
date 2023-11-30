@@ -1,0 +1,4 @@
+SELECT LAST * FROM S
+WHERE (SELL as T1; BUY as T2; BUY as T3; BUY as NE)
+FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND NE[name = 'NotExists']
+WITHIN TIMESTAMP [stock_time]

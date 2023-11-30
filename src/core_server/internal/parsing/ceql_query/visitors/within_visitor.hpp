@@ -55,7 +55,9 @@ class WithinVisitor : public CEQLQueryParserBaseVisitor {
 
   virtual std::any
   visitCustom_span(CEQLQueryParser::Custom_spanContext* ctx) override {
-    throw std::logic_error("Custom span not implemented in within.");
+    within.time_window = {std::stoull(ctx->integer()->getText()),
+                          ctx->any_name()->getText(),
+                          CEQL::Within::TimeWindowMode::ATTRIBUTE};
     return {};
   }
 };
