@@ -3,6 +3,7 @@
 #include <zmq.hpp>
 
 #include "shared/networking/message_sender/message_sender.hpp"
+// Remove from internal
 
 namespace CORE::Internal {
 class ZMQMessageSender : MessageSender {
