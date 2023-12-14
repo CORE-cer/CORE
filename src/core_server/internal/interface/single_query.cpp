@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SingleQuery.hpp"
+#include "single_query.hpp"
 
 #include <thread>
 
@@ -12,7 +12,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 
-namespace CORE::External {
+namespace CORE::Internal::Interface {
 SingleQuery::SingleQuery(Internal::CEQL::Query&& query,
                          Internal::Catalog& catalog,
                          RingTupleQueue::Queue& queue,

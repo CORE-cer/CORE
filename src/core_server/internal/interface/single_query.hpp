@@ -10,7 +10,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 
-namespace CORE::External {
+namespace CORE::Internal::Interface {
 class SingleQuery {
   uint64_t current_stream_position = 0;
   Internal::Catalog& catalog;

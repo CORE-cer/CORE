@@ -14,13 +14,13 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
-#include "SingleQuery.hpp"
+#include "single_query.hpp"
 
-namespace CORE::External {
+namespace CORE::Internal::Interface {
 class Backend {
   Internal::Catalog catalog = {};
   RingTupleQueue::Queue queue;
-  Types::PortNumber next_available_port;
+  std::atomic<Types::PortNumber>& next_available_port;
   
   // TODO: Copied from mediator, check
   std::vector<std::unique_ptr<uint64_t>> query_events_expiration_time = {};
@@ -32,13 +32,13 @@ class Backend {
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
-  Backend(Types::PortNumber next_available_port);
+  Backend(std::atomic<Types::PortNumber>& next_available_port);
 
-  ~Backend(){};
+  ~Backend();
 
   // TODO: Add error to catalog add event type and propogate to ClientMessageHandler
   Types::EventTypeId
-  declare_event(std::string event_name,
+  add_event_type(std::string event_name,
                 std::vector<Types::AttributeInfo> attributes_info);
 
   Types::EventInfo
@@ -50,7 +50,7 @@ class Backend {
 
   // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
   Types::StreamTypeId
-  declare_stream(std::string stream_name,
+  add_stream_type(std::string stream_name,
                  std::vector<Types::EventTypeId> event_types);
 
   Types::StreamInfo

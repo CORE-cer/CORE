@@ -1,6 +1,6 @@
 #include <string>
 
-namespace CORE::Internal {
+namespace CORE::Serializer {
 template <typename StructName>
 class Serializer {
  public:
