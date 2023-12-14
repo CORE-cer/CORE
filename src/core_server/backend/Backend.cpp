@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "BackendInterface.hpp"
-#include "QueryImpl.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
@@ -16,9 +14,10 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
+#include "SingleQuery.hpp"
 
 namespace CORE::External {
-class BackendImpl : BackendInterface {
+class Backend {
   Internal::Catalog catalog = {};
   RingTupleQueue::Queue queue;
   Types::PortNumber next_available_port;
@@ -29,20 +28,20 @@ class BackendImpl : BackendInterface {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  std::vector<std::unique_ptr<QueryImpl>> queries;
+  std::vector<std::unique_ptr<SingleQuery>> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
-  BackendImpl(Types::PortNumber next_available_port)
+  Backend(Types::PortNumber next_available_port)
       : queue(100'000, &catalog.tuple_schemas),
         next_available_port(next_available_port) {}
 
-  ~BackendImpl(){};
+  ~Backend(){};
 
   // TODO: Add error to catalog add event type and propogate to ClientMessageHandler
   Types::EventTypeId
   declare_event(std::string event_name,
-                std::vector<Types::AttributeInfo> attributes_info) override {
+                std::vector<Types::AttributeInfo> attributes_info) {
     Types::EventTypeId id = catalog.add_event_type(std::move(event_name),
                                                    std::move(
                                                      attributes_info));
@@ -51,22 +50,22 @@ class BackendImpl : BackendInterface {
   }
 
   Types::EventInfo
-  get_event_info(Types::EventTypeId event_type_id) override {
+  get_event_info(Types::EventTypeId event_type_id) {
     return catalog.get_event_info(event_type_id);
   }
 
-  Types::EventInfo get_event_info(std::string event_name) override {
+  Types::EventInfo get_event_info(std::string event_name) {
     return catalog.get_event_info(event_name);
   }
 
-  std::vector<Types::EventInfo> get_all_events_info() override {
+  std::vector<Types::EventInfo> get_all_events_info() {
     return catalog.get_all_events_info();
   }
 
   // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
   Types::StreamTypeId
   declare_stream(std::string stream_name,
-                 std::vector<Types::EventTypeId> event_types) override {
+                 std::vector<Types::EventTypeId> event_types) {
     Types::StreamTypeId id = catalog.add_stream_type(std::move(stream_name),
                                                      std::move(event_types));
 
@@ -74,28 +73,28 @@ class BackendImpl : BackendInterface {
   }
 
   Types::StreamInfo
-  get_stream_info(Types::StreamTypeId event_type_id) override {
+  get_stream_info(Types::StreamTypeId event_type_id) {
     return catalog.get_stream_info(event_type_id);
   }
 
-  Types::StreamInfo get_stream_info(std::string event_name) override {
+  Types::StreamInfo get_stream_info(std::string event_name) {
     return catalog.get_stream_info(event_name);
   }
 
-  std::vector<Types::StreamInfo> get_all_streams_info() override {
+  std::vector<Types::StreamInfo> get_all_streams_info() {
     return catalog.get_all_streams_info();
   }
 
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(
     std::string query,
-    std::function<void(Types::Enumerator)> result_handler) override {
+    std::function<void(Types::Enumerator)> result_handler) {
     Internal::CEQL::Query
       parsed_query = Internal::Parsing::Parser::parse_query(query);
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(
                                             next_available_port++);
-    queries.emplace_back(std::make_unique<QueryImpl>(std::move(parsed_query),
+    queries.emplace_back(std::make_unique<SingleQuery>(std::move(parsed_query),
                                                      catalog,
                                                      queue,
                                                      inproc_receiver_address,
@@ -107,7 +106,7 @@ class BackendImpl : BackendInterface {
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
-                             Types::Event event) override {
+                             Types::Event event) {
     RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
