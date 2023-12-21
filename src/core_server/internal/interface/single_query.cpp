@@ -1,5 +1,3 @@
-#pragma once
-
 #include "single_query.hpp"
 
 #include <thread>

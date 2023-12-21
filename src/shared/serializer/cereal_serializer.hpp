@@ -32,7 +32,7 @@
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace CORE::Serializer {
+namespace CORE::Internal {
 template <typename StructName>
 class CerealSerializer : Serializer<StructName> {
  public:

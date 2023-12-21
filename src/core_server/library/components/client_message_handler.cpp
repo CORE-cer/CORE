@@ -4,7 +4,7 @@
 
 namespace CORE::Library::Components {
 
-using namespace Serializer;
+using namespace Internal;
 
 ClientMessageHandler::ClientMessageHandler(Backend& backend, std::function<void(Types::Enumerator)> result_handler)
     : backend(backend), result_handler(result_handler) {}
