@@ -59,6 +59,12 @@ TEST_CASE("Evaluation of in-range predicate") {
                       20,
                       expiration_time);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue,
                                           0,
                                           "MSFT",
@@ -66,8 +72,7 @@ TEST_CASE("Evaluation of in-range predicate") {
                                           200);
   INFO("Evaluation event 1: "
        + get_evaluation_info(string_query, catalog, tuple));
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 150 200");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -77,8 +82,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 292, 350);
   INFO("Evaluation event 2: "
        + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 292 350");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -88,8 +92,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80, 100);
   INFO("Evaluation event 3: "
        + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80 100");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -99,8 +102,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   tuple = add_event(ring_tuple_queue, 1, "AMZN", 100, 120);
   INFO("Evaluation event 4: "
        + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+       outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY AMZN 100 120");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -110,8 +112,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 50, 75);
   INFO("Evaluation event 5: "
        + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+       outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 50 75");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -129,8 +130,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 50, 75));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80, 140);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL INTL 80 140");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -138,8 +138,7 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920, 2000);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL AMZN 1920 2000");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));

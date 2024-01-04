@@ -131,4 +131,22 @@ std::string get_evaluation_info(std::string string_query,
   return tuple_evaluator_test(tuple).get_str(2);
 }
 
+std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                      std::vector<RingTupleQueue::Tuple>>>
+get_outputs(
+  RingTupleQueue::Tuple tuple,
+  int current_time,
+  Evaluator& evaluator,
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>> outputs) {
+  bool has_outputs = evaluator.next(tuple, current_time);
+  if (has_outputs) {
+    auto next_output_enumerator = evaluator.get_enumerator();
+    outputs = enumerator_to_vector(next_output_enumerator);
+  } else {
+    outputs.clear();
+  }
+  return outputs;
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests

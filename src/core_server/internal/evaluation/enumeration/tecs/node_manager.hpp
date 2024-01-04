@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
@@ -8,7 +11,7 @@
 
 namespace CORE::Internal::tECS {
 
-const size_t MEMORY_POOL_STARTING_SIZE = 2048;
+const size_t MEMORY_POOL_STARTING_SIZE = 4;
 
 /**
  * The Node Manager class stores the pointers to all allocated
@@ -52,6 +55,12 @@ class NodeManager {
       out = allocate_a_new_node(std::forward<Args>(args)...);
     }
     time_list_manager.add_node(out);
+    // // Debug
+    // // Codigo para guardar datos de memoria en un csv
+    // std::ofstream archivo("../CORE/datos.csv", std::ios_base::app);
+    // archivo << std::to_string(amount_of_nodes_used)+","+std::to_string(amount_of_recycled_nodes) << std::endl;
+    // archivo.flush();
+    // archivo.close();
     return out;
   }
 

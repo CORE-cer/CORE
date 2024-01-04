@@ -3,6 +3,10 @@
 #include <stack>
 #include <vector>
 
+#include <fstream>
+#include <iostream>
+#include <string>
+
 #include "node.hpp"
 #include "tecs.hpp"
 
@@ -89,6 +93,7 @@ class Enumerator {
   // Allow move assignment
   Enumerator& operator=(Enumerator&& other) noexcept {
     if (this != &other) {
+      cleanup();
       stack = std::move(other.stack);
       original_pos = other.original_pos;
       last_time_to_consider = other.last_time_to_consider;
@@ -111,15 +116,7 @@ class Enumerator {
         time_reserved_node{nullptr} {}  // Empty enumerator
 
   ~Enumerator() {
-    if (tecs != nullptr) {
-      // It is not an empty enumerator
-      tecs->unpin(original_node);
-      assert(time_reservator != nullptr);
-      assert(time_reserved_node != nullptr);
-      time_reservator->remove_node(time_reserved_node);
-      time_reserved_node = nullptr;
-      tecs = nullptr;
-    }
+    cleanup();
   }
 
   iterator begin() { return iterator(*this, !has_next()); }
@@ -162,6 +159,29 @@ class Enumerator {
   next() {
     std::reverse(next_value.second.begin(), next_value.second.end());
     return next_value;
+  }
+
+  inline void cleanup(){
+    // static int j = 1;
+    // if (tecs != nullptr) {
+    // // Debug : Ver cuantas veces se llama a cleanup
+    // // Codigo para guardar datos de memoria en un csv
+    // std::ofstream archivo("../CORE/datos2.csv", std::ios_base::app);
+    // archivo << std::to_string(j) << std::endl;
+    // j++;
+    // archivo.flush();
+    // archivo.close();
+    // TODO: Take off the if statement when fixing online_query_evaluator empty enumerator problem
+    // It is not an empty enumerator
+    if (tecs != nullptr) {
+      assert(tecs != nullptr);
+      tecs->unpin(original_node);
+      assert(time_reservator != nullptr);
+      assert(time_reserved_node != nullptr);
+      time_reservator->remove_node(time_reserved_node);
+      time_reserved_node = nullptr;
+      tecs = nullptr;
+    }
   }
 };
 }  // namespace CORE::Internal::tECS

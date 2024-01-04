@@ -66,7 +66,8 @@ class OfflineSingleMediator {
       catalog);
   }
 
-  tECS::Enumerator
+  // Es necesario tener stream_id??
+  bool
   send_event_to_query(Types::StreamTypeId stream_id, Types::Event event) {
     RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
@@ -82,11 +83,17 @@ class OfflineSingleMediator {
     // Convert tuple_serialized to uint64_t
     uint64_t* tuple_serialized_uint64;
     memcpy(&tuple_serialized_uint64, &tuple_serialized[0], sizeof(uint64_t));
-    tECS::Enumerator enumerator = query_evaluator->next_data(tuple_serialized_uint64);
+
+    bool has_final_states = query_evaluator->next_data(tuple_serialized_uint64);
 
     update_space_of_ring_tuple_queue();
 
-    return enumerator;
+    return has_final_states;
+  }
+
+  tECS::Enumerator
+  create_enumerator_from_query(){
+    return query_evaluator->get_enumerator_from_data();
   }
 
   void update_space_of_ring_tuple_queue() {

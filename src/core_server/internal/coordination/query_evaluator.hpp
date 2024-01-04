@@ -34,9 +34,10 @@ class QueryEvaluator {
 
   ~QueryEvaluator() {}
 
-  tECS::Enumerator next_data(uint64_t* data) {
+  bool next_data(uint64_t* data) {
     RingTupleQueue::Tuple tuple = queue.get_tuple(data);
     uint64_t time;
+    // TODO: Encapsule window mode into function
     switch (window_mode) {
       case CEQL::Within::TimeWindowMode::EVENTS:
         time = current_stream_position++;
@@ -52,9 +53,14 @@ class QueryEvaluator {
         break;
     }
 
-    tECS::Enumerator output = evaluator->next(tuple, time);
+    bool output = evaluator->next(tuple, time);
 
     return output;
+  }
+
+  tECS::Enumerator get_enumerator_from_data() {
+    tECS::Enumerator enumerator = evaluator->get_enumerator();
+    return enumerator;
   }
 };
 

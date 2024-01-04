@@ -15,4 +15,4 @@ FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND
 	T16[name = 'IPIX'] AND T17[name = 'AMAT'] AND T18[name = 'CSCO'] AND
 	T19[name = 'YHOO'] AND T20[name = 'DELL'] AND T21[name = 'ORCL'] AND
 	T22[name = 'MSFT'] AND T23[name = 'INTC'] AND T24[name = 'RIMM']
-WITHIN TIMESTAMP [stock_time]
+WITHIN 1000 [stock_time]

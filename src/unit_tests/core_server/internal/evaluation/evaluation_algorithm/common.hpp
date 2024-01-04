@@ -46,4 +46,12 @@ query_to_logical_cea(Catalog& catalog, CEQL::Query& query);
 std::string get_evaluation_info(std::string string_query,
                                 CORE::Internal::Catalog catalog,
                                 RingTupleQueue::Tuple tuple);
+std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                      std::vector<RingTupleQueue::Tuple>>>
+get_outputs(
+  RingTupleQueue::Tuple tuple,
+  int current_time,
+  Evaluator& evaluator,
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>> outputs);
 }  // namespace CORE::Internal::Evaluation::UnitTests

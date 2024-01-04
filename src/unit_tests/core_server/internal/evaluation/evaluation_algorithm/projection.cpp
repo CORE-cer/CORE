@@ -56,9 +56,14 @@ TEST_CASE(
                       20,
                       expiration_time);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -66,8 +71,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -75,8 +79,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -84,8 +87,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -93,8 +95,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -102,8 +103,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -111,8 +111,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -120,8 +119,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 7, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -140,8 +138,7 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 8, evaluator, outputs);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -149,8 +146,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 9, evaluator, outputs);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -203,9 +199,14 @@ TEST_CASE(
                       20,
                       expiration_time);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -213,8 +214,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -222,8 +222,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -231,8 +230,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -240,8 +238,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -249,8 +246,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -258,8 +254,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -267,8 +262,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 7, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -286,8 +280,7 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 8, evaluator, outputs);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -295,8 +288,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 9, evaluator, outputs);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -347,9 +339,14 @@ TEST_CASE("Evaluation of long query with projection") {
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -357,8 +354,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -366,8 +362,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -375,8 +370,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -384,8 +378,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -393,8 +386,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -402,8 +394,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -411,8 +402,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 7, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -420,8 +410,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 8, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -429,8 +418,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 9, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -438,8 +426,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 10);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 10, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -447,8 +434,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 11);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 11, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -456,8 +442,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 12);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 12, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -465,8 +450,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 13);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 13, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -488,8 +472,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(is_the_same_as(outputs[0].second[5], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 14);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 14, evaluator, outputs);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -497,8 +480,7 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 15);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 15, evaluator, outputs);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -549,9 +531,14 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -559,8 +546,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -568,8 +554,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -577,8 +562,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -586,8 +570,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -595,8 +578,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -604,8 +586,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -613,8 +594,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 7, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -622,8 +602,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 8, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -631,8 +610,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 9, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -640,8 +618,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 10);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 10, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -649,8 +626,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 11);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 11, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -658,8 +634,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 12);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 12, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -667,8 +642,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 13);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 13, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -690,8 +664,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(is_the_same_as(outputs[0].second[5], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 14);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 14, evaluator, outputs);
   INFO("SELL INTL 81");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -699,8 +672,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 15);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 15, evaluator, outputs);
   INFO("SELL AMZN 1920");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -755,9 +727,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -765,8 +742,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -774,8 +750,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -783,8 +758,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -792,8 +766,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -815,8 +788,7 @@ TEST_CASE(
   REQUIRE(is_the_same_as(outputs[1].second[0], 0, "AMZN", 1900));
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 105);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -824,9 +796,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 85);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
-
+  outputs = get_outputs(tuple, 6, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -834,8 +804,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1901);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 7, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -910,9 +879,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -920,8 +894,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -929,8 +902,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -938,8 +910,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -947,8 +918,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1022,9 +992,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1032,8 +1007,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1041,8 +1015,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1050,8 +1023,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1059,8 +1031,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1129,9 +1100,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1139,8 +1115,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1148,8 +1123,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1157,8 +1131,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1166,8 +1139,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1233,9 +1205,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1243,8 +1220,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1252,8 +1228,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1261,8 +1236,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 1);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1270,8 +1244,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1342,9 +1315,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1352,8 +1330,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1361,8 +1338,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1370,8 +1346,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 1);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1379,8 +1354,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1445,9 +1419,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1455,8 +1434,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1464,8 +1442,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1473,8 +1450,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 1);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1482,8 +1458,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1550,9 +1525,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1560,8 +1540,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1569,8 +1548,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1578,8 +1556,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1587,8 +1564,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1652,9 +1628,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1662,8 +1643,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1671,8 +1651,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1680,8 +1659,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 1);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1689,8 +1667,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 5, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1764,9 +1741,14 @@ TEST_CASE(
                       100,
                       event_time_of_expiration);
 
+  bool has_outputs;
+  tECS::Enumerator next_output_enumerator;
+  std::vector<std::pair<std::pair<uint64_t, uint64_t>,
+                        std::vector<RingTupleQueue::Tuple>>>
+    outputs;
+
   RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 0, evaluator, outputs);
   INFO("SELL MSFT 101");
   // 1001101 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1774,8 +1756,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 1, evaluator, outputs);
   INFO("SELL MSFT 102");
   // 1001101 <- Tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1783,8 +1764,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 2, evaluator, outputs);
   INFO("BUY INTL 80");
   // 1000001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1792,8 +1772,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 3, evaluator, outputs);
   INFO("SELL INTL 80");
   // 1000010 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));
@@ -1801,8 +1780,7 @@ TEST_CASE(
   REQUIRE(outputs.size() == 0);
 
   tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  outputs = get_outputs(tuple, 4, evaluator, outputs);
   INFO("SELL AMZN 1900");
   // 1101001 <- tuple evaluator
   INFO(output_to_string(next_output_enumerator));

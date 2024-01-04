@@ -26,6 +26,10 @@ class Evaluator {
   std::unordered_map<State*, UnionList> current_union_list_map;  // T'
   std::vector<State*> current_ordered_keys;
 
+  std::vector<State*> final_states;
+
+  uint64_t actual_time;
+
   uint64_t current_iteration = 0;  // Current iteration of the algorithm as seen by next().
 
   /**
@@ -56,7 +60,7 @@ class Evaluator {
         event_time_of_expiration(event_time_of_expiration),
         tecs(event_time_of_expiration) {}
 
-  tECS::Enumerator next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
+  bool next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
@@ -70,6 +74,8 @@ class Evaluator {
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
+    final_states.clear();
+    actual_time = current_time;
     UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
     exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
@@ -91,7 +97,68 @@ class Evaluator {
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
-    return output(current_time);
+    if (!final_states.empty()){
+      return true;
+    }
+    return false;
+    // Debug: Ver cuantos enumerators son vacios o no
+    // static int k = 1;
+    // if (final_states.empty()){
+    //   // Debug
+    //   // Codigo para guardar datos de memoria en un csv
+    //   std::ofstream archivo("../CORE/datos3.csv", std::ios_base::app);
+    //   archivo << std::to_string(k) << std::endl;
+    //   k++;
+    //   archivo.flush();
+    //   archivo.close();
+    // }
+    // return output(current_time);
+  }
+
+  /*       _\|/_
+           (o o)
+   +----oOO-{_}-OOo-----------------------------------------+
+   |From the final states: n0, n1, ... nk creates this node:|
+   |     u                                                  |
+   |    / \                                                 |
+   |  n0   u1                                               |
+   |      /  \                                              |
+   |     n1   u2                                            |
+   |         /  \                                           |
+   |        n2   \                                          |
+   |              uk-1                                      |
+   |             /   \                                      |
+   |           nk-1   nk                                    |
+   +-------------------------------------------------------*/
+
+  // Change to tECS::Enumerator.
+  tECS::Enumerator get_enumerator() {
+    Node* out = nullptr;
+    for (auto it = final_states.rbegin();
+         it != final_states.rend();
+         ++it) {
+      State* p = *it;
+      assert(historic_union_list_map.contains(p));
+      Node* n = tecs.merge(historic_union_list_map[p]);
+      // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
+      if (out == nullptr) {
+        out = n;
+      } else {
+        // out = tecs.new_union_fixed_order(n, out);
+        out = tecs.new_union(n, out); 
+      }
+      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
+    }
+    // TODO: Take off the if statement when fixing online_query_evaluator empty enumerator problem
+    if (out == nullptr) {
+      return {};
+    } else {
+      tecs.pin(out);
+      return {out, actual_time, time_window, tecs, tecs.time_reservator};
+    }
+    // assert(out != nullptr);
+    // tecs.pin(out);
+    // return {out, actual_time, time_window, tecs, tecs.time_reservator};
   }
 
  private:
@@ -118,6 +185,9 @@ class Evaluator {
         UnionList new_ulist = tecs.new_ulist(new_node);
         current_ordered_keys.push_back(marked_state);
         current_union_list_map[marked_state] = new_ulist;
+        if (marked_state->is_final){
+          final_states.push_back(marked_state);
+        }
       }
     }
     if (!unmarked_state->is_empty) {
@@ -129,38 +199,13 @@ class Evaluator {
         current_ordered_keys.push_back(unmarked_state);
         current_union_list_map[unmarked_state] = ul;
         recycle_ulist = true;
+        if (unmarked_state->is_final){
+          final_states.push_back(unmarked_state);
+        }
       }
     }
     if (!recycle_ulist) {
       tecs.unpin(ul);
-    }
-  }
-
-  // Change to tECS::Enumerator.
-  tECS::Enumerator output(uint64_t current_time) {
-    Node* out = nullptr;
-    // Recorrer en inverso
-    for (auto it = historic_ordered_keys.rbegin();
-         it != historic_ordered_keys.rend();
-         ++it) {
-      State* p = *it;
-      if (p->is_final) {
-        assert(historic_union_list_map.contains(p));
-        Node* n = tecs.merge(historic_union_list_map[p]);
-        // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
-        if (out == nullptr) {
-          out = n;
-        } else {
-          out = tecs.new_union(n, out);  // Cambiar a n, out
-        }
-      }
-      // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
-    }
-    if (out == nullptr) {
-      return {};
-    } else {
-      tecs.pin(out);
-      return {out, current_time, time_window, tecs, tecs.time_reservator};
     }
   }
 };

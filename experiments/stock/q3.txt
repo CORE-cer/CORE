@@ -5,4 +5,4 @@ WHERE (SELL as T1; BUY as T2; BUY as T3;
 FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] AND
 	T4[name = 'IPIX'] AND T5[name = 'AMAT'] AND T6[name = 'CSCO'] AND
 	T7[name = 'YHOO'] AND T8[name = 'DELL'] AND T9[name = 'ORCL']
-WITHIN TIMESTAMP [stock_time]
+WITHIN 1000 [stock_time]

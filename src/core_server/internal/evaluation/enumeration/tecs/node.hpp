@@ -84,8 +84,6 @@ class Node {
 
   /* UNION Node */
   Node(Node* left, Node* right) {
-    assert(left != nullptr);
-    assert(right != nullptr);
     reset(left, right);
   }
 

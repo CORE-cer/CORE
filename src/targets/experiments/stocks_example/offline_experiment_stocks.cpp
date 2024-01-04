@@ -41,15 +41,26 @@ int main(int argc, char** argv) {
     Internal::tECS::Enumerator enumerator;
     Types::Enumerator event_enumerator;
 
+    bool has_outputs;
+
     std::cout << "Read events " << reader.events.size() << std::endl;
 
     for (Types::Event event_to_send : reader.events) {
       ZoneScoped;
-      enumerator = mediator.send_event_to_query(0, event_to_send);
-      event_enumerator = mediator.convert_enumerator(std::move(enumerator));
-      for (auto& event : event_enumerator) {
-        std::cout << event.to_string() << std::endl;
+      has_outputs = mediator.send_event_to_query(0, event_to_send);
+      if (has_outputs){
+        enumerator = mediator.create_enumerator_from_query();
+        event_enumerator = mediator.convert_enumerator(std::move(enumerator));
       }
+      // Debug: Ver cuantos eventos tienen un complex event
+      // static int l = 1;
+      // if (!event_enumerator.complex_events.empty()){
+      //   std::cout << l << std::endl;
+      //   l++;
+      // }
+      // for (auto& complex_event : event_enumerator) {
+      //   std::cout << complex_event.to_string() << std::endl;
+      // }
     }
 
     return 0;

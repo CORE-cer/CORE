@@ -24,7 +24,7 @@ class tECS {
 
  public:
   tECS(uint64_t& event_time_of_expiration)
-      : node_manager(2048, event_time_of_expiration) {
+      : node_manager(MEMORY_POOL_STARTING_SIZE, event_time_of_expiration) {
     time_reservator = &node_manager.get_time_reservator();
   }
 
@@ -82,6 +82,12 @@ class tECS {
     } else {
       return create_union_of_two_union_nodes(node_1, node_2);
     }
+  }
+
+  // This may not be the best way to do it since alloc should be private
+  // but is a quick solution for the get_enumerator function from the evaluator
+  [[nodiscard]] Node* new_union_fixed_order(Node* node_1, Node* node_2){
+    return node_manager.alloc(node_1, node_2);
   }
 
   /**
@@ -148,6 +154,7 @@ class tECS {
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
     for (auto rit = ulist.rbegin() + 1; rit != ulist.rend(); ++rit) {
+      assert(*rit != nullptr && tail != nullptr);
       tail = node_manager.alloc(*rit, tail);
     }
     return tail;

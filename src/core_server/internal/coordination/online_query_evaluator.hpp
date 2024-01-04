@@ -84,10 +84,11 @@ class OnlineQueryEvaluator {
     uint64_t* data;
     memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
 
-    tECS::Enumerator output = query_evaluator.next_data(data);
+    bool has_outputs = query_evaluator.next_data(data);
+    tECS::Enumerator output = query_evaluator.get_enumerator_from_data();
     Types::Enumerator output_enumerator = catalog.convert_enumerator(
       std::move(output));
-
+    // TODO: Manejar casos en que no hayan outputs
     return CerealSerializer<Types::Enumerator>::serialize(output_enumerator);
   }
 };
