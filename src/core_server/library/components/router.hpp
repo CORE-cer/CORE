@@ -10,22 +10,33 @@
 
 namespace CORE::Library::Components {
 
+template <typename ResultHandlerFactoryT>
 class Router {
  private:
-  Internal::ZMQMessageRouter<ClientMessageHandler> router;
+  Internal::ZMQMessageRouter<ClientMessageHandler<ResultHandlerFactoryT>>
+    router;
   std::thread router_thread;
 
  public:
   Router(Internal::Interface::Backend& backend,
          Types::PortNumber port_number,
-         std::function<void(Types::Enumerator)> result_handler);
+         ResultHandlerFactoryT result_handler_factory)
+      : router("tcp://*:" + std::to_string(port_number),
+               ClientMessageHandler(backend, result_handler_factory)) {
+    start();
+  }
 
-  ~Router();
+  ~Router() { stop(); }
 
  private:
-  void start();
+  void start() {
+    router_thread = std::thread([&]() { router.start(); });
+  }
 
-  void stop();
+  void stop() {
+    router.stop();
+    router_thread.join();
+  }
 };
 
 }  // namespace CORE::Library::Components

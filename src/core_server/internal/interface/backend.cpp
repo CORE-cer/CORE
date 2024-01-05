@@ -1,5 +1,3 @@
-#pragma once
-
 #include <functional>
 #include <string>
 #include <vector>
@@ -88,7 +86,7 @@ void Backend::declare_query(std::string query,
 }
 
 void Backend::send_event_to_queries(Types::StreamTypeId stream_id,
-                           Types::Event event) {
+                           const Types::Event& event) {
   RingTupleQueue::Tuple tuple = event_to_tuple(event);
   uint64_t ns = tuple.nanoseconds();
   if (!previous_event_sent) {
@@ -124,7 +122,7 @@ void Backend::update_space_of_ring_tuple_queue() {
   }
 }
 
-RingTupleQueue::Tuple Backend::event_to_tuple(Types::Event& event) {
+RingTupleQueue::Tuple Backend::event_to_tuple(const Types::Event& event) {
   if (event.event_type_id > catalog.number_of_events()) {
     throw std::runtime_error("Provided event type id is not valid.");
   }

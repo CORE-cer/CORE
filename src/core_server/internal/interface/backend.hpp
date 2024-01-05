@@ -66,12 +66,12 @@ class Backend {
     std::function<void(Types::Enumerator)> result_handler);
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
-                             Types::Event event);
+                             const Types::Event& event);
 
  private:
   void update_space_of_ring_tuple_queue();
 
-  RingTupleQueue::Tuple event_to_tuple(Types::Event& event);
+  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event);
 
   void write_int(std::shared_ptr<Types::Value>& attr);
 
