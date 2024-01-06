@@ -1,3 +1,4 @@
+#include <iostream>
 #include <zmq.hpp>
 
 #include "shared/networking/message_broadcaster/message_broadcaster.hpp"
@@ -7,6 +8,7 @@ class ZMQMessageBroadcaster {
  public:
   ZMQMessageBroadcaster(const std::string& address)
       : context(1), socket(context, zmq::socket_type::pub) {
+    std::cout << address << std::endl;
     socket.bind(address);
   }
 

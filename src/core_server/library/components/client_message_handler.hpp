@@ -1,5 +1,7 @@
 #pragma once
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
@@ -8,11 +10,16 @@
 
 namespace CORE::Library::Components {
 
-using Backend = CORE::Internal::Interface::Backend;
 using namespace Internal;
 
 template <typename ResultHandlerFactoryT>
 class ClientMessageHandler {
+  using HandlerType = std::invoke_result_t<
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>;
+
+  using Backend = CORE::Internal::Interface::Backend<HandlerType>;
+
  private:
   Backend& backend;
   ResultHandlerFactoryT result_handler_factory;
@@ -140,11 +147,19 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
+    std::cout << "hello" << std::endl;
+    if constexpr (std::is_same_v<decltype(result_handler_factory),
+                                 OnlineResultHandlerFactory>) {
+      std::cout << result_handler_factory.next_available_port << std::endl;
+    }
     auto result_handler = result_handler_factory.create_handler();
-    backend.declare_query(std::move(s_query_info), result_handler);
-    return Types::ServerResponse(
-      CerealSerializer<Types::PortNumber>::serialize(555),
-      Types::ServerResponseType::PortNumber);
+    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+    backend.declare_query(std::move(s_query_info),
+                          std::move(result_handler));
+
+    return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
+                                   possible_port.value_or(0)),
+                                 Types::ServerResponseType::PortNumber);
   }
 
   // TODO: all queries and port numbers

@@ -12,13 +12,18 @@ namespace CORE::Library::Components {
 
 template <typename ResultHandlerFactoryT>
 class Router {
+  using HandlerType = std::invoke_result_t<
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>;
+
+
  private:
   Internal::ZMQMessageRouter<ClientMessageHandler<ResultHandlerFactoryT>>
     router;
   std::thread router_thread;
 
  public:
-  Router(Internal::Interface::Backend& backend,
+  Router(Internal::Interface::Backend<HandlerType>& backend,
          Types::PortNumber port_number,
          ResultHandlerFactoryT result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),
