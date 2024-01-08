@@ -78,8 +78,8 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    final_port_number++;
     assert(port_number == final_port_number);
+    final_port_number++;
   }
 
   std::cout << "Created queries" << std::endl;
