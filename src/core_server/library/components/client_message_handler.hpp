@@ -162,10 +162,6 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    if constexpr (std::is_same_v<decltype(result_handler_factory),
-                                 OnlineResultHandlerFactory>) {
-      std::cout << result_handler_factory.next_available_port << std::endl;
-    }
     std::unique_ptr<HandlerType> result_handler = result_handler_factory
                                                     .create_handler();
     std::optional<Types::PortNumber> possible_port = result_handler

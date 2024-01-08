@@ -1,11 +1,9 @@
 #include <thread>
 
 #include "core_client/client.hpp"
-#include "core_server/internal/coordination/mediator.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "taxi_data.hpp"
-
-using namespace CORE;
 
 using namespace CORE;
 
@@ -129,8 +127,8 @@ void send_a_stream(TaxiData::Data data) {
 
 int main(int argc, char** argv) {
   try {
-    Internal::Mediator mediator(5000);
-    mediator.start();
+    Types::PortNumber starting_port{5000};
+    Library::OnlineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
@@ -148,7 +146,6 @@ int main(int argc, char** argv) {
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {

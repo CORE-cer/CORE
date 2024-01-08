@@ -7,8 +7,6 @@
 
 using namespace CORE;
 
-using namespace CORE;
-
 void do_declarations(Client& client) {
   std::vector<Types::EventTypeId> event_types{};
   for (std::string name : {"BUY", "SELL"}) {
@@ -52,7 +50,6 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    std::cout << port_number << final_port_number << std::endl;
     assert(port_number == final_port_number);
     final_port_number++;
   }
