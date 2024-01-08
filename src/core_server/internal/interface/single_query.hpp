@@ -9,6 +9,7 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
+#include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface {
 template <typename ResultHandlerT>
@@ -16,7 +17,7 @@ class SingleQuery {
   uint64_t current_stream_position = 0;
   Internal::Catalog& catalog;
   RingTupleQueue::Queue& queue;
-  ResultHandlerT result_handler;
+  ResultHandlerT& result_handler;
 
   // Stream position based on server time
   bool time_is_stream_position;
@@ -37,12 +38,12 @@ class SingleQuery {
               Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
-              ResultHandlerT&& result_handler)
+              ResultHandlerT& result_handler)
       : catalog(catalog),
         queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
-        result_handler(std::move(result_handler)) {
+        result_handler(result_handler) {
     create_query(std::move(query), catalog);
     start();
   }
@@ -88,18 +89,23 @@ class SingleQuery {
   void start() {
     worker_thread = std::thread([&]() {
       ZoneScopedN("QueryImpl::start::worker_thread");  //NOLINT
-      result_handler->start();
+      result_handler.start();
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
-        RingTupleQueue::Tuple tuple = serialized_message_to_tuple(
-          serialized_message);
-        Types::Enumerator output = process_event(tuple);
-        result_handler->operator()(output);
+        std::optional<RingTupleQueue::Tuple>
+          tuple = serialized_message_to_tuple(serialized_message);
+        if (!tuple.has_value()) {
+          continue;
+        }
+        Types::Enumerator output = process_event(tuple.value());
+        result_handler(output);
       }
     });
   }
 
   void stop() {
+    ZMQMessageSender sender(receiver_address, receiver.get_context());
+    sender.send("STOP");
     stop_condition = true;
     worker_thread.join();
   }
@@ -113,8 +119,11 @@ class SingleQuery {
     return output;
   }
 
-  RingTupleQueue::Tuple
+  std::optional<RingTupleQueue::Tuple>
   serialized_message_to_tuple(std::string& serialized_message) {
+    if (serialized_message == "STOP") {
+      return {};
+    }
     assert(serialized_message.size() == sizeof(uint64_t*));
     uint64_t* data;
     memcpy(&data, &serialized_message[0], sizeof(uint64_t*));

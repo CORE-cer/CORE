@@ -14,20 +14,35 @@ using namespace Internal;
 
 template <typename ResultHandlerFactoryT>
 class ClientMessageHandler {
+  // Extract from ResultHandlerFactoryT the return value of creating a handler
+  // use ::element_type to remove the unique_ptr and get the internal type.
   using HandlerType = std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>;
+    ResultHandlerFactoryT*>::element_type;
 
   using Backend = CORE::Internal::Interface::Backend<HandlerType>;
 
  private:
   Backend& backend;
   ResultHandlerFactoryT result_handler_factory;
+  std::vector<std::unique_ptr<HandlerType>> result_handlers;
 
  public:
   ClientMessageHandler(Backend& backend,
                        ResultHandlerFactoryT result_handler_factory)
       : backend(backend), result_handler_factory(result_handler_factory) {}
+
+  ClientMessageHandler(const ClientMessageHandler& other) = delete;
+
+  ClientMessageHandler&
+  operator=(const ClientMessageHandler& other) = delete;
+
+  ClientMessageHandler(ClientMessageHandler&& other)
+      : backend(other.backend),
+        result_handler_factory(other.result_handler_factory),
+        result_handlers(std::move(other.result_handlers)) {}
+
+  ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
   /**
    * The ClientMessageHandler exists inside a MessageRouter class (one
@@ -147,15 +162,16 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    std::cout << "hello" << std::endl;
     if constexpr (std::is_same_v<decltype(result_handler_factory),
                                  OnlineResultHandlerFactory>) {
       std::cout << result_handler_factory.next_available_port << std::endl;
     }
-    auto result_handler = result_handler_factory.create_handler();
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
-    backend.declare_query(std::move(s_query_info),
-                          std::move(result_handler));
+    std::unique_ptr<HandlerType> result_handler = result_handler_factory
+                                                    .create_handler();
+    std::optional<Types::PortNumber> possible_port = result_handler
+                                                       ->get_port();
+    backend.declare_query(std::move(s_query_info), *result_handler);
+    result_handlers.push_back(std::move(result_handler));
 
     return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
                                    possible_port.value_or(0)),

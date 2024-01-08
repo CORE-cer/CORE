@@ -85,7 +85,7 @@ class Backend {
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(
     std::string query,
-    ResultHandlerT&& result_handler) {
+    ResultHandlerT& result_handler) {
     Internal::CEQL::Query
       parsed_query = Internal::Parsing::Parser::parse_query(query);
     std::string inproc_receiver_address = "inproc://"
@@ -96,7 +96,7 @@ class Backend {
                                     catalog,
                                     queue,
                                     inproc_receiver_address,
-                                    std::move(result_handler)));
+                                    result_handler));
 
     zmq::context_t& inproc_context = queries.back()->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address,

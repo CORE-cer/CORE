@@ -19,17 +19,17 @@ namespace CORE::Library {
  *  Stream Listener = starting_port + 1
  **/
 class OfflineServer {
-  using ResultHandlerFactory = Components::OfflineResultHandlerFactory;
+  using ResultHandlerFactoryT = Components::OfflineResultHandlerFactory;
 
   std::atomic<Types::PortNumber> next_available_port;
 
   using HandlerType = std::invoke_result_t<
-    decltype(&ResultHandlerFactory::create_handler),
-    ResultHandlerFactory*>;
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
-  ResultHandlerFactory result_handler_factory{};
-  Components::Router<ResultHandlerFactory> router;
+  ResultHandlerFactoryT result_handler_factory{};
+  Components::Router<ResultHandlerFactoryT> router;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
  public:
@@ -56,17 +56,17 @@ class OfflineServer {
  *  Query #n (0 to infinity) = starting_port + 2 + n
  **/
 class OnlineServer {
-  using ResultHandlerFactory = Components::OnlineResultHandlerFactory;
+  using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
 
   std::atomic<Types::PortNumber> next_available_port;
 
   using HandlerType = std::invoke_result_t<
-    decltype(&ResultHandlerFactory::create_handler),
-    ResultHandlerFactory*>;
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
-  ResultHandlerFactory result_handler_factory;
-  Components::Router<ResultHandlerFactory> router;
+  ResultHandlerFactoryT result_handler_factory;
+  Components::Router<ResultHandlerFactoryT> router;
   Components::OnlineStreamsListener<HandlerType> stream_listener;
 
  public:

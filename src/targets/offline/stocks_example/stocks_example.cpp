@@ -67,9 +67,7 @@ void send_a_stream(Library::OfflineServer& server, StocksData::Data data) {
        std::make_shared<Types::IntValue>(data.stock_time)}
   };
   // clang-format on
-  std::cout << "Send stream" << std::endl;
   server.receive_stream({0, {event_to_send}});
-  std::cout << "Sent Stream" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -82,6 +80,7 @@ int main(int argc, char** argv) {
     create_queries(client);
 
     for (int i = 0; i < StocksData::stream.size(); i++) {
+      ZoneScopedN("Send a Stream");
       send_a_stream(server, StocksData::stream[i]);
     }
 

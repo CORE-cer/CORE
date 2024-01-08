@@ -20,7 +20,7 @@ class ZMQMessageRouter : MessageRouter {
   ZMQMessageRouter(const std::string& address, TransformFunc&& transformer)
       : context(1),
         socket(context, zmq::socket_type::router),
-        transformer(transformer),
+        transformer(std::move(transformer)),
         stop_router(false) {
     socket.bind(address);
     socket.set(zmq::sockopt::rcvtimeo, 2000);

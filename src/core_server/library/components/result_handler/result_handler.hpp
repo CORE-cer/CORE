@@ -24,13 +24,15 @@ class ResultHandler {
   void start() { static_cast<Derived*>(this)->start_impl(); }
 
   std::optional<Types::PortNumber> get_port() { return port; }
+
+  virtual ~ResultHandler() = default;
 };
 
 class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
   void handle_complex_event(Types::Enumerator enumerator) {
     for (auto& complex_event : enumerator) {
-      std::cout << complex_event.to_string() << std::endl;
+      std::cout << complex_event.to_string() << "\n";
     }
   }
 

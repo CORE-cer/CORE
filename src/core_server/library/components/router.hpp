@@ -14,7 +14,7 @@ template <typename ResultHandlerFactoryT>
 class Router {
   using HandlerType = std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>;
+    ResultHandlerFactoryT*>::element_type;
 
 
  private:
@@ -27,11 +27,15 @@ class Router {
          Types::PortNumber port_number,
          ResultHandlerFactoryT result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),
-               ClientMessageHandler(backend, result_handler_factory)) {
+               std::move(ClientMessageHandler(backend, result_handler_factory))) {
     start();
   }
 
   ~Router() { stop(); }
+
+  Router(const Router& other) = delete;
+
+  Router& operator=(const Router& other) = delete;
 
  private:
   void start() {
