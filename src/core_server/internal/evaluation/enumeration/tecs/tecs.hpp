@@ -23,7 +23,7 @@ class tECS {
   NodeManager node_manager;
 
  public:
-  tECS(uint64_t& event_time_of_expiration)
+  tECS(std::atomic<uint64_t>& event_time_of_expiration)
       : node_manager(2048, event_time_of_expiration) {
     time_reservator = &node_manager.get_time_reservator();
   }

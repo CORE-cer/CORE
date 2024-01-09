@@ -19,12 +19,8 @@ class SingleQuery {
   RingTupleQueue::Queue& queue;
   ResultHandlerT& result_handler;
 
-  CEQL::Within::TimeWindow time_window;
-
   // Underlying evaluator for tuples
   std::unique_ptr<Internal::Evaluation::Evaluator> evaluator;
-
-  uint64_t time_of_expiration;
 
   // Receiver for tuples
   std::string receiver_address;
@@ -33,6 +29,9 @@ class SingleQuery {
   std::thread worker_thread;
 
  public:
+  std::atomic<uint64_t> time_of_expiration = 0;
+  CEQL::Within::TimeWindow time_window;
+
   SingleQuery(Internal::CEQL::Query&& query,
               Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,

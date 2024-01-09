@@ -34,7 +34,7 @@ class Evaluator {
    * by reference to the tECS, and the tECS manages this behavior. This
    * uint64_t is a reference of the uint64_t stored at the mediator.
    */
-  uint64_t& event_time_of_expiration;
+  std::atomic<uint64_t>& event_time_of_expiration;
 
   // Other auxiliary objects
 
@@ -49,7 +49,7 @@ class Evaluator {
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
-            uint64_t& event_time_of_expiration)
+            std::atomic<uint64_t>& event_time_of_expiration)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),

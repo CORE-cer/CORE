@@ -26,8 +26,9 @@ class Backend {
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
   // TODO: Copied from mediator, check
-  std::vector<std::unique_ptr<uint64_t>> query_events_expiration_time = {};
-  std::vector<bool> time_is_event_based = {};
+  std::vector<std::reference_wrapper<std::atomic<uint64_t>>> query_events_expiration_time =
+    {};
+  std::vector<CEQL::Within::TimeWindowMode> query_events_time_window_mode = {};
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
@@ -87,6 +88,9 @@ class Backend {
     queries.emplace_back(std::make_unique<SingleQuery<ResultHandlerT>>(
       std::move(parsed_query), catalog, queue, inproc_receiver_address, result_handler));
 
+    query_events_time_window_mode.push_back(queries.back()->time_window.mode);
+    query_events_expiration_time.emplace_back(queries.back()->time_of_expiration);
+
     zmq::context_t& inproc_context = queries.back()->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
@@ -112,15 +116,24 @@ class Backend {
  private:
   void update_space_of_ring_tuple_queue() {
     if (query_events_expiration_time.size() != 0) {
-      assert(query_events_expiration_time.size() == time_is_event_based.size());
+      assert(query_events_expiration_time.size() == query_events_time_window_mode.size());
       uint64_t consensus = UINT64_MAX;
-      for (size_t i = 0; i < time_is_event_based.size(); i++) {
-        if (time_is_event_based[i]) {
-          consensus = std::min(*query_events_expiration_time[i]
-                                 * maximum_historic_time_between_events,
-                               consensus);
-        } else {
-          consensus = std::min(*query_events_expiration_time[i], consensus);
+      for (size_t i = 0; i < query_events_time_window_mode.size(); i++) {
+        switch (query_events_time_window_mode[i]) {
+          case CEQL::Within::TimeWindowMode::EVENTS:
+          case CEQL::Within::TimeWindowMode::ATTRIBUTE:
+            consensus = std::min(query_events_expiration_time[i].get()
+                                   * maximum_historic_time_between_events,
+                                 consensus);
+            break;
+          case CEQL::Within::TimeWindowMode::NONE:
+          case CEQL::Within::TimeWindowMode::NANOSECONDS:
+            consensus = std::min(query_events_expiration_time[i].get().load(), consensus);
+            break;
+          default:
+            assert(false
+                   && "Unknown time_window mode in update_space_of_ring_tuple_queue.");
+            break;
         }
       }
       queue.update_overwrite_timepoint(consensus);
