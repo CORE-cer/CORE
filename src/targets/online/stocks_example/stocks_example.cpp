@@ -1,11 +1,9 @@
 #include <thread>
 
 #include "core_client/client.hpp"
-#include "core_server/internal/coordination/mediator.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "stocks_data.hpp"
-
-using namespace CORE;
 
 using namespace CORE;
 
@@ -30,7 +28,7 @@ Types::PortNumber create_queries(Client& client) {
     "SELECT * FROM S\n"
     "WHERE (SELL as T1; BUY as T2; BUY as T3)\n"
     "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] \n"
-    "WITHIN TIMESTAMP [stock_time]\n");
+    "WITHIN 100 EVENTS");
   queries.push_back(
     "SELECT * FROM S\n"
     "WHERE (SELL as T1; BUY as T2; BUY as T3;\n"
@@ -52,8 +50,8 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    final_port_number++;
     assert(port_number == final_port_number);
+    final_port_number++;
   }
 
   std::cout << "Created queries" << std::endl;
@@ -73,8 +71,7 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream(StocksData::Data data) {
-  Streamer streamer("tcp://localhost", 5001);
+void send_a_stream(Streamer& streamer, StocksData::Data data) {
   // clang-format off
   Types::Event event_to_send{
     data.event_type,
@@ -90,8 +87,8 @@ void send_a_stream(StocksData::Data data) {
 
 int main(int argc, char** argv) {
   try {
-    Internal::Mediator mediator(5000);
-    mediator.start();
+    Types::PortNumber starting_port{5000};
+    Library::OnlineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
@@ -99,17 +96,17 @@ int main(int argc, char** argv) {
     Types::PortNumber final_port_number = create_queries(client);
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < StocksData::stream.size(); i++) {
-      send_a_stream(StocksData::stream[i]);
+      send_a_stream(streamer, StocksData::stream[i]);
     }
 
     client.stop_all_subscriptions();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {

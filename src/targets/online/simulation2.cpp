@@ -1,7 +1,7 @@
 #include <thread>
 
 #include "core_client/client.hpp"
-#include "core_server/internal/coordination/mediator.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -64,9 +64,8 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream() {
+void send_a_stream(Streamer& streamer) {
   ZoneScoped;
-  Streamer streamer("tcp://localhost", 5001);
   Types::Event event_to_send{0,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
@@ -83,8 +82,8 @@ int main(int argc, char** argv) {
     }
     int amount_of_messages = std::stoi(argv[1]);
 
-    Internal::Mediator mediator(5000);
-    mediator.start();
+    Types::PortNumber starting_port{5000};
+    Library::OnlineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
@@ -94,19 +93,19 @@ int main(int argc, char** argv) {
               << " Final port: " << final_port_number << std::endl;
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < amount_of_messages; i++) {
-      send_a_stream();
+      send_a_stream(streamer);
     }
 
     client.stop_all_subscriptions();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    send_a_stream();
+    send_a_stream(streamer);
 
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {

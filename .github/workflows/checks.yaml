@@ -20,8 +20,8 @@ jobs:
       - name: setup env
         run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
 
-      - name: add artifactory
-        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+      # - name: add artifactory
+      #   run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
@@ -82,8 +82,8 @@ jobs:
       - name: setup env
         run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
 
-      - name: add artifactory
-        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+      # - name: add artifactory
+      #   run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
@@ -103,7 +103,7 @@ jobs:
         run: |
           sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
           sudo apt-get update
-          sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.4 libc6-dev=2.35-0ubuntu3.4 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
+          sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.5 libc6-dev=2.35-0ubuntu3.5 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
 
       - name: Check clang tidy
         run: |

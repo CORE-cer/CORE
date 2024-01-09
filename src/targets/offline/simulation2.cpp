@@ -1,8 +1,9 @@
 #include <thread>
 
 #include "core_client/client.hpp"
-#include "core_server/internal/coordination/mediator.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
+#include "tracy/Tracy.hpp"
 
 using namespace CORE;
 
@@ -10,12 +11,13 @@ using namespace CORE;
 
 std::string create_query(std::string filter_clause) {
   // clang-format off
+  // TODO: Query with :, 
   return "SELECT ALL * \n"
          "FROM S1, S2\n"
-         "WHERE (Ints AS X) OR (Mixed AS X)\n"
+         "WHERE Ints as X; Mixed as X \n"
          "FILTER\n"
          + filter_clause + "\n"
-         "WITHIN 4 EVENTS\n";
+         "WITHIN 0.1 seconds\n";
   // clang-format on
 }
 
@@ -35,21 +37,13 @@ void do_declarations(Client& client) {
 
 Types::PortNumber create_queries(Client& client) {
   std::vector<std::string> queries;
-  queries.push_back(
-    create_query("Ints[Int1 >= 20 AND Int2 >= 1] AND "
-                 "X[Int1 <= 30 OR Double1 >= 3.0]"));
-  //queries.push_back(
-  //create_query("Mixed[Int1 >= 3 AND Int2 <= 20] AND "
-  //"X[Int1 == 30 OR Double1 >= 3.0]"));
-  //queries.push_back(
-  //create_query("Ints[Int2 <= 4 AND Int2 >= 1] AND "
-  //"X[Double1 == 30 OR Int2 >= 1.0]"));
+  queries.push_back(create_query("X[Int1 <= 30 OR Double1 >= 3.0]"));
 
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    final_port_number++;
     assert(port_number == final_port_number);
+    final_port_number++;
   }
 
   std::cout << "Created queries" << std::endl;
@@ -60,7 +54,7 @@ void subscribe_to_queries(Client& client,
                           Types::PortNumber initial_port,
                           Types::PortNumber final_port) {
   std::vector<std::unique_ptr<DummyHandler>> handlers;
-  for (size_t port = initial_port; port <= final_port; port++) {
+  for (size_t port = initial_port; port < final_port; port++) {
     std::cout << "Subscribing to port: " << port << std::endl;
     handlers.emplace_back(
       std::make_unique<DummyHandler>());  // Store one enumerator.
@@ -70,8 +64,8 @@ void subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
 }
 
-void send_a_stream() {
-  Streamer streamer("tcp://localhost", 5001);
+void send_a_stream(Streamer& streamer) {
+  ZoneScoped;
   Types::Event event_to_send{0,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
@@ -79,6 +73,7 @@ void send_a_stream() {
 }
 
 int main(int argc, char** argv) {
+  FrameMark;
   try {
     if (argc != 2) {
       std::cout << "There must be 1 argument: The amount of messages."
@@ -87,31 +82,30 @@ int main(int argc, char** argv) {
     }
     int amount_of_messages = std::stoi(argv[1]);
 
-    Internal::Mediator mediator(5000);
-    mediator.start();
+    Types::PortNumber starting_port{5000};
+    Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
     Types::PortNumber initial_port_number = 5002;
     Types::PortNumber final_port_number = create_queries(client);
+    std::cout << "Initial por: " << initial_port_number
+              << " Final port: " << final_port_number << std::endl;
     subscribe_to_queries(client, initial_port_number, final_port_number);
 
-    std::cout << "Sending " + std::to_string(amount_of_messages) + " streams"
-              << std::endl;
+    Streamer streamer("tcp://localhost", 5001);
     for (int i = 0; i < amount_of_messages; i++) {
-      send_a_stream();
+      send_a_stream(streamer);
     }
-    std::cout << "Finished sending streams" << std::endl;
 
     client.stop_all_subscriptions();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    send_a_stream();
+    send_a_stream(streamer);
 
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {

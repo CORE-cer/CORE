@@ -1,49 +1,85 @@
 #pragma once
 
-#include <cwchar>
-#include <string>
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
+#include "core_server/library/components/router.hpp"
+#include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
+#include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
 
-#include "core_server/internal/coordination/mediator.hpp"
-#include "shared/networking/message_router/zmq_message_router.hpp"
+namespace CORE::Library {
 
-namespace CORE {
+/**
+ * Instances an offline server which has the same functionality as the online server
+ * except that it can receive events directly. This means we do not need to use
+ * serialization or networking to send events to and from the server.
+ *
+ * Given the starting_port:
+ *
+ *  Router(message_handler) = starting_port
+ *
+ *  Stream Listener = starting_port + 1
+ **/
+class OfflineServer {
+  using ResultHandlerFactoryT = Components::OfflineResultHandlerFactory;
 
-template <typename... Ts>
-class Server {};
+  std::atomic<Types::PortNumber> next_available_port;
 
-template <>
-class Server<> {
-  /**
-   * The server class opens up an initial router connection at the port
-   * given, then it opens up various other ports:
-   * port: Mediator port. (Router Dealer Relationship)
-   * port + 1: Stream listener port
-   * port + 1 + i: ith response port.
-   */
+  using HandlerType = typename std::invoke_result_t<
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>::element_type;
+  Internal::Interface::Backend<HandlerType> backend;
 
- private:
-  Internal::Mediator mediator;
+  ResultHandlerFactoryT result_handler_factory{};
+  Components::Router<ResultHandlerFactoryT> router;
+  Components::OfflineStreamsListener<HandlerType> stream_listener;
 
  public:
-  Server(int port, int maximum_amount_of_result_ports = 100)
-      : mediator(port) {}
+  OfflineServer(Types::PortNumber starting_port)
+      : next_available_port(starting_port),
+        router{backend, next_available_port++, result_handler_factory},
+        stream_listener{backend, next_available_port++} {}
 
-  ~Server() {}
-
-  void start(const std::string address) {}
-
-  void stop() {}
+  void receive_stream(const Types::Stream& stream) {
+    stream_listener.receive_stream(stream);
+  }
 };
 
-template <typename FirstModality, typename... OtherModalities>
-class Server<FirstModality, OtherModalities...>
-    : public Server<OtherModalities...> {
+/**
+ * Instances an online server which means we use networking and serialization
+ * to receive events and send the results back to the clients.
+ *
+ * Given the starting_port:
+ *
+ *  Router(message_handler) = starting_port
+ *
+ *  Stream Listener = starting_port + 1
+ *
+ *  Query #n (0 to infinity) = starting_port + 2 + n
+ **/
+class OnlineServer {
+  using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
+
+  std::atomic<Types::PortNumber> next_available_port;
+
+  using HandlerType = std::invoke_result_t<
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*>::element_type;
+  Internal::Interface::Backend<HandlerType> backend;
+
+  ResultHandlerFactoryT result_handler_factory;
+  Components::Router<ResultHandlerFactoryT> router;
+  Components::OnlineStreamsListener<HandlerType> stream_listener;
+
  public:
-  Server() : Server<OtherModalities...>() {}
+  OnlineServer(Types::PortNumber starting_port)
+      : next_available_port(starting_port),
+        result_handler_factory{next_available_port},
+        router{backend, next_available_port++, result_handler_factory},
+        stream_listener{backend, next_available_port++} {}
 
-  void start() { Server<OtherModalities...>::start(); }
-
-  void stop() {}
+  void receive_stream(const Types::Stream& stream) {
+    static_assert(
+      "in memory receive_stream not supported on online server");
+  }
 };
 
-}  // namespace CORE
+}  // namespace CORE::Library

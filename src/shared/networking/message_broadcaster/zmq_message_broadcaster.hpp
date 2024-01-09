@@ -1,3 +1,4 @@
+#include <iostream>
 #include <zmq.hpp>
 
 #include "shared/networking/message_broadcaster/message_broadcaster.hpp"

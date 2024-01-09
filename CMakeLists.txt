@@ -105,25 +105,43 @@ endif()
 
 # executable target
 
-add_executable(simulation1 src/targets/simulation1.cpp)
-add_executable(simulation2 src/targets/simulation2.cpp)
-add_executable(polkura_example src/targets/polkura_example/polkura.cpp)
-add_executable(stocks_example src/targets/stocks_example/stocks_example.cpp)
-add_executable(taxi_example src/targets/taxi_example/taxi_example.cpp)
-add_executable(client src/targets/client.cpp)
-add_executable(server src/targets/server.cpp)
+add_executable(online_simulation1 src/targets/online/simulation1.cpp)
+add_executable(online_simulation2 src/targets/online/simulation2.cpp)
+add_executable(online_polkura_example src/targets/online/polkura_example/polkura.cpp)
+add_executable(online_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
+add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
+add_executable(online_client src/targets/online/client.cpp)
+add_executable(online_server src/targets/online/server.cpp)
 
-target_link_libraries(simulation1 PRIVATE core)
-target_link_libraries(simulation2 PRIVATE core)
-target_link_libraries(polkura_example PRIVATE core)
-target_link_libraries(stocks_example PRIVATE core)
-target_link_libraries(taxi_example PRIVATE core)
-target_link_libraries(client PRIVATE core)
-target_link_libraries(server PRIVATE core)
+target_link_libraries(online_simulation1 PRIVATE core)
+target_link_libraries(online_simulation2 PRIVATE core)
+target_link_libraries(online_polkura_example PRIVATE core)
+target_link_libraries(online_stocks_example PRIVATE core)
+target_link_libraries(online_taxi_example PRIVATE core)
+target_link_libraries(online_client PRIVATE core)
+target_link_libraries(online_server PRIVATE core)
+
+
+
+add_executable(offline_simulation1 src/targets/online/simulation1.cpp)
+add_executable(offline_simulation2 src/targets/online/simulation2.cpp)
+add_executable(offline_polkura_example src/targets/online/polkura_example/polkura.cpp)
+add_executable(offline_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
+add_executable(offline_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
+add_executable(offline_client src/targets/online/client.cpp)
+add_executable(offline_server src/targets/online/server.cpp)
+
+target_link_libraries(offline_simulation1 PRIVATE core)
+target_link_libraries(offline_simulation2 PRIVATE core)
+target_link_libraries(offline_polkura_example PRIVATE core)
+target_link_libraries(offline_stocks_example PRIVATE core)
+target_link_libraries(offline_taxi_example PRIVATE core)
+target_link_libraries(offline_client PRIVATE core)
+target_link_libraries(offline_server PRIVATE core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
- install(TARGETS core DESTINATION ~/.local/bin)
+ # install(TARGETS core DESTINATION ~/.local/bin)
 
 # /*       _\|/_
 #          (o o)
@@ -132,7 +150,7 @@ target_link_libraries(server PRIVATE core)
 #  +------------------*/
 
 find_package(Catch2 REQUIRED)
-
+#
 file(GLOB_RECURSE UNIT_TESTING_FILES
      src/unit_tests/*.cpp
 )
@@ -143,7 +161,7 @@ file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
 
 add_executable(tests ${UNIT_TESTING_FILES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain core)
-
+#
 add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
 target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
 

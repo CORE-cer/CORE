@@ -1,13 +1,12 @@
-#include "core_server/internal/coordination/mediator.hpp"
-
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "core_client/client.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/stream.hpp"
 
-namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests {
+namespace CORE::Internal::UnitTests::COREBackendCoordinationTests {
 
 Types::ServerResponse
 send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
@@ -89,11 +88,11 @@ TEST_CASE(
   "and responds back a string representing the bits that are satisfied",
   "[server coordination]") {
   // TODO: Change this to actual complex event, not queryEvaluator.
-  Mediator mediator(5000);
-  mediator.start();
+  Types::PortNumber starting_port{5000};
+  Library::OnlineServer server{starting_port};
   INFO("Started mediator.");
 
-  Client client{"tcp://localhost", 5000};
+  Client client{"tcp://localhost", starting_port};
 
   auto event_type_id_1 = declare_and_check_for_event(
     client,
@@ -147,7 +146,6 @@ TEST_CASE(
   INFO("Subscriber thread joined. (message was received.)");
   Types::Enumerator
     enumerator = CerealSerializer<Types::Enumerator>::deserialize(message);
-  mediator.stop();
   INFO("BEFORE echecking complex_events");
   REQUIRE(complex_events_from_enumerator(enumerator).size() == 1);
   INFO("Finished");
@@ -158,10 +156,10 @@ TEST_CASE(
   "3 queries, 1 tuple. One weakly typed query."
   "[server coordination]") {
   // TODO: Change this to complex events.
-  Mediator mediator(5000);
-  mediator.start();
+  Types::PortNumber starting_port{5000};
+  Library::OnlineServer server{starting_port};
 
-  Client client{"tcp://localhost", 5000};
+  Client client{"tcp://localhost", starting_port};
 
   auto event_type_id_1 = declare_and_check_for_event(
     client,
@@ -223,7 +221,6 @@ TEST_CASE(
   streamer.send_stream(stream_type_id_1, event_to_send);
 
   client.join_all_threads();
-  mediator.stop();
 
   INFO("Stopped mediators and joined clients");
 
@@ -237,4 +234,4 @@ TEST_CASE(
   REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
           == 1);
 }
-}  // namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests
+}  // namespace CORE::Internal::UnitTests::COREBackendCoordinationTests

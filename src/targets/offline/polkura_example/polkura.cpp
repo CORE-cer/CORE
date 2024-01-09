@@ -1,11 +1,9 @@
 #include <thread>
 
 #include "core_client/client.hpp"
-#include "core_server/internal/coordination/mediator.hpp"
+#include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "polkura_data.hpp"
-
-using namespace CORE;
 
 using namespace CORE;
 
@@ -60,8 +58,8 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    final_port_number++;
     assert(port_number == final_port_number);
+    final_port_number++;
   }
 
   std::cout << "Created queries" << std::endl;
@@ -96,8 +94,8 @@ void send_a_stream(PolkuraData::Data data) {
 
 int main(int argc, char** argv) {
   try {
-    Internal::Mediator mediator(5000);
-    mediator.start();
+    Types::PortNumber starting_port{5000};
+    Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
@@ -115,7 +113,6 @@ int main(int argc, char** argv) {
     std::cout << "Joining threads" << std::endl;
 
     client.join_all_threads();
-    mediator.stop();
 
     return 0;
   } catch (std::exception& e) {
