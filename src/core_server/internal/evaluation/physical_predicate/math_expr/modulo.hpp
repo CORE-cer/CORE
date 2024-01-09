@@ -15,8 +15,7 @@ class Modulo : public MathExpr<Type> {
   std::unique_ptr<MathExpr<Type>> right;
   virtual ~Modulo() = default;
 
-  Modulo(std::unique_ptr<MathExpr<Type>>&& left,
-         std::unique_ptr<MathExpr<Type>>&& right)
+  Modulo(std::unique_ptr<MathExpr<Type>>&& left, std::unique_ptr<MathExpr<Type>>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {

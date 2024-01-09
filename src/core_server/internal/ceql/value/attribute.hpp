@@ -16,9 +16,7 @@ struct Attribute final : public Value {
 
   std::string to_string() const noexcept override { return value; }
 
-  bool operator==(const Attribute& other) const noexcept {
-    return value == other.value;
-  }
+  bool operator==(const Attribute& other) const noexcept { return value == other.value; }
 
   bool equals(Value* val) const noexcept override {
     if (Attribute* attribute = dynamic_cast<Attribute*>(val)) {
@@ -31,9 +29,7 @@ struct Attribute final : public Value {
     return std::make_unique<Attribute>(value);
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {

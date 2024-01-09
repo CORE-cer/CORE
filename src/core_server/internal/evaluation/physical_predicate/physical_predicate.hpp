@@ -14,8 +14,7 @@ class PhysicalPredicate {
 
   bool admits_any_event_type = false;
 
-  PhysicalPredicate(uint64_t event_type_id)
-      : admissible_event_types({event_type_id}) {}
+  PhysicalPredicate(uint64_t event_type_id) : admissible_event_types({event_type_id}) {}
 
   PhysicalPredicate(std::set<uint64_t> admissible_event_types)
       : admissible_event_types(admissible_event_types) {}
@@ -33,9 +32,8 @@ class PhysicalPredicate {
   virtual bool eval(RingTupleQueue::Tuple& tuple) = 0;
 
   std::string complete_info_string() const {
-    std::string out = "admits any event type: "
-                      + std::to_string(admits_any_event_type) + "\n"
-                      + " admissible event types:";
+    std::string out = "admits any event type: " + std::to_string(admits_any_event_type)
+                      + "\n" + " admissible event types:";
     for (auto& event_type : admissible_event_types) {
       out += " " + std::to_string(event_type);
     }

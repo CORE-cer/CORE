@@ -57,8 +57,7 @@ class NodeManager {
 
   size_t amount_of_nodes_allocated() const {
     size_t amount = 0;
-    for (NodePool* mpool = minipool_head; mpool != nullptr;
-         mpool = mpool->prev())
+    for (NodePool* mpool = minipool_head; mpool != nullptr; mpool = mpool->prev())
       amount += mpool->capacity();
     return amount;
   }
@@ -101,8 +100,7 @@ class NodeManager {
     }
     if (recyclable_node_head == nullptr) {
       if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
-        while (
-          time_list_manager.remove_a_dead_node_if_possible(expiration_time))
+        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time))
           ;
         if (recyclable_node_head != nullptr) {
           return get_node_to_recycle();
@@ -164,8 +162,7 @@ class NodeManager {
   std::string print_free_node_list() {
     std::string out;
     out += "Free memory list: ";
-    for (Node* node = recyclable_node_head; node != nullptr;
-         node = node->next_free_node) {
+    for (Node* node = recyclable_node_head; node != nullptr; node = node->next_free_node) {
       // Transform the node pointer to string
       std::stringstream ss;
       ss << node;

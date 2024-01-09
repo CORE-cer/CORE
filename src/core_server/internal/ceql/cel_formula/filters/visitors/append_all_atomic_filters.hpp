@@ -18,9 +18,7 @@ class AppendAllAtomicFilters : public FilterVisitor {
 
   ~AppendAllAtomicFilters() override = default;
 
-  void visit(AtomicFilter& filter) override {
-    atomic_filters.push_back(&filter);
-  }
+  void visit(AtomicFilter& filter) override { atomic_filters.push_back(&filter); }
 
   // clang-format off
   void visit(AndFilter& filter) override { filter.left->accept_visitor(*this);

@@ -12,20 +12,17 @@ struct FilterFormula : public Formula {
   std::unique_ptr<Formula> formula;
   std::unique_ptr<Filter> filter;
 
-  FilterFormula(std::unique_ptr<Formula>&& formula,
-                std::unique_ptr<Filter>&& filter)
+  FilterFormula(std::unique_ptr<Formula>&& formula, std::unique_ptr<Filter>&& filter)
       : formula(std::move(formula)), filter(std::move(filter)) {}
 
   ~FilterFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<FilterFormula>(formula->clone(),
-                                           filter->clone());
+    return std::make_unique<FilterFormula>(formula->clone(), filter->clone());
   }
 
   bool operator==(const FilterFormula& other) const {
-    return formula->equals(other.formula.get())
-           && filter->equals(other.filter.get());
+    return formula->equals(other.formula.get()) && filter->equals(other.filter.get());
   }
 
   bool equals(Formula* other) const override {
@@ -39,8 +36,6 @@ struct FilterFormula : public Formula {
     return formula->to_string() + " FILTER " + filter->to_string();
   }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

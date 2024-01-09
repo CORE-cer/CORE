@@ -68,18 +68,19 @@ class Catalog {
   std::set<Types::ValueTypes>
   get_possible_attribute_types(std::string attribute_name) const noexcept;
 
-  std::set<Types::EventTypeId> get_compatible_event_types(std::string attribute_name) const noexcept;
+  std::set<Types::EventTypeId>
+  get_compatible_event_types(std::string attribute_name) const noexcept;
 
   uint64_t add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes);
 
   Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator);
 
  private:
-  Types::ComplexEvent
-  tuples_to_complex_event(uint64_t start,
-                          uint64_t end,
-                          std::vector<RingTupleQueue::Tuple>& tuples,
-                          std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory);
+  Types::ComplexEvent tuples_to_complex_event(
+    uint64_t start,
+    uint64_t end,
+    std::vector<RingTupleQueue::Tuple>& tuples,
+    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory);
 
   Types::Event tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple);
 };

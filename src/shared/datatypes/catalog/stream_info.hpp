@@ -24,9 +24,7 @@ struct StreamInfo {
   StreamInfo(StreamTypeId stream_type_id,
              std::string stream_name,
              std::vector<EventInfo>&& events_info) noexcept
-      : id(stream_type_id),
-        name(stream_name),
-        events_info(std::move(events_info)) {}
+      : id(stream_type_id), name(stream_name), events_info(std::move(events_info)) {}
 
   StreamInfo(std::initializer_list<EventInfo>&& events_info) noexcept
       : events_info(std::move(events_info)) {}

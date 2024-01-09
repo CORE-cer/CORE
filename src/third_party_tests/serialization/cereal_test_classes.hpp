@@ -64,8 +64,7 @@ struct ClassWithAbstractClassSharedPtr {
 
   ClassWithAbstractClassSharedPtr() {}
 
-  ClassWithAbstractClassSharedPtr(
-    std::initializer_list<std::shared_ptr<AbstractClass>> vals)
+  ClassWithAbstractClassSharedPtr(std::initializer_list<std::shared_ptr<AbstractClass>> vals)
       : objects(vals) {}
 
   template <class Archive>

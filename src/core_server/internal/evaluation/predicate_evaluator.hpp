@@ -12,8 +12,7 @@ namespace CORE::Internal::Evaluation {
 struct PredicateEvaluator {
   std::vector<std::unique_ptr<CEA::PhysicalPredicate>> predicates;
 
-  PredicateEvaluator(
-    std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates)
+  PredicateEvaluator(std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates)
       : predicates(std::move(predicates)) {}
 
   mpz_class operator()(RingTupleQueue::Tuple& tuple) {

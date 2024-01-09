@@ -24,8 +24,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
   Catalog& catalog;
 
  public:
-  AnnotatePredicatesWithNewPhysicalPredicates(Catalog& catalog)
-      : catalog(catalog) {}
+  AnnotatePredicatesWithNewPhysicalPredicates(Catalog& catalog) : catalog(catalog) {}
 
   Query eval(Query&& query) {
     query.where.formula->accept_visitor(visitor);
@@ -40,14 +39,12 @@ class AnnotatePredicatesWithNewPhysicalPredicates
 
  private:
   void create_naive_mapping(std::vector<AtomicFilter*>& filters) {
-    for (int64_t event_type_id = 0;
-         event_type_id < catalog.number_of_events();
+    for (int64_t event_type_id = 0; event_type_id < catalog.number_of_events();
          event_type_id++) {
       physical_predicates.push_back(
         std::make_unique<CEA::CheckTypePredicate>(event_type_id));
     }
-    for (uint64_t i = 0, predicate_id = physical_predicates.size();
-         i < filters.size();
+    for (uint64_t i = 0, predicate_id = physical_predicates.size(); i < filters.size();
          i++, predicate_id++) {
       std::string event_name = filters[i]->variable_name;
       if (!catalog.event_name_is_taken(event_name)) {

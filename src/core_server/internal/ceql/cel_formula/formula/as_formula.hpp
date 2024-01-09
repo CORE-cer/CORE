@@ -35,8 +35,6 @@ struct AsFormula : public Formula {
     return formula->to_string() + " AS " + variable_name;
   }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

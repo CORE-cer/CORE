@@ -66,8 +66,7 @@ class Node {
   /* OUTPUT Node */
   Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
     assert(node != nullptr);
-    reset(node,
-          tuple,
+    reset(node, tuple,
           timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
@@ -107,8 +106,7 @@ class Node {
   Node(NodeType node_type) : node_type(node_type) { reset(node_type); }
 
   void reset(NodeType node_type) {
-    assert(node_type == NodeType::TIME_LIST_HEAD
-           || node_type == NodeType::TIME_LIST_TAIL);
+    assert(node_type == NodeType::TIME_LIST_HEAD || node_type == NodeType::TIME_LIST_TAIL);
     this->node_type = node_type;
     maximum_start = UINT64_MAX;
     this->ref_count = 1;  // Se mantiene en 1 dado que en teoria se ocupa siempre

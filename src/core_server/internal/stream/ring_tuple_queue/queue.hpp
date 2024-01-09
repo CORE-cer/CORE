@@ -51,8 +51,7 @@ class Queue {
         overwrite_timepoint(std::chrono::system_clock::now()) {}
 
   uint64_t* start_tuple(uint64_t tuple_type_id) {
-    uint64_t minimum_size = schemas->get_constant_section_size(
-      tuple_type_id);
+    uint64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
     assert(minimum_size < buffer_size);
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {
@@ -77,8 +76,7 @@ class Queue {
     memcpy(&current_buffer[constant_section_index++],
            &now,
            sizeof(std::chrono::system_clock::time_point));
-    static_assert(sizeof(std::chrono::system_clock::time_point)
-                  <= sizeof(uint64_t));
+    static_assert(sizeof(std::chrono::system_clock::time_point) <= sizeof(uint64_t));
     last_updated[constant_section_buffer_index] = now;
 
     return &current_buffer[constant_section_index - 2];
@@ -94,8 +92,7 @@ class Queue {
     auto& current_buffer = buffers[constant_section_buffer_index];
     auto ptr = &current_buffer[constant_section_index];
     // Advance, ceiling so that we can actually fit if not multiple of sizeof(uin64_t)
-    constant_section_index += (sizeof(T) + sizeof(uint64_t) - 1)
-                              / sizeof(uint64_t);
+    constant_section_index += (sizeof(T) + sizeof(uint64_t) - 1) / sizeof(uint64_t);
     return reinterpret_cast<T*>(ptr);
   }
 
@@ -120,8 +117,7 @@ class Queue {
       current_index = size;
       index_to_write_in = 0;
     }
-    auto start_ptr = reinterpret_cast<char*>(
-      &current_buffer[index_to_write_in]);
+    auto start_ptr = reinterpret_cast<char*>(&current_buffer[index_to_write_in]);
     auto end_ptr = &(start_ptr[size_in_bytes]);
 
     char** start_ptr_storage = reinterpret_cast<char**>(
@@ -139,8 +135,7 @@ class Queue {
     typename std::enable_if<!std::is_trivially_copyable<T>::value
                               && !std::is_convertible<T, std::string>::value,
                             uint64_t*>::type {
-    throw std::logic_error(
-      "Non-string non-const sized writer is not implemented yet");
+    throw std::logic_error("Non-string non-const sized writer is not implemented yet");
     //auto& buffer = buffers[constant_section_buffer_index];
     //uint64_t size = (size_in_bytes + 7) / 8;  // Ceiling
     //int64_t index_to_write_in;
@@ -150,15 +145,13 @@ class Queue {
     //return ptr;
   }
 
-  void update_overwrite_timepoint(
-    std::chrono::system_clock::time_point timepoint) {
+  void update_overwrite_timepoint(std::chrono::system_clock::time_point timepoint) {
     overwrite_timepoint = timepoint;
   }
 
   void update_overwrite_timepoint(uint64_t ns_from_compile_time) {
     auto compile_time_point = get_compile_time_point();
-    auto timepoint = compile_time_point
-                     + std::chrono::nanoseconds(ns_from_compile_time);
+    auto timepoint = compile_time_point + std::chrono::nanoseconds(ns_from_compile_time);
     overwrite_timepoint = timepoint;
   }
 
@@ -176,10 +169,9 @@ class Queue {
   void insert_a_buffer_after(uint64_t buffer_index) {
     assert(buffer_index < buffers.size());
     // NOTE: Added due to buffers.begin not being uint64_t. To remove need to refactor.
-    if (buffer_index <= static_cast<size_t>(
-          std::numeric_limits<std::ptrdiff_t>::max() - 1)) {
-      std::ptrdiff_t buffer_index_ptrdiff = static_cast<std::ptrdiff_t>(
-        buffer_index);
+    if (buffer_index
+        <= static_cast<size_t>(std::numeric_limits<std::ptrdiff_t>::max() - 1)) {
+      std::ptrdiff_t buffer_index_ptrdiff = static_cast<std::ptrdiff_t>(buffer_index);
 
       buffers.insert(buffers.begin() + buffer_index_ptrdiff + 1,
                      std::vector<uint64_t>(buffer_size));
@@ -211,20 +203,19 @@ class Queue {
     }
   }
 
-  const static std::chrono::system_clock::time_point
-  get_compile_time_point() {
+  const static std::chrono::system_clock::time_point get_compile_time_point() {
     static const auto compile_time_point = []() {
       std::istringstream compile_time_stream(__DATE__ " " __TIME__);
       std::tm compile_time_tm = {};
-      compile_time_stream
-        >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
+      compile_time_stream >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
 
       if (compile_time_stream.fail()) {
-        assert(false && "The compiler should be able to give the date and time of compilation!");
+        assert(false
+               && "The compiler should be able to give the date and time of "
+                  "compilation!");
       }
 
-      return std::chrono::system_clock::from_time_t(
-        std::mktime(&compile_time_tm));
+      return std::chrono::system_clock::from_time_t(std::mktime(&compile_time_tm));
     }();
 
     return compile_time_point;

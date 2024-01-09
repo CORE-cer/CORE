@@ -17,9 +17,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
   ValueVisitor value_visitor;
 
  public:
-  std::unique_ptr<CEQL::Predicate> get_parsed_predicate() {
-    return std::move(predicate);
-  }
+  std::unique_ptr<CEQL::Predicate> get_parsed_predicate() { return std::move(predicate); }
 
   virtual std::any
   visitNot_predicate(CEQLQueryParser::Not_predicateContext* ctx) override {
@@ -28,8 +26,8 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitInequality_predicate(
-    CEQLQueryParser::Inequality_predicateContext* ctx) override {
+  virtual std::any
+  visitInequality_predicate(CEQLQueryParser::Inequality_predicateContext* ctx) override {
     value_visitor.visit(ctx->math_expr()[0]);
     std::unique_ptr<CEQL::Value> left = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->math_expr()[1]);
@@ -87,8 +85,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any
-  visitOr_predicate(CEQLQueryParser::Or_predicateContext* ctx) override {
+  virtual std::any visitOr_predicate(CEQLQueryParser::Or_predicateContext* ctx) override {
     std::vector<std::unique_ptr<CEQL::Predicate>> predicates;
     visit(ctx->predicate()[0]);
     predicates.push_back(std::move(predicate));
@@ -98,19 +95,17 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitRegex_predicate(
-    CEQLQueryParser::Regex_predicateContext* ctx) override {
+  virtual std::any
+  visitRegex_predicate(CEQLQueryParser::Regex_predicateContext* ctx) override {
     value_visitor.visit(ctx->attribute_name());
     auto left = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->regexp());
     auto right = value_visitor.get_parsed_value();
-    predicate = std::make_unique<CEQL::LikePredicate>(std::move(left),
-                                                      std::move(right));
+    predicate = std::make_unique<CEQL::LikePredicate>(std::move(left), std::move(right));
     return {};
   }
 
-  virtual std::any
-  visitIn_predicate(CEQLQueryParser::In_predicateContext* ctx) override {
+  virtual std::any visitIn_predicate(CEQLQueryParser::In_predicateContext* ctx) override {
     value_visitor.visit(ctx->attribute_name());
     auto left = value_visitor.get_parsed_value();
 
@@ -120,24 +115,24 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     assert(right_ptr != nullptr);
     CEQL::Sequence right = std::move(*right_ptr);
     delete right_ptr;
-    predicate = std::make_unique<CEQL::InPredicate>(std::move(left),
-                                                    std::move(right));
+    predicate = std::make_unique<CEQL::InPredicate>(std::move(left), std::move(right));
     if (ctx->K_NOT()) {
       predicate = std::make_unique<CEQL::NotPredicate>(std::move(predicate));
     }
     return {};
   }
 
-  virtual std::any visitIn_range_predicate(
-    CEQLQueryParser::In_range_predicateContext* ctx) override {
+  virtual std::any
+  visitIn_range_predicate(CEQLQueryParser::In_range_predicateContext* ctx) override {
     value_visitor.visit(ctx->math_expr()[0]);
     auto left = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->math_expr()[1]);
     auto lower_bound = value_visitor.get_parsed_value();
     value_visitor.visit(ctx->math_expr()[2]);
     auto upper_bound = value_visitor.get_parsed_value();
-    predicate = std::make_unique<CEQL::InRangePredicate>(
-      std::move(left), std::move(lower_bound), std::move(upper_bound));
+    predicate = std::make_unique<CEQL::InRangePredicate>(std::move(left),
+                                                         std::move(lower_bound),
+                                                         std::move(upper_bound));
     return {};
   }
 };

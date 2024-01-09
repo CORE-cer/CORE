@@ -47,8 +47,7 @@ From parse_from(std::string query) {
   return from_visitor.get_parsed_from();
 }
 
-TEST_CASE("From captures list_of_streams correctly",
-          "[From, list_of_variables]") {
+TEST_CASE("From captures list_of_streams correctly", "[From, list_of_variables]") {
   std::set<std::string> stream_names;
   bool condition;
 

@@ -7,8 +7,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveEpsilonTransitions
-    : public LogicalCEATransformer<RemoveEpsilonTransitions> {
+class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTransitions> {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
 
@@ -20,8 +19,7 @@ class RemoveEpsilonTransitions
   // to CEA.
   LogicalCEA eval(LogicalCEA&& cea) {
     std::vector<int64_t> epsilon_jump_sources(cea.amount_of_states, -1);
-    for (int source_node = 0; source_node < cea.amount_of_states;
-         source_node++) {
+    for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
       std::stack<NodeId> epsilon_reachable_nodes;
       epsilon_jump_sources[source_node] = source_node;
       for (NodeId target : cea.epsilon_transitions[source_node]) {

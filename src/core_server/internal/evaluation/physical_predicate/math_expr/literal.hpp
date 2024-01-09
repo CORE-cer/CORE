@@ -14,9 +14,8 @@ class Literal : public MathExpr<Type> {
 
   // If Type == std::string_view, then the underlying string is stored, if not
   // a char is stored. (Simpler than doing specialization of the Literal Class)
-  typename std::conditional<std::is_same_v<Type, std::string_view>,
-                            std::string,
-                            char>::type stored_string;
+  typename std::conditional<std::is_same_v<Type, std::string_view>, std::string, char>::type
+    stored_string;
   virtual ~Literal() override = default;
 
   Literal(Type val) : val(val) {

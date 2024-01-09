@@ -41,15 +41,13 @@ class Client {
 
  public:
   Client(std::string address, Types::PortNumber dealer_port)
-      : dealer(address + ":" + std::to_string(dealer_port)),
-        address(address) {}
+      : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
 
   Types::EventTypeId
   declare_event_type(std::string name,
                      std::vector<Types::AttributeInfo>&& attributes_info) {
     Types::ClientRequest event_declaration(
-      Internal::CerealSerializer<
-        std::pair<std::string, std::vector<Types::AttributeInfo>>>::
+      Internal::CerealSerializer<std::pair<std::string, std::vector<Types::AttributeInfo>>>::
         serialize(std::pair(name, attributes_info)),
       Types::ClientRequestType::EventDeclaration);
     Types::ServerResponse response = send_request(event_declaration);
@@ -60,9 +58,9 @@ class Client {
   }
 
   Types::EventInfo get_event_info(Types::EventTypeId id) {
-    Types::ClientRequest
-      request(Internal::CerealSerializer<Types::EventTypeId>::serialize(id),
-              Types::ClientRequestType::EventInfoFromId);
+    Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
+                                   id),
+                                 Types::ClientRequestType::EventInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
     auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
@@ -71,9 +69,8 @@ class Client {
   }
 
   Types::EventInfo get_event_info(std::string name) {
-    Types::ClientRequest
-      request(Internal::CerealSerializer<std::string>::serialize(name),
-              Types::ClientRequestType::EventInfoFromName);
+    Types::ClientRequest request(Internal::CerealSerializer<std::string>::serialize(name),
+                                 Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
     auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
@@ -82,22 +79,18 @@ class Client {
   }
 
   std::vector<Types::EventInfo> get_all_event_types() {
-    Types::ClientRequest request("",
-                                 Types::ClientRequestType::EventInfoFromName);
+    Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto events_info = Internal::
-      CerealSerializer<std::vector<Types::EventInfo>>::deserialize(
-        response.serialized_response_data);
+    auto events_info = Internal::CerealSerializer<std::vector<Types::EventInfo>>::deserialize(
+      response.serialized_response_data);
     return events_info;
   }
 
   Types::StreamTypeId
-  declare_stream_type(std::string stream_name,
-                      std::vector<Types::EventTypeId>&& events) {
+  declare_stream_type(std::string stream_name, std::vector<Types::EventTypeId>&& events) {
     Types::ClientRequest stream_declaration(
-      Internal::CerealSerializer<
-        std::pair<std::string, std::vector<Types::EventTypeId>>>::
+      Internal::CerealSerializer<std::pair<std::string, std::vector<Types::EventTypeId>>>::
         serialize(std::pair(stream_name, events)),
       Types::ClientRequestType::StreamDeclaration);
     Types::ServerResponse res = send_request(stream_declaration);
@@ -107,13 +100,13 @@ class Client {
   }
 
   Types::StreamInfo get_stream_info(Types::StreamTypeId id) {
-    Types::ClientRequest
-      request(Internal::CerealSerializer<Types::EventTypeId>::serialize(id),
-              Types::ClientRequestType::StreamInfoFromId);
+    Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
+                                   id),
+                                 Types::ClientRequestType::StreamInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::StreamInfo);
-    auto stream_info = Internal::CerealSerializer<
-      Types::StreamInfo>::deserialize(response.serialized_response_data);
+    auto stream_info = Internal::CerealSerializer<Types::StreamInfo>::deserialize(
+      response.serialized_response_data);
     return stream_info;
   }
 
@@ -122,8 +115,8 @@ class Client {
                                          Types::ClientRequestType::AddQuery};
     Types::ServerResponse response = send_request(create_streamer);
     assert(response.response_type == Types::ServerResponseType::PortNumber);
-    auto port_number = Internal::CerealSerializer<
-      Types::PortNumber>::deserialize(response.serialized_response_data);
+    auto port_number = Internal::CerealSerializer<Types::PortNumber>::deserialize(
+      response.serialized_response_data);
     return port_number;
   }
 
@@ -145,11 +138,9 @@ class Client {
   }
 
   template <typename Handler>
-  SubscriptionId
-  subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
-    static_assert(
-      std::is_base_of_v<MessageHandler<Handler>, Handler>
-      || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
+  SubscriptionId subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
+    static_assert(std::is_base_of_v<MessageHandler<Handler>, Handler>
+                  || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
 
     auto subscription_id = create_subscribers_and_stop_conditions(port);
     auto subscriber = subscribers[subscription_id].get();
@@ -193,8 +184,7 @@ class Client {
     return res;
   }
 
-  std::vector<Types::ComplexEvent>
-  extract_complex_events(Types::Enumerator& enumerator) {
+  std::vector<Types::ComplexEvent> extract_complex_events(Types::Enumerator& enumerator) {
     std::vector<Types::ComplexEvent> out;
     for (auto val : enumerator) {
       out.push_back(std::move(val));
@@ -202,8 +192,7 @@ class Client {
     return out;
   }
 
-  SubscriptionId
-  create_subscribers_and_stop_conditions(Types::PortNumber port) {
+  SubscriptionId create_subscribers_and_stop_conditions(Types::PortNumber port) {
     subscribers.push_back(std::make_unique<Internal::ZMQMessageSubscriber>(
       address + ":" + std::to_string(port)));
     stop_conditions.push_back(std::make_unique<std::atomic<bool>>(false));

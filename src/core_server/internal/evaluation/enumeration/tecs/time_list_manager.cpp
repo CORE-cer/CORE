@@ -33,8 +33,7 @@ void TimeListManager::add_node(Node* node) {
   previous_right->time_list_left = node;
 }
 
-bool TimeListManager::remove_a_dead_node_if_possible(
-  uint64_t maximum_start_limit) {
+bool TimeListManager::remove_a_dead_node_if_possible(uint64_t maximum_start_limit) {
   uint64_t limit = std::min(maximum_start_limit,
                             time_reservator.get_smallest_reserved_time());
   if (tail->time_list_left->maximum_start < limit) {

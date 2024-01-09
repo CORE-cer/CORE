@@ -24,8 +24,7 @@ class DetermineFinalValueDataType : public ValueVisitor {
   Types::EventInfo event_info;
 
  public:
-  DetermineFinalValueDataType(Types::EventInfo event_info)
-      : event_info(event_info) {}
+  DetermineFinalValueDataType(Types::EventInfo event_info) : event_info(event_info) {}
 
   DataType get_final_data_type() {
     auto out = final_value_datatype;
@@ -34,12 +33,10 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto attribute_id = event_info.attribute_names_to_ids.find(
-      attribute.value);
+    auto attribute_id = event_info.attribute_names_to_ids.find(attribute.value);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event "
-                               + event_info.name);
+                               + " does not exist in event " + event_info.name);
     }
     size_t id = attribute_id->second;
     auto info = event_info.attributes_info[id];

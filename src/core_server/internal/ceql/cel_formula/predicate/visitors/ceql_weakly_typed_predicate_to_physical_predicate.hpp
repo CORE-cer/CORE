@@ -15,8 +15,7 @@
 
 namespace CORE::Internal::CEQL {
 
-class CEQLWeaklyTypedPredicateToCEAPredicate final
-    : public PredicateVisitor {
+class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
  private:
   using CEQLComparison = CEQL::InequalityPredicate::LogicalOperation;
   using CEAComparison = CEA::ComparisonType;
@@ -45,21 +44,18 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     ObtainCompatibleEventTypes determine_event_types(catalog);
     inequality_predicate.left->accept_visitor(determine_event_types);
     inequality_predicate.right->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId>
-      compatible_event_types = determine_event_types
-                                 .get_compatible_event_types();
+    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
+                                                            .get_compatible_event_types();
 
     if (has_added_admissible_event_types) {
-      admissible_event_types = intersect(admissible_event_types,
-                                         compatible_event_types);
+      admissible_event_types = intersect(admissible_event_types, compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
       has_added_admissible_event_types = true;
     }
 
     predicate = compare_math_exprs(inequality_predicate.left,
-                                   convert_op(
-                                     inequality_predicate.logical_op),
+                                   convert_op(inequality_predicate.logical_op),
                                    inequality_predicate.right);
   }
 
@@ -67,20 +63,17 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     ObtainCompatibleEventTypes determine_event_types(catalog);
     like_predicate.left->accept_visitor(determine_event_types);
     like_predicate.right->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId>
-      compatible_event_types = determine_event_types
-                                 .get_compatible_event_types();
+    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
+                                                            .get_compatible_event_types();
 
     if (has_added_admissible_event_types) {
-      admissible_event_types = intersect(admissible_event_types,
-                                         compatible_event_types);
+      admissible_event_types = intersect(admissible_event_types, compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
       has_added_admissible_event_types = true;
     }
 
-    predicate = compare_with_regex(like_predicate.left,
-                                   like_predicate.right);
+    predicate = compare_with_regex(like_predicate.left, like_predicate.right);
   }
 
   void visit(InRangePredicate& in_range_predicate) override {
@@ -88,12 +81,10 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     in_range_predicate.left->accept_visitor(determine_event_types);
     in_range_predicate.lower_bound->accept_visitor(determine_event_types);
     in_range_predicate.upper_bound->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId>
-      compatible_event_types = determine_event_types
-                                 .get_compatible_event_types();
+    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
+                                                            .get_compatible_event_types();
     if (has_added_admissible_event_types) {
-      admissible_event_types = intersect(admissible_event_types,
-                                         compatible_event_types);
+      admissible_event_types = intersect(admissible_event_types, compatible_event_types);
     } else {
       admissible_event_types = compatible_event_types;
       has_added_admissible_event_types = true;
@@ -105,26 +96,22 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     auto combined_type = final_data_type_visitor.get_final_data_type();
     switch (combined_type) {
       case FinalType::Integer:
-        predicate = create_in_range_predicate<int64_t>(
-          in_range_predicate.left,
-          in_range_predicate.lower_bound,
-          in_range_predicate.upper_bound);
+        predicate = create_in_range_predicate<int64_t>(in_range_predicate.left,
+                                                       in_range_predicate.lower_bound,
+                                                       in_range_predicate.upper_bound);
         break;
       case FinalType::Double:
-        predicate = create_in_range_predicate<double>(
-          in_range_predicate.left,
-          in_range_predicate.lower_bound,
-          in_range_predicate.upper_bound);
+        predicate = create_in_range_predicate<double>(in_range_predicate.left,
+                                                      in_range_predicate.lower_bound,
+                                                      in_range_predicate.upper_bound);
         break;
       case FinalType::Date:
-        predicate = create_in_range_predicate<std::time_t>(
-          in_range_predicate.left,
-          in_range_predicate.lower_bound,
-          in_range_predicate.upper_bound);
+        predicate = create_in_range_predicate<std::time_t>(in_range_predicate.left,
+                                                           in_range_predicate.lower_bound,
+                                                           in_range_predicate.upper_bound);
         break;
       case FinalType::String:
-        throw std::runtime_error(
-          "Invalid Value data type String for InRangePredicate");
+        throw std::runtime_error("Invalid Value data type String for InRangePredicate");
       case FinalType::Undetermined:
         throw std::runtime_error("No type was deduced from Value");
       case FinalType::Invalid:
@@ -158,8 +145,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     for (auto& predicate_ : or_predicate.predicates) {
       predicate_->accept_visitor(*this);
       predicates.push_back(std::move(predicate));
-      new_admissible_event_types = unite(std::move(
-                                           new_admissible_event_types),
+      new_admissible_event_types = unite(std::move(new_admissible_event_types),
                                          std::move(admissible_event_types));
       admissible_event_types = previous_admissible_event_types;
       new_has_added_event_types = has_added_admissible_event_types
@@ -188,8 +174,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   void visit(ConstantBooleanPredicate& constant_boolean_predicate) override {
-    throw std::logic_error(
-      "visit ConstantBooleanPredicate not implemented.");
+    throw std::logic_error("visit ConstantBooleanPredicate not implemented.");
   }
 
  private:
@@ -232,41 +217,25 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
 
     switch (op) {
       case CEAComparison::EQUALS:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::EQUALS, ValueType>>(
+          admissible_event_types, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::GREATER, ValueType>>(
+          admissible_event_types, std::move(left_expr), std::move(right_expr));
       case CEAComparison::GREATER_EQUALS:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::GREATER_EQUALS,
+                                                      ValueType>>(admissible_event_types,
+                                                                  std::move(left_expr),
+                                                                  std::move(right_expr));
       case CEAComparison::LESS_EQUALS:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::LESS_EQUALS, ValueType>>(
+          admissible_event_types, std::move(left_expr), std::move(right_expr));
       case CEAComparison::LESS:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::LESS, ValueType>>(
+          admissible_event_types, std::move(left_expr), std::move(right_expr));
       case CEAComparison::NOT_EQUALS:
-        return std::make_unique<
-          CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
-          admissible_event_types,
-          std::move(left_expr),
-          std::move(right_expr));
+        return std::make_unique<CEA::CompareMathExprs<CEAComparison::NOT_EQUALS, ValueType>>(
+          admissible_event_types, std::move(left_expr), std::move(right_expr));
       default:
         throw std::logic_error(
           "Non implemented Comparison Type in "
@@ -277,8 +246,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   template <typename ValueType>
-  std::unique_ptr<CEA::MathExpr<ValueType>>
-  get_expr(std::unique_ptr<CEQL::Value>& val) {
+  std::unique_ptr<CEA::MathExpr<ValueType>> get_expr(std::unique_ptr<CEQL::Value>& val) {
     WeaklyTypedValueToMathExpr<ValueType> convertor(catalog);
     val->accept_visitor(convertor);
     return std::move(convertor.math_expr);
@@ -313,22 +281,19 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
     assert(dynamic_cast<const CEQL::Attribute*>(left.get()) != nullptr);
     auto left_value_attr = static_cast<CEQL::Attribute*>(left.get());
     auto left_expr_attr = std::make_unique<
-      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value,
-                                                        catalog);
+      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value, catalog);
 
     assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
     auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());
     std::string_view value = right_value_string->value;
-    auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(
-      value);
+    auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(value);
 
     // Pass in string as it is one time cost and CompareWithRegex should have the direct object
     std::string regex_string(right_expr_string->val);
 
-    return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(
-      admissible_event_types,
-      std::move(left_expr_attr),
-      std::move(regex_string));
+    return std::make_unique<CEA::CompareWithRegexWeaklyTyped>(admissible_event_types,
+                                                              std::move(left_expr_attr),
+                                                              std::move(regex_string));
   }
 
   template <typename ValueType>
@@ -344,8 +309,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   static std::set<Types::EventTypeId>
-  intersect(std::set<Types::EventTypeId> left,
-            std::set<Types::EventTypeId> right) {
+  intersect(std::set<Types::EventTypeId> left, std::set<Types::EventTypeId> right) {
     // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out;
     for (auto& elem : left)
@@ -354,8 +318,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final
   }
 
   static std::set<Types::EventTypeId>
-  unite(std::set<Types::EventTypeId>&& left,
-        std::set<Types::EventTypeId>&& right) {
+  unite(std::set<Types::EventTypeId>&& left, std::set<Types::EventTypeId>&& right) {
     // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out = std::move(left);
     for (auto& elem : right) out.insert(elem);

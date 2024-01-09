@@ -24,8 +24,7 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   Catalog& catalog;
 
  public:
-  DetermineFinalValueDataTypeWithCatalog(Catalog& catalog)
-      : catalog(catalog) {}
+  DetermineFinalValueDataTypeWithCatalog(Catalog& catalog) : catalog(catalog) {}
 
   DataType get_final_data_type() {
     auto out = final_value_datatype;

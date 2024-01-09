@@ -9,17 +9,14 @@ using namespace RingTupleQueue;
 
 namespace CORE::Internal::CEQL::UnitTests {
 
-TEST_CASE("Single functionality testing of Value to MathExpr",
-          "[ValueToMathExpr]") {
+TEST_CASE("Single functionality testing of Value to MathExpr", "[ValueToMathExpr]") {
   std::vector<Types::AttributeInfo> attributes_info;
   attributes_info.emplace_back("String", Types::ValueTypes::STRING_VIEW);
   attributes_info.emplace_back("Integer1", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Integer2", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", Types::ValueTypes::DOUBLE);
   attributes_info.emplace_back("Double2", Types::ValueTypes::DOUBLE);
-  Types::EventInfo event_info(0,
-                              "some_event_name",
-                              std::move(attributes_info));
+  Types::EventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   TupleSchemas schemas;
   Queue ring_tuple_queue(100, &schemas);
@@ -84,15 +81,14 @@ TEST_CASE("Single functionality testing of Value to MathExpr",
   }
 
   SECTION("Combination of exprs", "ValueToMathExpr") {
-    Addition value(
-      std::make_unique<IntegerLiteral>(2),
-      std::make_unique<Multiplication>(
-        std::make_unique<Subtraction>(
-          std::make_unique<Division>(std::make_unique<IntegerLiteral>(10),
-                                     std::make_unique<IntegerLiteral>(3)),
-          std::make_unique<Attribute>("Integer1")),
-        std::make_unique<Modulo>(std::make_unique<Attribute>("Integer2"),
-                                 std::make_unique<IntegerLiteral>(7))));
+    Addition value(std::make_unique<IntegerLiteral>(2),
+                   std::make_unique<Multiplication>(
+                     std::make_unique<Subtraction>(
+                       std::make_unique<Division>(std::make_unique<IntegerLiteral>(10),
+                                                  std::make_unique<IntegerLiteral>(3)),
+                       std::make_unique<Attribute>("Integer1")),
+                     std::make_unique<Modulo>(std::make_unique<Attribute>("Integer2"),
+                                              std::make_unique<IntegerLiteral>(7))));
     // 2 + ((10/3 - -1)) * (1 % 7))
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);

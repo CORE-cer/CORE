@@ -70,10 +70,9 @@ TEST_CASE("atomic filter works", "[Predicate, Inequality]") {
   std::unique_ptr<Filter> filter = parse_filter(query);
   auto expected_filter = make_unique<AtomicFilter>(
     "t2",
-    make_unique<InequalityPredicate>(
-      make_unique<Attribute>("temp"),
-      InequalityPredicate::LogicalOperation::EQUALS,
-      make_unique<IntegerLiteral>(50)));
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::EQUALS,
+                                     make_unique<IntegerLiteral>(50)));
   INFO("Expected: " + expected_filter->to_string());
   INFO("Got: " + filter->to_string());
   REQUIRE(filter->equals(expected_filter.get()));
@@ -83,16 +82,16 @@ TEST_CASE("and filter works", "[Predicate, Inequality]") {
   auto query = create_query("t2[temp == 50] and t3[temp == 50]");
   std::unique_ptr<Filter> filter = parse_filter(query);
   auto expected_filter = make_unique<AndFilter>(
-    make_unique<AtomicFilter>("t2",
-                              make_unique<InequalityPredicate>(
-                                make_unique<Attribute>("temp"),
-                                InequalityPredicate::LogicalOperation::EQUALS,
-                                make_unique<IntegerLiteral>(50))),
-    make_unique<AtomicFilter>("t3",
-                              make_unique<InequalityPredicate>(
-                                make_unique<Attribute>("temp"),
-                                InequalityPredicate::LogicalOperation::EQUALS,
-                                make_unique<IntegerLiteral>(50))));
+    make_unique<AtomicFilter>(
+      "t2",
+      make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                       InequalityPredicate::LogicalOperation::EQUALS,
+                                       make_unique<IntegerLiteral>(50))),
+    make_unique<AtomicFilter>(
+      "t3",
+      make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                       InequalityPredicate::LogicalOperation::EQUALS,
+                                       make_unique<IntegerLiteral>(50))));
   INFO("Expected: " + expected_filter->to_string());
   INFO("Got: " + filter->to_string());
   REQUIRE(filter->equals(expected_filter.get()));
@@ -102,16 +101,16 @@ TEST_CASE("or filter works", "[Predicate, Inequality]") {
   auto query = create_query("t2[temp == 50] or t3[temp == 50]");
   std::unique_ptr<Filter> filter = parse_filter(query);
   auto expected_filter = make_unique<OrFilter>(
-    make_unique<AtomicFilter>("t2",
-                              make_unique<InequalityPredicate>(
-                                make_unique<Attribute>("temp"),
-                                InequalityPredicate::LogicalOperation::EQUALS,
-                                make_unique<IntegerLiteral>(50))),
-    make_unique<AtomicFilter>("t3",
-                              make_unique<InequalityPredicate>(
-                                make_unique<Attribute>("temp"),
-                                InequalityPredicate::LogicalOperation::EQUALS,
-                                make_unique<IntegerLiteral>(50))));
+    make_unique<AtomicFilter>(
+      "t2",
+      make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                       InequalityPredicate::LogicalOperation::EQUALS,
+                                       make_unique<IntegerLiteral>(50))),
+    make_unique<AtomicFilter>(
+      "t3",
+      make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                       InequalityPredicate::LogicalOperation::EQUALS,
+                                       make_unique<IntegerLiteral>(50))));
   INFO("Expected: " + expected_filter->to_string());
   INFO("Got: " + filter->to_string());
   REQUIRE(filter->equals(expected_filter.get()));

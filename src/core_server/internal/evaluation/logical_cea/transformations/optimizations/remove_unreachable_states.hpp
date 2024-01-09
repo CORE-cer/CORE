@@ -9,8 +9,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveUnreachableStates
-    : public LogicalCEATransformer<RemoveUnreachableStates> {
+class RemoveUnreachableStates : public LogicalCEATransformer<RemoveUnreachableStates> {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
 

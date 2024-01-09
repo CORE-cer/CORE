@@ -24,13 +24,12 @@ std::vector<Types::AttributeInfo> attributes_of_event_type_1() {
   return attributes_info;
 }
 
-RingTupleQueue::Tuple
-add_event_type_1(RingTupleQueue::Queue& ring_tuple_queue,
-                 std::string val1,
-                 int64_t val2,
-                 int64_t val3,
-                 double val4,
-                 double val5) {
+RingTupleQueue::Tuple add_event_type_1(RingTupleQueue::Queue& ring_tuple_queue,
+                                       std::string val1,
+                                       int64_t val2,
+                                       int64_t val3,
+                                       double val4,
+                                       double val5) {
   uint64_t* data = ring_tuple_queue.start_tuple(0);
   char* chars = ring_tuple_queue.writer<std::string>(val1.size());
   memcpy(chars, &val1[0], val1.size());
@@ -53,9 +52,7 @@ std::vector<Types::AttributeInfo> attributes_of_event_type_2() {
 }
 
 RingTupleQueue::Tuple
-add_event_type_2(RingTupleQueue::Queue& ring_tuple_queue,
-                 int64_t val1,
-                 int64_t val2) {
+add_event_type_2(RingTupleQueue::Queue& ring_tuple_queue, int64_t val1, int64_t val2) {
   uint64_t* data = ring_tuple_queue.start_tuple(1);
   int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
   *integer_ptr = val1;
@@ -85,8 +82,7 @@ CEQL::Query parse_query(std::string query) {  // Only parses where correctly
   Parsing::WhereVisitor where_visitor;
   where_visitor.visit(tree);
   std::unique_ptr<CEQL::ProjectionFormula>
-    formula = std::make_unique<CEQL::ProjectionFormula>(
-      std::set<std::string>{""});
+    formula = std::make_unique<CEQL::ProjectionFormula>(std::set<std::string>{""});
 
   // TODO: Partitionby, within and consume_by
   CEQL::Query parsed_query(CEQL::Select(CEQL::Select::Strategy::ALL,
@@ -112,10 +108,10 @@ TEST_CASE(
   "(bitset)",
   "[PredicateEvaluator]") {
   Catalog catalog;
-  Types::EventTypeId event1_id = catalog.add_event_type(
-    "event1", attributes_of_event_type_1());
-  Types::EventTypeId event2_id = catalog.add_event_type(
-    "event2", attributes_of_event_type_2());
+  Types::EventTypeId event1_id = catalog.add_event_type("event1",
+                                                        attributes_of_event_type_1());
+  Types::EventTypeId event2_id = catalog.add_event_type("event2",
+                                                        attributes_of_event_type_2());
   REQUIRE(event1_id == 0);
   REQUIRE(event2_id == 1);
   RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
@@ -124,8 +120,7 @@ TEST_CASE(
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 >= 20 AND Double1 >= 1.0] AND "
                    "event2[Integer1 <= 30 OR Integer2 > 3]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -137,11 +132,10 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped compare with attribute mixed types math_exprs") {
-    CEQL::Query query = parse_query(create_query(
-      "event1[Integer1 >= Double1 AND Integer2 <= 1.0] AND "
-      "event2[Integer1 >= (Integer1 + 30) / Integer2 AND 6 > Integer2]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    CEQL::Query query = parse_query(
+      create_query("event1[Integer1 >= Double1 AND Integer2 <= 1.0] AND "
+                   "event2[Integer1 >= (Integer1 + 30) / Integer2 AND 6 > Integer2]"));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -159,8 +153,7 @@ TEST_CASE(
     CEQL::Query query = parse_query(
       create_query("X[Integer1 >= 20 AND Double1 >= 1.0] AND "
                    "event2[Integer1 <= 30 OR Integer2 > 3]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_2(ring_tuple_queue, 20, 0);
     auto evaluation = evaluator(tuple);
     REQUIRE(evaluation == 0b1010);
@@ -183,11 +176,11 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped complicated comparison predicates no.2") {
-    CEQL::Query query = parse_query(create_query(
-      "X[NOT((Integer1 - Integer2) * Integer1 / (Double1 + 2) >= "
-      "20 AND NOT (Integer2 >= Integer1 * 2))] AND "
-      "X[Integer1 >= Double1 OR Integer1 == Integer1] AND Y[Integer1 != "
-      "Integer2]"));
+    CEQL::Query query = parse_query(
+      create_query("X[NOT((Integer1 - Integer2) * Integer1 / (Double1 + 2) >= "
+                   "20 AND NOT (Integer2 >= Integer1 * 2))] AND "
+                   "X[Integer1 >= Double1 OR Integer1 == Integer1] AND Y[Integer1 != "
+                   "Integer2]"));
     auto predicates = get_predicates(query, catalog);
     INFO("Predicates with size: " + std::to_string(predicates.size()));
     INFO(predicates[0]->complete_info_string());
@@ -206,10 +199,8 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(
-      create_query("event1[String LIKE <<.*>>]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.*>>]"));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -224,10 +215,8 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(
-      create_query("event1[String LIKE <<.>>]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.>>]"));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -243,8 +232,7 @@ TEST_CASE(
 
   SECTION("WeaklyTyped LIKE predicate matching") {
     CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -260,8 +248,7 @@ TEST_CASE(
 
   SECTION("WeaklyTyped LIKE predicate not matching") {
     CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -279,8 +266,7 @@ TEST_CASE(
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 IN RANGE (((Integer2*100)/120), "
                    "Integer1 * Integer2)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    292,
@@ -298,8 +284,7 @@ TEST_CASE(
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 IN RANGE (((Integer2*100)/120), "
                    "Integer1 * Integer2)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    150,
@@ -316,8 +301,7 @@ TEST_CASE(
   SECTION("StronglyTyped IN RANGE (int, int) predicate trivially false") {
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 IN RANGE (Integer1, Integer2)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -334,8 +318,7 @@ TEST_CASE(
   SECTION("StronglyTyped IN RANGE predicate mixed types match") {
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 IN RANGE (Integer1, Double1)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -352,8 +335,7 @@ TEST_CASE(
   SECTION("StronglyTyped IN RANGE predicate mixed types not match") {
     CEQL::Query query = parse_query(
       create_query("event1[Integer1 IN RANGE (Integer1, Double1)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -370,8 +352,7 @@ TEST_CASE(
   SECTION("WeaklyTyped IN RANGE predicate myxed types matching") {
     CEQL::Query query = parse_query(
       create_query("X[Integer1 IN RANGE (Integer1, Double1)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -388,8 +369,7 @@ TEST_CASE(
   SECTION("WeaklyTyped IN RANGE predicate (int, int) matching") {
     CEQL::Query query = parse_query(
       create_query("X[Integer1 IN RANGE (Integer1, Integer2)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -406,8 +386,7 @@ TEST_CASE(
   SECTION("WeaklyTyped IN RANGE predicate (int, int) not matching") {
     CEQL::Query query = parse_query(
       create_query("X[Integer1 IN RANGE (Integer1, Integer2)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,
@@ -424,8 +403,7 @@ TEST_CASE(
   SECTION("WeaklyTyped IN RANGE predicate mixed types not matching") {
     CEQL::Query query = parse_query(
       create_query("X[Integer1 IN RANGE (Integer1, Double1)]"));
-    auto evaluator = Evaluation::PredicateEvaluator(
-      get_predicates(query, catalog));
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, catalog));
     RingTupleQueue::Tuple tuple = add_event_type_1(ring_tuple_queue,
                                                    "somestring",
                                                    20,

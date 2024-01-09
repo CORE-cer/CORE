@@ -10,8 +10,7 @@ namespace CORE::Internal::CEA {
 
 class CheckTypePredicate : public PhysicalPredicate {
  public:
-  CheckTypePredicate(uint64_t event_type_id)
-      : PhysicalPredicate(event_type_id) {}
+  CheckTypePredicate(uint64_t event_type_id) : PhysicalPredicate(event_type_id) {}
 
   CheckTypePredicate(std::set<uint64_t> admissible_event_types)
       : PhysicalPredicate(admissible_event_types) {}

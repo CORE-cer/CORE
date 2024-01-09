@@ -40,9 +40,8 @@ class OnlineStreamsListener {
     worker_thread = std::thread([&]() {
       while (!stop_condition) {
         std::string s_message = receiver.receive();
-        Types::Stream
-          stream = Internal::CerealSerializer<Types::Stream>::deserialize(
-            s_message);
+        Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
+          s_message);
         for (auto& event : stream.events) {
           backend.send_event_to_queries(stream.id, event);
         }
@@ -55,8 +54,8 @@ class OnlineStreamsListener {
       Internal::ZMQMessageSender sender("tcp://localhost:"
                                         + std::to_string(receiver_port));
       stop_condition = true;
-      sender.send(Internal::CerealSerializer<Types::Stream>::serialize(
-        Types::Stream(0, {})));
+      sender.send(
+        Internal::CerealSerializer<Types::Stream>::serialize(Types::Stream(0, {})));
       worker_thread.join();
     } catch (std::exception& e) {
       std::cout << "Exception: " << e.what() << std::endl;

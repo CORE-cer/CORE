@@ -55,8 +55,7 @@ TEST_CASE("EventType name syntax", "[Where]") {
 
 TEST_CASE("AS", "[Where]") {
   auto query = create_where_query("T as t2");
-  auto expected_formula = make_unique<AsFormula>(
-    make_unique<EventTypeFormula>("T"), "t2");
+  auto expected_formula = make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2");
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
@@ -105,8 +104,8 @@ TEST_CASE("event:event", "[Where]") {
 
 TEST_CASE("event or event", "[Where]") {
   auto query = create_where_query("H OR T");
-  auto expected_formula = make_unique<OrFormula>(
-    make_unique<EventTypeFormula>("H"), make_unique<EventTypeFormula>("T"));
+  auto expected_formula = make_unique<OrFormula>(make_unique<EventTypeFormula>("H"),
+                                                 make_unique<EventTypeFormula>("T"));
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
@@ -121,8 +120,7 @@ TEST_CASE("Example test NonContiguous", "[Where, Composite] NonContiguous") {
     make_unique<NonContiguousSequencingFormula>(
       make_unique<NonContiguousSequencingFormula>(
         make_unique<EventTypeFormula>("S>T"),
-        make_unique<NonContiguousIterationFormula>(
-          make_unique<EventTypeFormula>("H"))),
+        make_unique<NonContiguousIterationFormula>(make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
   auto formula = parse_formula(query);
@@ -135,10 +133,9 @@ TEST_CASE("Example test Contiguous", "[Where, Composite]") {
   auto query = create_where_query("( S>T ; H :+ ; T AS t2) AS all_events");
   auto expected_formula = make_unique<AsFormula>(
     make_unique<NonContiguousSequencingFormula>(
-      make_unique<NonContiguousSequencingFormula>(
-        make_unique<EventTypeFormula>("S>T"),
-        make_unique<ContiguousIterationFormula>(
-          make_unique<EventTypeFormula>("H"))),
+      make_unique<NonContiguousSequencingFormula>(make_unique<EventTypeFormula>("S>T"),
+                                                  make_unique<ContiguousIterationFormula>(
+                                                    make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
   auto formula = parse_formula(query);

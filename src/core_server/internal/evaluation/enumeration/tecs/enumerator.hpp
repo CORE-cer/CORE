@@ -25,9 +25,7 @@ class Enumerator {
       return enumerator.next();
     }
 
-    bool operator!=(const iterator& other) const {
-      return is_end != other.is_end;
-    }
+    bool operator!=(const iterator& other) const { return is_end != other.is_end; }
 
     iterator& operator++() {
       if (!enumerator.has_next()) {
@@ -40,8 +38,7 @@ class Enumerator {
   std::stack<std::pair<Node*, std::vector<RingTupleQueue::Tuple>>> stack;
   uint64_t original_pos;
   uint64_t last_time_to_consider;
-  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
-    next_value;
+  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next_value;
   Node* original_node{nullptr};
   tECS* tecs{nullptr};
   TimeReservator* time_reservator{nullptr};
@@ -54,8 +51,8 @@ class Enumerator {
              tECS& tecs,
              TimeReservator* time_reservator)
       : original_pos(original_pos),
-        last_time_to_consider(
-          (original_pos < time_window) ? 0 : original_pos - time_window),
+        last_time_to_consider((original_pos < time_window) ? 0
+                                                           : original_pos - time_window),
         original_node(node),
         tecs(&tecs),
         time_reservator(time_reservator) {
@@ -125,8 +122,7 @@ class Enumerator {
   }
 
   /// It requires has_next to be evaluated before.
-  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
-  next() {
+  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next() {
     std::reverse(next_value.second.begin(), next_value.second.end());
     return next_value;
   }

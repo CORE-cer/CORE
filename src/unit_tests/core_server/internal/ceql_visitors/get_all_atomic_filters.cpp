@@ -39,33 +39,32 @@ std::unique_ptr<Formula> parse_formula(std::string query) {
 
 std::unique_ptr<Predicate> create_example_and_predicate() {
   std::vector<std::unique_ptr<Predicate>> predicates;
-  predicates.push_back(std::make_unique<InequalityPredicate>(
-    std::make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::NOT_EQUALS,
-    std::make_unique<IntegerLiteral>(50)));
-  predicates.push_back(std::make_unique<InequalityPredicate>(
-    std::make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::GREATER,
-    std::make_unique<IntegerLiteral>(30)));
+  predicates.push_back(
+    std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("temp"),
+                                          InequalityPredicate::LogicalOperation::NOT_EQUALS,
+                                          std::make_unique<IntegerLiteral>(50)));
+  predicates.push_back(
+    std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("temp"),
+                                          InequalityPredicate::LogicalOperation::GREATER,
+                                          std::make_unique<IntegerLiteral>(30)));
   return std::make_unique<AndPredicate>(std::move(predicates));
 }
 
-TEST_CASE("get_all_ceql_predicates gets all predicates",
-          "[ValueToMathExpr]") {
+TEST_CASE("get_all_ceql_predicates gets all predicates", "[ValueToMathExpr]") {
   GetAllAtomicFilters visitor;
-  auto formula = parse_formula(create_query(
-    "t2[temp == 50] or (t3[temp != 50 and temp > 30] AND t1[temp < 3])"));
+  auto formula = parse_formula(
+    create_query("t2[temp == 50] or (t3[temp != 50 and temp > 30] AND t1[temp < 3])"));
   formula->accept_visitor(visitor);
   std::vector<std::unique_ptr<Predicate>> expected_predicates;
-  expected_predicates.push_back(std::make_unique<InequalityPredicate>(
-    std::make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::EQUALS,
-    std::make_unique<IntegerLiteral>(50)));
+  expected_predicates.push_back(
+    std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("temp"),
+                                          InequalityPredicate::LogicalOperation::EQUALS,
+                                          std::make_unique<IntegerLiteral>(50)));
   expected_predicates.push_back(create_example_and_predicate());
-  expected_predicates.push_back(std::make_unique<InequalityPredicate>(
-    std::make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::LESS,
-    std::make_unique<IntegerLiteral>(3)));
+  expected_predicates.push_back(
+    std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("temp"),
+                                          InequalityPredicate::LogicalOperation::LESS,
+                                          std::make_unique<IntegerLiteral>(3)));
   INFO("Original Formula: " + formula->to_string());
   REQUIRE(visitor.atomic_filters.size() == 3);
   INFO(
@@ -74,8 +73,7 @@ TEST_CASE("get_all_ceql_predicates gets all predicates",
   for (int i = 0; i < 3; i++) {
     INFO("Expected: " + expected_predicates[i]->to_string()
          + " Got: " + visitor.atomic_filters[i]->predicate->to_string());
-    REQUIRE(expected_predicates[i]->equals(
-      visitor.atomic_filters[i]->predicate.get()));
+    REQUIRE(expected_predicates[i]->equals(visitor.atomic_filters[i]->predicate.get()));
   }
 }
 }  // namespace CORE::Internal::CEQL::UnitTests

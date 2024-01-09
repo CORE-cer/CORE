@@ -9,8 +9,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveUselessStates
-    : public LogicalCEATransformer<RemoveUselessStates> {
+class RemoveUselessStates : public LogicalCEATransformer<RemoveUselessStates> {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
   using Transition = LogicalCEA::Transition;
@@ -62,8 +61,8 @@ class RemoveUselessStates
     return RemoveStates(states_to_remove)(std::move(cea));
   }
 
-  std::vector<std::vector<Transition>> invert_transitions(
-    const std::vector<std::vector<Transition>>& transitions) {
+  std::vector<std::vector<Transition>>
+  invert_transitions(const std::vector<std::vector<Transition>>& transitions) {
     std::vector<std::vector<Transition>> out;
     for (size_t i = 0; i < transitions.size(); i++) {
       out.push_back({});

@@ -9,26 +9,14 @@
 namespace CORE::Internal::CEQL {
 
 struct Select {
-  enum class Strategy {
-    ALL,
-    ANY,
-    LAST,
-    MAX,
-    NEXT,
-    STRICT,
-    DEFAULT = Strategy::ALL
-  };
+  enum class Strategy { ALL, ANY, LAST, MAX, NEXT, STRICT, DEFAULT = Strategy::ALL };
 
   std::unique_ptr<Formula> formula;
   Strategy strategy;
   bool is_star;
 
-  Select(Strategy&& strategy,
-         bool is_star,
-         std::unique_ptr<Formula>&& formula)
-      : strategy(std::move(strategy)),
-        is_star(is_star),
-        formula(std::move(formula)) {}
+  Select(Strategy&& strategy, bool is_star, std::unique_ptr<Formula>&& formula)
+      : strategy(std::move(strategy)), is_star(is_star), formula(std::move(formula)) {}
 
   std::string to_string() const {
     std::string out = "Select " + strategy_to_string(strategy);

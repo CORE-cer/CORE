@@ -10,8 +10,7 @@ namespace CORE::Internal::CEQL {
 struct EventTypeFormula : public Formula {
   std::string event_type_name;
 
-  EventTypeFormula(std::string event_type_name)
-      : event_type_name(event_type_name) {}
+  EventTypeFormula(std::string event_type_name) : event_type_name(event_type_name) {}
 
   ~EventTypeFormula() override = default;
 
@@ -32,8 +31,6 @@ struct EventTypeFormula : public Formula {
 
   std::string to_string() const override { return event_type_name; }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

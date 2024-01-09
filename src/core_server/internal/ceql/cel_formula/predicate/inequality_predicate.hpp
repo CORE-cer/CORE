@@ -27,16 +27,12 @@ struct InequalityPredicate : public Predicate {
   InequalityPredicate(std::unique_ptr<Value>&& left,
                       LogicalOperation logical_op,
                       std::unique_ptr<Value>&& right)
-      : left(std::move(left)),
-        logical_op(logical_op),
-        right(std::move(right)) {}
+      : left(std::move(left)), logical_op(logical_op), right(std::move(right)) {}
 
   ~InequalityPredicate() override = default;
 
   std::unique_ptr<Predicate> clone() const override {
-    return std::make_unique<InequalityPredicate>(left->clone(),
-                                                 logical_op,
-                                                 right->clone());
+    return std::make_unique<InequalityPredicate>(left->clone(), logical_op, right->clone());
   }
 
   bool is_constant() const override {
@@ -63,13 +59,10 @@ struct InequalityPredicate : public Predicate {
   }
 
   std::string to_string() const override {
-    return left->to_string() + " " + to_string(logical_op) + " "
-           + right->to_string();
+    return left->to_string() + " " + to_string(logical_op) + " " + right->to_string();
   }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 
  private:
   static LogicalOperation negate(LogicalOperation op) {

@@ -76,10 +76,8 @@ struct CEA {
       "    Δ : {PredicateSet × Marked → FinalState}" + "\n";
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
-      if (transitions[i].size() != 0)
-        out += "    Δ[" + std::to_string(i) + "]\n";
-      for (const std::tuple<PredicateSet, IsMarked, NodeId>& transition :
-           transitions[i]) {
+      if (transitions[i].size() != 0) out += "    Δ[" + std::to_string(i) + "]\n";
+      for (const std::tuple<PredicateSet, IsMarked, NodeId>& transition : transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ","
                + (std::get<1>(transition) ? "Marked" : "Unmarked") + ","
                + std::to_string(std::get<2>(transition)) + "\n";
@@ -94,10 +92,9 @@ struct CEA {
     for (NodeId node_pos = 0; node_pos < amount_of_states; node_pos++) {
       transitions.push_back({});
       for (auto transition : logical_cea.transitions[node_pos]) {
-        transitions[node_pos].insert(
-          std::make_tuple(std::get<0>(transition),
-                          (std::get<1>(transition) != 0),
-                          std::get<2>(transition)));
+        transitions[node_pos].insert(std::make_tuple(std::get<0>(transition),
+                                                     (std::get<1>(transition) != 0),
+                                                     std::get<2>(transition)));
       }
     }
   }

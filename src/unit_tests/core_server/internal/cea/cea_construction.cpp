@@ -48,9 +48,8 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   REQUIRE(cea.final_states == 0b100);
 }
 
-TEST_CASE(
-  "Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
-  "[LogicalCEA To CEA]") {
+TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
+          "[LogicalCEA To CEA]") {
   Catalog catalog;
   auto event_type_id_1 = catalog.add_event_type("H", {});
   auto event_type_id_2 = catalog.add_event_type("S", {});
@@ -68,14 +67,12 @@ TEST_CASE(
   REQUIRE(logical_cea.transitions[1].size() == 0);
   REQUIRE(logical_cea.transitions[2].size() == 1);
 
-  REQUIRE(
-    std::count(logical_cea.transitions[0].begin(),
-               logical_cea.transitions[0].end(),
-               std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+  REQUIRE(std::count(logical_cea.transitions[0].begin(),
+                     logical_cea.transitions[0].end(),
+                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
   REQUIRE(std::count(logical_cea.transitions[2].begin(),
                      logical_cea.transitions[2].end(),
-                     std::make_tuple(CEA::PredicateSet(
-                                       CEA::PredicateSet::Type::Tautology),
+                     std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),
                                      false,
                                      2)));
 

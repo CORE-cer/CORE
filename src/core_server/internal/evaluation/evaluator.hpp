@@ -64,9 +64,7 @@ class Evaluator {
     last_tuple_time = current_time;
 #endif
     // current_time is j in the algorithm.
-    event_time_of_expiration = current_time < time_window
-                                 ? 0
-                                 : current_time - time_window;
+    event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
@@ -83,11 +81,9 @@ class Evaluator {
                  current_time);  // Send the tuple in exec_trans.
     }
     // Update last used q0 so it can be used in the next iteration.
-    cea.state_manager.update_last_used_iteration_state(q0,
-                                                       current_iteration);
+    cea.state_manager.update_last_used_iteration_state(q0, current_iteration);
     // Update the evicted states.
-    cea.state_manager.update_evicted_states(historic_ordered_keys,
-                                            current_iteration);
+    cea.state_manager.update_evicted_states(historic_ordered_keys, current_iteration);
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
@@ -140,8 +136,7 @@ class Evaluator {
   tECS::Enumerator output(uint64_t current_time) {
     Node* out = nullptr;
     // Recorrer en inverso
-    for (auto it = historic_ordered_keys.rbegin();
-         it != historic_ordered_keys.rend();
+    for (auto it = historic_ordered_keys.rbegin(); it != historic_ordered_keys.rend();
          ++it) {
       State* p = *it;
       if (p->is_final) {

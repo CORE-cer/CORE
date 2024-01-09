@@ -14,8 +14,7 @@ struct LikePredicate : public Predicate {
   std::unique_ptr<Value> left;
   std::unique_ptr<Value> right;
 
-  LikePredicate(std::unique_ptr<Value>&& left,
-                std::unique_ptr<Value>&& right)
+  LikePredicate(std::unique_ptr<Value>&& left, std::unique_ptr<Value>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<Predicate> clone() const override {
@@ -30,8 +29,7 @@ struct LikePredicate : public Predicate {
   }
 
   bool operator==(const LikePredicate& other) const {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Predicate* other) const override {
@@ -47,9 +45,7 @@ struct LikePredicate : public Predicate {
     return left->to_string() + " like " + right->to_string();
   }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 };
 
 }  // namespace CORE::Internal::CEQL

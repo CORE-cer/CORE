@@ -32,9 +32,7 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
     }
   }
 
-  std::set<uint64_t> get_compatible_event_types() const {
-    return compatible_event_types;
-  }
+  std::set<uint64_t> get_compatible_event_types() const { return compatible_event_types; }
 
   void reset() {
     compatible_event_types = {};
@@ -77,8 +75,7 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
 
  private:
   static std::set<Types::EventTypeId>
-  intersect(std::set<Types::EventTypeId> left,
-            std::set<Types::EventTypeId> right) {
+  intersect(std::set<Types::EventTypeId> left, std::set<Types::EventTypeId> right) {
     // TODO: Replace with std::set_intersection
     std::set<Types::EventTypeId> out;
     for (auto& elem : left)

@@ -29,8 +29,7 @@ struct ClientRequest {
 
   ClientRequest(std::string&& serialized_request_data,
                 ClientRequestType request_type) noexcept
-      : serialized_request_data(serialized_request_data),
-        request_type(request_type) {}
+      : serialized_request_data(serialized_request_data), request_type(request_type) {}
 
   ~ClientRequest() noexcept = default;
 

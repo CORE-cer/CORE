@@ -8,8 +8,7 @@
 
 namespace CORE::Internal::CEA {
 
-class NonContiguousSequencing
-    : public LogicalCEATransformer<NonContiguousSequencing> {
+class NonContiguousSequencing : public LogicalCEATransformer<NonContiguousSequencing> {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
@@ -26,8 +25,8 @@ class NonContiguousSequencing
     // Tautology loop
     for (auto right_initial_state : right_initial_states) {
       uint64_t target_state_id = right_initial_state + left.amount_of_states;
-      out.transitions[target_state_id].emplace_back(
-        PredicateSet(PredicateSet::Type::Tautology), 0, target_state_id);
+      out.transitions[target_state_id]
+        .emplace_back(PredicateSet(PredicateSet::Type::Tautology), 0, target_state_id);
     }
 
     for (auto left_final_state : left_final_states) {

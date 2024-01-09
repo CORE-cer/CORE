@@ -18,14 +18,14 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
   PredicateSet predicate_set;
 
  public:
-  ApplyAtomicFilter(uint64_t variable_id_to_filter,
-                    CEQL::AtomicFilter& atomic_filter)
+  ApplyAtomicFilter(uint64_t variable_id_to_filter, CEQL::AtomicFilter& atomic_filter)
       : variables_to_filter(mpz_class(1) << variable_id_to_filter),
-        physical_predicate_id(
-          atomic_filter.predicate->physical_predicate_id) {
+        physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
-    assert(physical_predicate_id != std::numeric_limits<uint64_t>::max() && "Physical predicate ID should be added to query before creating the automaton.");
+    assert(
+      physical_predicate_id != std::numeric_limits<uint64_t>::max()
+      && "Physical predicate ID should be added to query before creating the automaton.");
     predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
                                  mpz_class(1) << physical_predicate_id);
   }
@@ -34,8 +34,7 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
     for (int i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
         if ((std::get<1>(transition) & variables_to_filter) != 0) {
-          transition = std::make_tuple(std::get<0>(transition)
-                                         & predicate_set,
+          transition = std::make_tuple(std::get<0>(transition) & predicate_set,
                                        std::get<1>(transition),
                                        std::get<2>(transition));
         }

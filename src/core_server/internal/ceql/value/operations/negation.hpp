@@ -9,8 +9,7 @@ struct Negation final : public Value {
 
   Negation() noexcept {}
 
-  Negation(const Negation& negation) noexcept
-      : val(negation.val->clone()) {}
+  Negation(const Negation& negation) noexcept : val(negation.val->clone()) {}
 
   Negation(std::unique_ptr<Value> val) noexcept : val(std::move(val)) {}
 
@@ -33,9 +32,7 @@ struct Negation final : public Value {
     return std::make_unique<Negation>(val->clone());
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   ~Negation() noexcept override {}
 

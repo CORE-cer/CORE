@@ -13,8 +13,7 @@ struct AtomicFilter : public Filter {
   std::string variable_name;
   std::unique_ptr<Predicate> predicate;
 
-  AtomicFilter(std::string variable_name,
-               std::unique_ptr<Predicate>&& predicate)
+  AtomicFilter(std::string variable_name, std::unique_ptr<Predicate>&& predicate)
       : variable_name(variable_name), predicate(std::move(predicate)) {}
 
   ~AtomicFilter() override = default;
@@ -35,9 +34,7 @@ struct AtomicFilter : public Filter {
     return false;
   }
 
-  void accept_visitor(FilterVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FilterVisitor& visitor) override { visitor.visit(*this); }
 
   std::string to_string() const override {
     return variable_name + "[" + predicate->to_string() + "]";

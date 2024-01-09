@@ -49,8 +49,6 @@ struct InPredicate : public Predicate {
     return left->to_string() + " In " + right.to_string();
   }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

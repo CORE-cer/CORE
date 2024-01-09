@@ -11,23 +11,19 @@ struct Multiplication final : Value {
   Multiplication() noexcept {}
 
   Multiplication(const Multiplication& multiplication) noexcept
-      : left(multiplication.left->clone()),
-        right(multiplication.right->clone()) {}
+      : left(multiplication.left->clone()), right(multiplication.right->clone()) {}
 
-  Multiplication(std::unique_ptr<Value> left,
-                 std::unique_ptr<Value> right) noexcept
+  Multiplication(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
-  Multiplication(Value*&& left, Value*&& right) noexcept
-      : left(left), right(right) {}
+  Multiplication(Value*&& left, Value*&& right) noexcept : left(left), right(right) {}
 
   std::string to_string() const override {
     return left->to_string() + "*" + right->to_string();
   }
 
   bool operator==(const Multiplication& other) const noexcept {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -41,9 +37,7 @@ struct Multiplication final : Value {
     return std::make_unique<Multiplication>(left->clone(), right->clone());
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   ~Multiplication() noexcept override {}
 

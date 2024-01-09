@@ -38,12 +38,10 @@ class Backend {
   Backend() : queue(100'000, &catalog.tuple_schemas) {}
 
   // TODO: Add error to catalog add event type and propogate to ClientMessageHandler
-  Types::EventTypeId
-  add_event_type(std::string event_name,
-                 std::vector<Types::AttributeInfo> attributes_info) {
+  Types::EventTypeId add_event_type(std::string event_name,
+                                    std::vector<Types::AttributeInfo> attributes_info) {
     Types::EventTypeId id = catalog.add_event_type(std::move(event_name),
-                                                   std::move(
-                                                     attributes_info));
+                                                   std::move(attributes_info));
 
     return id;
   }
@@ -62,8 +60,7 @@ class Backend {
 
   // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
   Types::StreamTypeId
-  add_stream_type(std::string stream_name,
-                  std::vector<Types::EventTypeId> event_types) {
+  add_stream_type(std::string stream_name, std::vector<Types::EventTypeId> event_types) {
     Types::StreamTypeId id = catalog.add_stream_type(std::move(stream_name),
                                                      std::move(event_types));
 
@@ -84,33 +81,24 @@ class Backend {
 
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(std::string query, ResultHandlerT& result_handler) {
-    Internal::CEQL::Query
-      parsed_query = Internal::Parsing::Parser::parse_query(query);
+    Internal::CEQL::Query parsed_query = Internal::Parsing::Parser::parse_query(query);
     std::string inproc_receiver_address = "inproc://"
-                                          + std::to_string(
-                                            next_available_inproc_port++);
-    queries.emplace_back(
-      std::make_unique<SingleQuery<ResultHandlerT>>(std::move(parsed_query),
-                                                    catalog,
-                                                    queue,
-                                                    inproc_receiver_address,
-                                                    result_handler));
+                                          + std::to_string(next_available_inproc_port++);
+    queries.emplace_back(std::make_unique<SingleQuery<ResultHandlerT>>(
+      std::move(parsed_query), catalog, queue, inproc_receiver_address, result_handler));
 
     zmq::context_t& inproc_context = queries.back()->get_inproc_context();
-    inner_thread_event_senders.emplace_back(inproc_receiver_address,
-                                            inproc_context);
+    inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 
-  void send_event_to_queries(Types::StreamTypeId stream_id,
-                             const Types::Event& event) {
+  void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
     RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
       previous_event_sent = ns;
     }
-    maximum_historic_time_between_events = std::max(
-      maximum_historic_time_between_events,
-      ns - previous_event_sent.value());
+    maximum_historic_time_between_events = std::max(maximum_historic_time_between_events,
+                                                    ns - previous_event_sent.value());
     previous_event_sent = ns;
     // TODO: send events to specific queries that require it.
     for (auto& sender : inner_thread_event_senders) {
@@ -124,8 +112,7 @@ class Backend {
  private:
   void update_space_of_ring_tuple_queue() {
     if (query_events_expiration_time.size() != 0) {
-      assert(query_events_expiration_time.size()
-             == time_is_event_based.size());
+      assert(query_events_expiration_time.size() == time_is_event_based.size());
       uint64_t consensus = UINT64_MAX;
       for (size_t i = 0; i < time_is_event_based.size(); i++) {
         if (time_is_event_based[i]) {
@@ -144,12 +131,10 @@ class Backend {
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
-    Types::EventInfo event_info = catalog.get_event_info(
-      event.event_type_id);
+    Types::EventInfo event_info = catalog.get_event_info(event.event_type_id);
     std::vector<Types::AttributeInfo> attr_infos = event_info.attributes_info;
     if (attr_infos.size() != event.attributes.size()) {
-      throw std::runtime_error(
-        "Event had an incorrect number of attributes");
+      throw std::runtime_error("Event had an incorrect number of attributes");
     }
 
     uint64_t* data = queue.start_tuple(event.event_type_id);
@@ -175,8 +160,9 @@ class Backend {
           write_date(attr);
           break;
         default:
-          assert(false
-               && "A value type was added but not updated in the switch in event_to_tuple");
+          assert(
+            false
+            && "A value type was added but not updated in the switch in event_to_tuple");
       }
     }
     return queue.get_tuple(data);
@@ -193,8 +179,7 @@ class Backend {
   }
 
   void write_double(std::shared_ptr<Types::Value>& attr) {
-    Types::DoubleValue* val_ptr = dynamic_cast<Types::DoubleValue*>(
-      attr.get());
+    Types::DoubleValue* val_ptr = dynamic_cast<Types::DoubleValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
         "An attribute type that is not an DoubleValue was provided where "
@@ -215,8 +200,7 @@ class Backend {
   }
 
   void write_string_view(std::shared_ptr<Types::Value>& attr) {
-    Types::StringValue* val_ptr = dynamic_cast<Types::StringValue*>(
-      attr.get());
+    Types::StringValue* val_ptr = dynamic_cast<Types::StringValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
         "An attribute type that is not a StringValue was provided where it "

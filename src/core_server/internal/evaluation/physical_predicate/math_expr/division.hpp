@@ -15,8 +15,7 @@ class Division : public MathExpr<Type> {
   std::unique_ptr<MathExpr<Type>> right;
   virtual ~Division() = default;
 
-  Division(std::unique_ptr<MathExpr<Type>>&& left,
-           std::unique_ptr<MathExpr<Type>>&& right)
+  Division(std::unique_ptr<MathExpr<Type>>&& left, std::unique_ptr<MathExpr<Type>>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {

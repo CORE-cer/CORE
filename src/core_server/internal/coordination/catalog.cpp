@@ -38,8 +38,9 @@ Catalog::add_event_type(std::string&& event_name,
     }
   }
   uint64_t ring_tuple_schema_id = add_type_to_schema(event_attributes);
-  events_info.push_back(
-    Types::EventInfo(events_info.size(), std::move(event_name), std::move(event_attributes)));
+  events_info.push_back(Types::EventInfo(events_info.size(),
+                                         std::move(event_name),
+                                         std::move(event_attributes)));
   assert(ring_tuple_schema_id == events_info.size() - 1);
   return events_info.size() - 1;
 }
@@ -55,12 +56,12 @@ uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
       search != event_info.attribute_names_to_ids.end()) {
     return search->second;
   } else {
-      throw std::runtime_error(
-        "attribute_name not found");
+    throw std::runtime_error("attribute_name not found");
   }
 }
 
-Types::EventInfo Catalog::get_event_info(const Types::EventTypeId event_type_id) const noexcept {
+Types::EventInfo
+Catalog::get_event_info(const Types::EventTypeId event_type_id) const noexcept {
   if (event_type_id < events_info.size()) {
     return events_info[event_type_id];
   } else {
@@ -120,7 +121,8 @@ bool Catalog::stream_name_is_taken(std::string stream_name) const noexcept {
   return stream_name_to_id.contains(stream_name);
 }
 
-Types::StreamInfo Catalog::get_stream_info(const Types::StreamTypeId stream_type_id) const noexcept {
+Types::StreamInfo
+Catalog::get_stream_info(const Types::StreamTypeId stream_type_id) const noexcept {
   if (stream_type_id < streams_info.size()) {
     return streams_info[stream_type_id];
   } else {
@@ -230,8 +232,10 @@ Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
-    out.push_back(
-      tuples_to_complex_event(info.first.first, info.first.second, info.second, event_memory));
+    out.push_back(tuples_to_complex_event(info.first.first,
+                                          info.first.second,
+                                          info.second,
+                                          event_memory));
   }
   return {std::move(out)};
 }
@@ -254,7 +258,8 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
   return {start, end, std::move(converted_events)};
 }
 
-Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) {
+Types::Event
+Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) {
   assert(tuple.id() == event_info.id);
   std::vector<std::shared_ptr<Types::Value>> values;
   for (auto i = 0; i < event_info.attributes_info.size(); i++) {
@@ -262,20 +267,24 @@ Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueu
     std::shared_ptr<Types::Value> val;
     switch (att_info.value_type) {
       case Types::ValueTypes::INT64:
-        val = std::make_shared<Types::IntValue>(RingTupleQueue::Value<int64_t>(tuple[i]).get());
+        val = std::make_shared<Types::IntValue>(
+          RingTupleQueue::Value<int64_t>(tuple[i]).get());
         break;
       case Types::ValueTypes::DOUBLE:
-        val = std::make_shared<Types::DoubleValue>(RingTupleQueue::Value<double>(tuple[i]).get());
+        val = std::make_shared<Types::DoubleValue>(
+          RingTupleQueue::Value<double>(tuple[i]).get());
         break;
       case Types::ValueTypes::BOOL:
-        val = std::make_shared<Types::BoolValue>(RingTupleQueue::Value<bool>(tuple[i]).get());
+        val = std::make_shared<Types::BoolValue>(
+          RingTupleQueue::Value<bool>(tuple[i]).get());
         break;
       case Types::ValueTypes::STRING_VIEW:
         val = std::make_shared<Types::StringValue>(
           std::string(RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
         break;
       case Types::ValueTypes::DATE:
-        val = std::make_shared<Types::DateValue>(RingTupleQueue::Value<std::time_t>(tuple[i]).get());
+        val = std::make_shared<Types::DateValue>(
+          RingTupleQueue::Value<std::time_t>(tuple[i]).get());
         break;
       default:
         assert(false && "Some Value Type was not implemented");

@@ -19,24 +19,17 @@ struct ComplexEvent {
 
   ComplexEvent() : start(0), end(0), events() {}
 
-  ComplexEvent(uint64_t start,
-               uint64_t end,
-               std::vector<Event>&& events) noexcept
+  ComplexEvent(uint64_t start, uint64_t end, std::vector<Event>&& events) noexcept
       : start(start), end(end), events(std::move(events)) {}
 
-  ComplexEvent(uint64_t start,
-               uint64_t end,
-               std::initializer_list<Event>&& events) noexcept
+  ComplexEvent(uint64_t start, uint64_t end, std::initializer_list<Event>&& events) noexcept
       : start(start), end(end), events(std::move(events)) {}
 
-  ComplexEvent(uint64_t start,
-               uint64_t end,
-               std::vector<Event>& events) noexcept
+  ComplexEvent(uint64_t start, uint64_t end, std::vector<Event>& events) noexcept
       : start(start), end(end), events(events) {}
 
   std::string to_string() const {
-    std::string out = "[" + std::to_string(start) + ","
-                      + std::to_string(end) + "], [";
+    std::string out = "[" + std::to_string(start) + "," + std::to_string(end) + "], [";
     for (auto& event : events) {
       out += event.to_string() + " ";
     }

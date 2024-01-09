@@ -21,8 +21,7 @@ class Project : public LogicalCEATransformer<Project> {
     for (int i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
         transition = std::make_tuple(std::get<0>(transition),
-                                     std::get<1>(transition)
-                                       & variables_to_project,
+                                     std::get<1>(transition) & variables_to_project,
                                      std::get<2>(transition));
       }
     }

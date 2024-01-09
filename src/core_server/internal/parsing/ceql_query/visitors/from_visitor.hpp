@@ -11,8 +11,7 @@ class FromVisitor : public CEQLQueryParserBaseVisitor {
  public:
   CEQL::From get_parsed_from() { return CEQL::From(std::move(streams)); }
 
-  virtual std::any
-  visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
+  virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting From clause will identify all streams.
     auto from_ctx = ctx->from_clause();
     if (from_ctx) {
@@ -21,8 +20,7 @@ class FromVisitor : public CEQLQueryParserBaseVisitor {
     return {};  // Only interested in stream names
   }
 
-  virtual std::any
-  visitStream_name(CEQLQueryParser::Stream_nameContext* ctx) override {
+  virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext* ctx) override {
     streams.insert(ctx->getText());
     return {};
   }

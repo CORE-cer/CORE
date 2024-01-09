@@ -24,8 +24,7 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
       : name(name), catalog(catalog) {}
 
   std::unique_ptr<MathExpr<GlobalType>> clone() const override {
-    return std::make_unique<NonStronglyTypedAttribute<GlobalType>>(name,
-                                                                   catalog);
+    return std::make_unique<NonStronglyTypedAttribute<GlobalType>>(name, catalog);
   }
 
   ~NonStronglyTypedAttribute() override = default;
@@ -37,8 +36,7 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
     // makes sense for the tuple.
     assert(event_info.attribute_names_to_ids.contains(name));
     pos = event_info.attribute_names_to_ids[name];
-    Types::ValueTypes attribute_type = event_info.attributes_info[pos]
-                                         .value_type;
+    Types::ValueTypes attribute_type = event_info.attributes_info[pos].value_type;
 
     switch (attribute_type) {
       case Types::ValueTypes::INT64:
@@ -52,7 +50,8 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
       case Types::ValueTypes::DATE:
         return eval<std::time_t>(tuple, pos);
       default:
-        assert(false && "A value type was not implemented in NonStronglytypedAttribute eval");
+        assert(false
+               && "A value type was not implemented in NonStronglytypedAttribute eval");
         break;
     }
     return {};  // For warning not to appear.
@@ -64,11 +63,11 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      stored_string = std::to_string(
-        val.get());  // It is not a string already.
+      stored_string = std::to_string(val.get());  // It is not a string already.
       return stored_string;
     } else if constexpr (std::is_same_v<LocalType, std::string_view>) {
-      assert(false && "Local Type is string and global type is not, this should never happen.");
+      assert(false
+             && "Local Type is string and global type is not, this should never happen.");
       return {};
     } else {
       return static_cast<GlobalType>(val.get());

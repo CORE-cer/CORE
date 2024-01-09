@@ -33,9 +33,7 @@ class StaticMessageHandler {
     Derived::handle_complex_event(enumerator);
   }
 
-  static bool needs_to_stop() {
-    return Derived::needs_to_stop_implementation();
-  }
+  static bool needs_to_stop() { return Derived::needs_to_stop_implementation(); }
 
   static void handle_complex_event(Types::Enumerator& enumerator) {
     assert(false && "statically_handle_complex_event is not implemented");

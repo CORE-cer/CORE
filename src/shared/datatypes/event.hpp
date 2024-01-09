@@ -43,8 +43,7 @@ struct Event {
       : event_type_id(event_type_id), attributes(attributes) {}
 
   std::string to_string() const {
-    std::string out = "(id: " + std::to_string(event_type_id)
-                      + " attributes: [";
+    std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";
     for (auto& val : attributes) {
       out += val->to_string() + " ";
     }

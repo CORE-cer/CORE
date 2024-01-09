@@ -72,7 +72,8 @@ class SingleQuery {
     time_window = query.within.time_window;
 
     evaluator = std::make_unique<Internal::Evaluation::Evaluator>(std::move(cea),
-                                                                  std::move(tuple_evaluator),
+                                                                  std::move(
+                                                                    tuple_evaluator),
                                                                   time_window.duration,
                                                                   time_of_expiration);
   }
@@ -83,7 +84,8 @@ class SingleQuery {
       result_handler.start();
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
-        std::optional<RingTupleQueue::Tuple> tuple = serialized_message_to_tuple(serialized_message);
+        std::optional<RingTupleQueue::Tuple> tuple = serialized_message_to_tuple(
+          serialized_message);
         if (!tuple.has_value()) {
           continue;
         }
@@ -132,7 +134,8 @@ class SingleQuery {
     return output;
   }
 
-  std::optional<RingTupleQueue::Tuple> serialized_message_to_tuple(std::string& serialized_message) {
+  std::optional<RingTupleQueue::Tuple>
+  serialized_message_to_tuple(std::string& serialized_message) {
     if (serialized_message == "STOP") {
       return {};
     }
