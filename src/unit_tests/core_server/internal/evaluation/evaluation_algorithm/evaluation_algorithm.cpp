@@ -94,14 +94,18 @@ TEST_CASE("Evaluation on the example stream of the papers") {
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -126,27 +130,37 @@ TEST_CASE("Evaluation on the example stream of the papers") {
   REQUIRE(output.complex_events.size() == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
 
   REQUIRE(output.complex_events[2].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1920));
 
   REQUIRE(output.complex_events[3].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
 }
 
-TEST_CASE("Evaluation on the example stream of the paper with within of 4 seconds") {
+TEST_CASE(
+  "Evaluation on the example stream of the paper with within of 4 "
+  "seconds") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
@@ -236,14 +250,18 @@ TEST_CASE("Evaluation on the example stream of the paper with within of 4 second
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -272,14 +290,18 @@ TEST_CASE("Evaluation on the example stream of the paper with within of 4 second
   REQUIRE(output.complex_events[1].end == 6);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
 }
 
 TEST_CASE("Evaluation of a query with contiguous events") {
@@ -402,9 +424,11 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   REQUIRE(output.complex_events[0].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -614,15 +638,21 @@ TEST_CASE("Evaluation of long query") {
   REQUIRE(output.complex_events[0].end == 13);
 
   REQUIRE(output.complex_events[0].events.size() == 9);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[6], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[7], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[8], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[8], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -755,13 +785,18 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
   REQUIRE(output.complex_events[0].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 8);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[7], 1, "INTL", 80));
 
   event = {0,
@@ -978,22 +1013,33 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
   REQUIRE(output.complex_events[0].end == 15);
 
   REQUIRE(output.complex_events[0].events.size() == 16);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[7], 1, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[0].events[8], 1, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[0].events[9], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[10], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[11], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[12], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[13], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[14], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[15], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[10], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[11], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[12], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[13], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[14], 1, "INTL", 80));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[15], 1, "INTL", 80));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -1118,36 +1164,50 @@ TEST_CASE(
   REQUIRE(output.complex_events[5].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[2].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[3].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[3].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[4].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[4].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[4].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[4].events[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[4].events[3], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[4].events[3], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[5].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[5].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[5].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[5].events[2], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
@@ -1178,7 +1238,6 @@ TEST_CASE(
 
   // NOTE: If fails, should check if correct. Made assuming correctness
 
-
   backend.send_event_to_queries(0, event);
 
   output = result_handler.get_enumerator();
@@ -1206,57 +1265,80 @@ TEST_CASE(
   REQUIRE(output.complex_events[9].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 105));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 105));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[2].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(output.complex_events[2].events[3], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[2].events[3], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[3].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[4].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[4].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[4].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[4].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[5].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[5].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[5].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[5].events[2], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[5].events[3], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[5].events[3], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[6].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[6].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[6].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[6].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[6].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[6].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[7].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[7].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[7].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[7].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[7].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[7].events[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[7].events[3], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[7].events[3], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[8].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[8].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[8].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[8].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[8].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[8].events[2], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[9].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[9].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[9].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[9].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[9].events[2], 0, "AMZN", 1901));
+  REQUIRE(
+    is_the_same_as(output.complex_events[9].events[2], 0, "AMZN", 1901));
 }
 
 TEST_CASE(
@@ -1351,15 +1433,20 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
@@ -1450,15 +1537,20 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 4);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
@@ -1528,11 +1620,14 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 2);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 1, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 1, "MSFT", 102));
 
   REQUIRE(output.complex_events[1].events.size() == 2);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 1, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 1, "MSFT", 102));
 }
 
 TEST_CASE(
@@ -1552,7 +1647,6 @@ TEST_CASE(
   auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1602,11 +1696,14 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 2);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
 
   REQUIRE(output.complex_events[1].events.size() == 2);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
 
 }  // namespace CORE::Internal::Evaluation::UnitTests

@@ -40,18 +40,21 @@ class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
 };
 
 class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
-
  public:
- std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
-  OnlineResultHandler(Types::PortNumber assigned_port) : broadcaster{nullptr} {
+  std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
+
+  OnlineResultHandler(Types::PortNumber assigned_port)
+      : broadcaster{nullptr} {
     port = assigned_port;
   }
 
   void start_impl() {
     if (!port.has_value()) {
-     throw std::runtime_error("port not defined on OnlineResultHandler when starting");
+      throw std::runtime_error(
+        "port not defined on OnlineResultHandler when starting");
     }
-    broadcaster = std::make_unique<Internal::ZMQMessageBroadcaster>("tcp://*:" + std::to_string(port.value()));
+    broadcaster = std::make_unique<Internal::ZMQMessageBroadcaster>(
+      "tcp://*:" + std::to_string(port.value()));
   }
 
   void handle_complex_event(Types::Enumerator enumerator) {

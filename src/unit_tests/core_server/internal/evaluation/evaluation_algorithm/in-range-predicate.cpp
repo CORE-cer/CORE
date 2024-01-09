@@ -99,9 +99,12 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(output.complex_events[0].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 50, 75));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 50, 75));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -128,13 +131,19 @@ TEST_CASE("Evaluation of in-range predicate") {
   REQUIRE(output.complex_events.size() == 2);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920, 2000));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
+  REQUIRE(
+    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920, 2000));
 
   REQUIRE(output.complex_events[1].events.size() == 3);
-  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80, 140));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920, 2000));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80, 140));
+  REQUIRE(
+    is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920, 2000));
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests

@@ -16,7 +16,6 @@ class Router {
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*>::element_type;
 
-
  private:
   Internal::ZMQMessageRouter<ClientMessageHandler<ResultHandlerFactoryT>>
     router;
@@ -27,7 +26,8 @@ class Router {
          Types::PortNumber port_number,
          ResultHandlerFactoryT result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),
-               std::move(ClientMessageHandler(backend, result_handler_factory))) {
+               std::move(
+                 ClientMessageHandler(backend, result_handler_factory))) {
     start();
   }
 

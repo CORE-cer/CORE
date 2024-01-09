@@ -234,4 +234,4 @@ TEST_CASE(
   REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
           == 1);
 }
-}  // namespace CORE::Internal::UnitTests::COREMediatorCoordinationTests
+}  // namespace CORE::Internal::UnitTests::COREBackendCoordinationTests
