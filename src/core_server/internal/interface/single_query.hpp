@@ -67,6 +67,9 @@ class SingleQuery {
 
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(catalog);
     query.where.formula->accept_visitor(visitor);
+    if (!query.select.is_star) {
+      query.select.formula->accept_visitor(visitor);
+    }
 
     Internal::CEA::DetCEA cea(
       Internal::CEA::CEA(std::move(visitor.current_cea)));

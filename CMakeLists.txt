@@ -149,21 +149,21 @@ target_link_libraries(offline_server PRIVATE core)
 #  |UNIT TESTS (Catch2)|
 #  +------------------*/
 
-# find_package(Catch2 REQUIRED)
+find_package(Catch2 REQUIRED)
 #
-# file(GLOB_RECURSE UNIT_TESTING_FILES
-#      src/unit_tests/*.cpp
-# )
+file(GLOB_RECURSE UNIT_TESTING_FILES
+     src/unit_tests/*.cpp
+)
+
+file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
+     src/third_party_tests/*.cpp
+)
+
+add_executable(tests ${UNIT_TESTING_FILES})
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain core)
 #
-# file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
-#      src/third_party_tests/*.cpp
-# )
-#
-# add_executable(tests ${UNIT_TESTING_FILES})
-# target_link_libraries(tests PRIVATE Catch2::Catch2WithMain core)
-#
-# add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
-# target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
+add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
+target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
 
 # These tests need their own main (None at the moment)
 #add_executable(custom-main-tests test.cpp test-main.cpp)
