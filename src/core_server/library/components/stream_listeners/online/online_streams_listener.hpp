@@ -51,12 +51,16 @@ class OnlineStreamsListener {
   }
 
   void stop() {
-    Internal::ZMQMessageSender sender("tcp://localhost:"
-                                      + std::to_string(receiver_port));
-    stop_condition = true;
-    sender.send(Internal::CerealSerializer<Types::Stream>::serialize(
-      Types::Stream(0, {})));
-    worker_thread.join();
+    try {
+      Internal::ZMQMessageSender sender("tcp://localhost:"
+                                        + std::to_string(receiver_port));
+      stop_condition = true;
+      sender.send(Internal::CerealSerializer<Types::Stream>::serialize(
+        Types::Stream(0, {})));
+      worker_thread.join();
+    } catch (std::exception& e) {
+      std::cout << "Exception: " << e.what() << std::endl;
+    }
   }
 };
 

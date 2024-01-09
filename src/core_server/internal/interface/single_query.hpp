@@ -107,10 +107,14 @@ class SingleQuery {
   }
 
   void stop() {
-    ZMQMessageSender sender(receiver_address, receiver.get_context());
-    sender.send("STOP");
-    stop_condition = true;
-    worker_thread.join();
+    try {
+      ZMQMessageSender sender(receiver_address, receiver.get_context());
+      sender.send("STOP");
+      stop_condition = true;
+      worker_thread.join();
+    } catch (std::exception& e) {
+      std::cout << "Exception: " << e.what() << std::endl;
+    }
   }
 
   Types::Enumerator process_event(RingTupleQueue::Tuple tuple) {
