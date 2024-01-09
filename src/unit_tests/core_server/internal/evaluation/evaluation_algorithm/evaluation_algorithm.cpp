@@ -1,32 +1,26 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
-#include <memory>
 
-#include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
-#include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
-#include "core_server/internal/evaluation/enumeration/tecs/tecs.hpp"
-#include "core_server/internal/evaluation/evaluator.hpp"
-#include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/interface/backend.hpp"
 #include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
-TEST_CASE("Evaluation on the example stream of the paper.") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+TEST_CASE("Evaluation on the example stream of the papers") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -35,293 +29,275 @@ TEST_CASE("Evaluation on the example stream of the paper.") {
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      20,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
 
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 4);
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 4);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[1].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 4);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 4);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
 
-  REQUIRE(outputs.size() == 4);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));
+  REQUIRE(output.complex_events.size() == 4);
 
-  REQUIRE(outputs[2].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[2].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[2].second[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(outputs[2].second[2], 0, "AMZN", 1920));
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
-  REQUIRE(outputs[3].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[3].second[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1920));
-  next_output_enumerator = {};  // To prevent segfault
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
+
+  REQUIRE(output.complex_events[2].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1920));
+
+  REQUIRE(output.complex_events[3].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
 }
 
-TEST_CASE(
-  "Evaluation on the example stream of the paper with within of 4 "
-  "seconds.") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+TEST_CASE("Evaluation on the example stream of the paper with within of 4 seconds") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 5 EVENTS";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea = CEA::DetCEA(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      5,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
 
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 4);
 
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 4);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 4);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 4);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
 
-  REQUIRE(outputs.size() == 2);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 6);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].first.first == 1);
-  REQUIRE(outputs[1].first.second == 6);
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 6);
+  REQUIRE(output.complex_events[1].start == 1);
+  REQUIRE(output.complex_events[1].end == 6);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920));
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
-  REQUIRE(outputs[1].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 81));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920));
-  next_output_enumerator = {};  // To prevent segfault
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
 }
 
 TEST_CASE("Evaluation of a query with contiguous events") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -330,146 +306,145 @@ TEST_CASE("Evaluation of a query with contiguous events") {
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t expiration_time = 0;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      20,
-                      expiration_time);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 5);
-  REQUIRE(outputs[0].first.second == 7);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 5);
+  REQUIRE(output.complex_events[0].end == 7);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};  // To prevent segfault
-  REQUIRE(outputs.size() == 0);
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
 }
 
 TEST_CASE("Evaluation of long query") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -477,353 +452,355 @@ TEST_CASE("Evaluation of long query") {
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 10);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 11);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 12);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 13);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
+  backend.send_event_to_queries(0, event);
 
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 5);
-  REQUIRE(outputs[0].first.second == 13);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[0].second.size() == 9);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[3], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[6], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[7], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[8], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events.size() == 1);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 14);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events[0].start == 5);
+  REQUIRE(output.complex_events[0].end == 13);
+
+  REQUIRE(output.complex_events[0].events.size() == 9);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[7], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[8], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 15);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};  // To prevent segfault
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
 }
 
 TEST_CASE("Evaluation of long query with continuous and OR") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("BUY AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 10);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 11);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("BUY MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 12);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
+  backend.send_event_to_queries(0, event);
 
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 0);
-  REQUIRE(outputs[0].first.second == 12);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[0].second.size() == 8);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 1, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[3], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[6], 1, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[7], 1, "INTL", 80));
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 0);
+  REQUIRE(output.complex_events[0].end == 7);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 14);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events[0].events.size() == 8);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[7], 1, "INTL", 80));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 15);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};  // To prevent segfault
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
 }
 
 TEST_CASE("Evaluation of longer query with continuous and OR v2") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -832,232 +809,234 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
     "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("BUY AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "MSFT", 101);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("BUY MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 8);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 9);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 10);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 11);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 12);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 13);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  backend.send_event_to_queries(0, event);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 14);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 15);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
+  backend.send_event_to_queries(0, event);
 
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 0);
-  REQUIRE(outputs[0].first.second == 15);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[0].second.size() == 16);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 1, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[3], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[4], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[5], 0, "AMZN", 1900));
-  REQUIRE(is_the_same_as(outputs[0].second[6], 1, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[0].second[7], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[8], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[9], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[10], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[11], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[12], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[13], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[14], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[15], 1, "INTL", 80));
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 0);
+  REQUIRE(output.complex_events[0].end == 15);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 81);
-  next_output_enumerator = evaluator.next(tuple, 16);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events[0].events.size() == 16);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[6], 1, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[7], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[8], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[9], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[10], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[11], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[12], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[13], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[14], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[15], 1, "INTL", 80));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920);
-  next_output_enumerator = evaluator.next(tuple, 17);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};  // To prevent segfault
-  REQUIRE(outputs.size() == 1);
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
 }
 
 TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1066,247 +1045,239 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 6);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 4);
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 4);
-  REQUIRE(outputs[2].first.first == 0);
-  REQUIRE(outputs[2].first.second == 4);
-  REQUIRE(outputs[3].first.first == 1);
-  REQUIRE(outputs[3].first.second == 4);
-  REQUIRE(outputs[4].first.first == 0);
-  REQUIRE(outputs[4].first.second == 4);
-  REQUIRE(outputs[5].first.first == 0);
-  REQUIRE(outputs[5].first.second == 4);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[3], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events.size() == 6);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 4);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 4);
+  REQUIRE(output.complex_events[2].start == 0);
+  REQUIRE(output.complex_events[2].end == 4);
+  REQUIRE(output.complex_events[3].start == 1);
+  REQUIRE(output.complex_events[3].end == 4);
+  REQUIRE(output.complex_events[4].start == 0);
+  REQUIRE(output.complex_events[4].end == 4);
+  REQUIRE(output.complex_events[5].start == 0);
+  REQUIRE(output.complex_events[5].end == 4);
 
-  REQUIRE(outputs[2].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[2].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[2].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[2].second[2], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
-  REQUIRE(outputs[3].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[3].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events[1].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 
-  REQUIRE(outputs[4].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[4].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[4].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[4].second[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[4].second[3], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events[2].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1900));
 
-  REQUIRE(outputs[5].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[5].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[5].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[5].second[2], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events[3].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1900));
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 105);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
-  INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  REQUIRE(output.complex_events[4].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[4].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[4].events[2], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[4].events[3], 0, "AMZN", 1900));
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 85);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events[5].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[5].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[5].events[2], 0, "AMZN", 1900));
 
-  INFO("SELL INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(105)}};
+  INFO("SELL MSFT 105");
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1901);
-  next_output_enumerator = evaluator.next(tuple, 7);
-  outputs = enumerator_to_vector(next_output_enumerator);
-  INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(85)}};
+  INFO("SELL INTL 85");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1901)}};
+  INFO("SELL AMZN 1901");
 
   // NOTE: If fails, should check if correct. Made assuming correctness
 
-  REQUIRE(outputs.size() == 10);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 5);
-  REQUIRE(outputs[0].first.second == 7);
-  REQUIRE(outputs[1].first.first == 1);
-  REQUIRE(outputs[1].first.second == 7);
-  REQUIRE(outputs[2].first.first == 0);
-  REQUIRE(outputs[2].first.second == 7);
-  REQUIRE(outputs[3].first.first == 0);
-  REQUIRE(outputs[3].first.second == 7);
-  REQUIRE(outputs[4].first.first == 1);
-  REQUIRE(outputs[4].first.second == 7);
-  REQUIRE(outputs[5].first.first == 0);
-  REQUIRE(outputs[5].first.second == 7);
-  REQUIRE(outputs[6].first.first == 1);
-  REQUIRE(outputs[6].first.second == 7);
-  REQUIRE(outputs[7].first.first == 0);
-  REQUIRE(outputs[7].first.second == 7);
-  REQUIRE(outputs[8].first.first == 0);
-  REQUIRE(outputs[8].first.second == 7);
-  REQUIRE(outputs[9].first.first == 0);
-  REQUIRE(outputs[9].first.second == 7);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 105));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1901));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events.size() == 10);
+  REQUIRE(output.complex_events[0].start == 5);
+  REQUIRE(output.complex_events[0].end == 7);
+  REQUIRE(output.complex_events[1].start == 1);
+  REQUIRE(output.complex_events[1].end == 7);
+  REQUIRE(output.complex_events[2].start == 0);
+  REQUIRE(output.complex_events[2].end == 7);
+  REQUIRE(output.complex_events[3].start == 0);
+  REQUIRE(output.complex_events[3].end == 7);
+  REQUIRE(output.complex_events[4].start == 1);
+  REQUIRE(output.complex_events[4].end == 7);
+  REQUIRE(output.complex_events[5].start == 0);
+  REQUIRE(output.complex_events[5].end == 7);
+  REQUIRE(output.complex_events[6].start == 1);
+  REQUIRE(output.complex_events[6].end == 7);
+  REQUIRE(output.complex_events[7].start == 0);
+  REQUIRE(output.complex_events[7].end == 7);
+  REQUIRE(output.complex_events[8].start == 0);
+  REQUIRE(output.complex_events[8].end == 7);
+  REQUIRE(output.complex_events[9].start == 0);
+  REQUIRE(output.complex_events[9].end == 7);
 
-  REQUIRE(outputs[2].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[2].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[2].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[2].second[2], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(outputs[2].second[3], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 105));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 85));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[3].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[3].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[3].second[1], 0, "INTL", 85));
-  REQUIRE(is_the_same_as(outputs[3].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 85));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[4].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[4].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[4].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[4].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[2].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "INTL", 85));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[3], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[5].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[5].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[5].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[5].second[2], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[5].second[3], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[3].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 85));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[6].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[6].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[6].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[6].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[4].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[4].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[4].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[4].events[2], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[7].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[7].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[7].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[7].second[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[7].second[3], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[5].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[5].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[5].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[5].events[2], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[5].events[3], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[8].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[8].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[8].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[8].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[6].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[6].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[6].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[6].events[2], 0, "AMZN", 1901));
 
-  REQUIRE(outputs[9].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[9].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[9].second[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[9].second[2], 0, "AMZN", 1901));
+  REQUIRE(output.complex_events[7].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[7].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[7].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[7].events[2], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[7].events[3], 0, "AMZN", 1901));
+
+  REQUIRE(output.complex_events[8].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[8].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[8].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[8].events[2], 0, "AMZN", 1901));
+
+  REQUIRE(output.complex_events[9].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[9].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[9].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[9].events[2], 0, "AMZN", 1901));
 }
 
 TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1315,371 +1286,327 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 4);
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 4);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[3], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 4);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 4);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1900);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 2);
-  REQUIRE(outputs[0].first.second == 5);
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 5);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[0].second.size() == 3);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1900));
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[1].second.size() == 4);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 1, "INTL", 80));
-  REQUIRE(is_the_same_as(outputs[1].second[3], 0, "AMZN", 1900));
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 4);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 4);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 4);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, OR, and "
   "AS") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL OR BUY)+ as msft\n"
     "FILTER msft[name='MSFT']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("BUY MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 2);
-  REQUIRE(outputs[0].first.second == 2);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 2);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[0].second.size() == 1);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 1, "MSFT", 102));
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 2);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 2);
 
-  REQUIRE(outputs[1].second.size() == 2);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 1, "MSFT", 102));
+  REQUIRE(output.complex_events[0].events.size() == 1);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 1, "MSFT", 102));
+
+  REQUIRE(output.complex_events[1].events.size() == 2);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 1, "MSFT", 102));
 }
 
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, and AS") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
 
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL)+ as msft\n"
     "FILTER msft[name='MSFT']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t event_time_of_expiration;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      100,
-                      event_time_of_expiration);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue, 0, "MSFT", 101);
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  tuple = add_event(ring_tuple_queue, 1, "INTL", 80);
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 102);
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
 
-  REQUIRE(outputs[0].first.first == 2);
-  REQUIRE(outputs[0].first.second == 2);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(outputs[1].first.first == 0);
-  REQUIRE(outputs[1].first.second == 2);
+  output = result_handler.get_enumerator();
 
-  REQUIRE(outputs[0].second.size() == 1);
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 102));
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 2);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 2);
 
-  REQUIRE(outputs[1].second.size() == 2);
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "MSFT", 102));
+  REQUIRE(output.complex_events[0].events.size() == 1);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+
+  REQUIRE(output.complex_events[1].events.size() == 2);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
+
 }  // namespace CORE::Internal::Evaluation::UnitTests

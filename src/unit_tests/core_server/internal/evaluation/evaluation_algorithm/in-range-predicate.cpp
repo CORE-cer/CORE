@@ -1,36 +1,28 @@
-#include <string.h>
-
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
-#include <memory>
 
-#include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
-#include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
-#include "core_server/internal/evaluation/enumeration/tecs/tecs.hpp"
-#include "core_server/internal/evaluation/evaluator.hpp"
-#include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/interface/backend.hpp"
 #include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of in-range predicate") {
-  Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type(
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler;
+
+  auto event_type_id_1 = backend.add_event_type(
     "SELL",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64},
      {"quantity", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = catalog.add_event_type(
+  auto event_type_id_2 = backend.add_event_type(
     "BUY",
     {{"name", Types::ValueTypes::STRING_VIEW},
      {"price", Types::ValueTypes::INT64},
      {"quantity", Types::ValueTypes::INT64}});
 
-  auto stream_type = catalog.add_stream_type("Stock",
+  auto stream_type = backend.add_stream_type("Stock",
                                              {event_type_id_1,
                                               event_type_id_2});
-
-  RingTupleQueue::Queue ring_tuple_queue(100, &catalog.tuple_schemas);
 
   std::string string_query =
     "SELECT msft, intel, amzn FROM Stock\n"
@@ -39,120 +31,110 @@ TEST_CASE("Evaluation of in-range predicate") {
     "   AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query query = Parsing::Parser::parse_query(string_query);
-  CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
-  query = transformer(std::move(query));
-  auto predicates = std::move(transformer.physical_predicates);
-  auto tuple_evaluator = PredicateEvaluator(std::move(predicates));
-  INFO("Tuple Evaluator: " + tuple_evaluator.to_string());
+  backend.declare_query(string_query, result_handler);
 
-  CEQL::FormulaToLogicalCEA visitor = query_to_logical_cea(catalog, query);
+  Types::Event event;
+  Types::Enumerator output;
 
-  INFO(visitor.current_cea.to_string());
-  CEA::CEA intermediate_cea = CEA::CEA(std::move(visitor.current_cea));
-  INFO(intermediate_cea.to_string());
-  CEA::DetCEA cea(std::move(intermediate_cea));
-
-  uint64_t expiration_time = 0;
-  Evaluator evaluator(std::move(cea),
-                      std::move(tuple_evaluator),
-                      20,
-                      expiration_time);
-
-  RingTupleQueue::Tuple tuple = add_event(ring_tuple_queue,
-                                          0,
-                                          "MSFT",
-                                          150,
-                                          200);
-  INFO("Evaluation event 1: "
-       + get_evaluation_info(string_query, catalog, tuple));
-  auto next_output_enumerator = evaluator.next(tuple, 0);
-  auto outputs = enumerator_to_vector(next_output_enumerator);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(150),
+            std::make_shared<Types::IntValue>(200)}};
   INFO("SELL MSFT 150 200");
-  // 1001101 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "MSFT", 292, 350);
-  INFO("Evaluation event 2: "
-       + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 1);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(292),
+            std::make_shared<Types::IntValue>(350)}};
   INFO("SELL MSFT 292 350");
-  // 1001101 <- Tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80, 100);
-  INFO("Evaluation event 3: "
-       + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 2);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(100)}};
   INFO("SELL INTL 80 100");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 1, "AMZN", 100, 120);
-  INFO("Evaluation event 4: "
-       + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 3);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(100),
+            std::make_shared<Types::IntValue>(120)}};
   INFO("BUY AMZN 100 120");
-  // 1000010 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 50, 75);
-  INFO("Evaluation event 5: "
-       + get_evaluation_info(string_query, catalog, tuple));
-  next_output_enumerator = evaluator.next(tuple, 4);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(50),
+            std::make_shared<Types::IntValue>(75)}};
   INFO("SELL AMZN 50 75");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 1);
 
-  for (std::pair<std::pair<uint64_t, uint64_t>,
-                 std::vector<RingTupleQueue::Tuple>> output : outputs) {
-  }
-  REQUIRE(outputs[0].first.first == 1);
-  REQUIRE(outputs[0].first.second == 4);
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80, 100));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 50, 75));
+  output = result_handler.get_enumerator();
 
-  tuple = add_event(ring_tuple_queue, 0, "INTL", 80, 140);
-  next_output_enumerator = evaluator.next(tuple, 5);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 4);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 50, 75));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(140)}};
   INFO("SELL INTL 80 140");
-  // 1000001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 0);
 
-  tuple = add_event(ring_tuple_queue, 0, "AMZN", 1920, 2000);
-  next_output_enumerator = evaluator.next(tuple, 6);
-  outputs = enumerator_to_vector(next_output_enumerator);
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920),
+            std::make_shared<Types::IntValue>(2000)}};
   INFO("SELL AMZN 1920 2000");
-  // 1101001 <- tuple evaluator
-  INFO(output_to_string(next_output_enumerator));
-  next_output_enumerator = {};
-  REQUIRE(outputs.size() == 2);
 
-  REQUIRE(is_the_same_as(outputs[0].second[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(outputs[0].second[1], 0, "INTL", 80, 100));
-  REQUIRE(is_the_same_as(outputs[0].second[2], 0, "AMZN", 1920, 2000));
+  backend.send_event_to_queries(0, event);
 
-  REQUIRE(is_the_same_as(outputs[1].second[0], 0, "MSFT", 292, 350));
-  REQUIRE(is_the_same_as(outputs[1].second[1], 0, "INTL", 80, 140));
-  REQUIRE(is_the_same_as(outputs[1].second[2], 0, "AMZN", 1920, 2000));
-  next_output_enumerator = {};  // To prevent segfault
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80, 100));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920, 2000));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 292, 350));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80, 140));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920, 2000));
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests
