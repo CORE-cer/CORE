@@ -23,7 +23,7 @@ class OfflineServer {
 
   std::atomic<Types::PortNumber> next_available_port;
 
-  using HandlerType = std::invoke_result_t<
+  using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*>::element_type;
   Internal::Interface::Backend<HandlerType> backend;

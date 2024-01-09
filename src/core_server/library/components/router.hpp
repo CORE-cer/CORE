@@ -12,7 +12,7 @@ namespace CORE::Library::Components {
 
 template <typename ResultHandlerFactoryT>
 class Router {
-  using HandlerType = std::invoke_result_t<
+  using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*>::element_type;
 

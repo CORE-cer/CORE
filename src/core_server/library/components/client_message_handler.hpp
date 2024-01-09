@@ -16,7 +16,7 @@ template <typename ResultHandlerFactoryT>
 class ClientMessageHandler {
   // Extract from ResultHandlerFactoryT the return value of creating a handler
   // use ::element_type to remove the unique_ptr and get the internal type.
-  using HandlerType = std::invoke_result_t<
+  using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*>::element_type;
 
