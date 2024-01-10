@@ -82,9 +82,7 @@ class Node {
   }
 
   /* UNION Node */
-  Node(Node* left, Node* right) {
-    reset(left, right);
-  }
+  Node(Node* left, Node* right) { reset(left, right); }
 
   void reset(Node* left, Node* right) {
     this->node_type = NodeType::UNION;
