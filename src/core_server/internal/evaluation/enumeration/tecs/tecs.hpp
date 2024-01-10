@@ -24,7 +24,7 @@ class tECS {
 
  public:
   tECS(std::atomic<uint64_t>& event_time_of_expiration)
-      : node_manager(2048, event_time_of_expiration) {
+      : node_manager(MEMORY_POOL_STARTING_SIZE, event_time_of_expiration) {
     time_reservator = &node_manager.get_time_reservator();
   }
 
@@ -75,12 +75,17 @@ class tECS {
     assert(node_1 != nullptr && node_2 != nullptr);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {
-      return node_manager.alloc(node_1, node_2);
+      return new_direct_union(node_1, node_2);
     } else if (!node_2->is_union()) {
-      return node_manager.alloc(node_2, node_1);
+      return new_direct_union(node_2, node_1);
     } else {
       return create_union_of_two_union_nodes(node_1, node_2);
     }
+  }
+
+  [[nodiscard]] Node* new_direct_union(Node* node_1, Node* node_2) {
+    assert(node_1 != nullptr && node_2 != nullptr);
+    return node_manager.alloc(node_1, node_2);
   }
 
   /**
@@ -147,6 +152,7 @@ class tECS {
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
     for (auto rit = ulist.rbegin() + 1; rit != ulist.rend(); ++rit) {
+      assert(*rit != nullptr && tail != nullptr);
       tail = node_manager.alloc(*rit, tail);
     }
     return tail;

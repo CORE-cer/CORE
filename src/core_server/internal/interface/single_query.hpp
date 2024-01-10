@@ -128,9 +128,11 @@ class SingleQuery {
         assert(false && "Unknown time_window mode in next_data.");
         break;
     }
-    Types::Enumerator output = catalog.convert_enumerator(evaluator->next(tuple, time));
-
-    return output;
+    bool has_output = evaluator->next(tuple, time);
+    if (has_output) {
+      return catalog.convert_enumerator(evaluator->get_enumerator());
+    }
+    return {};
   }
 
   std::optional<RingTupleQueue::Tuple>
