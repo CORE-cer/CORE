@@ -68,6 +68,44 @@ class Enumerator {
   /// the delete operator of the enumerator.
   Enumerator(const Enumerator&) = delete;
 
+  /// The copy assignment is deleted so that it does not inferfere with
+  /// the delete operator of the enumerator.
+  Enumerator& operator=(const Enumerator&) = delete;
+
+  // Allow move constructor
+  Enumerator(Enumerator&& other) noexcept
+      : stack(std::move(other.stack)),
+        original_pos(other.original_pos),
+        last_time_to_consider(other.last_time_to_consider),
+        next_value(std::move(other.next_value)),
+        original_node(other.original_node),
+        tecs(other.tecs),
+        time_reservator(other.time_reservator),
+        time_reserved_node(other.time_reserved_node) {
+    other.tecs = nullptr;
+    other.time_reservator = nullptr;
+    other.time_reserved_node = nullptr;
+  }
+
+  // Allow move assignment
+  Enumerator& operator=(Enumerator&& other) noexcept {
+    if (this != &other) {
+      cleanup();
+      stack = std::move(other.stack);
+      original_pos = other.original_pos;
+      last_time_to_consider = other.last_time_to_consider;
+      next_value = std::move(other.next_value);
+      original_node = other.original_node;
+      tecs = other.tecs;
+      time_reservator = other.time_reservator;
+      time_reserved_node = other.time_reserved_node;
+      other.tecs = nullptr;
+      other.time_reservator = nullptr;
+      other.time_reserved_node = nullptr;
+    }
+    return *this;
+  }
+
   Enumerator()
       : original_node(nullptr),
         tecs(nullptr),
@@ -76,13 +114,7 @@ class Enumerator {
 
   ~Enumerator() {
     if (tecs != nullptr) {
-      // It is not an empty enumerator
-      tecs->unpin(original_node);
-      assert(time_reservator != nullptr);
-      assert(time_reserved_node != nullptr);
-      time_reservator->remove_node(time_reserved_node);
-      time_reserved_node = nullptr;
-      tecs = nullptr;
+      cleanup();
     }
   }
 
@@ -125,6 +157,18 @@ class Enumerator {
   std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next() {
     std::reverse(next_value.second.begin(), next_value.second.end());
     return next_value;
+  }
+
+  inline void cleanup() {
+    if (tecs != nullptr) {
+      assert(tecs != nullptr);
+      tecs->unpin(original_node);
+      assert(time_reservator != nullptr);
+      assert(time_reserved_node != nullptr);
+      time_reservator->remove_node(time_reserved_node);
+      time_reserved_node = nullptr;
+      tecs = nullptr;
+    }
   }
 };
 }  // namespace CORE::Internal::tECS
