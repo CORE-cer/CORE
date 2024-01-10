@@ -13,8 +13,7 @@ struct PredicateSet {
   mpz_class predicates;  // expected evaluation
   Type type;
 
-  PredicateSet(Type type = Contradiction)
-      : mask(0), predicates(0), type(type) {}
+  PredicateSet(Type type = Contradiction) : mask(0), predicates(0), type(type) {}
 
   PredicateSet(mpz_class mask, mpz_class predicates)
       : mask(mask), predicates(predicates), type(Satisfiable) {}
@@ -30,8 +29,7 @@ struct PredicateSet {
       return PredicateSet(other);
     else if (other.type == Tautology)
       return PredicateSet(*this);
-    mpz_class conflict = (mask & other.mask)
-                         & (predicates ^ other.predicates);
+    mpz_class conflict = (mask & other.mask) & (predicates ^ other.predicates);
     if (conflict != 0) {
       return PredicateSet(Contradiction);
     }
@@ -49,8 +47,7 @@ struct PredicateSet {
       case Tautology:
         return PredicateSet(Contradiction);
       default:
-        mpz_class unselective_mask = (mpz_class(1) << (amount_of_bits + 1))
-                                     - 1;
+        mpz_class unselective_mask = (mpz_class(1) << (amount_of_bits + 1)) - 1;
         mpz_class new_mask = unselective_mask ^ mask;
         mpz_class new_predicates = ~predicates;
         return PredicateSet(new_mask, new_predicates);
@@ -72,8 +69,7 @@ struct PredicateSet {
   bool operator==(const PredicateSet other) const {
     if (type != other.type || mask != other.mask) return false;
     if (type == Contradiction || type == Tautology) return true;
-    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates))
-                     & mask;
+    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates)) & mask;
     return conflicts == 0;
   }
 

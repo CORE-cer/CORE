@@ -24,8 +24,7 @@ class MarkVariable : public LogicalCEATransformer<MarkVariable> {
           continue;
         }
         transition = std::make_tuple(std::get<0>(transition),
-                                     std::get<1>(transition)
-                                       | variables_to_mark,
+                                     std::get<1>(transition) | variables_to_mark,
                                      std::get<2>(transition));
       }
     }

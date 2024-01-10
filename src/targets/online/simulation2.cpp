@@ -56,10 +56,8 @@ void subscribe_to_queries(Client& client,
   std::vector<std::unique_ptr<DummyHandler>> handlers;
   for (size_t port = initial_port; port < final_port; port++) {
     std::cout << "Subscribing to port: " << port << std::endl;
-    handlers.emplace_back(
-      std::make_unique<DummyHandler>());  // Store one enumerator.
-    client.subscribe_to_complex_event<DummyHandler>(handlers.back().get(),
-                                                    port);
+    handlers.emplace_back(std::make_unique<DummyHandler>());  // Store one enumerator.
+    client.subscribe_to_complex_event<DummyHandler>(handlers.back().get(), port);
   }
   std::cout << "Created handlers" << std::endl;
 }
@@ -76,8 +74,7 @@ int main(int argc, char** argv) {
   FrameMark;
   try {
     if (argc != 2) {
-      std::cout << "There must be 1 argument: The amount of messages."
-                << std::endl;
+      std::cout << "There must be 1 argument: The amount of messages." << std::endl;
       return 1;
     }
     int amount_of_messages = std::stoi(argv[1]);

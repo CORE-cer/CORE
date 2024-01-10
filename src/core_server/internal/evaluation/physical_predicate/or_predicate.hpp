@@ -16,13 +16,11 @@ class OrPredicate : public PhysicalPredicate {
  public:
   OrPredicate(uint64_t event_type_id,
               std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
-      : PhysicalPredicate(event_type_id),
-        predicates(std::move(predicates)) {}
+      : PhysicalPredicate(event_type_id), predicates(std::move(predicates)) {}
 
   OrPredicate(std::set<uint64_t> admissible_event_types,
               std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
-      : PhysicalPredicate(admissible_event_types),
-        predicates(std::move(predicates)) {}
+      : PhysicalPredicate(admissible_event_types), predicates(std::move(predicates)) {}
 
   OrPredicate(std::vector<std::unique_ptr<PhysicalPredicate>>&& predicates)
       : PhysicalPredicate(), predicates(std::move(predicates)) {}

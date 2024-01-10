@@ -19,13 +19,8 @@ class SingleQuery {
   RingTupleQueue::Queue& queue;
   ResultHandlerT& result_handler;
 
-  // Stream position based on server time
-  bool time_is_stream_position;
-
   // Underlying evaluator for tuples
   std::unique_ptr<Internal::Evaluation::Evaluator> evaluator;
-
-  uint64_t time_of_expiration;
 
   // Receiver for tuples
   std::string receiver_address;
@@ -34,6 +29,9 @@ class SingleQuery {
   std::thread worker_thread;
 
  public:
+  std::atomic<uint64_t> time_of_expiration = 0;
+  CEQL::Within::TimeWindow time_window;
+
   SingleQuery(Internal::CEQL::Query&& query,
               Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
@@ -53,17 +51,14 @@ class SingleQuery {
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
  private:
-  void
-  create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
-      catalog);
+  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
+    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
 
     query = transformer(std::move(query));
 
     auto predicates = std::move(transformer.physical_predicates);
 
-    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
-      std::move(predicates));
+    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
 
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(catalog);
     query.where.formula->accept_visitor(visitor);
@@ -71,22 +66,15 @@ class SingleQuery {
       query.select.formula->accept_visitor(visitor);
     }
 
-    Internal::CEA::DetCEA cea(
-      Internal::CEA::CEA(std::move(visitor.current_cea)));
+    Internal::CEA::DetCEA cea(Internal::CEA::CEA(std::move(visitor.current_cea)));
 
-    uint64_t time_window = query.within.time_window.mode
-                               == Internal::CEQL::Within::TimeWindowMode::NONE
-                             ? 1000000000
-                             : query.within.time_window.duration;
+    time_window = query.within.time_window;
 
-    time_is_stream_position = query.within.time_window.mode
-                              != Internal::CEQL::Within::TimeWindowMode::NANOSECONDS;
-
-    evaluator = std::make_unique<Internal::Evaluation::Evaluator>(
-      std::move(cea),
-      std::move(tuple_evaluator),
-      time_window,
-      time_of_expiration);
+    evaluator = std::make_unique<Internal::Evaluation::Evaluator>(std::move(cea),
+                                                                  std::move(
+                                                                    tuple_evaluator),
+                                                                  time_window.duration,
+                                                                  time_of_expiration);
   }
 
   void start() {
@@ -95,8 +83,8 @@ class SingleQuery {
       result_handler.start();
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
-        std::optional<RingTupleQueue::Tuple>
-          tuple = serialized_message_to_tuple(serialized_message);
+        std::optional<RingTupleQueue::Tuple> tuple = serialized_message_to_tuple(
+          serialized_message);
         if (!tuple.has_value()) {
           continue;
         }
@@ -109,8 +97,8 @@ class SingleQuery {
   void stop() {
     try {
       ZMQMessageSender sender(receiver_address, receiver.get_context());
-      sender.send("STOP");
       stop_condition = true;
+      sender.send("STOP");
       worker_thread.join();
     } catch (std::exception& e) {
       std::cout << "Exception: " << e.what() << std::endl;
@@ -118,10 +106,29 @@ class SingleQuery {
   }
 
   Types::Enumerator process_event(RingTupleQueue::Tuple tuple) {
-    uint64_t time = time_is_stream_position ? current_stream_position++
-                                            : tuple.nanoseconds();
-    Types::Enumerator output = catalog.convert_enumerator(
-      evaluator->next(tuple, time));
+    uint64_t time;
+
+    switch (time_window.mode) {
+      case CEQL::Within::TimeWindowMode::NONE:
+      case CEQL::Within::TimeWindowMode::EVENTS:
+        time = current_stream_position++;
+        break;
+      case CEQL::Within::TimeWindowMode::NANOSECONDS:
+        time = tuple.nanoseconds();
+        break;
+      case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
+        // TODO: Extract logic and memoize so it is only done once
+        Types::EventTypeId event_type_id = tuple.id();
+        uint64_t attribute_index = catalog.get_index_attribute(event_type_id,
+                                                               time_window.attribute_name);
+        time = *tuple[attribute_index];
+        break;
+      }
+      default:
+        assert(false && "Unknown time_window mode in next_data.");
+        break;
+    }
+    Types::Enumerator output = catalog.convert_enumerator(evaluator->next(tuple, time));
 
     return output;
   }

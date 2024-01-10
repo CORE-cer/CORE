@@ -20,8 +20,7 @@ struct AndFilter : public Filter {
   }
 
   bool operator==(const AndFilter& other) const {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Filter* other) const override {
@@ -31,9 +30,7 @@ struct AndFilter : public Filter {
     return false;
   }
 
-  void accept_visitor(FilterVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FilterVisitor& visitor) override { visitor.visit(*this); }
 
   std::string to_string() const override {
     return left->to_string() + " AND " + right->to_string();

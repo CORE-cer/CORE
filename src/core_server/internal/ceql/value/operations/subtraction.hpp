@@ -11,23 +11,19 @@ struct Subtraction final : Value {
   Subtraction() noexcept {}
 
   Subtraction(const Subtraction& subtraction) noexcept
-      : left(subtraction.left->clone()),
-        right(subtraction.right->clone()) {}
+      : left(subtraction.left->clone()), right(subtraction.right->clone()) {}
 
-  Subtraction(std::unique_ptr<Value> left,
-              std::unique_ptr<Value> right) noexcept
+  Subtraction(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
-  Subtraction(Value*&& left, Value*&& right) noexcept
-      : left(left), right(right) {}
+  Subtraction(Value*&& left, Value*&& right) noexcept : left(left), right(right) {}
 
   std::string to_string() const override {
     return left->to_string() + "-" + right->to_string();
   }
 
   bool operator==(const Subtraction& other) const noexcept {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -41,9 +37,7 @@ struct Subtraction final : Value {
     return std::make_unique<Subtraction>(left->clone(), right->clone());
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   ~Subtraction() noexcept override {}
 

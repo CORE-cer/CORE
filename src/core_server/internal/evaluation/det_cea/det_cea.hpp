@@ -31,19 +31,17 @@ class DetCEA {
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    State* initial_state = state_manager.create_or_return_existing_state(
-      initial_bitset_1, 0, cea);
+    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
+                                                                         0,
+                                                                         cea);
     this->initial_state = initial_state;
   }
 
-  States next(State* state,
-              mpz_class evaluation,
-              const uint64_t& current_iteration) {
+  States next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
     assert(state != nullptr);
     n_nexts++;
     auto next_states = state->next(evaluation, n_hits);  // memoized
-    if (next_states.marked_state == nullptr
-        || next_states.unmarked_state == nullptr) {
+    if (next_states.marked_state == nullptr || next_states.unmarked_state == nullptr) {
       next_states = compute_next_states(state, evaluation, current_iteration);
       state->add_transition(evaluation, next_states);
     }
@@ -69,10 +67,12 @@ class DetCEA {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
     mpz_class marked_bitset = computed_bitsets.first;
     mpz_class unmarked_bitset = computed_bitsets.second;
-    State* marked_state = state_manager.create_or_return_existing_state(
-      marked_bitset, current_iteration, cea);
-    State* unmarked_state = state_manager.create_or_return_existing_state(
-      unmarked_bitset, current_iteration, cea);
+    State* marked_state = state_manager.create_or_return_existing_state(marked_bitset,
+                                                                        current_iteration,
+                                                                        cea);
+    State* unmarked_state = state_manager.create_or_return_existing_state(unmarked_bitset,
+                                                                          current_iteration,
+                                                                          cea);
     return {marked_state, unmarked_state};
   }
 

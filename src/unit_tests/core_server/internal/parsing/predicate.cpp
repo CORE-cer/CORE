@@ -273,8 +273,8 @@ TEST_CASE("In {num_list} physical_predicate", "[Predicate]") {
   for (int64_t i = 1; i <= 3; i++) {
     number_seq.push_back(make_unique<IntegerLiteral>(i));
   }
-  auto expected_predicate = make_unique<InPredicate>(
-    make_unique<Attribute>("temp"), Sequence(std::move(number_seq)));
+  auto expected_predicate = make_unique<InPredicate>(make_unique<Attribute>("temp"),
+                                                     Sequence(std::move(number_seq)));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -304,15 +304,13 @@ TEST_CASE("In {Lower Bound...} physical_predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("In {Lower Bound... Upper Bound} physical_predicate",
-          "[Predicate]") {
+TEST_CASE("In {Lower Bound... Upper Bound} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp IN {3..999999999999}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
   auto expected_predicate = make_unique<InPredicate>(
     make_unique<Attribute>("temp"),
-    Sequence(make_unique<IntegerLiteral>(3),
-             make_unique<IntegerLiteral>(999999999999)));
+    Sequence(make_unique<IntegerLiteral>(3), make_unique<IntegerLiteral>(999999999999)));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -359,16 +357,14 @@ TEST_CASE("NOT IN {Lower Bound...} physical_predicate", "[Predicate]") {
   REQUIRE(predicate->equals(expected_predicate.get()));
 }
 
-TEST_CASE("NOT IN {Lower Bound... Upper Bound} physical_predicate",
-          "[Predicate]") {
+TEST_CASE("NOT IN {Lower Bound... Upper Bound} physical_predicate", "[Predicate]") {
   auto query = create_query("t2[temp NOT IN {3..999999999999}]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Value>> number_seq;
   auto expected_predicate = make_unique<NotPredicate>(
     make_unique<InPredicate>(make_unique<Attribute>("temp"),
                              Sequence(make_unique<IntegerLiteral>(3),
-                                      make_unique<IntegerLiteral>(
-                                        999999999999))));
+                                      make_unique<IntegerLiteral>(999999999999))));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -402,8 +398,8 @@ TEST_CASE("math_expr IN RANGE (math_expr, math_expr)", "[Predicate]") {
 TEST_CASE("Like", "[Predicate]") {
   auto query = create_query("t2[temp LIKE <<.*>>]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
-  auto expected_predicate = make_unique<LikePredicate>(
-    make_unique<Attribute>("temp"), make_unique<RegexLiteral>(".*"));
+  auto expected_predicate = make_unique<LikePredicate>(make_unique<Attribute>("temp"),
+                                                       make_unique<RegexLiteral>(".*"));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
   REQUIRE(predicate->equals(expected_predicate.get()));
@@ -417,14 +413,14 @@ TEST_CASE("P1 AND P2", "[Predicate]") {
   auto query = create_query("t2[not temp != 50 AND temp > 40]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Predicate>> predicates;
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::EQUALS,
-    make_unique<IntegerLiteral>(50)));
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::GREATER,
-    make_unique<IntegerLiteral>(40)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::EQUALS,
+                                     make_unique<IntegerLiteral>(50)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::GREATER,
+                                     make_unique<IntegerLiteral>(40)));
   auto expected_predicate = make_unique<AndPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
@@ -435,14 +431,14 @@ TEST_CASE("NOT (P1 AND P2) = NOT P1 OR NOT P2", "[Predicate]") {
   auto query = create_query("t2[not (not temp != 50 AND temp > 40)]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Predicate>> predicates;
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::NOT_EQUALS,
-    make_unique<IntegerLiteral>(50)));
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::LESS_EQUALS,
-    make_unique<IntegerLiteral>(40)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::NOT_EQUALS,
+                                     make_unique<IntegerLiteral>(50)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::LESS_EQUALS,
+                                     make_unique<IntegerLiteral>(40)));
   auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
@@ -453,14 +449,14 @@ TEST_CASE("P1 OR P2", "[Predicate]") {
   auto query = create_query("t2[not temp != 50 OR temp > 40]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Predicate>> predicates;
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::EQUALS,
-    make_unique<IntegerLiteral>(50)));
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::GREATER,
-    make_unique<IntegerLiteral>(40)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::EQUALS,
+                                     make_unique<IntegerLiteral>(50)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::GREATER,
+                                     make_unique<IntegerLiteral>(40)));
   auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());
@@ -471,14 +467,14 @@ TEST_CASE("NOT (P1 OR P2) = NOT P1 AND NOT P2", "[Predicate]") {
   auto query = create_query("t2[not (not temp != 50 AND temp > 40)]");
   std::unique_ptr<Predicate> predicate = parse_predicate(query);
   std::vector<std::unique_ptr<Predicate>> predicates;
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::NOT_EQUALS,
-    make_unique<IntegerLiteral>(50)));
-  predicates.push_back(make_unique<InequalityPredicate>(
-    make_unique<Attribute>("temp"),
-    InequalityPredicate::LogicalOperation::LESS_EQUALS,
-    make_unique<IntegerLiteral>(40)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::NOT_EQUALS,
+                                     make_unique<IntegerLiteral>(50)));
+  predicates.push_back(
+    make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                     InequalityPredicate::LogicalOperation::LESS_EQUALS,
+                                     make_unique<IntegerLiteral>(40)));
   auto expected_predicate = make_unique<OrPredicate>(std::move(predicates));
   INFO("Expected: " + expected_predicate->to_string());
   INFO("Got: " + predicate->to_string());

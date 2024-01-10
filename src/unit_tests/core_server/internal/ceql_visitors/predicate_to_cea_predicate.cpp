@@ -13,17 +13,14 @@ using namespace RingTupleQueue;
 
 namespace CORE::Internal::CEQL::UnitTests {
 
-TEST_CASE("Compare with constant predicate computed correctly.",
-          "[ValueToMathExpr]") {
+TEST_CASE("Compare with constant predicate computed correctly.", "[ValueToMathExpr]") {
   std::vector<Types::AttributeInfo> attributes_info;
   attributes_info.emplace_back("String", Types::ValueTypes::STRING_VIEW);
   attributes_info.emplace_back("Integer1", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Integer2", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", Types::ValueTypes::DOUBLE);
   attributes_info.emplace_back("Double2", Types::ValueTypes::DOUBLE);
-  Types::EventInfo event_info(0,
-                              "some_event_name",
-                              std::move(attributes_info));
+  Types::EventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   TupleSchemas schemas;
   Queue ring_tuple_queue(100, &schemas);
@@ -50,30 +47,29 @@ TEST_CASE("Compare with constant predicate computed correctly.",
   CEQLStrongTypedPredicateToPhysicalPredicate converter(event_info);
 
   SECTION("Compare with a constant") {
-    std::unique_ptr<Predicate> predicate = std::make_unique<
-      InequalityPredicate>(std::make_unique<Attribute>("Integer1"),
-                           InequalityPredicate::LogicalOperation::LESS,
-                           std::make_unique<IntegerLiteral>(5));
+    std::unique_ptr<Predicate> predicate = std::make_unique<InequalityPredicate>(
+      std::make_unique<Attribute>("Integer1"),
+      InequalityPredicate::LogicalOperation::LESS,
+      std::make_unique<IntegerLiteral>(5));
     predicate->accept_visitor(converter);
     REQUIRE((*converter.predicate)(tuple));
   }
 
   SECTION("Compare with an attribute") {
-    std::unique_ptr<Predicate> predicate = std::make_unique<
-      InequalityPredicate>(std::make_unique<Attribute>("Integer1"),
-                           InequalityPredicate::LogicalOperation::GREATER,
-                           std::make_unique<Attribute>("Integer2"));
+    std::unique_ptr<Predicate> predicate = std::make_unique<InequalityPredicate>(
+      std::make_unique<Attribute>("Integer1"),
+      InequalityPredicate::LogicalOperation::GREATER,
+      std::make_unique<Attribute>("Integer2"));
     predicate->accept_visitor(converter);
     REQUIRE(!(*converter.predicate)(tuple));
   }
 
   SECTION("Compare with math_expr attribute") {
-    std::unique_ptr<Predicate> predicate = std::make_unique<
-      InequalityPredicate>(std::make_unique<Multiplication>(
-                             std::make_unique<Attribute>("Integer1"),
-                             std::make_unique<IntegerLiteral>(-5)),
-                           InequalityPredicate::LogicalOperation::GREATER,
-                           std::make_unique<Attribute>("Integer2"));
+    std::unique_ptr<Predicate> predicate = std::make_unique<InequalityPredicate>(
+      std::make_unique<Multiplication>(std::make_unique<Attribute>("Integer1"),
+                                       std::make_unique<IntegerLiteral>(-5)),
+      InequalityPredicate::LogicalOperation::GREATER,
+      std::make_unique<Attribute>("Integer2"));
     predicate->accept_visitor(converter);
     REQUIRE((*converter.predicate)(tuple));
   }
@@ -86,10 +82,10 @@ TEST_CASE("Compare with constant predicate computed correctly.",
                                        std::make_unique<IntegerLiteral>(-5)),
       InequalityPredicate::LogicalOperation::GREATER,
       std::make_unique<Attribute>("Integer2")));
-    predicates.push_back(std::make_unique<InequalityPredicate>(
-      std::make_unique<Attribute>("Integer1"),
-      InequalityPredicate::LogicalOperation::GREATER,
-      std::make_unique<Attribute>("Integer2")));
+    predicates.push_back(
+      std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("Integer1"),
+                                            InequalityPredicate::LogicalOperation::GREATER,
+                                            std::make_unique<Attribute>("Integer2")));
     std::unique_ptr<Predicate> predicate = std::make_unique<AndPredicate>(
       std::move(predicates));
     predicate->accept_visitor(converter);
@@ -104,10 +100,10 @@ TEST_CASE("Compare with constant predicate computed correctly.",
                                        std::make_unique<IntegerLiteral>(-5)),
       InequalityPredicate::LogicalOperation::GREATER,
       std::make_unique<Attribute>("Integer2")));
-    predicates.push_back(std::make_unique<InequalityPredicate>(
-      std::make_unique<Attribute>("Integer1"),
-      InequalityPredicate::LogicalOperation::GREATER,
-      std::make_unique<Attribute>("Integer2")));
+    predicates.push_back(
+      std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("Integer1"),
+                                            InequalityPredicate::LogicalOperation::GREATER,
+                                            std::make_unique<Attribute>("Integer2")));
     std::unique_ptr<Predicate> predicate = std::make_unique<OrPredicate>(
       std::move(predicates));
     predicate->accept_visitor(converter);
@@ -121,10 +117,10 @@ TEST_CASE("Compare with constant predicate computed correctly.",
                                        std::make_unique<IntegerLiteral>(-5)),
       InequalityPredicate::LogicalOperation::GREATER,
       std::make_unique<Attribute>("Integer2")));
-    predicates.push_back(std::make_unique<InequalityPredicate>(
-      std::make_unique<Attribute>("Integer1"),
-      InequalityPredicate::LogicalOperation::GREATER,
-      std::make_unique<Attribute>("Integer2")));
+    predicates.push_back(
+      std::make_unique<InequalityPredicate>(std::make_unique<Attribute>("Integer1"),
+                                            InequalityPredicate::LogicalOperation::GREATER,
+                                            std::make_unique<Attribute>("Integer2")));
     std::unique_ptr<Predicate> predicate = std::make_unique<NotPredicate>(
       std::make_unique<AndPredicate>(std::move(predicates)));
     predicate->accept_visitor(converter);

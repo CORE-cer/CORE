@@ -88,14 +88,12 @@ class TimeReservator {
       }
 
       if (current->right != nullptr && current->right->left != current) {
-        std::cout << "Right node's left does not point back to node"
-                  << std::endl;
+        std::cout << "Right node's left does not point back to node" << std::endl;
         return false;
       }
 
       if (current->left != nullptr && current->left->right.get() != current) {
-        std::cout << "Left node's right does not point back to node"
-                  << std::endl;
+        std::cout << "Left node's right does not point back to node" << std::endl;
         return false;
       }
 

@@ -62,8 +62,6 @@ struct AndPredicate : public Predicate {
     return result + ")";
   }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

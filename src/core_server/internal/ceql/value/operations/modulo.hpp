@@ -16,16 +16,14 @@ struct Modulo final : Value {
   Modulo(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
-  Modulo(Value*&& left, Value*&& right) noexcept
-      : left(left), right(right) {}
+  Modulo(Value*&& left, Value*&& right) noexcept : left(left), right(right) {}
 
   std::string to_string() const override {
     return left->to_string() + "%" + right->to_string();
   }
 
   bool operator==(const Modulo& other) const noexcept {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -39,9 +37,7 @@ struct Modulo final : Value {
     return std::make_unique<Modulo>(left->clone(), right->clone());
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   ~Modulo() noexcept override {}
 

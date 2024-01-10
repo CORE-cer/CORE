@@ -25,9 +25,7 @@ struct Undefined final : public Value {
     return std::make_unique<Undefined>();
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {}

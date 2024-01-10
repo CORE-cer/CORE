@@ -40,8 +40,7 @@ class ZMQMessageDealer {
     } while (!reception && attempts < amount_of_tries);
 
     if (!reception) {
-      throw std::runtime_error(
-        "Failed to receive message from socket after retries");
+      throw std::runtime_error("Failed to receive message from socket after retries");
     }
 
     std::string reply_str = reply.to_string();

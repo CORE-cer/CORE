@@ -23,19 +23,20 @@ TEST_CASE("Serialization works for a vector structure", "[cereal]") {
   REQUIRE(initial_struct.values == final_struct.values);
 }
 
-TEST_CASE("Serialization works for an object with an abstract class ptr",
-          "[cereal]") {
+TEST_CASE("Serialization works for an object with an abstract class ptr", "[cereal]") {
   std::shared_ptr<ConcreteClass1> obj1(new ConcreteClass1{5, 4, 3, 2});
   std::shared_ptr<ConcreteClass2> obj2(new ConcreteClass2(10));
   ClassWithAbstractClassSharedPtr initial_object{{obj1, obj2}};
 
   // Serialize
-  std::string serialized_object = CerealSerializer<
-    ClassWithAbstractClassSharedPtr>::serialize(initial_object);
+  std::string
+    serialized_object = CerealSerializer<ClassWithAbstractClassSharedPtr>::serialize(
+      initial_object);
 
   // Deserialize
-  ClassWithAbstractClassSharedPtr final_object = CerealSerializer<
-    ClassWithAbstractClassSharedPtr>::deserialize(serialized_object);
+  ClassWithAbstractClassSharedPtr
+    final_object = CerealSerializer<ClassWithAbstractClassSharedPtr>::deserialize(
+      serialized_object);
 
   REQUIRE(initial_object.objects.size() == final_object.objects.size());
   // Detailed checks

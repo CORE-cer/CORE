@@ -31,9 +31,7 @@ struct StringLiteral final : public Value {
     return std::make_unique<StringLiteral>(value);
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {

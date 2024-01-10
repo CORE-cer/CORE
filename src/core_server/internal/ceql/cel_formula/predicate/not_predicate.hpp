@@ -22,9 +22,7 @@ struct NotPredicate : public Predicate {
 
   ~NotPredicate() {}
 
-  std::unique_ptr<Predicate> negate() const override {
-    return predicate->clone();
-  }
+  std::unique_ptr<Predicate> negate() const override { return predicate->clone(); }
 
   bool operator==(const NotPredicate& other) const {
     return predicate->equals(other.predicate.get());
@@ -39,13 +37,9 @@ struct NotPredicate : public Predicate {
 
   bool is_constant() const override { return false; }
 
-  std::string to_string() const override {
-    return "not(" + predicate->to_string() + ")";
-  }
+  std::string to_string() const override { return "not(" + predicate->to_string() + ")"; }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 };
 
 }  // namespace CORE::Internal::CEQL

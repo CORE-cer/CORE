@@ -30,8 +30,7 @@ struct LogicalCEA {
   uint64_t amount_of_states;
 
  public:
-  LogicalCEA(uint64_t amount_of_states)
-      : amount_of_states(amount_of_states) {
+  LogicalCEA(uint64_t amount_of_states) : amount_of_states(amount_of_states) {
     for (int i = 0; i < amount_of_states; i++) {
       transitions.push_back({});
       epsilon_transitions.push_back({});
@@ -105,8 +104,7 @@ struct LogicalCEA {
       "    Δ : [PredicateSet × (bitset) VariablesToMark → FinalState]" + "\n";
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
-      if (transitions[i].size() != 0)
-        out += "    Δ[" + std::to_string(i) + "]:\n";
+      if (transitions[i].size() != 0) out += "    Δ[" + std::to_string(i) + "]:\n";
       for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
            transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ",0xb"
@@ -117,8 +115,7 @@ struct LogicalCEA {
     out += "    Δε: [NodeId]:\n";
     for (size_t i = 0; i < epsilon_transitions.size(); i++) {
       for (const NodeId& end_node : epsilon_transitions[i]) {
-        out += "        " + std::to_string(i) + "→ "
-               + std::to_string(end_node) + "\n";
+        out += "        " + std::to_string(i) + "→ " + std::to_string(end_node) + "\n";
       }
     }
 

@@ -5,23 +5,18 @@
 #include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
-TEST_CASE(
-  "Evaluation of a query with contiguous events Projection all filters") {
+TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT msft, intel, amzn FROM Stock\n"
@@ -126,11 +121,9 @@ TEST_CASE(
   REQUIRE(output.complex_events[0].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -155,23 +148,18 @@ TEST_CASE(
   REQUIRE(output.complex_events.size() == 0);
 }
 
-TEST_CASE(
-  "Evaluation of a query with contiguous events Projection msft, intel") {
+TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT msft, intel FROM Stock\n"
@@ -275,8 +263,7 @@ TEST_CASE(
   REQUIRE(output.complex_events[0].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 2);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
 
   event = {0,
@@ -306,18 +293,14 @@ TEST_CASE("Evaluation of long query with projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT msft, amzn FROM Stock\n"
@@ -487,18 +470,12 @@ TEST_CASE("Evaluation of long query with projection") {
   REQUIRE(output.complex_events[0].end == 13);
 
   REQUIRE(output.complex_events[0].events.size() == 6);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[1], 0, "AMZN", 1900));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[2], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[3], 0, "AMZN", 1900));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[4], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -525,18 +502,14 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT amzn, msft FROM Stock\n"
@@ -706,18 +679,12 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
   REQUIRE(output.complex_events[0].end == 13);
 
   REQUIRE(output.complex_events[0].events.size() == 6);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[1], 0, "AMZN", 1900));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[2], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[3], 0, "AMZN", 1900));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[4], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -747,18 +714,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT amzn FROM Stock\n"
@@ -833,12 +796,10 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
@@ -883,16 +844,13 @@ TEST_CASE(
   REQUIRE(output.complex_events[2].end == 7);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1901));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[1].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[0], 0, "AMZN", 1901));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "AMZN", 1901));
 
   REQUIRE(output.complex_events[2].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[2].events[0], 0, "AMZN", 1901));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "AMZN", 1901));
 }
 
 TEST_CASE(
@@ -902,18 +860,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT msft FROM Stock\n"
@@ -988,14 +942,11 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
 
   REQUIRE(output.complex_events[1].events.size() == 2);
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
 
 TEST_CASE(
@@ -1004,18 +955,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT SELL, BUY FROM Stock\n"
@@ -1086,20 +1033,15 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 4);
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
@@ -1109,18 +1051,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT BUY FROM Stock\n"
@@ -1203,18 +1141,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT nt FROM Stock\n"
@@ -1296,18 +1230,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT nvda FROM Stock\n"
@@ -1392,18 +1322,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT BUY, SELL FROM Stock\n"
@@ -1474,20 +1400,15 @@ TEST_CASE(
   REQUIRE(output.complex_events[1].end == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
-  REQUIRE(
-    is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
 
   REQUIRE(output.complex_events[1].events.size() == 4);
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
-  REQUIRE(
-    is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
 
 TEST_CASE(
@@ -1497,18 +1418,14 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler;
 
-  auto event_type_id_1 = backend.add_event_type(
-    "SELL",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type(
-    "BUY",
-    {{"name", Types::ValueTypes::STRING_VIEW},
-     {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64}});
 
-  auto stream_type = backend.add_stream_type("Stock",
-                                             {event_type_id_1,
-                                              event_type_id_2});
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
 
   std::string string_query =
     "SELECT NONE FROM Stock\n"

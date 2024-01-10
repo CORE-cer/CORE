@@ -18,8 +18,7 @@ class ZMQMessageSender : MessageSender {
     socket.connect(connect_address);
   }
 
-  ZMQMessageSender(const std::string& connect_address,
-                   zmq::context_t& shared_context)
+  ZMQMessageSender(const std::string& connect_address, zmq::context_t& shared_context)
       : socket(shared_context, ZMQ_PUSH) {
     socket.connect(connect_address);
   }

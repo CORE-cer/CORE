@@ -13,20 +13,17 @@ struct Addition final : Value {
   Addition(const Addition& addition) noexcept
       : left(addition.clone()), right(addition.clone()) {}
 
-  Addition(std::unique_ptr<Value> left,
-           std::unique_ptr<Value> right) noexcept
+  Addition(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
-  Addition(Value*&& left, Value*&& right) noexcept
-      : left(left), right(right) {}
+  Addition(Value*&& left, Value*&& right) noexcept : left(left), right(right) {}
 
   std::string to_string() const override {
     return left->to_string() + "+" + right->to_string();
   }
 
   bool operator==(const Addition& other) const noexcept {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -42,9 +39,7 @@ struct Addition final : Value {
 
   ~Addition() noexcept override {}
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {

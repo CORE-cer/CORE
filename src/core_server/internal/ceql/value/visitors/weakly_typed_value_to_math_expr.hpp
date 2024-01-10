@@ -20,8 +20,8 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
 
   void visit(Attribute& attribute) override {
     // TODO: Add local type and Global Type.
-    math_expr = std::make_unique<CEA::NonStronglyTypedAttribute<Type>>(
-      attribute.value, catalog);
+    math_expr = std::make_unique<CEA::NonStronglyTypedAttribute<Type>>(attribute.value,
+                                                                       catalog);
   }
 
   void visit(StringLiteral& literal) override {
@@ -58,8 +58,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
       math_expr = std::make_unique<CEA::Literal<double>>(
         static_cast<double>(literal.value));
     } else {
-      assert(false
-             && "IntegerLiteral cannot be casted to a non supported type");
+      assert(false && "IntegerLiteral cannot be casted to a non supported type");
     }
   }
 
@@ -70,8 +69,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
       math_expr = std::make_unique<CEA::Literal<double>>(
         static_cast<double>(literal.value));
     } else {
-      assert(false
-             && "LongLiteral cannot be casted to a non supported type");
+      assert(false && "LongLiteral cannot be casted to a non supported type");
     }
   }
 
@@ -80,8 +78,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     addition.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Addition<Type>>(std::move(left),
-                                                      std::move(right));
+    math_expr = std::make_unique<CEA::Addition<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Division& division) override {
@@ -89,8 +86,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     division.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Division<Type>>(std::move(left),
-                                                      std::move(right));
+    math_expr = std::make_unique<CEA::Division<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Modulo& modulo) override {
@@ -98,8 +94,7 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     modulo.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Modulo<Type>>(std::move(left),
-                                                    std::move(right));
+    math_expr = std::make_unique<CEA::Modulo<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Multiplication& multiplication) override {

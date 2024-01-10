@@ -60,9 +60,8 @@ class OnlineServer {
 
   std::atomic<Types::PortNumber> next_available_port;
 
-  using HandlerType = std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>::element_type;
+  using HandlerType = std::invoke_result_t<decltype(&ResultHandlerFactoryT::create_handler),
+                                           ResultHandlerFactoryT*>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
   ResultHandlerFactoryT result_handler_factory;
@@ -77,8 +76,7 @@ class OnlineServer {
         stream_listener{backend, next_available_port++} {}
 
   void receive_stream(const Types::Stream& stream) {
-    static_assert(
-      "in memory receive_stream not supported on online server");
+    static_assert("in memory receive_stream not supported on online server");
   }
 };
 

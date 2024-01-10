@@ -10,18 +10,16 @@ namespace CORE::Internal::UnitTests::COREBackendCoordinationTests {
 
 Types::ServerResponse
 send_request(ZMQMessageDealer& dealer, Types::ClientRequest& request) {
-  std::string
-    serialized_request = CerealSerializer<Types::ClientRequest>::serialize(
-      request);
+  std::string serialized_request = CerealSerializer<Types::ClientRequest>::serialize(
+    request);
   auto serialized_response = dealer.send_and_receive(serialized_request);
-  return CerealSerializer<Types::ServerResponse>::deserialize(
-    serialized_response);
+  return CerealSerializer<Types::ServerResponse>::deserialize(serialized_response);
 }
 
-Types::EventTypeId declare_and_check_for_event(
-  Client& client,
-  std::string name,
-  std::vector<Types::AttributeInfo> attribute_info) {
+Types::EventTypeId
+declare_and_check_for_event(Client& client,
+                            std::string name,
+                            std::vector<Types::AttributeInfo> attribute_info) {
   try {
     auto id = client.declare_event_type(name, std::move(attribute_info));
     Types::EventInfo event_info_from_id = client.get_event_info(id);
@@ -36,10 +34,9 @@ Types::EventTypeId declare_and_check_for_event(
   }
 }
 
-Types::EventTypeId
-declare_and_check_for_stream(Client& client,
-                             std::string name,
-                             std::vector<Types::EventTypeId> ids) {
+Types::EventTypeId declare_and_check_for_stream(Client& client,
+                                                std::string name,
+                                                std::vector<Types::EventTypeId> ids) {
   try {
     auto id = client.declare_stream_type(name, std::move(ids));
     Types::StreamInfo stream_info_from_id = client.get_stream_info(id);
@@ -99,9 +96,7 @@ TEST_CASE(
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = declare_and_check_for_stream(client,
-                                                       "S1",
-                                                       {event_type_id_1});
+  auto stream_type_id_1 = declare_and_check_for_stream(client, "S1", {event_type_id_1});
   auto event_type_id_2 = declare_and_check_for_event(
     client,
     "Mixed",
@@ -110,29 +105,25 @@ TEST_CASE(
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
   auto stream_type_id_2 = declare_and_check_for_stream(client,
                                                        "S2",
-                                                       {event_type_id_1,
-                                                        event_type_id_2});
+                                                       {event_type_id_1, event_type_id_2});
 
   std::string query = create_query(
     "Ints[Int1 >= 20 AND Int2 >= 1] AND "
     "Mixed[Int1 <= 30 OR Double1 >= 3.0]");
-  Types::ClientRequest create_query_evaluator{
-    std::move(query), Types::ClientRequestType::AddQuery};
+  Types::ClientRequest create_query_evaluator{std::move(query),
+                                              Types::ClientRequestType::AddQuery};
 
   ZMQMessageDealer dealer("tcp://localhost:5000");
   INFO("Before creating the query evaluator");
-  Types::ServerResponse response = send_request(dealer,
-                                                create_query_evaluator);
+  Types::ServerResponse response = send_request(dealer, create_query_evaluator);
   REQUIRE(response.response_type == Types::ServerResponseType::PortNumber);
   auto port_number = CerealSerializer<Types::PortNumber>::deserialize(
     response.serialized_response_data);
   REQUIRE(port_number == 5002);
 
-  ZMQMessageSubscriber subscriber("tcp://localhost:"
-                                  + std::to_string(port_number));
+  ZMQMessageSubscriber subscriber("tcp://localhost:" + std::to_string(port_number));
   std::string message;
-  std::thread subscriber_thread = std::thread(
-    [&]() { message = subscriber.receive(); });
+  std::thread subscriber_thread = std::thread([&]() { message = subscriber.receive(); });
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   ZMQMessageSender sender("tcp://localhost:" + std::to_string(5001));
   Types::Event event_to_send{event_type_id_1,
@@ -144,8 +135,7 @@ TEST_CASE(
   INFO("Event sent");
   subscriber_thread.join();
   INFO("Subscriber thread joined. (message was received.)");
-  Types::Enumerator
-    enumerator = CerealSerializer<Types::Enumerator>::deserialize(message);
+  Types::Enumerator enumerator = CerealSerializer<Types::Enumerator>::deserialize(message);
   INFO("BEFORE echecking complex_events");
   REQUIRE(complex_events_from_enumerator(enumerator).size() == 1);
   INFO("Finished");
@@ -166,9 +156,7 @@ TEST_CASE(
     "Ints",
     {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
      Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  auto stream_type_id_1 = declare_and_check_for_stream(client,
-                                                       "S1",
-                                                       {event_type_id_1});
+  auto stream_type_id_1 = declare_and_check_for_stream(client, "S1", {event_type_id_1});
   auto event_type_id_2 = declare_and_check_for_event(
     client,
     "Mixed",
@@ -177,8 +165,7 @@ TEST_CASE(
      Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
   auto stream_type_id_2 = declare_and_check_for_stream(client,
                                                        "S2",
-                                                       {event_type_id_1,
-                                                        event_type_id_2});
+                                                       {event_type_id_1, event_type_id_2});
 
   // TODO: Maybe add the variables in the other parts of the query.
   std::vector<std::string> queries;
@@ -203,8 +190,7 @@ TEST_CASE(
   for (size_t port = 5002; port < expected_port_number; port++) {
     handlers.emplace_back(
       std::make_unique<LimitedMessageStorer>(1));  // Store one enumerator.
-    client.subscribe_to_complex_event<LimitedMessageStorer>(
-      handlers.back().get(), port);
+    client.subscribe_to_complex_event<LimitedMessageStorer>(handlers.back().get(), port);
   }
 
   INFO("Created handlers");
@@ -225,13 +211,10 @@ TEST_CASE(
   INFO("Stopped mediators and joined clients");
 
   REQUIRE(handlers[0]->storage.size() == 1);
-  REQUIRE(complex_events_from_enumerator(handlers[0]->storage[0]).size()
-          == 1);
+  REQUIRE(complex_events_from_enumerator(handlers[0]->storage[0]).size() == 1);
   REQUIRE(handlers[1]->storage.size() == 1);
-  REQUIRE(complex_events_from_enumerator(handlers[1]->storage[0]).size()
-          == 0);
+  REQUIRE(complex_events_from_enumerator(handlers[1]->storage[0]).size() == 0);
   REQUIRE(handlers[2]->storage.size() == 1);
-  REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size()
-          == 1);
+  REQUIRE(complex_events_from_enumerator(handlers[2]->storage[0]).size() == 1);
 }
 }  // namespace CORE::Internal::UnitTests::COREBackendCoordinationTests

@@ -8,8 +8,7 @@
 
 namespace CORE::Internal::CEA {
 
-class ContiguousSequencing
-    : public LogicalCEATransformer<ContiguousSequencing> {
+class ContiguousSequencing : public LogicalCEATransformer<ContiguousSequencing> {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;

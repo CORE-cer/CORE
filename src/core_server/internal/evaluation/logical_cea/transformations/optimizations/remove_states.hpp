@@ -20,15 +20,13 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
   std::vector<int64_t> mapping;
 
  public:
-  RemoveStates(std::set<NodeId> nodes_to_discard)
-      : nodes_to_discard(nodes_to_discard) {}
+  RemoveStates(std::set<NodeId> nodes_to_discard) : nodes_to_discard(nodes_to_discard) {}
 
   LogicalCEA eval(LogicalCEA&& cea) {
     assert(cea.amount_of_states >= nodes_to_discard.size());
     new_cea = LogicalCEA(cea.amount_of_states - nodes_to_discard.size());
     create_new_mapping(cea);
-    for (NodeId old_state = 0; old_state < cea.amount_of_states;
-         old_state++) {
+    for (NodeId old_state = 0; old_state < cea.amount_of_states; old_state++) {
       if (!nodes_to_discard.contains(old_state)) {
         NodeId new_state = mapping[old_state];
         assert(new_state != -1);
@@ -50,8 +48,7 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
   void create_new_mapping(LogicalCEA& cea) {
     mapping = std::vector<int64_t>(cea.amount_of_states, -1);
     int64_t new_state_id = 0;
-    for (uint64_t previous_state_id = 0;
-         previous_state_id < cea.amount_of_states;
+    for (uint64_t previous_state_id = 0; previous_state_id < cea.amount_of_states;
          previous_state_id++) {
       if (!nodes_to_discard.contains(previous_state_id)) {
         mapping[previous_state_id] = new_state_id++;
@@ -60,8 +57,7 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
     assert(new_state_id == new_cea.amount_of_states);
   }
 
-  void transcribe_transitions(NodeId new_state,
-                              std::vector<Transition> transitions) {
+  void transcribe_transitions(NodeId new_state, std::vector<Transition> transitions) {
     for (auto& transition : transitions) {
       NodeId previous_target_node = std::get<2>(transition);
       if (!nodes_to_discard.contains(previous_target_node)) {

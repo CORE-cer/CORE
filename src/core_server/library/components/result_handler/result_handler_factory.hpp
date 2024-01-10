@@ -12,8 +12,7 @@ class ResultHandlerFactory {
 };
 
 class OfflineResultHandlerFactory
-    : public ResultHandlerFactory<OfflineResultHandlerFactory,
-                                  OfflineResultHandler> {
+    : public ResultHandlerFactory<OfflineResultHandlerFactory, OfflineResultHandler> {
  public:
   std::unique_ptr<OfflineResultHandler> create_handler_impl() {
     return std::make_unique<OfflineResultHandler>();
@@ -21,14 +20,12 @@ class OfflineResultHandlerFactory
 };
 
 class OnlineResultHandlerFactory
-    : public ResultHandlerFactory<OnlineResultHandlerFactory,
-                                  OnlineResultHandler> {
+    : public ResultHandlerFactory<OnlineResultHandlerFactory, OnlineResultHandler> {
  public:
   std::atomic<Types::PortNumber>& next_available_port;
 
  public:
-  OnlineResultHandlerFactory(
-    std::atomic<Types::PortNumber>& next_available_port)
+  OnlineResultHandlerFactory(std::atomic<Types::PortNumber>& next_available_port)
       : next_available_port(next_available_port) {}
 
   std::unique_ptr<OnlineResultHandler> create_handler_impl() {

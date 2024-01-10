@@ -59,8 +59,7 @@ void subscribe_to_queries(Client& client,
                           Types::PortNumber final_port) {
   std::vector<std::unique_ptr<Printer>> handlers;
   for (size_t port = initial_port; port < final_port; port++) {
-    handlers.emplace_back(
-      std::make_unique<Printer>());  // Store one enumerator.
+    handlers.emplace_back(std::make_unique<Printer>());  // Store one enumerator.
     client.subscribe_to_complex_event<Printer>(handlers.back().get(), port);
   }
   std::cout << "Created handlers" << std::endl;

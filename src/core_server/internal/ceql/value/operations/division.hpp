@@ -13,20 +13,17 @@ struct Division final : public Value {
   Division(const Division& division) noexcept
       : left(division.left->clone()), right(division.right->clone()) {}
 
-  Division(std::unique_ptr<Value> left,
-           std::unique_ptr<Value> right) noexcept
+  Division(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}
 
-  Division(Value*&& left, Value*&& right) noexcept
-      : left(left), right(right) {}
+  Division(Value*&& left, Value*&& right) noexcept : left(left), right(right) {}
 
   std::string to_string() const override {
     return left->to_string() + "/" + right->to_string();
   }
 
   bool operator==(const Division& other) const noexcept {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Value* val) const noexcept override {
@@ -40,9 +37,7 @@ struct Division final : public Value {
     return std::make_unique<Division>(left->clone(), right->clone());
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   ~Division() noexcept override {}
 

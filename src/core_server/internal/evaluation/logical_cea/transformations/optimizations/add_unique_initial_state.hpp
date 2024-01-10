@@ -7,8 +7,7 @@
 
 namespace CORE::Internal::CEA {
 
-class AddUniqueInitialState
-    : public LogicalCEATransformer<AddUniqueInitialState> {
+class AddUniqueInitialState : public LogicalCEATransformer<AddUniqueInitialState> {
   using NodeId = LogicalCEA::NodeId;
 
  public:

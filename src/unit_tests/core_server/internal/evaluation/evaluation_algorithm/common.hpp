@@ -8,8 +8,7 @@
 #include "core_server/library/components/result_handler/result_handler.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
-class TestResultHandler
-    : public Library::Components::ResultHandler<TestResultHandler> {
+class TestResultHandler : public Library::Components::ResultHandler<TestResultHandler> {
   bool ready = false;
 
   std::condition_variable cv;

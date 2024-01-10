@@ -20,8 +20,7 @@ class Subtraction : public MathExpr<Type> {
       : left(std::move(left)), right(std::move(right)) {}
 
   std::unique_ptr<MathExpr<Type>> clone() const override {
-    return std::make_unique<Subtraction<Type>>(left->clone(),
-                                               right->clone());
+    return std::make_unique<Subtraction<Type>>(left->clone(), right->clone());
   }
 
   Type eval(RingTupleQueue::Tuple& tuple) override {

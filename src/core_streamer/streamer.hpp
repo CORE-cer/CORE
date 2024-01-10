@@ -24,7 +24,6 @@ class Streamer {
   }
 
   // TODO: Send a stream through a CSV file and an AttributesInfo vector.
-  void send_streams(std::string csv_path,
-                    std::vector<Types::AttributeInfo> attributes);
+  void send_streams(std::string csv_path, std::vector<Types::AttributeInfo> attributes);
 };
 }  // namespace CORE

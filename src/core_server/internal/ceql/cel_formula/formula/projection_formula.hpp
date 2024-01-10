@@ -11,8 +11,7 @@ namespace CORE::Internal::CEQL {
 struct ProjectionFormula : public Formula {
   std::set<std::string> variables;
 
-  ProjectionFormula(std::set<std::string>&& variables)
-      : variables(variables) {}
+  ProjectionFormula(std::set<std::string>&& variables) : variables(variables) {}
 
   ~ProjectionFormula() override = default;
 
@@ -44,8 +43,6 @@ struct ProjectionFormula : public Formula {
     return "π⟨" + variables_str + "⟩";
   }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

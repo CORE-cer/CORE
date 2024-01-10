@@ -43,8 +43,7 @@ struct StructType {
       default:
         throw std::invalid_argument("Unsupported type");
     }
-    return (size_in_bytes + sizeof(uint64_t) - 1)
-           / sizeof(uint64_t);  // Ceiling division
+    return (size_in_bytes + sizeof(uint64_t) - 1) / sizeof(uint64_t);  // Ceiling division
   }
 };
 
@@ -78,9 +77,9 @@ class TupleSchemas {
 
   const std::vector<SupportedTypes>& get_schema(uint64_t id) const {
     if (id >= schemas.size()) {
-      throw std::out_of_range(
-        "TupleSchemas::get_schema: id: " + std::to_string(id)
-        + " out of range. (size = " + std::to_string(schemas.size()) + ")");
+      throw std::out_of_range("TupleSchemas::get_schema: id: " + std::to_string(id)
+                              + " out of range. (size = " + std::to_string(schemas.size())
+                              + ")");
     }  // In the future we just return the id, no checks to increase efficiency.
     return schemas[id];
   }
@@ -107,8 +106,7 @@ class TupleSchemas {
  private:
   std::vector<uint64_t> get_positions(uint64_t id) const {
     if (id >= schemas.size()) {
-      throw std::out_of_range(
-        "TupleSchemas::get_positions: id out of range");
+      throw std::out_of_range("TupleSchemas::get_positions: id out of range");
     }
 
     // First transform the types to their respective sizes
@@ -140,8 +138,7 @@ class Tuple {
   TupleSchemas* schemas;
 
  public:
-  explicit Tuple(uint64_t* data, TupleSchemas* schemas)
-      : data(data), schemas(schemas) {}
+  explicit Tuple(uint64_t* data, TupleSchemas* schemas) : data(data), schemas(schemas) {}
 
   uint64_t id() const { return data[0]; }
 
@@ -157,8 +154,7 @@ class Tuple {
     auto compile_time_point = get_compile_time_point();
     auto duration_since_compile = timestamp() - compile_time_point;
 
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-             duration_since_compile)
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_compile)
       .count();
   }
 
@@ -171,34 +167,29 @@ class Tuple {
   }
 
   // for set comparison.
-  bool operator<(const RingTupleQueue::Tuple& other) const {
-    return data < other.data;
-  }
+  bool operator<(const RingTupleQueue::Tuple& other) const { return data < other.data; }
 
   // for set comparison.
-  bool operator==(const RingTupleQueue::Tuple& other) const {
-    return data == other.data;
-  }
+  bool operator==(const RingTupleQueue::Tuple& other) const { return data == other.data; }
 
   uint64_t* operator[](uint64_t index) {
     return &data[schemas->get_relative_positions(id())[index]];
   }
 
  private:
-  const static std::chrono::system_clock::time_point
-  get_compile_time_point() {
+  const static std::chrono::system_clock::time_point get_compile_time_point() {
     static const auto compile_time_point = []() {
       std::istringstream compile_time_stream(__DATE__ " " __TIME__);
       std::tm compile_time_tm = {};
-      compile_time_stream
-        >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
+      compile_time_stream >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
 
       if (compile_time_stream.fail()) {
-        assert(false && "The compiler should be able to give the date and time of compilation!");
+        assert(false
+               && "The compiler should be able to give the date and time of "
+                  "compilation!");
       }
 
-      return std::chrono::system_clock::from_time_t(
-        std::mktime(&compile_time_tm));
+      return std::chrono::system_clock::from_time_t(std::mktime(&compile_time_tm));
     }();
 
     return compile_time_point;

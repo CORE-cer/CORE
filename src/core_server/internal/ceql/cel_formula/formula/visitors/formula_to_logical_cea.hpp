@@ -30,8 +30,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   CEA::LogicalCEA current_cea{0};
 
   FormulaToLogicalCEA(Catalog& catalog) : catalog(catalog) {
-    for (uint64_t event_id = 0; event_id < catalog.number_of_events();
-         event_id++) {
+    for (uint64_t event_id = 0; event_id < catalog.number_of_events(); event_id++) {
       variables_to_id[catalog.get_event_info(event_id).name] = event_id;
     }
   }
@@ -44,8 +43,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    uint64_t event_type_id = catalog.get_event_info(formula.event_type_name)
-                               .id;
+    uint64_t event_type_id = catalog.get_event_info(formula.event_type_name).id;
     current_cea = CEA::LogicalCEA::atomic_cea(event_type_id);
   }
 
@@ -94,13 +92,11 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     for (const std::string& var_name : formula.variables) {
       if (!variables_to_id.contains(var_name)) {
         // TODO: Move this to client warning
-        std::cout << "Projecting on new variable, output will be empty"
-                  << std::endl;
+        std::cout << "Projecting on new variable, output will be empty" << std::endl;
         variables_to_id[var_name] = next_variable_id++;
       }
       if (variables_to_id.contains(var_name)) {
-        variables_to_project |= mpz_class(1)
-                                << variables_to_id.find(var_name)->second;
+        variables_to_project |= mpz_class(1) << variables_to_id.find(var_name)->second;
       }  // If not, then the variable was not added to any transitions,
          // so no variables should be projected.
     }

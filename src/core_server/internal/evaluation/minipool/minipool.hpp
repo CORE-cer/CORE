@@ -20,9 +20,7 @@ class MiniPool {
   MiniPool* prev_{nullptr};
 
  public:
-  MiniPool(size_t cap) : capacity_(cap) {
-    item_container.reserve(capacity_);
-  }
+  MiniPool(size_t cap) : capacity_(cap) { item_container.reserve(capacity_); }
 
   size_t capacity() const { return item_container.capacity(); }
 

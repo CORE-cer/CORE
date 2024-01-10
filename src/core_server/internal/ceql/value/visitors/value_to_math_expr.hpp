@@ -19,12 +19,10 @@ class ValueToMathExpr : public ValueVisitor {
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
-    auto attribute_id = event_info.attribute_names_to_ids.find(
-      attribute.value);
+    auto attribute_id = event_info.attribute_names_to_ids.find(attribute.value);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event "
-                               + event_info.name);
+                               + " does not exist in event " + event_info.name);
     }
     size_t id = attribute_id->second;
     Types::AttributeInfo info = event_info.attributes_info[id];
@@ -40,17 +38,15 @@ class ValueToMathExpr : public ValueVisitor {
         break;
       case Types::STRING_VIEW:
         if constexpr (std::is_same_v<Type, std::string_view>) {
-          math_expr = std::make_unique<
-            CEA::Attribute<std::string_view, std::string_view>>(id);
+          math_expr = std::make_unique<CEA::Attribute<std::string_view, std::string_view>>(
+            id);
         } else {
-          assert(false
-                 && "Global type is not std::string_view and local is.");
+          assert(false && "Global type is not std::string_view and local is.");
         }
         break;
       case Types::DATE:
         if constexpr (std::is_same_v<Type, std::time_t>) {
-          math_expr = std::make_unique<
-            CEA::Attribute<std::time_t, std::time_t>>(id);
+          math_expr = std::make_unique<CEA::Attribute<std::time_t, std::time_t>>(id);
         } else {
           assert(false && "Global type is not std::time_t and local is.");
         }
@@ -89,8 +85,7 @@ class ValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     addition.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Addition<Type>>(std::move(left),
-                                                      std::move(right));
+    math_expr = std::make_unique<CEA::Addition<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Division& division) override {
@@ -98,8 +93,7 @@ class ValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     division.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Division<Type>>(std::move(left),
-                                                      std::move(right));
+    math_expr = std::make_unique<CEA::Division<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Modulo& modulo) override {
@@ -107,8 +101,7 @@ class ValueToMathExpr : public ValueVisitor {
     auto left = std::move(math_expr);
     modulo.right->accept_visitor(*this);
     auto right = std::move(math_expr);
-    math_expr = std::make_unique<CEA::Modulo<Type>>(std::move(left),
-                                                    std::move(right));
+    math_expr = std::make_unique<CEA::Modulo<Type>>(std::move(left), std::move(right));
   }
 
   void visit(Multiplication& multiplication) override {

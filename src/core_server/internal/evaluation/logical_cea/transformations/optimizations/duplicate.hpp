@@ -40,8 +40,7 @@ class Duplicate : public LogicalCEATransformer<Duplicate> {
     }
     new_cea.initial_states = cea.initial_states
                              | (cea.initial_states << cea.amount_of_states);
-    new_cea.final_states = cea.final_states
-                           | (cea.final_states << cea.amount_of_states);
+    new_cea.final_states = cea.final_states | (cea.final_states << cea.amount_of_states);
     return std::move(new_cea);
   }
 };

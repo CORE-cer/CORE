@@ -23,7 +23,7 @@ class tECS {
   NodeManager node_manager;
 
  public:
-  tECS(uint64_t& event_time_of_expiration)
+  tECS(std::atomic<uint64_t>& event_time_of_expiration)
       : node_manager(2048, event_time_of_expiration) {
     time_reservator = &node_manager.get_time_reservator();
   }
@@ -52,8 +52,7 @@ class tECS {
    * The bottom node, also known as the terminal node, has no children and
    * tells us that we reached the end of an output
    */
-  [[nodiscard]] Node*
-  new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
+  [[nodiscard]] Node* new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
     auto out = node_manager.alloc(tuple, timestamp);
     return out;
   }
@@ -115,7 +114,7 @@ class tECS {
         break;
       }
       if (ulist[i]->max() < node->max()) {
-        pin(node);  // Se pinea el nodo que se inserta
+        pin(node);                              // Se pinea el nodo que se inserta
         ulist.insert(ulist.begin() + i, node);  // Cambio a i en vez de 1
         break;
       }
@@ -193,8 +192,7 @@ class tECS {
     //debido a que se cambio el constructor y los hijos una vez se hace alloc
     //no pierden la referencia, se saco los pin
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
-    Node* new_node = create_union_of_output_and_intermediate_node(node_1,
-                                                                  u1);
+    Node* new_node = create_union_of_output_and_intermediate_node(node_1, u1);
     return new_node;
   }
 
@@ -216,8 +214,7 @@ class tECS {
     return u1;
   }
 
-  Node*
-  create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
+  Node* create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
     // pin(node_1->left);
     Node* new_node = node_manager.alloc(node_1->left, u2);
     return new_node;

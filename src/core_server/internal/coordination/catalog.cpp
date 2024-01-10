@@ -24,9 +24,9 @@ namespace CORE::Internal {
 \_______________________/
        ___)( )(___
       (((__) (__)))       */
-[[nodiscard]] Types::EventTypeId Catalog::add_event_type(
-  std::string&& event_name,
-  std::vector<Types::AttributeInfo>&& event_attributes) noexcept {
+[[nodiscard]] Types::EventTypeId
+Catalog::add_event_type(std::string&& event_name,
+                        std::vector<Types::AttributeInfo>&& event_attributes) noexcept {
   event_name_to_id.insert(std::make_pair(event_name, events_info.size()));
   for (auto& attribute : event_attributes) {
     if (possible_attribute_types.contains(attribute.name)) {
@@ -49,8 +49,19 @@ bool Catalog::event_name_is_taken(std::string event_name) const {
   return event_name_to_id.contains(event_name);
 }
 
-Types::EventInfo Catalog::get_event_info(
-  const Types::EventTypeId event_type_id) const noexcept {
+uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
+                                      std::string attribute_name) const {
+  Types::EventInfo event_info = get_event_info(event_type_id);
+  if (auto search = event_info.attribute_names_to_ids.find(attribute_name);
+      search != event_info.attribute_names_to_ids.end()) {
+    return search->second;
+  } else {
+    throw std::runtime_error("attribute_name not found");
+  }
+}
+
+Types::EventInfo
+Catalog::get_event_info(const Types::EventTypeId event_type_id) const noexcept {
   if (event_type_id < events_info.size()) {
     return events_info[event_type_id];
   } else {
@@ -60,22 +71,19 @@ Types::EventInfo Catalog::get_event_info(
   }
 }
 
-Types::EventInfo
-Catalog::get_event_info(std::string event_name) const noexcept {
+Types::EventInfo Catalog::get_event_info(std::string event_name) const noexcept {
   auto got = event_name_to_id.find(event_name);
   if (got != event_name_to_id.end()) {
     return events_info[got->second];
   } else {
-    std::cout << "WARNING: Event name not found, this shoult not happend"
-              << std::endl;
+    std::cout << "WARNING: Event name not found, this shoult not happend" << std::endl;
     // EventTypeId not found. Return an empty vector
     // maybe in the future, we will want to raise an exception.
     return {};
   }
 }
 
-const std::vector<Types::EventInfo>&
-Catalog::get_all_events_info() const noexcept {
+const std::vector<Types::EventInfo>& Catalog::get_all_events_info() const noexcept {
   return events_info;
 }
 
@@ -91,9 +99,9 @@ Catalog::get_all_events_info() const noexcept {
     \ (    (   )
      \_)    ) /
            (_/ */
-[[nodiscard]] Types::StreamTypeId Catalog::add_stream_type(
-  std::string stream_name,
-  std::vector<Types::EventTypeId>&& stream_event_types) noexcept {
+[[nodiscard]] Types::StreamTypeId
+Catalog::add_stream_type(std::string stream_name,
+                         std::vector<Types::EventTypeId>&& stream_event_types) noexcept {
   // We assume the stream_name is unique and event_types have valid
   // ids.
   stream_name_to_id.insert(std::make_pair(stream_name, streams_info.size()));
@@ -104,9 +112,8 @@ Catalog::get_all_events_info() const noexcept {
     // validated elsewhere
     stream_events_info.push_back(get_event_info(id));
   }
-  streams_info.push_back(Types::StreamInfo(streams_info.size(),
-                                           stream_name,
-                                           std::move(stream_events_info)));
+  streams_info.push_back(
+    Types::StreamInfo(streams_info.size(), stream_name, std::move(stream_events_info)));
   return streams_info.size() - 1;
 }
 
@@ -114,8 +121,8 @@ bool Catalog::stream_name_is_taken(std::string stream_name) const noexcept {
   return stream_name_to_id.contains(stream_name);
 }
 
-Types::StreamInfo Catalog::get_stream_info(
-  const Types::StreamTypeId stream_type_id) const noexcept {
+Types::StreamInfo
+Catalog::get_stream_info(const Types::StreamTypeId stream_type_id) const noexcept {
   if (stream_type_id < streams_info.size()) {
     return streams_info[stream_type_id];
   } else {
@@ -126,22 +133,19 @@ Types::StreamInfo Catalog::get_stream_info(
   }
 }
 
-Types::StreamInfo
-Catalog::get_stream_info(std::string stream_name) const noexcept {
+Types::StreamInfo Catalog::get_stream_info(std::string stream_name) const noexcept {
   auto got = stream_name_to_id.find(stream_name);
   if (got != stream_name_to_id.end()) {
     return streams_info[got->second];
   } else {
-    std::cout << "WARNING: stream name not found, this shoult not happend"
-              << std::endl;
+    std::cout << "WARNING: stream name not found, this shoult not happend" << std::endl;
     // EventTypeId not found. Return an empty vector
     // maybe in the future, we will want to raise an exception.
     return {};
   }
 }
 
-const std::vector<Types::StreamInfo>&
-Catalog::get_all_streams_info() const noexcept {
+const std::vector<Types::StreamInfo>& Catalog::get_all_streams_info() const noexcept {
   return streams_info;
 }
 
@@ -164,8 +168,7 @@ Types::QueryInfoId Catalog::add_query(Types::QueryInfo query_info) noexcept {
   return queries_info.size() - 1;
 }
 
-Types::QueryInfo
-Catalog::get_query_info(Types::QueryInfoId query_info_id) const noexcept {
+Types::QueryInfo Catalog::get_query_info(Types::QueryInfoId query_info_id) const noexcept {
   if (query_info_id < queries_info.size()) {
     return queries_info[query_info_id];
   } else {
@@ -175,13 +178,12 @@ Catalog::get_query_info(Types::QueryInfoId query_info_id) const noexcept {
   }
 }
 
-const std::vector<Types::QueryInfo>&
-Catalog::get_all_query_infos() const noexcept {
+const std::vector<Types::QueryInfo>& Catalog::get_all_query_infos() const noexcept {
   return queries_info;
 }
 
-std::set<Types::ValueTypes> Catalog::get_possible_attribute_types(
-  std::string attribute_name) const noexcept {
+std::set<Types::ValueTypes>
+Catalog::get_possible_attribute_types(std::string attribute_name) const noexcept {
   auto iter = possible_attribute_types.find(attribute_name);
   if (iter != possible_attribute_types.end()) {
     return iter->second;
@@ -190,8 +192,8 @@ std::set<Types::ValueTypes> Catalog::get_possible_attribute_types(
   }
 }
 
-std::set<Types::EventTypeId> Catalog::get_compatible_event_types(
-  std::string attribute_name) const noexcept {
+std::set<Types::EventTypeId>
+Catalog::get_compatible_event_types(std::string attribute_name) const noexcept {
   auto iter = event_types_with_attribute.find(attribute_name);
   if (iter != event_types_with_attribute.end()) {
     return iter->second;
@@ -200,8 +202,7 @@ std::set<Types::EventTypeId> Catalog::get_compatible_event_types(
   }
 }
 
-uint64_t Catalog::add_type_to_schema(
-  std::vector<Types::AttributeInfo>& event_attributes) {
+uint64_t Catalog::add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes) {
   std::vector<RingTupleQueue::SupportedTypes> converted_types;
   for (auto type : event_attributes) {
     switch (type.value_type) {
@@ -215,8 +216,7 @@ uint64_t Catalog::add_type_to_schema(
         converted_types.push_back(RingTupleQueue::SupportedTypes::BOOL);
         break;
       case Types::STRING_VIEW:
-        converted_types.push_back(
-          RingTupleQueue::SupportedTypes::STRING_VIEW);
+        converted_types.push_back(RingTupleQueue::SupportedTypes::STRING_VIEW);
         break;
       case Types::DATE:
         converted_types.push_back(RingTupleQueue::SupportedTypes::DATE);
@@ -228,8 +228,7 @@ uint64_t Catalog::add_type_to_schema(
   return tuple_schemas.add_schema(std::move(converted_types));
 }
 
-Types::Enumerator
-Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
+Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
@@ -259,8 +258,8 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
   return {start, end, std::move(converted_events)};
 }
 
-Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info,
-                                     RingTupleQueue::Tuple& tuple) {
+Types::Event
+Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) {
   assert(tuple.id() == event_info.id);
   std::vector<std::shared_ptr<Types::Value>> values;
   for (auto i = 0; i < event_info.attributes_info.size(); i++) {
@@ -280,8 +279,8 @@ Types::Event Catalog::tuple_to_event(Types::EventInfo& event_info,
           RingTupleQueue::Value<bool>(tuple[i]).get());
         break;
       case Types::ValueTypes::STRING_VIEW:
-        val = std::make_shared<Types::StringValue>(std::string(
-          RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
+        val = std::make_shared<Types::StringValue>(
+          std::string(RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
         break;
       case Types::ValueTypes::DATE:
         val = std::make_shared<Types::DateValue>(

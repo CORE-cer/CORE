@@ -38,8 +38,7 @@ struct InRangePredicate : public Predicate {
   }
 
   bool operator==(const InRangePredicate& other) const {
-    return left->equals(other.left.get())
-           && lower_bound->equals(other.lower_bound.get())
+    return left->equals(other.left.get()) && lower_bound->equals(other.lower_bound.get())
            && upper_bound->equals(other.upper_bound.get());
   }
 
@@ -53,13 +52,11 @@ struct InRangePredicate : public Predicate {
   bool is_constant() const override { return false; }
 
   std::string to_string() const override {
-    return left->to_string() + " in range (" + lower_bound->to_string()
-           + "," + upper_bound->to_string() + ")";
+    return left->to_string() + " in range (" + lower_bound->to_string() + ","
+           + upper_bound->to_string() + ")";
   }
 
-  void accept_visitor(PredicateVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(PredicateVisitor& visitor) override { visitor.visit(*this); }
 };
 
 }  // namespace CORE::Internal::CEQL

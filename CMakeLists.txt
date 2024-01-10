@@ -123,21 +123,17 @@ target_link_libraries(online_server PRIVATE core)
 
 
 
-add_executable(offline_simulation1 src/targets/online/simulation1.cpp)
-add_executable(offline_simulation2 src/targets/online/simulation2.cpp)
-add_executable(offline_polkura_example src/targets/online/polkura_example/polkura.cpp)
-add_executable(offline_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
-add_executable(offline_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
-add_executable(offline_client src/targets/online/client.cpp)
-add_executable(offline_server src/targets/online/server.cpp)
+add_executable(offline_simulation1 src/targets/offline/simulation1.cpp)
+add_executable(offline_simulation2 src/targets/offline/simulation2.cpp)
+add_executable(offline_polkura_example src/targets/offline/polkura_example/polkura.cpp)
+add_executable(offline_stocks_example src/targets/offline/stocks_example/stocks_example.cpp)
+add_executable(offline_taxi_example src/targets/offline/taxi_example/taxi_example.cpp)
 
 target_link_libraries(offline_simulation1 PRIVATE core)
 target_link_libraries(offline_simulation2 PRIVATE core)
 target_link_libraries(offline_polkura_example PRIVATE core)
 target_link_libraries(offline_stocks_example PRIVATE core)
 target_link_libraries(offline_taxi_example PRIVATE core)
-target_link_libraries(offline_client PRIVATE core)
-target_link_libraries(offline_server PRIVATE core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:

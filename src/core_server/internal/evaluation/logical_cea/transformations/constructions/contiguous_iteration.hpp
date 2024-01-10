@@ -4,8 +4,7 @@
 
 namespace CORE::Internal::CEA {
 
-class ContiguousIteration
-    : public LogicalCEATransformer<ContiguousIteration> {
+class ContiguousIteration : public LogicalCEATransformer<ContiguousIteration> {
  public:
   LogicalCEA eval(LogicalCEA&& cea) {
     for (auto final_state : cea.get_final_states())

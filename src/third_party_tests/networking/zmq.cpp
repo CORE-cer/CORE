@@ -41,13 +41,10 @@ TEST_CASE(
   "MessageRouterRequesterTest - messages are sent specifically to each "
   "listener",
   "[zmq]") {
-  auto transformer = [](const std::string& message) {
-    return "Transformed: " + message;
-  };
+  auto transformer = [](const std::string& message) { return "Transformed: " + message; };
 
   using TransformFunc = std::function<std::string(const std::string&)>;
-  ZMQMessageRouter<TransformFunc> router("tcp://*:5555",
-                                         std::move(transformer));
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
@@ -86,8 +83,7 @@ TEST_CASE(
   }
 }
 
-TEST_CASE("A broadcast message is received exactly as it was sent.",
-          "[zmq]") {
+TEST_CASE("A broadcast message is received exactly as it was sent.", "[zmq]") {
   std::string sent_message1 = "Hello World 1";
   std::vector<std::string> received_messages;
 
@@ -119,13 +115,10 @@ TEST_CASE(
   "MessageRouterRequesterTest - messages are sent specifically to each "
   "listener: 100 listeners 1 router",
   "[zmq]") {
-  auto transformer = [](const std::string& message) {
-    return "Transformed: " + message;
-  };
+  auto transformer = [](const std::string& message) { return "Transformed: " + message; };
 
   using TransformFunc = std::function<std::string(const std::string&)>;
-  ZMQMessageRouter<TransformFunc> router("tcp://*:5555",
-                                         std::move(transformer));
+  ZMQMessageRouter<TransformFunc> router("tcp://*:5555", std::move(transformer));
 
   std::thread router_thread([&router]() { router.start(); });
 
@@ -208,8 +201,7 @@ TEST_CASE(
   }
 }
 
-TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
-          "[zmq]") {
+TEST_CASE("A sent message is received exactly as it was sent, 100 senders", "[zmq]") {
   static const int amount_of_threads = 100;
   std::string sent_message = "Hello World";
   std::vector<std::string> received_messages;
@@ -245,8 +237,7 @@ TEST_CASE("A sent message is received exactly as it was sent, 100 senders",
     sent_messages.push_back(message_to_send);
   }
 
-  REQUIRE_THAT(sent_messages,
-               Catch::Matchers::UnorderedEquals(received_messages));
+  REQUIRE_THAT(sent_messages, Catch::Matchers::UnorderedEquals(received_messages));
 }
 
 }  // namespace CORE::Internal::ThirdPartyTests

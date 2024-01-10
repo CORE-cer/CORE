@@ -20,8 +20,7 @@ struct Enumerator {
 
   Enumerator() noexcept = default;
 
-  Enumerator(std::vector<ComplexEvent>&& events) noexcept
-      : complex_events(events) {}
+  Enumerator(std::vector<ComplexEvent>&& events) noexcept : complex_events(events) {}
 
   ~Enumerator() noexcept = default;
 

@@ -12,8 +12,7 @@ struct OrFormula : public Formula {
   std::unique_ptr<Formula> left;
   std::unique_ptr<Formula> right;
 
-  OrFormula(std::unique_ptr<Formula>&& left,
-            std::unique_ptr<Formula>&& right)
+  OrFormula(std::unique_ptr<Formula>&& left, std::unique_ptr<Formula>&& right)
       : left(std::move(left)), right(std::move(right)) {}
 
   ~OrFormula() override = default;
@@ -23,8 +22,7 @@ struct OrFormula : public Formula {
   }
 
   bool operator==(const OrFormula& other) const {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Formula* other) const override {
@@ -38,8 +36,6 @@ struct OrFormula : public Formula {
     return left->to_string() + " OR " + right->to_string();
   }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

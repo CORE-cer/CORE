@@ -19,8 +19,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
  public:
   CEQL::Where get_parsed_where() { return CEQL::Where(std::move(formula)); }
 
-  virtual std::any
-  visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
+  virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting Where clause will identify all streams.
     auto cel_formula_ctx = ctx->cel_formula();
     visit(cel_formula_ctx);
@@ -42,22 +41,20 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNon_contiguous_iteration_cel_formula(
-    CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext* ctx)
-    override {
+    CEQLQueryParser::Non_contiguous_iteration_cel_formulaContext* ctx) override {
     visit(ctx->cel_formula());
-    formula = std::make_unique<CEQL::NonContiguousIterationFormula>(
-      std::move(formula));
+    formula = std::make_unique<CEQL::NonContiguousIterationFormula>(std::move(formula));
     return {};
   }
 
   virtual std::any visitNon_contiguous_sequencing_cel_formula(
-    CEQLQueryParser::Non_contiguous_sequencing_cel_formulaContext* ctx)
-    override {
+    CEQLQueryParser::Non_contiguous_sequencing_cel_formulaContext* ctx) override {
     visit(ctx->cel_formula()[0]);
     auto first_formula = std::move(formula);
     visit(ctx->cel_formula()[1]);
-    formula = std::make_unique<CEQL::NonContiguousSequencingFormula>(
-      std::move(first_formula), std::move(formula));
+    formula = std::make_unique<CEQL::NonContiguousSequencingFormula>(std::move(
+                                                                       first_formula),
+                                                                     std::move(formula));
     return {};
   }
 
@@ -66,8 +63,8 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     visit(ctx->cel_formula()[0]);
     auto first_formula = std::move(formula);
     visit(ctx->cel_formula()[1]);
-    formula = std::make_unique<CEQL::ContiguousSequencingFormula>(
-      std::move(first_formula), std::move(formula));
+    formula = std::make_unique<CEQL::ContiguousSequencingFormula>(std::move(first_formula),
+                                                                  std::move(formula));
     return {};
   }
 
@@ -81,20 +78,19 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitFilter_cel_formula(
-    CEQLQueryParser::Filter_cel_formulaContext* ctx) override {
+  virtual std::any
+  visitFilter_cel_formula(CEQLQueryParser::Filter_cel_formulaContext* ctx) override {
     visit(ctx->cel_formula());
     filter_visitor.visit(ctx->filter());
-    formula = std::make_unique<CEQL::FilterFormula>(
-      std::move(formula), filter_visitor.get_parsed_filter());
+    formula = std::make_unique<CEQL::FilterFormula>(std::move(formula),
+                                                    filter_visitor.get_parsed_filter());
     return {};
   }
 
   virtual std::any visitContiguous_iteration_cel_formula(
     CEQLQueryParser::Contiguous_iteration_cel_formulaContext* ctx) override {
     visit(ctx->cel_formula());
-    formula = std::make_unique<CEQL::ContiguousIterationFormula>(
-      std::move(formula));
+    formula = std::make_unique<CEQL::ContiguousIterationFormula>(std::move(formula));
     return {};
   }
 };

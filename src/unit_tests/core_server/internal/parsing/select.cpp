@@ -9,8 +9,7 @@
 
 namespace CORE::Internal::CEQL::UnitTests {
 
-std::string
-create_select_query(std::string strategy, std::string variable_names) {
+std::string create_select_query(std::string strategy, std::string variable_names) {
   // clang-format off
   return "SELECT " + strategy + " " + variable_names + "\n"
          "FROM S, S2\n"
@@ -52,8 +51,7 @@ TEST_CASE("Select captures star correctly", "[Select, list_of_variables]") {
   REQUIRE(!parse_select(create_select_query("ALL", "T")).is_star);
 }
 
-TEST_CASE("Select captures list_of_variables correctly",
-          "[Select, list_of_variables]") {
+TEST_CASE("Select captures list_of_variables correctly", "[Select, list_of_variables]") {
   ProjectionFormula* formula;
   std::set<std::string> vars;
   bool condition;

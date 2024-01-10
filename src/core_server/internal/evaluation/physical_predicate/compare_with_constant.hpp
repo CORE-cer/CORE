@@ -15,9 +15,7 @@ class CompareWithConstant : public PhysicalPredicate {
   ValueType constant_val;
 
  public:
-  CompareWithConstant(uint64_t event_type_id,
-                      size_t pos_to_compare,
-                      ValueType constant_val)
+  CompareWithConstant(uint64_t event_type_id, size_t pos_to_compare, ValueType constant_val)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
         constant_val(constant_val) {}
@@ -54,8 +52,7 @@ class CompareWithConstant : public PhysicalPredicate {
   struct has_to_string : std::false_type {};
 
   template <typename T>
-  struct has_to_string<T,
-                       std::void_t<decltype(std::to_string(std::declval<T>()))>>
+  struct has_to_string<T, std::void_t<decltype(std::to_string(std::declval<T>()))>>
       : std::true_type {};
 
   template <typename T>
@@ -64,26 +61,19 @@ class CompareWithConstant : public PhysicalPredicate {
   std::string to_string() const override {
     if constexpr (!has_to_string_v<ValueType>) {
       if constexpr (Comp == ComparisonType::EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] == some chrono";
+        return "Event[" + std::to_string(pos_to_compare) + "] == some chrono";
       else if constexpr (Comp == ComparisonType::GREATER)
-        return "Event[" + std::to_string(pos_to_compare) + "] > "
-               + "some chrono";
+        return "Event[" + std::to_string(pos_to_compare) + "] > " + "some chrono";
       else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] >= some chrono";
+        return "Event[" + std::to_string(pos_to_compare) + "] >= some chrono";
       else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] <= some chrono";
+        return "Event[" + std::to_string(pos_to_compare) + "] <= some chrono";
       else if constexpr (Comp == ComparisonType::LESS)
-        return "Event[" + std::to_string(pos_to_compare) + "] < "
-               + "some chrono";
+        return "Event[" + std::to_string(pos_to_compare) + "] < " + "some chrono";
       else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] != some chrono ";
+        return "Event[" + std::to_string(pos_to_compare) + "] != some chrono ";
       else
-        assert(false
-               && "to_string() not implemented for some ComparisonType");
+        assert(false && "to_string() not implemented for some ComparisonType");
     } else {
       if constexpr (Comp == ComparisonType::EQUALS)
         return "Event[" + std::to_string(pos_to_compare)
@@ -104,8 +94,7 @@ class CompareWithConstant : public PhysicalPredicate {
         return "Event[" + std::to_string(pos_to_compare)
                + "] != " + std::to_string(constant_val);
       else
-        assert(false
-               && "to_string() not implemented for some ComparisonType");
+        assert(false && "to_string() not implemented for some ComparisonType");
     }
   }
 };

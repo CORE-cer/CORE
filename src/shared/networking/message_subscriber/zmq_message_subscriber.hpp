@@ -22,8 +22,7 @@ class ZMQMessageSubscriber {
     zmq::message_t zmq_message;
     auto result = socket.recv(zmq_message);
     if (result) {
-      return std::string(static_cast<char*>(zmq_message.data()),
-                         zmq_message.size());
+      return std::string(static_cast<char*>(zmq_message.data()), zmq_message.size());
     } else {
       throw std::runtime_error("No message available");
     }
@@ -40,8 +39,7 @@ class ZMQMessageSubscriber {
 
     if (result) {
       return std::optional<std::string>(
-        std::string(static_cast<char*>(zmq_message.data()),
-                    zmq_message.size()));
+        std::string(static_cast<char*>(zmq_message.data()), zmq_message.size()));
     } else {
       return std::nullopt;
     }

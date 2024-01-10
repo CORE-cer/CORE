@@ -16,8 +16,6 @@ class QueryTransformer {
     return static_cast<Derived*>(this)->eval(std::move(query));
   }
 
-  Query eval(Query&& query) {
-    throw std::logic_error("eval not implemented");
-  }
+  Query eval(Query&& query) { throw std::logic_error("eval not implemented"); }
 };
 }  // namespace CORE::Internal::CEQL

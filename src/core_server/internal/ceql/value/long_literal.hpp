@@ -15,9 +15,7 @@ struct LongLiteral final : public Value {
 
   ~LongLiteral() noexcept override {}
 
-  std::string to_string() const noexcept override {
-    return std::to_string(value);
-  }
+  std::string to_string() const noexcept override { return std::to_string(value); }
 
   bool operator==(const LongLiteral& other) const noexcept {
     return value == other.value;
@@ -34,9 +32,7 @@ struct LongLiteral final : public Value {
     return std::make_unique<LongLiteral>(value);
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {

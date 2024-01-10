@@ -19,18 +19,15 @@ struct NonContiguousSequencingFormula : public Formula {
   ~NonContiguousSequencingFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<NonContiguousSequencingFormula>(left->clone(),
-                                                            right->clone());
+    return std::make_unique<NonContiguousSequencingFormula>(left->clone(), right->clone());
   }
 
   bool operator==(const NonContiguousSequencingFormula& other) const {
-    return left->equals(other.left.get())
-           && right->equals(other.right.get());
+    return left->equals(other.left.get()) && right->equals(other.right.get());
   }
 
   bool equals(Formula* other) const override {
-    if (auto other_formula = dynamic_cast<NonContiguousSequencingFormula*>(
-          other)) {
+    if (auto other_formula = dynamic_cast<NonContiguousSequencingFormula*>(other)) {
       return *this == *other_formula;
     } else
       return false;
@@ -40,8 +37,6 @@ struct NonContiguousSequencingFormula : public Formula {
     return "(" + left->to_string() + ";" + right->to_string() + ")";
   }
 
-  void accept_visitor(FormulaVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

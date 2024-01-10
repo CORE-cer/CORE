@@ -70,8 +70,7 @@ class State {
   }
 
   States next(mpz_class evaluation, uint64_t& n_hits) {
-    assert(next_evictable_state == nullptr
-           && prev_evictable_state == nullptr);
+    assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
       StatesData states_data = it->second;
@@ -87,14 +86,12 @@ class State {
 
   void add_transition(mpz_class evaluation, States next_states) {
     assert(!transitions.contains(evaluation));
-    assert(next_states.unmarked_state != nullptr
-           && next_states.marked_state != nullptr);
-    transitions.insert(
-      std::make_pair(evaluation,
-                     StatesData{next_states.marked_state->id,
-                                next_states.marked_state,
-                                next_states.unmarked_state->id,
-                                next_states.unmarked_state}));
+    assert(next_states.unmarked_state != nullptr && next_states.marked_state != nullptr);
+    transitions.insert(std::make_pair(evaluation,
+                                      StatesData{next_states.marked_state->id,
+                                                 next_states.marked_state,
+                                                 next_states.unmarked_state->id,
+                                                 next_states.unmarked_state}));
   }
 
   bool is_evictable(const uint64_t& current_iteration) {
@@ -102,8 +99,7 @@ class State {
   }
 
   void set_evictable(State* const tail_evictable_state) {
-    assert(next_evictable_state == nullptr
-           && prev_evictable_state == nullptr);
+    assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     next_evictable_state = tail_evictable_state;
   }
 

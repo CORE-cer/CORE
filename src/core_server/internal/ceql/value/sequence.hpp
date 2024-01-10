@@ -19,8 +19,7 @@ struct Sequence final : public Value {
 
   ~Sequence() noexcept override {}
 
-  Sequence(std::unique_ptr<Value>&& bound, Type type) noexcept
-      : type(type) {
+  Sequence(std::unique_ptr<Value>&& bound, Type type) noexcept : type(type) {
     switch (type) {
       case UPPER_BOUND:
         upper_bound = std::move(bound);
@@ -122,8 +121,6 @@ struct Sequence final : public Value {
     return std::make_unique<Sequence>(*this);
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 };
 }  // namespace CORE::Internal::CEQL

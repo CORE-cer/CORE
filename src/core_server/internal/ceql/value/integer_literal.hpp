@@ -14,17 +14,14 @@ struct IntegerLiteral final : public Value {
 
   ~IntegerLiteral() noexcept {}
 
-  std::string to_string() const noexcept override {
-    return std::to_string(this->value);
-  }
+  std::string to_string() const noexcept override { return std::to_string(this->value); }
 
   bool operator==(const IntegerLiteral& other) const noexcept {
     return value == other.value;
   }
 
   bool equals(Value* val) const noexcept override {
-    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(
-          val)) {
+    if (IntegerLiteral* integer_literal = dynamic_cast<IntegerLiteral*>(val)) {
       return *this == *integer_literal;
     } else
       return false;
@@ -34,9 +31,7 @@ struct IntegerLiteral final : public Value {
     return std::make_unique<IntegerLiteral>(value);
   }
 
-  void accept_visitor(ValueVisitor& visitor) override {
-    visitor.visit(*this);
-  }
+  void accept_visitor(ValueVisitor& visitor) override { visitor.visit(*this); }
 
   template <class Archive>
   void serialize(Archive& archive) {

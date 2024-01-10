@@ -22,8 +22,7 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   memcpy(&data[4], &bool_var, sizeof(bool));
 
   SECTION("Schema creation and retrieval") {
-    auto id = schema.add_schema(
-      {SupportedTypes::INT64, SupportedTypes::DOUBLE});
+    auto id = schema.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE});
     REQUIRE(id == 0);
     auto retSchema = schema.get_schema(id);
     REQUIRE(retSchema[0] == SupportedTypes::INT64);

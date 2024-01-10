@@ -34,9 +34,8 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
   }
 
   SECTION("string indexing") {
-    auto id = schemas.add_schema({SupportedTypes::INT64,
-                                  SupportedTypes::STRING_VIEW,
-                                  SupportedTypes::BOOL});
+    auto id = schemas.add_schema(
+      {SupportedTypes::INT64, SupportedTypes::STRING_VIEW, SupportedTypes::BOOL});
     uint64_t* data = ring_tuple_queue.start_tuple(id);
     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
     *integer_ptr = -10;
@@ -92,8 +91,7 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     }
 
     auto last_tuple_in_fist_buffer = ring_tuple_queue.get_tuple(datas[32]);
-    ring_tuple_queue.update_overwrite_timepoint(
-      last_tuple_in_fist_buffer.timestamp());
+    ring_tuple_queue.update_overwrite_timepoint(last_tuple_in_fist_buffer.timestamp());
 
     // Now the first buffer can be recycled.
     for (int i = 66; i < 99; i++) {

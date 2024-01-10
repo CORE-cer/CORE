@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdlib>
 
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
@@ -21,7 +22,7 @@ class NodeManager {
  public:
   size_t amount_of_nodes_used{0};
   size_t amount_of_recycled_nodes{0};
-  uint64_t& expiration_time;
+  std::atomic<uint64_t>& expiration_time;
 
  private:
   NodePool* minipool_head = nullptr;
@@ -29,7 +30,7 @@ class NodeManager {
   TimeListManager time_list_manager;
 
  public:
-  NodeManager(size_t starting_size, uint64_t& event_time_of_expiration)
+  NodeManager(size_t starting_size, std::atomic<uint64_t>& event_time_of_expiration)
       : minipool_head(new NodePool(starting_size)),
         recyclable_node_head(nullptr),
         time_list_manager(*this),
@@ -57,8 +58,7 @@ class NodeManager {
 
   size_t amount_of_nodes_allocated() const {
     size_t amount = 0;
-    for (NodePool* mpool = minipool_head; mpool != nullptr;
-         mpool = mpool->prev())
+    for (NodePool* mpool = minipool_head; mpool != nullptr; mpool = mpool->prev())
       amount += mpool->capacity();
     return amount;
   }
@@ -100,9 +100,8 @@ class NodeManager {
       return nullptr;
     }
     if (recyclable_node_head == nullptr) {
-      if (time_list_manager.remove_a_dead_node_if_possible(expiration_time)) {
-        while (
-          time_list_manager.remove_a_dead_node_if_possible(expiration_time))
+      if (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load())) {
+        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()))
           ;
         if (recyclable_node_head != nullptr) {
           return get_node_to_recycle();
@@ -164,8 +163,7 @@ class NodeManager {
   std::string print_free_node_list() {
     std::string out;
     out += "Free memory list: ";
-    for (Node* node = recyclable_node_head; node != nullptr;
-         node = node->next_free_node) {
+    for (Node* node = recyclable_node_head; node != nullptr; node = node->next_free_node) {
       // Transform the node pointer to string
       std::stringstream ss;
       ss << node;
