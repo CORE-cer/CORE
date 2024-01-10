@@ -45,7 +45,7 @@ void do_declarations(Client& client) {
   client.declare_stream_type("S", std::move(event_types));
 }
 
-Types::PortNumber create_queries(Client& client) {
+void create_queries(Client& client) {
   std::vector<std::string> queries;
   // clang-format off
   queries.push_back(
@@ -55,27 +55,12 @@ Types::PortNumber create_queries(Client& client) {
     "FILTER ( (BatteryVoltage[value > 5.5 or value < 4.5] OR a2[value > 4]))\n");
   // clang-format on
 
-  Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    assert(port_number == final_port_number);
-    final_port_number++;
+    assert(port_number == 0);
   }
 
   std::cout << "Created queries" << std::endl;
-  return final_port_number;
-}
-
-void subscribe_to_queries(Client& client,
-                          Types::PortNumber initial_port,
-                          Types::PortNumber final_port) {
-  std::vector<std::unique_ptr<Printer>> handlers;
-  for (size_t port = initial_port; port < final_port; port++) {
-    std::cout << "Subscribing to port: " << port << std::endl;
-    handlers.emplace_back(std::make_unique<Printer>());  // Store one enumerator.
-    client.subscribe_to_complex_event<Printer>(handlers.back().get(), port);
-  }
-  std::cout << "Created handlers" << std::endl;
 }
 
 void send_a_stream(PolkuraData::Data data) {
@@ -98,9 +83,7 @@ int main(int argc, char** argv) {
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
-    Types::PortNumber initial_port_number = 5002;
-    Types::PortNumber final_port_number = create_queries(client);
-    subscribe_to_queries(client, initial_port_number, final_port_number);
+    create_queries(client);
 
     for (int i = 0; i < PolkuraData::stream.size(); i++) {
       send_a_stream(PolkuraData::stream[i]);

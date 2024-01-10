@@ -6,8 +6,6 @@
 
 using namespace CORE;
 
-using namespace CORE;
-
 std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
@@ -33,7 +31,7 @@ void do_declarations(Client& client) {
   client.declare_stream_type("S2", {event_type_id_1, event_type_id_2});
 }
 
-Types::PortNumber create_queries(Client& client) {
+void create_queries(Client& client) {
   std::vector<std::string> queries;
   queries.push_back(
     create_query("Ints[Int1 >= 20 AND Int2 >= 1] AND "
@@ -48,32 +46,18 @@ Types::PortNumber create_queries(Client& client) {
   Types::PortNumber final_port_number = 5002;
   for (auto& query : queries) {
     auto port_number = client.add_query(query);
-    assert(port_number == final_port_number);
-    final_port_number++;
+    assert(port_number == 0);
   }
 
   std::cout << "Created queries" << std::endl;
-  return final_port_number;
 }
 
-void subscribe_to_queries(Client& client,
-                          Types::PortNumber initial_port,
-                          Types::PortNumber final_port) {
-  std::vector<std::unique_ptr<DummyHandler>> handlers;
-  for (size_t port = initial_port; port <= final_port; port++) {
-    std::cout << "Subscribing to port: " << port << std::endl;
-    handlers.emplace_back(std::make_unique<DummyHandler>());  // Store one enumerator.
-    client.subscribe_to_complex_event<DummyHandler>(handlers.back().get(), port);
-  }
-  std::cout << "Created handlers" << std::endl;
-}
-
-void send_a_stream() {
-  Streamer streamer("tcp://localhost", 5001);
+void send_a_stream(Library::OfflineServer& server) {
+  ZoneScoped;
   Types::Event event_to_send{0,
                              {std::make_shared<Types::IntValue>(20),
                               std::make_shared<Types::IntValue>(2)}};
-  streamer.send_stream(0, event_to_send);
+  server.receive_stream({0, {event_to_send}});
 }
 
 int main(int argc, char** argv) {
@@ -89,20 +73,16 @@ int main(int argc, char** argv) {
     Client client{"tcp://localhost", 5000};
 
     do_declarations(client);
-    Types::PortNumber initial_port_number = 5002;
-    Types::PortNumber final_port_number = create_queries(client);
-    subscribe_to_queries(client, initial_port_number, final_port_number);
+    create_queries(client);
 
     std::cout << "Sending " + std::to_string(amount_of_messages) + " streams" << std::endl;
     for (int i = 0; i < amount_of_messages; i++) {
-      send_a_stream();
+      send_a_stream(server);
     }
     std::cout << "Finished sending streams" << std::endl;
 
     client.stop_all_subscriptions();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-    send_a_stream();
 
     std::cout << "Joining threads" << std::endl;
 
