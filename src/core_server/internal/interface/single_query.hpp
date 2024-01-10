@@ -97,8 +97,8 @@ class SingleQuery {
   void stop() {
     try {
       ZMQMessageSender sender(receiver_address, receiver.get_context());
-      sender.send("STOP");
       stop_condition = true;
+      sender.send("STOP");
       worker_thread.join();
     } catch (std::exception& e) {
       std::cout << "Exception: " << e.what() << std::endl;
