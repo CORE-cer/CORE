@@ -15,7 +15,7 @@ struct Query {
   Where where;
   PartitionBy partition_by;  // TODO
   Within within;
-  ConsumeBy consume_by;  // TODO
+  ConsumeBy consume_by;
 
   Query(Select&& select,
         From&& from,
