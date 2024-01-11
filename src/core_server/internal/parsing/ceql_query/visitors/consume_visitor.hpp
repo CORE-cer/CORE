@@ -20,17 +20,17 @@ class ConsumeByVisitor : public CEQLQueryParserBaseVisitor {
     return {};  // Only interested in stream names
   }
 
-  virtual std::any visitCp_any(CEQLQueryParser::Cp_anyContext *ctx) override {
+  virtual std::any visitCp_any(CEQLQueryParser::Cp_anyContext* ctx) override {
     policy = CEQL::ConsumeBy::ConsumptionPolicy::ANY;
     return {};
   }
 
-  virtual std::any visitCp_partition(CEQLQueryParser::Cp_partitionContext *ctx) override {
+  virtual std::any visitCp_partition(CEQLQueryParser::Cp_partitionContext* ctx) override {
     policy = CEQL::ConsumeBy::ConsumptionPolicy::PARTITION;
     return {};
   }
-  
-  virtual std::any visitCp_none(CEQLQueryParser::Cp_noneContext *ctx) override {
+
+  virtual std::any visitCp_none(CEQLQueryParser::Cp_noneContext* ctx) override {
     policy = CEQL::ConsumeBy::ConsumptionPolicy::NONE;
     return {};
   }

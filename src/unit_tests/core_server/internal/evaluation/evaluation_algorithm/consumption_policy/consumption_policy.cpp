@@ -317,7 +317,6 @@ TEST_CASE(
     "    AND amzn[name='AMZN']"
     "CONSUME BY ANY";
 
-
   backend.declare_query(string_query, result_handler);
 
   Types::Event event;
