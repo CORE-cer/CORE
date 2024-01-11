@@ -2,6 +2,7 @@
 #include <cwchar>
 #include <unordered_map>
 
+#include "core_server/internal/ceql/query/consume_by.hpp"
 #include "det_cea/det_cea.hpp"
 #include "det_cea/state.hpp"
 #include "enumeration/tecs/enumerator.hpp"
@@ -44,6 +45,8 @@ class Evaluator {
 
   tECS::tECS tecs;
 
+  CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
+
 // Only in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
   uint64_t last_tuple_time = 0;
@@ -53,12 +56,14 @@ class Evaluator {
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
-            std::atomic<uint64_t>& event_time_of_expiration)
+            std::atomic<uint64_t>& event_time_of_expiration,
+            CEQL::ConsumeBy::ConsumptionPolicy consumption_policy)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
-        tecs(event_time_of_expiration) {}
+        tecs(event_time_of_expiration),
+        consumption_policy(consumption_policy) {}
 
   bool next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
@@ -93,7 +98,15 @@ class Evaluator {
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
-    return !final_states.empty();
+
+    bool has_output = !final_states.empty();
+
+    if (has_output && consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
+      historic_ordered_keys.clear();
+      // historic_union_list_map.clear();
+    }
+
+    return has_output;
   }
 
   tECS::Enumerator get_enumerator() { return output(); };
@@ -151,7 +164,10 @@ class Evaluator {
     Node* out = nullptr;
     for (auto it = final_states.rbegin(); it != final_states.rend(); ++it) {
       State* p = *it;
-      assert(historic_union_list_map.contains(p));
+      // If using ANY consumption policy, this assert will always fail due resetting state
+      if (consumption_policy != CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
+        assert(historic_union_list_map.contains(p));
+      }
       Node* n = tecs.merge(historic_union_list_map[p]);
       // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
       if (out == nullptr) {

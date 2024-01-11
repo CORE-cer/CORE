@@ -23,7 +23,8 @@ TEST_CASE("Evaluation on the example stream of the papers") {
     "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "CONSUME BY NONE";
 
   backend.declare_query(string_query, result_handler);
 

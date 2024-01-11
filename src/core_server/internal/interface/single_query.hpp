@@ -74,7 +74,8 @@ class SingleQuery {
                                                                   std::move(
                                                                     tuple_evaluator),
                                                                   time_window.duration,
-                                                                  time_of_expiration);
+                                                                  time_of_expiration,
+                                                                  query.consume_by.policy);
   }
 
   void start() {
