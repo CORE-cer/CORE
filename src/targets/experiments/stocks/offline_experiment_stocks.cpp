@@ -22,10 +22,10 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    auto stream_id = StocksData::do_declaration(client,
-                                                "Stocks",
-                                                StocksData::event_types,
-                                                StocksData::attributes);
+    StocksData::do_declaration(client,
+                               "Stocks",
+                               StocksData::event_types,
+                               StocksData::attributes);
 
     StocksData::DataReader reader(query_path, data_path);
     reader.read_query();
