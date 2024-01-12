@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <tracy/Tracy.hpp>
 #include <unordered_map>
 #include <vector>
 
@@ -229,6 +230,7 @@ uint64_t Catalog::add_type_to_schema(std::vector<Types::AttributeInfo>& event_at
 }
 
 Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
+  ZoneScopedN("Catalog::convert_enumerator");
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
@@ -245,6 +247,7 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
   uint64_t end,
   std::vector<RingTupleQueue::Tuple>& tuples,
   std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) {
+  ZoneScopedN("Catalog::tuple_to_complex_event");
   std::vector<Types::Event> converted_events;
   for (auto& tuple : tuples) {
     assert(tuple.id() < events_info.size());
@@ -260,6 +263,7 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
 
 Types::Event
 Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) {
+  ZoneScopedN("Catalog::tuple_to_event");
   assert(tuple.id() == event_info.id);
   std::vector<std::shared_ptr<Types::Value>> values;
   for (auto i = 0; i < event_info.attributes_info.size(); i++) {

@@ -16,6 +16,7 @@
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "single_query.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Interface {
 
@@ -96,6 +97,7 @@ class Backend {
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
+    ZoneScopedN("Backend::send_event_to_queries");
     RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
@@ -141,6 +143,7 @@ class Backend {
   }
 
   RingTupleQueue::Tuple event_to_tuple(const Types::Event& event) {
+    ZoneScopedN("Backend::event_to_tuple");
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }

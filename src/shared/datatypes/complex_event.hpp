@@ -36,6 +36,14 @@ struct ComplexEvent {
     return out + "]";
   }
 
+  std::string to_string_java() const {
+    std::string out = "";
+    for (auto& event : events) {
+      out += event.to_string_java() + " ";
+    }
+    return out;
+  }
+
   ~ComplexEvent() noexcept = default;
 
   template <class Archive>
