@@ -162,18 +162,17 @@ class Enumerator {
   }
 
   inline void cleanup(){
-    // static int j = 1;
-    // if (tecs != nullptr) {
-    // // Debug : Ver cuantas veces se llama a cleanup
-    // // Codigo para guardar datos de memoria en un csv
-    // std::ofstream archivo("../CORE/datos2.csv", std::ios_base::app);
-    // archivo << std::to_string(j) << std::endl;
-    // j++;
-    // archivo.flush();
-    // archivo.close();
+    static int j = 1;
+    if (tecs != nullptr) {
+    // Debug : Ver cuantas veces se llama a cleanup
+    // Codigo para guardar datos de memoria en un csv
+    std::ofstream archivo("../CORE/datos2.csv", std::ios_base::app);
+    archivo << std::to_string(j) << std::endl;
+    j++;
+    archivo.flush();
+    archivo.close();
     // TODO: Take off the if statement when fixing online_query_evaluator empty enumerator problem
     // It is not an empty enumerator
-    if (tecs != nullptr) {
       assert(tecs != nullptr);
       tecs->unpin(original_node);
       assert(time_reservator != nullptr);

@@ -51,16 +51,14 @@ int main(int argc, char** argv) {
       if (has_outputs){
         enumerator = mediator.create_enumerator_from_query();
         event_enumerator = mediator.convert_enumerator(std::move(enumerator));
+        // Debug: Ver cuantos eventos tienen un complex event
+        // static int l = 1;
+        // std::cout << l << std::endl;
+        // l++;
+        for (auto& complex_event : event_enumerator) {
+          std::cout << complex_event.to_string() << std::endl;
+        }
       }
-      // Debug: Ver cuantos eventos tienen un complex event
-      // static int l = 1;
-      // if (!event_enumerator.complex_events.empty()){
-      //   std::cout << l << std::endl;
-      //   l++;
-      // }
-      // for (auto& complex_event : event_enumerator) {
-      //   std::cout << complex_event.to_string() << std::endl;
-      // }
     }
 
     return 0;

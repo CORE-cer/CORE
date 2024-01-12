@@ -97,22 +97,21 @@ class Evaluator {
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
+    // Debug: Ver cuantos enumerators son vacios o no
+    static int k = 1;
+    if (!final_states.empty()){
+      // Debug
+      // Codigo para guardar datos de memoria en un csv
+      std::ofstream archivo("../CORE/datos3.csv", std::ios_base::app);
+      archivo << std::to_string(k) << std::endl;
+      k++;
+      archivo.flush();
+      archivo.close();
+    }
     if (!final_states.empty()){
       return true;
     }
     return false;
-    // Debug: Ver cuantos enumerators son vacios o no
-    // static int k = 1;
-    // if (final_states.empty()){
-    //   // Debug
-    //   // Codigo para guardar datos de memoria en un csv
-    //   std::ofstream archivo("../CORE/datos3.csv", std::ios_base::app);
-    //   archivo << std::to_string(k) << std::endl;
-    //   k++;
-    //   archivo.flush();
-    //   archivo.close();
-    // }
-    // return output(current_time);
   }
 
   /*       _\|/_
@@ -144,8 +143,8 @@ class Evaluator {
       if (out == nullptr) {
         out = n;
       } else {
-        // out = tecs.new_union_fixed_order(n, out);
-        out = tecs.new_union(n, out); 
+        out = tecs.new_direct_union(n, out);
+        // out = tecs.new_union(n, out); 
       }
       // La idea es hacer el merge del union list, y dsp eso le hago union a un nodo.
     }
