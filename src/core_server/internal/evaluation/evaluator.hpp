@@ -161,6 +161,7 @@ class Evaluator {
 
   // Change to tECS::Enumerator.
   tECS::Enumerator output() {
+    ZoneScopedN("Evaluator::output");
     Node* out = nullptr;
     for (auto it = final_states.rbegin(); it != final_states.rend(); ++it) {
       State* p = *it;
