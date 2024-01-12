@@ -6,18 +6,19 @@
 #include <string>
 #include <vector>
 
-#include "shared/datatypes/catalog/datatypes.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
-#include "shared/datatypes/event.hpp"
-
 #include "core_client/client.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
 
 namespace CORE::StocksData {
 
-
 template <typename TTypes, std::size_t NTypes, typename TAttributes, std::size_t NAttributes>
-CORE::Types::StreamTypeId do_declaration(Client& client, std::string stream_name, const std::array<TTypes, NTypes>& types,
-                                                 const std::array<TAttributes, NAttributes>& attributes) {
+CORE::Types::StreamTypeId
+do_declaration(Client& client,
+               std::string stream_name,
+               const std::array<TTypes, NTypes>& types,
+               const std::array<TAttributes, NAttributes>& attributes) {
   std::vector<Types::EventTypeId> event_types{};
   for (auto& type : types) {
     std::vector<Types::AttributeInfo> attributes_info{};
@@ -30,6 +31,7 @@ CORE::Types::StreamTypeId do_declaration(Client& client, std::string stream_name
 }
 
 enum EventType { BUY, SELL };
+
 std::array<std::string, 2> event_types = {"BUY", "SELL"};
 
 std::array<std::pair<std::string, CORE::Types::ValueTypes>, 5> attributes = {
@@ -40,13 +42,13 @@ std::array<std::pair<std::string, CORE::Types::ValueTypes>, 5> attributes = {
    {"stock_time", CORE::Types::ValueTypes::INT64}}};
 
 struct Data {
-    EventType event_type;
-    int64_t id;
-    std::string name;
-    int64_t volume;
-    double price;
-    int64_t stock_time;
-  };
+  EventType event_type;
+  int64_t id;
+  std::string name;
+  int64_t volume;
+  double price;
+  int64_t stock_time;
+};
 
 class DataReader {
   std::string csv_path;
@@ -69,16 +71,16 @@ class DataReader {
 
   void to_events() {
     for (auto& data : csv_data) {
-      Types::Event
-        event_to_send{data.event_type,
-                      {std::make_shared<Types::IntValue>(data.id),
-                       std::make_shared<Types::StringValue>(data.name),
-                       std::make_shared<Types::IntValue>(data.volume),
-                       std::make_shared<Types::DoubleValue>(data.price),
-                       std::make_shared<Types::IntValue>(data.stock_time)}};
+      Types::Event event_to_send{data.event_type,
+                                 {std::make_shared<Types::IntValue>(data.id),
+                                  std::make_shared<Types::StringValue>(data.name),
+                                  std::make_shared<Types::IntValue>(data.volume),
+                                  std::make_shared<Types::DoubleValue>(data.price),
+                                  std::make_shared<Types::IntValue>(data.stock_time)}};
       events.push_back(event_to_send);
     }
   }
+
   void read_csv() {
     std::ifstream file(csv_path);
     std::string line;
@@ -99,7 +101,6 @@ class DataReader {
                           std::stoi(tokens[5])});
     }
   }
-
 };
 
 };  // namespace CORE::StocksData
