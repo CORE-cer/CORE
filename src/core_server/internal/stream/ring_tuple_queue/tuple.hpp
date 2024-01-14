@@ -176,9 +176,7 @@ class Tuple {
     return &data[schemas->get_relative_positions(id())[index]];
   }
 
-  uint64_t size() const {
-    return schemas->get_relative_positions(id()).size();
-  }
+  uint64_t size() const { return schemas->get_relative_positions(id()).size(); }
 
  private:
   const static std::chrono::system_clock::time_point get_compile_time_point() {

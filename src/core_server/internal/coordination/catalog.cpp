@@ -234,10 +234,8 @@ Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) con
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
-    out.push_back(tuples_to_complex_event(info.start,
-                                          info.end,
-                                          info.event_tuples,
-                                          event_memory));
+    out.push_back(
+      tuples_to_complex_event(info.start, info.end, info.event_tuples, event_memory));
   }
   return {std::move(out)};
 }
@@ -261,8 +259,8 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
   return {start, end, std::move(converted_events)};
 }
 
-Types::Event
-Catalog::tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const {
+Types::Event Catalog::tuple_to_event(const Types::EventInfo& event_info,
+                                     RingTupleQueue::Tuple& tuple) const {
   ZoneScopedN("Catalog::tuple_to_event");
   assert(tuple.id() == event_info.id);
   std::vector<std::shared_ptr<Types::Value>> values;

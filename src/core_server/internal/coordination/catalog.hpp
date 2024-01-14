@@ -82,7 +82,8 @@ class Catalog {
     std::vector<RingTupleQueue::Tuple>& tuples,
     std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const;
 
-  Types::Event tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
+  Types::Event
+  tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
 };
 
 }  // namespace CORE::Internal

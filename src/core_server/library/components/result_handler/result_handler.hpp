@@ -69,7 +69,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
       "tcp://*:" + std::to_string(port.value()));
   }
 
-  void handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+  void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
       enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));

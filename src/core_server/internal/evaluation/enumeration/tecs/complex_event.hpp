@@ -18,7 +18,9 @@ class ComplexEvent {
 
   ComplexEvent(std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
                  complex_event)
-      : start(complex_event.first.first), end(complex_event.first.second), event_tuples(complex_event.second) {
+      : start(complex_event.first.first),
+        end(complex_event.first.second),
+        event_tuples(complex_event.second) {
     // for (RingTupleQueue::Tuple& tuple : event_tuples) {
     //   events.emplace_back(tuple);
     // }
