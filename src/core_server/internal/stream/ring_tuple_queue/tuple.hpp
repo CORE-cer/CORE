@@ -91,7 +91,7 @@ class TupleSchemas {
       throw std::out_of_range(
         "TupleSchemas::get_relative_positions: id: " + std::to_string(id)
         + " out of range. (size = " + std::to_string(schemas.size()) + ")");
-    }  // In the future we just return the id, no checks to increase efficiency.
+    }  // OPTIMIZE: In the future we just return the id, no checks to increase efficiency.
     return relative_positions[id];
   }
 
@@ -174,6 +174,10 @@ class Tuple {
 
   uint64_t* operator[](uint64_t index) {
     return &data[schemas->get_relative_positions(id())[index]];
+  }
+
+  uint64_t size() const {
+    return schemas->get_relative_positions(id()).size();
   }
 
  private:
