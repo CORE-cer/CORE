@@ -26,9 +26,9 @@ struct Enumerator {
 
   Enumerator& operator=(Enumerator&& other) = default;
 
-  constexpr Enumerator(const CORE::Types::Enumerator&) = default;
+  Enumerator(const Enumerator&) = default;
 
-  constexpr Enumerator& operator=(const Enumerator&) = default;
+  Enumerator& operator=(const Enumerator&) = default;
 
   auto begin() noexcept { return complex_events.begin(); }
 
