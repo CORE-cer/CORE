@@ -19,7 +19,12 @@ class TestResultHandler : public Library::Components::ResultHandler<TestResultHa
   TestResultHandler(const Catalog& catalog)
       : CORE::Library::Components::ResultHandler<TestResultHandler>(catalog) {}
 
-  void handle_complex_event(Types::Enumerator enumerator) {
+  void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+    Types::Enumerator enumerator;
+    if (internal_enumerator.has_value()) {
+      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+    }
     std::unique_lock lk(output_mutex);
 
     cv.wait(lk, [this] { return !ready; });

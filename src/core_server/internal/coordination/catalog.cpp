@@ -229,14 +229,14 @@ uint64_t Catalog::add_type_to_schema(std::vector<Types::AttributeInfo>& event_at
   return tuple_schemas.add_schema(std::move(converted_types));
 }
 
-Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) {
+Types::Enumerator Catalog::convert_enumerator(tECS::Enumerator&& enumerator) const {
   ZoneScopedN("Catalog::convert_enumerator");
   std::vector<Types::ComplexEvent> out;
   std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
   for (auto info : enumerator) {
-    out.push_back(tuples_to_complex_event(info.first.first,
-                                          info.first.second,
-                                          info.second,
+    out.push_back(tuples_to_complex_event(info.start,
+                                          info.end,
+                                          info.event_tuples,
                                           event_memory));
   }
   return {std::move(out)};
@@ -246,7 +246,7 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
   uint64_t start,
   uint64_t end,
   std::vector<RingTupleQueue::Tuple>& tuples,
-  std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) {
+  std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const {
   ZoneScopedN("Catalog::tuple_to_complex_event");
   std::vector<Types::Event> converted_events;
   for (auto& tuple : tuples) {
@@ -254,7 +254,7 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
     if (event_memory.contains(tuple)) {
       converted_events.push_back(event_memory[tuple]);
     } else {
-      Types::EventInfo& event_info = events_info[tuple.id()];
+      const Types::EventInfo& event_info = events_info[tuple.id()];
       converted_events.push_back(tuple_to_event(event_info, tuple));
     }
   }
@@ -262,12 +262,12 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
 }
 
 Types::Event
-Catalog::tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) {
+Catalog::tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const {
   ZoneScopedN("Catalog::tuple_to_event");
   assert(tuple.id() == event_info.id);
   std::vector<std::shared_ptr<Types::Value>> values;
   for (auto i = 0; i < event_info.attributes_info.size(); i++) {
-    Types::AttributeInfo& att_info = event_info.attributes_info[i];
+    const Types::AttributeInfo& att_info = event_info.attributes_info[i];
     std::shared_ptr<Types::Value> val;
     switch (att_info.value_type) {
       case Types::ValueTypes::INT64:

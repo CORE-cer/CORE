@@ -73,16 +73,16 @@ class Catalog {
 
   uint64_t add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes);
 
-  Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator);
+  Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator) const;
 
  private:
   Types::ComplexEvent tuples_to_complex_event(
     uint64_t start,
     uint64_t end,
     std::vector<RingTupleQueue::Tuple>& tuples,
-    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory);
+    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const;
 
-  Types::Event tuple_to_event(Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple);
+  Types::Event tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
 };
 
 }  // namespace CORE::Internal

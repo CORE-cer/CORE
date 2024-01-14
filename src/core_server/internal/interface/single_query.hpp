@@ -89,8 +89,8 @@ class SingleQuery {
         if (!tuple.has_value()) {
           continue;
         }
-        Types::Enumerator output = process_event(tuple.value());
-        result_handler(output);
+        std::optional<tECS::Enumerator> output = process_event(tuple.value());
+        result_handler(std::move(output));
       }
     });
   }
@@ -106,7 +106,7 @@ class SingleQuery {
     }
   }
 
-  Types::Enumerator process_event(RingTupleQueue::Tuple tuple) {
+  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
     uint64_t time;
 
     switch (time_window.mode) {
@@ -131,7 +131,7 @@ class SingleQuery {
     }
     bool has_output = evaluator->next(tuple, time);
     if (has_output) {
-      return catalog.convert_enumerator(evaluator->get_enumerator());
+      return evaluator->get_enumerator();
     }
     return {};
   }

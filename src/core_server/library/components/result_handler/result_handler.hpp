@@ -20,8 +20,8 @@ class ResultHandler {
  public:
   ResultHandler(const Internal::Catalog& catalog) : catalog(catalog) {}
 
-  void operator()(Types::Enumerator enumerator) {
-    static_cast<Derived*>(this)->handle_complex_event(enumerator);
+  void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
+    static_cast<Derived*>(this)->handle_complex_event(std::move(enumerator));
   }
 
   void start() { static_cast<Derived*>(this)->start_impl(); }
@@ -35,7 +35,12 @@ class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
   OfflineResultHandler(const Internal::Catalog& catalog) : ResultHandler(catalog) {}
 
-  void handle_complex_event(Types::Enumerator enumerator) {
+  void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+    Types::Enumerator enumerator;
+    if (internal_enumerator.has_value()) {
+      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+    }
     for (auto& complex_event : enumerator) {
       std::cout << complex_event.to_string() << "\n";
     }
@@ -61,7 +66,11 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
       "tcp://*:" + std::to_string(port.value()));
   }
 
-  void handle_complex_event(Types::Enumerator enumerator) {
+  void handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+    Types::Enumerator enumerator;
+    if (internal_enumerator.has_value()) {
+      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+    }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};
 
