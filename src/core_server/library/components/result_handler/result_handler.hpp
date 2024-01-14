@@ -15,8 +15,11 @@ template <class Derived>
 class ResultHandler {
  protected:
   std::optional<Types::PortNumber> port{};
+  const Internal::Catalog& catalog;
 
  public:
+  ResultHandler(const Internal::Catalog& catalog) : catalog(catalog) {}
+
   void operator()(Types::Enumerator enumerator) {
     static_cast<Derived*>(this)->handle_complex_event(enumerator);
   }
@@ -30,6 +33,8 @@ class ResultHandler {
 
 class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
+  OfflineResultHandler(const Internal::Catalog& catalog) : ResultHandler(catalog) {}
+
   void handle_complex_event(Types::Enumerator enumerator) {
     for (auto& complex_event : enumerator) {
       std::cout << complex_event.to_string() << "\n";
@@ -43,7 +48,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
  public:
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
 
-  OnlineResultHandler(Types::PortNumber assigned_port) : broadcaster{nullptr} {
+  OnlineResultHandler(const Internal::Catalog& catalog, Types::PortNumber assigned_port)
+      : ResultHandler(catalog), broadcaster{nullptr} {
     port = assigned_port;
   }
 

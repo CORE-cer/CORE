@@ -7,7 +7,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of in-range predicate") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},

@@ -39,6 +39,10 @@ class Backend {
  public:
   Backend() : queue(100'000, &catalog.tuple_schemas) {}
 
+  const Catalog& get_catalog_reference() const {
+    return catalog;
+  }
+
   // TODO: Add error to catalog add event type and propogate to ClientMessageHandler
   Types::EventTypeId add_event_type(std::string event_name,
                                     std::vector<Types::AttributeInfo> attributes_info) {

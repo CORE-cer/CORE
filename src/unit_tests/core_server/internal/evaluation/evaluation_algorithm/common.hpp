@@ -16,6 +16,9 @@ class TestResultHandler : public Library::Components::ResultHandler<TestResultHa
   Types::Enumerator output;
 
  public:
+  TestResultHandler(const Catalog& catalog)
+      : CORE::Library::Components::ResultHandler<TestResultHandler>(catalog) {}
+
   void handle_complex_event(Types::Enumerator enumerator) {
     std::unique_lock lk(output_mutex);
 
