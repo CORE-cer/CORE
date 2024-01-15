@@ -21,8 +21,7 @@ class ComplexEvent {
                  complex_event)
       : start(complex_event.first.first),
         end(complex_event.first.second),
-        event_tuples(complex_event.second) {
-  }
+        event_tuples(complex_event.second) {}
 
   template <bool event_info>
   std::string to_string() const {
