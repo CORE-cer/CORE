@@ -132,6 +132,7 @@ TEST_CASE(
   INFO("BEFORE sending the event");
   sender.send(CerealSerializer<Types::Stream>::serialize(
     Types::Stream(stream_type_id_1, {event_to_send})));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   INFO("Event sent");
   subscriber_thread.join();
   INFO("Subscriber thread joined. (message was received.)");
