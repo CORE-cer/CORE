@@ -142,6 +142,10 @@ class Tuple {
 
   uint64_t id() const { return data[0]; }
 
+  const std::vector<SupportedTypes>& get_schema() const {
+    return schemas->get_schema(id());
+  }
+
   uint64_t hash() const { return reinterpret_cast<uint64_t>(data); }
 
   std::chrono::system_clock::time_point timestamp() const {
@@ -172,7 +176,7 @@ class Tuple {
   // for set comparison.
   bool operator==(const RingTupleQueue::Tuple& other) const { return data == other.data; }
 
-  uint64_t* operator[](uint64_t index) {
+  uint64_t* operator[](uint64_t index) const {
     return &data[schemas->get_relative_positions(id())[index]];
   }
 

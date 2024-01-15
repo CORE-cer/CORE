@@ -37,15 +37,12 @@ class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
-    // Types::Enumerator enumerator;
-    // if (internal_enumerator.has_value()) {
-    //   enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
-    // }
+    ZoneScopedN("OfflineResultHandler::handle_complex_event");
     if (!internal_enumerator.has_value()) {
       return;
     }
     for (const auto& complex_event : internal_enumerator.value()) {
-      std::cout << complex_event.to_string() << "\n";
+      std::cout << complex_event.to_string<false>() << "\n";
     }
   }
 

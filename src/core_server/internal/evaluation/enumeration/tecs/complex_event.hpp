@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
 
@@ -21,17 +22,18 @@ class ComplexEvent {
       : start(complex_event.first.first),
         end(complex_event.first.second),
         event_tuples(complex_event.second) {
-    // for (RingTupleQueue::Tuple& tuple : event_tuples) {
-    //   events.emplace_back(tuple);
-    // }
   }
 
+  template <bool event_info>
   std::string to_string() const {
-    std::string out = "[" + std::to_string(start) + "," + std::to_string(end) + "], [";
-    // for (const Event& event : events) {
-    //   out += event.to_string() + " ";
-    // }
-    return out + "]";
+    ZoneScopedN("Internal::ComplexEvent::to_string");
+    std::string out = "[" + std::to_string(start) + "," + std::to_string(end) + "], (";
+    if constexpr (event_info) {
+      for (const RingTupleQueue::Tuple& event_tuple : event_tuples) {
+        out += Event(event_tuple).to_string() + " ";
+      }
+    }
+    return out + ")";
   }
 };
 }  // namespace CORE::Internal::tECS

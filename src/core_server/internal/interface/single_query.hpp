@@ -107,6 +107,7 @@ class SingleQuery {
   }
 
   std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
+    ZoneScopedN("SingleQuery::process_event");
     uint64_t time;
 
     switch (time_window.mode) {
