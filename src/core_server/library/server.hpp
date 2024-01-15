@@ -28,7 +28,7 @@ class OfflineServer {
     ResultHandlerFactoryT*>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
-  ResultHandlerFactoryT result_handler_factory{};
+  ResultHandlerFactoryT result_handler_factory{backend.get_catalog_reference()};
   Components::Router<ResultHandlerFactoryT> router;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
@@ -71,7 +71,7 @@ class OnlineServer {
  public:
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
-        result_handler_factory{next_available_port},
+        result_handler_factory{backend.get_catalog_reference(), next_available_port},
         router{backend, next_available_port++, result_handler_factory},
         stream_listener{backend, next_available_port++} {}
 

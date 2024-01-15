@@ -7,7 +7,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with consume by any") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -128,7 +128,7 @@ TEST_CASE(
   "iteration, and "
   "OR with consume by any") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -298,7 +298,7 @@ TEST_CASE(
   "sequencing, non contiguous sequencing, and "
   "OR v2 with consume by any") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},

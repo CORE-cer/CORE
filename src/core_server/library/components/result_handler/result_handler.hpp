@@ -15,10 +15,13 @@ template <class Derived>
 class ResultHandler {
  protected:
   std::optional<Types::PortNumber> port{};
+  const Internal::Catalog& catalog;
 
  public:
-  void operator()(Types::Enumerator enumerator) {
-    static_cast<Derived*>(this)->handle_complex_event(enumerator);
+  ResultHandler(const Internal::Catalog& catalog) : catalog(catalog) {}
+
+  void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
+    static_cast<Derived*>(this)->handle_complex_event(std::move(enumerator));
   }
 
   void start() { static_cast<Derived*>(this)->start_impl(); }
@@ -30,9 +33,16 @@ class ResultHandler {
 
 class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
-  void handle_complex_event(Types::Enumerator enumerator) {
-    for (auto& complex_event : enumerator) {
-      std::cout << complex_event.to_string() << "\n";
+  OfflineResultHandler(const Internal::Catalog& catalog) : ResultHandler(catalog) {}
+
+  void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+    ZoneScopedN("OfflineResultHandler::handle_complex_event");
+    if (!internal_enumerator.has_value()) {
+      return;
+    }
+    for (const auto& complex_event : internal_enumerator.value()) {
+      std::cout << complex_event.to_string<false>() << "\n";
     }
   }
 
@@ -43,7 +53,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
  public:
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
 
-  OnlineResultHandler(Types::PortNumber assigned_port) : broadcaster{nullptr} {
+  OnlineResultHandler(const Internal::Catalog& catalog, Types::PortNumber assigned_port)
+      : ResultHandler(catalog), broadcaster{nullptr} {
     port = assigned_port;
   }
 
@@ -55,7 +66,12 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
       "tcp://*:" + std::to_string(port.value()));
   }
 
-  void handle_complex_event(Types::Enumerator enumerator) {
+  void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+    Types::Enumerator enumerator;
+    if (internal_enumerator.has_value()) {
+      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+    }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};
 

@@ -3,6 +3,7 @@
 #include <stack>
 #include <vector>
 
+#include "complex_event.hpp"
 #include "node.hpp"
 #include "tecs.hpp"
 
@@ -20,10 +21,7 @@ class Enumerator {
     iterator(Enumerator& enumerator, bool is_end)
         : enumerator(enumerator), is_end(is_end) {}
 
-    std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>>
-    operator*() {
-      return enumerator.next();
-    }
+    ComplexEvent operator*() { return enumerator.next(); }
 
     bool operator!=(const iterator& other) const { return is_end != other.is_end; }
 
@@ -154,9 +152,9 @@ class Enumerator {
   }
 
   /// It requires has_next to be evaluated before.
-  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next() {
+  ComplexEvent next() {
     std::reverse(next_value.second.begin(), next_value.second.end());
-    return next_value;
+    return ComplexEvent(next_value);
   }
 
   inline void cleanup() {

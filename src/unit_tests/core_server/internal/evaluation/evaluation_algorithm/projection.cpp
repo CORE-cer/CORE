@@ -7,7 +7,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -150,7 +150,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
 
 TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -291,7 +291,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel")
 
 TEST_CASE("Evaluation of long query with projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -500,7 +500,7 @@ TEST_CASE("Evaluation of long query with projection") {
 
 TEST_CASE("Evaluation of long query with projection swapped order") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -712,7 +712,7 @@ TEST_CASE(
   "iteration, and "
   "OR Projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -858,7 +858,7 @@ TEST_CASE(
   "sequencing, non contiguous sequencing, and "
   "OR v2 Projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -953,7 +953,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over events") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -1049,7 +1049,7 @@ TEST_CASE(
   "sequencing, and non contiguous sequencing with Projection over BUY "
   "event") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -1139,7 +1139,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing / Empty Projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -1228,7 +1228,7 @@ TEST_CASE(
   "sequencing, non contiguous sequencing, and "
   "OR v2 / Empty Projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -1320,7 +1320,7 @@ TEST_CASE(
   "sequencing, and non contiguous sequencing with Projection over events "
   "swapped") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -1416,7 +1416,7 @@ TEST_CASE(
   "sequencing, non contiguous sequencing, and "
   "OR v2 / none Projection") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},

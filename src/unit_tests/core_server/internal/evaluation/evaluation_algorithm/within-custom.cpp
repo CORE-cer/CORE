@@ -7,7 +7,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers Within") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
@@ -156,7 +156,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within") {
 
 TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   auto event_type_id_1 = backend.add_event_type("SELL",
                                                 {{"name", Types::ValueTypes::STRING_VIEW},
