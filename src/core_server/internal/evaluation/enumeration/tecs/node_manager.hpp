@@ -55,10 +55,10 @@ class NodeManager {
     time_list_manager.add_node(out);
     // Debug
     // Codigo para guardar datos de memoria en un csv
-    std::ofstream archivo("../CORE/datos.csv", std::ios_base::app);
-    archivo << std::to_string(amount_of_nodes_used)+","+std::to_string(amount_of_recycled_nodes) << std::endl;
-    archivo.flush();
-    archivo.close();
+    // std::ofstream archivo("../CORE/datos.csv", std::ios_base::app);
+    // archivo << std::to_string(amount_of_nodes_used)+","+std::to_string(amount_of_recycled_nodes) << std::endl;
+    // archivo.flush();
+    // archivo.close();
     return out;
   }
 

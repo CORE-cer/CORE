@@ -54,6 +54,7 @@ class tECS {
    */
   [[nodiscard]] Node* new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
     auto out = node_manager.alloc(tuple, timestamp);
+    assert(out != nullptr);
     return out;
   }
 
@@ -119,8 +120,8 @@ class tECS {
         break;
       }
       if (ulist[i]->max() < node->max()) {
-        pin(node);                              // Se pinea el nodo que se inserta
-        ulist.insert(ulist.begin() + i, node);  // Cambio a i en vez de 1
+        pin(node);                             
+        ulist.insert(ulist.begin() + i, node);
         break;
       }
     }
@@ -155,6 +156,7 @@ class tECS {
       assert(*rit != nullptr && tail != nullptr);
       tail = node_manager.alloc(*rit, tail);
     }
+    assert(tail != nullptr);
     return tail;
   }
 
@@ -193,36 +195,42 @@ class tECS {
     /// Because the creation of the union gives ownership of the nodes,
     /// the children of n1 and n2 are the ones that are referenced.
     /// n1 and n2 are not going to be used, therefore they are unpined.
+    assert(node_1 != nullptr);
+    assert(node_2 != nullptr);
     Node* u2 = create_first_intermediate_union_node(node_1, node_2);
-    //Antes en cada funcion que creaba un union node se hacia pin a cada hijo (quedo comentado)
-    //debido a que se cambio el constructor y los hijos una vez se hace alloc
-    //no pierden la referencia, se saco los pin
+    assert(u2 != nullptr);
     Node* u1 = create_second_intermediate_union_node(node_2, u2);
+    assert(u1 != nullptr);
     Node* new_node = create_union_of_output_and_intermediate_node(node_1, u1);
+    assert(new_node != nullptr);
     return new_node;
   }
 
   Node* create_first_intermediate_union_node(Node* node_1, Node* node_2) {
     Node* u2;
-    // pin(node_2->right);
-    // pin(node_1->right);
+    assert(node_1->right != nullptr && node_2->right != nullptr);
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
       u2 = node_manager.alloc(node_2->right, node_1->right);
     }
+    assert(u2 != nullptr);
     return u2;
   }
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
-    // pin(node_2->left);
+    assert(node_2->left != nullptr);
+    assert(u2 != nullptr);
     Node* u1 = node_manager.alloc(node_2->left, u2);
+    assert(u1 != nullptr);
     return u1;
   }
 
   Node* create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
-    // pin(node_1->left);
+    assert(node_1->left != nullptr);
+    assert(u2 != nullptr);
     Node* new_node = node_manager.alloc(node_1->left, u2);
+    assert(new_node != nullptr);
     return new_node;
   }
 };
