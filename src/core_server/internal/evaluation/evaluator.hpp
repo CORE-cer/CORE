@@ -65,7 +65,8 @@ class Evaluator {
         tecs(event_time_of_expiration),
         consumption_policy(consumption_policy) {}
 
-  std::optional<tECS::Enumerator> next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
+  std::optional<tECS::Enumerator>
+  next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
