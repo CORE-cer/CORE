@@ -42,7 +42,7 @@ class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
       return;
     }
     for (const auto& complex_event : internal_enumerator.value()) {
-      std::cout << complex_event.to_string<false>() << "\n";
+      std::cout << complex_event.to_string<true>() << "\n";
     }
   }
 
