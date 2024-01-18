@@ -105,12 +105,15 @@ class Evaluator {
 
     if (has_output) {
       tECS::Enumerator enumerator = output();
-      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
+      // TODO: uncomment assert and remove condition from if after fixing has_output bug on empty enumerator
+      // assert(enumerator.begin() != enumerator.end() && (enumerator.reset(), true));
+      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY && enumerator.begin() != enumerator.end()) {
         historic_ordered_keys.clear();
         for (auto& [state, ul] : historic_union_list_map) {
           tecs.unpin(ul);
         }
       }
+      enumerator.reset();
       return std::move(enumerator);
     }
     return {};
