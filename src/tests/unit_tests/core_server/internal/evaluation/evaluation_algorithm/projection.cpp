@@ -2,7 +2,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "core_server/internal/interface/backend.hpp"
-#include "unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
+#include "tests/unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {

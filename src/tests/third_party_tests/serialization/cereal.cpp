@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "shared/serializer/cereal_serializer.hpp"
-#include "third_party_tests/serialization/cereal_test_classes.hpp"
+#include "tests/third_party_tests/serialization/cereal_test_classes.hpp"
 
 namespace CORE::Internal::ThirdPartyTests::Cereal {
 

@@ -150,11 +150,11 @@ target_link_libraries(offline_experiment_stocks PRIVATE core)
 find_package(Catch2 REQUIRED)
 #
 file(GLOB_RECURSE UNIT_TESTING_FILES
-     src/unit_tests/*.cpp
+     src/tests/unit_tests/*.cpp
 )
 
 file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
-     src/third_party_tests/*.cpp
+     src/tests/third_party_tests/*.cpp
 )
 
 add_executable(tests ${UNIT_TESTING_FILES})
