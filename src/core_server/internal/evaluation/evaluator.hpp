@@ -107,7 +107,8 @@ class Evaluator {
       tECS::Enumerator enumerator = output();
       // TODO: uncomment assert and remove condition from if after fixing has_output bug on empty enumerator
       // assert(enumerator.begin() != enumerator.end() && (enumerator.reset(), true));
-      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY && enumerator.begin() != enumerator.end()) {
+      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
+          && enumerator.begin() != enumerator.end()) {
         historic_ordered_keys.clear();
         for (auto& [state, ul] : historic_union_list_map) {
           tecs.unpin(ul);
