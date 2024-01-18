@@ -1,5 +1,6 @@
 #pragma once
 #include <cwchar>
+#include <optional>
 #include <unordered_map>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
