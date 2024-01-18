@@ -73,6 +73,8 @@ class tECS {
    */
   [[nodiscard]] Node* new_union(Node* node_1, Node* node_2) {
     assert(node_1 != nullptr && node_2 != nullptr);
+    assert(node_1->node_type != Node::NodeType::DEAD);
+    assert(node_2->node_type != Node::NodeType::DEAD);
     assert(node_1->max() == node_2->max());
     if (!node_1->is_union()) {
       return new_direct_union(node_1, node_2);
@@ -85,6 +87,8 @@ class tECS {
 
   [[nodiscard]] Node* new_direct_union(Node* node_1, Node* node_2) {
     assert(node_1 != nullptr && node_2 != nullptr);
+    assert(node_1->node_type != Node::NodeType::DEAD);
+    assert(node_2->node_type != Node::NodeType::DEAD);
     return node_manager.alloc(node_1, node_2);
   }
 
@@ -153,7 +157,10 @@ class tECS {
     Node* tail = ulist.back();
     for (auto rit = ulist.rbegin() + 1; rit != ulist.rend(); ++rit) {
       assert(*rit != nullptr && tail != nullptr);
-      tail = node_manager.alloc(*rit, tail);
+      Node* node_1 = *rit;
+      assert(node_1->node_type != Node::NodeType::DEAD);
+      assert(tail->node_type != Node::NodeType::DEAD);
+      tail = node_manager.alloc(node_1, tail);
     }
     return tail;
   }
@@ -206,6 +213,8 @@ class tECS {
     Node* u2;
     // pin(node_2->right);
     // pin(node_1->right);
+    assert(node_1->right->node_type != Node::NodeType::DEAD);
+    assert(node_2->right->node_type != Node::NodeType::DEAD);
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
@@ -216,12 +225,16 @@ class tECS {
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
     // pin(node_2->left);
+    assert(node_2->left->node_type != Node::NodeType::DEAD);
+    assert(u2->node_type != Node::NodeType::DEAD);
     Node* u1 = node_manager.alloc(node_2->left, u2);
     return u1;
   }
 
   Node* create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
     // pin(node_1->left);
+    assert(node_1->left->node_type != Node::NodeType::DEAD);
+    assert(u2->node_type != Node::NodeType::DEAD);
     Node* new_node = node_manager.alloc(node_1->left, u2);
     return new_node;
   }
