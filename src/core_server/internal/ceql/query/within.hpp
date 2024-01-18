@@ -40,7 +40,12 @@ struct Within {
     }
 
     TimeWindow(uint64_t time_interval, std::string_view attribute_name, TimeWindowMode mode)
-        : mode(mode), attribute_name(attribute_name), duration(time_interval) {
+        : mode(mode), attribute_name(attribute_name), duration(time_interval - 1) {
+      if (time_interval == 0) {
+        throw std::logic_error(
+          "Cannot use a time window of less then 1, due to needing at least the "
+          "receiving event to fit in the window");
+      }
       switch (mode) {
         case NONE:
           throw std::logic_error(
