@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <thread>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
@@ -130,11 +131,7 @@ class SingleQuery {
         assert(false && "Unknown time_window mode in next_data.");
         break;
     }
-    bool has_output = evaluator->next(tuple, time);
-    if (has_output) {
-      return evaluator->get_enumerator();
-    }
-    return {};
+    return evaluator->next(tuple, time);
   }
 
   std::optional<RingTupleQueue::Tuple>

@@ -1,5 +1,6 @@
 #pragma once
 #include <cwchar>
+#include <optional>
 #include <unordered_map>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
@@ -65,7 +66,8 @@ class Evaluator {
         tecs(event_time_of_expiration),
         consumption_policy(consumption_policy) {}
 
-  bool next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
+  std::optional<tECS::Enumerator>
+  next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
@@ -101,15 +103,22 @@ class Evaluator {
 
     bool has_output = !final_states.empty();
 
-    if (has_output && consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
-      historic_ordered_keys.clear();
-      // historic_union_list_map.clear();
+    if (has_output) {
+      tECS::Enumerator enumerator = output();
+      // TODO: uncomment assert and remove condition from if after fixing has_output bug on empty enumerator
+      // assert(enumerator.begin() != enumerator.end() && (enumerator.reset(), true));
+      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
+          && enumerator.begin() != enumerator.end()) {
+        historic_ordered_keys.clear();
+        for (auto& [state, ul] : historic_union_list_map) {
+          tecs.unpin(ul);
+        }
+      }
+      enumerator.reset();
+      return std::move(enumerator);
     }
-
-    return has_output;
+    return {};
   }
-
-  tECS::Enumerator get_enumerator() { return output(); };
 
  private:
   State* get_initial_state() { return cea.initial_state; }
@@ -166,9 +175,7 @@ class Evaluator {
     for (auto it = final_states.rbegin(); it != final_states.rend(); ++it) {
       State* p = *it;
       // If using ANY consumption policy, this assert will always fail due resetting state
-      if (consumption_policy != CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
-        assert(historic_union_list_map.contains(p));
-      }
+      assert(historic_union_list_map.contains(p));
       Node* n = tecs.merge(historic_union_list_map[p]);
       // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
       if (out == nullptr) {

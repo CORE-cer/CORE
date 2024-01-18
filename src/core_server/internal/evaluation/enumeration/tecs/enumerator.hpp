@@ -122,7 +122,7 @@ class Enumerator {
 
   void reset() {
     stack = {};
-    if (original_node != nullptr) {
+    if (original_node != nullptr && original_node->max() >= last_time_to_consider) {
       stack.push({original_node, {}});
     }
   };
