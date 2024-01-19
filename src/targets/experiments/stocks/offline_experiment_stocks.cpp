@@ -36,8 +36,6 @@ int main(int argc, char** argv) {
 
     std::cout << "Query: " << query_string << std::endl;
 
-    std::cin.get();
-
     client.add_query(std::move(query_string));
 
     std::cout << "Read events " << reader.events.size() << std::endl;
