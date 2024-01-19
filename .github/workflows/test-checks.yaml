@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  run-unit-tests-debug:
+  run-tests-debug:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
@@ -35,13 +35,16 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
 
+      - name: run stock query tests
+        run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Debug
+
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
 
       # - name: run tests with thread sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
 
-  run-unit-tests-release:
+  run-tests-release:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
@@ -69,6 +72,9 @@ jobs:
 
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release
+
+      - name: run stock query tests
+        run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Release
 
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
