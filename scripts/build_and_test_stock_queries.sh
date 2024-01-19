@@ -13,7 +13,7 @@ build
 
 run_and_compare_script="scripts/run_and_compare.sh"
 base_dir="src/targets/experiments/stocks"
-executable="build/Debug/offline_experiment_stocks"
+executable="build/${BUILD_TYPE}/offline_experiment_stocks"
 
 queries=$(find "$base_dir/queries" -type f) 
 
