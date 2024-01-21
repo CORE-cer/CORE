@@ -88,21 +88,27 @@ class Evaluator {
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
       // Check if ulist is out of time window or not
+      // UnionList actual_ul = std::move(historic_union_list_map[p]);
+      // if (actual_ul.at(0)->maximum_start < event_time_of_expiration){
+      //   tecs.unpin(actual_ul);
+      // }
+      // else{
+      //   // Remove possible dead nodes in ul
+      //   for (auto it = actual_ul.begin(); it != actual_ul.end(); ) {
+      //     Node* ul_node = *it;
+      //     if (ul_node->maximum_start < event_time_of_expiration) {
+      //       it = actual_ul.erase(it);
+      //       tecs.unpin(ul_node);
+      //     } else {
+      //       ++it;
+      //     }
+      //   }
       UnionList actual_ul = std::move(historic_union_list_map[p]);
-      if (actual_ul.at(0)->maximum_start < event_time_of_expiration){
+      if (is_ul_out_time_window(actual_ul)){
         tecs.unpin(actual_ul);
       }
       else{
-        // Remove possible dead nodes in ul
-        for (auto it = actual_ul.begin(); it != actual_ul.end(); ) {
-          Node* ul_node = *it;
-          if (ul_node->maximum_start < event_time_of_expiration) {
-            it = actual_ul.erase(it);
-            tecs.unpin(ul_node);
-          } else {
-            ++it;
-          }
-        }
+        remove_dead_nodes_ul(actual_ul);
         exec_trans(tuple,
                   p,
                   std::move(actual_ul),
@@ -139,6 +145,22 @@ class Evaluator {
 
  private:
   State* get_initial_state() { return cea.initial_state; }
+
+  bool is_ul_out_time_window(const UnionList& ul){
+    return (ul.at(0)->maximum_start < event_time_of_expiration);
+  }
+
+  void remove_dead_nodes_ul(UnionList& ul){
+    for (auto it = ul.begin(); it != ul.end(); ) {
+      Node* ul_node = *it;
+      if (ul_node->maximum_start < event_time_of_expiration) {
+        it = ul.erase(it);
+        tecs.unpin(ul_node);
+      } else {
+        ++it;
+      }
+    }
+  }
 
   void exec_trans(RingTupleQueue::Tuple& tuple,
                   State* p,
