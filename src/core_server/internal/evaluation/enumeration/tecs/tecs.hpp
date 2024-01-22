@@ -214,11 +214,11 @@ class tECS {
   }
 
   Node* create_first_intermediate_union_node(Node* node_1, Node* node_2) {
-    Node* u2;
-    // pin(node_2->right);
-    // pin(node_1->right);
+    assert(node_1 != nullptr);
+    assert(node_2 != nullptr);
     assert(node_1->right->node_type != Node::NodeType::DEAD);
     assert(node_2->right->node_type != Node::NodeType::DEAD);
+    Node* u2;
     if (node_1->max() >= node_2->max()) {
       u2 = node_manager.alloc(node_1->right, node_2->right);
     } else {
@@ -229,7 +229,9 @@ class tECS {
   }
 
   Node* create_second_intermediate_union_node(Node* node_2, Node* u2) {
-    // pin(node_2->left);
+    assert(node_2 != nullptr);
+    assert(u2 != nullptr);
+    assert(node_2->left != nullptr);
     assert(node_2->left->node_type != Node::NodeType::DEAD);
     assert(u2->node_type != Node::NodeType::DEAD);
     Node* u1 = node_manager.alloc(node_2->left, u2);
@@ -238,7 +240,9 @@ class tECS {
   }
 
   Node* create_union_of_output_and_intermediate_node(Node* node_1, Node* u2) {
-    // pin(node_1->left);
+    assert(node_1 != nullptr);
+    assert(u2 != nullptr);
+    assert(node_1->left != nullptr);
     assert(node_1->left->node_type != Node::NodeType::DEAD);
     assert(u2->node_type != Node::NodeType::DEAD);
     Node* new_node = node_manager.alloc(node_1->left, u2);
