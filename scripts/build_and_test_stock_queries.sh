@@ -21,7 +21,7 @@ queries=$(find "$base_dir/queries" -type f)
 # parallel --verbose --halt now,fail=1 "$run_and_compare_script $executable '{} $base_dir/stock_data.csv' $base_dir/expected_results/{/}" ::: $queries
 
 echo -e "Checking if expected_results folder exists"
-if ! test -f $base_dir/expected_results; then
+if ! test -d $base_dir/expected_results; then
     echo -e "expected_results folder not found, uncompressing"
     tar -xf $base_dir/expected_results.tar.xz --directory $base_dir
 fi
