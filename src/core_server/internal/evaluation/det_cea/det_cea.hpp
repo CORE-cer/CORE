@@ -5,6 +5,7 @@
 #include <cwchar>
 #include <map>
 #include <memory>
+#include <tracy/Tracy.hpp>
 #include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
@@ -38,6 +39,7 @@ class DetCEA {
   }
 
   States next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
+    ZoneScopedN("DetCEA::next");
     assert(state != nullptr);
     n_nexts++;
     auto next_states = state->next(evaluation, n_hits);  // memoized

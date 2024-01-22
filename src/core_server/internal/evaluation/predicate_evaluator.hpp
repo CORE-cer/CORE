@@ -3,6 +3,7 @@
 #include <gmpxx.h>
 
 #include <memory>
+#include <tracy/Tracy.hpp>
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
@@ -16,6 +17,7 @@ struct PredicateEvaluator {
       : predicates(std::move(predicates)) {}
 
   mpz_class operator()(RingTupleQueue::Tuple& tuple) {
+    ZoneScopedN("PredicateEvaluator::operator()");
     mpz_class out = 0;
     for (size_t i = 0; i < predicates.size(); i++) {
       if ((*predicates[i])(tuple)) {

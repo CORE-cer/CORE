@@ -17,11 +17,13 @@ executable=$1
 arguments=$2
 expected_output_file=$3
 
-# Run the executable with the arguments and capture the output
-actual_output=$( $executable $arguments )
+temp_output_file=$(mktemp)
+
+# Run the executable with the arguments and pipe input into temporary file
+$executable $arguments > $temp_output_file
 
 # Compare the actual output with the expected output
-if diff <(echo "$actual_output") $expected_output_file > /dev/null; then
+if diff $temp_output_file $expected_output_file > /dev/null; then
     echo -e "${GREEN}Output matches expected of ${expected_output_file}${NORMAL_OUTPUT}"
 else
     echo -e "${RED}Output does not match expected of ${expected_output_file}${NORMAL_OUTPUT}"
