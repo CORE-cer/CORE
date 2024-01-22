@@ -49,4 +49,12 @@ if [ $result -ne 0 ]; then
     exit 1
 fi
 
+echo -e "${GREEN}Running build and test stock queries${NORMAL_OUTPUT}"
+./scripts/build_and_test_stock_queries.sh "$@ -b ${buildType}" &> /dev/null
+result=$?
+if [ $result -ne 0 ]; then
+    echo -e "${RED}Some stock queries failed! (${buildType})${NORMAL_OUTPUT}"
+    exit 1
+fi
+
 done
