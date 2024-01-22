@@ -124,7 +124,7 @@ class tECS {
         break;
       }
       if (ulist[i]->max() < node->max()) {
-        pin(node);                             
+        pin(node);
         ulist.insert(ulist.begin() + i, node);
         break;
       }

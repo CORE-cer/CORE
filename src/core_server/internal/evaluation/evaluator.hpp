@@ -88,16 +88,15 @@ class Evaluator {
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
       UnionList actual_ul = std::move(historic_union_list_map[p]);
-      if (is_ul_out_time_window(actual_ul)){
+      if (is_ul_out_time_window(actual_ul)) {
         tecs.unpin(actual_ul);
-      }
-      else{
+      } else {
         remove_dead_nodes_ul(actual_ul);
         exec_trans(tuple,
-                  p,
-                  std::move(actual_ul),
-                  predicates_satisfied,
-                  current_time);  // Send the tuple in exec_trans.
+                   p,
+                   std::move(actual_ul),
+                   predicates_satisfied,
+                   current_time);  // Send the tuple in exec_trans.
       }
     }
     // Update last used q0 so it can be used in the next iteration.
@@ -130,12 +129,12 @@ class Evaluator {
  private:
   State* get_initial_state() { return cea.initial_state; }
 
-  bool is_ul_out_time_window(const UnionList& ul){
+  bool is_ul_out_time_window(const UnionList& ul) {
     return (ul.at(0)->maximum_start < event_time_of_expiration);
   }
 
-  void remove_dead_nodes_ul(UnionList& ul){
-    for (auto it = ul.begin(); it != ul.end(); ) {
+  void remove_dead_nodes_ul(UnionList& ul) {
+    for (auto it = ul.begin(); it != ul.end();) {
       Node* ul_node = *it;
       if (ul_node->maximum_start < event_time_of_expiration) {
         it = ul.erase(it);
