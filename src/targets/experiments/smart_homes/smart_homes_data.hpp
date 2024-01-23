@@ -103,4 +103,4 @@ class DataReader {
   }
 };
 
-};  // namespace CORE::StocksData
+};  // namespace CORE::SmartHomesData
