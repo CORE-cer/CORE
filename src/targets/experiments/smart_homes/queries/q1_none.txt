@@ -1,0 +1,5 @@
+SELECT * FROM S
+WHERE (LOAD as H1; LOAD as H2; LOAD as H3) as H
+FILTER H[value > 76] AND H1[household_id = 0] AND H2[household_id = 2] AND H3[household_id = 4]
+WITHIN 10 [plug_timestamp]
+CONSUME BY NONE

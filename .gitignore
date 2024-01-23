@@ -27,3 +27,4 @@ cmake-build-debug
 .idea
 
 src/targets/experiments/stocks/expected_results
+src/targets/experiments/smart_homes/expected_results

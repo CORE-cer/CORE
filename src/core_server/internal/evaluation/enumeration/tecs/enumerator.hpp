@@ -26,6 +26,7 @@ class Enumerator {
     bool operator!=(const iterator& other) const { return is_end != other.is_end; }
 
     iterator& operator++() {
+      ZoneScopedN("Internal::Enumerator::iterator::operator++");
       if (!enumerator.has_next()) {
         is_end = true;
       }
@@ -129,6 +130,7 @@ class Enumerator {
 
  private:
   bool has_next() {
+    ZoneScopedN("Internal::Enumerator::has_next");
     while (!stack.empty()) {
       Node* current_node = stack.top().first;
       std::vector<RingTupleQueue::Tuple> tuples = stack.top().second;
@@ -153,6 +155,7 @@ class Enumerator {
 
   /// It requires has_next to be evaluated before.
   ComplexEvent next() {
+    ZoneScopedN("Internal::Enumerator::next");
     std::reverse(next_value.second.begin(), next_value.second.end());
     return ComplexEvent(next_value);
   }
