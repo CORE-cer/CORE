@@ -21,7 +21,7 @@ class Queue {
   std::vector<std::vector<uint64_t>> buffers;
   std::vector<std::chrono::system_clock::time_point> last_updated;
 
-  // This parameter specifies from what buffer it is possible to overwrite.
+  // Oldest buffer that has not yet been overwritten.
   uint64_t start_buffer_index;
 
   uint64_t constant_section_buffer_index;
@@ -102,22 +102,21 @@ class Queue {
                               && std::is_convertible<T, std::string>::value,
                             char*>::type {
     // Update the pointer positions fo the constant sized section
-
-    auto& current_buffer = buffers[current_buffer_index];
+    auto* current_buffer = &(buffers[current_buffer_index]);
     auto& constant_section_buffer = buffers[constant_section_buffer_index];
     uint64_t size = (size_in_bytes + 7) / 8;  // Ceiling
     uint64_t index_to_write_in;
-    if (current_index < current_buffer.size() - size) {
+    if (current_index < current_buffer->size() - size) {
       index_to_write_in = current_index;
       current_index += size;
     } else {
       increase_size_if_necessary();
       current_buffer_index = (current_buffer_index + 1) % buffers.size();
-      current_buffer = buffers[current_buffer_index];
+      current_buffer = &(buffers[current_buffer_index]);
       current_index = size;
       index_to_write_in = 0;
     }
-    auto start_ptr = reinterpret_cast<char*>(&current_buffer[index_to_write_in]);
+    auto start_ptr = reinterpret_cast<char*>(&((*current_buffer)[index_to_write_in]));
     auto end_ptr = &(start_ptr[size_in_bytes]);
 
     char** start_ptr_storage = reinterpret_cast<char**>(
