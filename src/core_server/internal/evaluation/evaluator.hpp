@@ -91,7 +91,7 @@ class Evaluator {
       if (is_ul_out_time_window(actual_ul)) {
         tecs.unpin(actual_ul);
       } else {
-        remove_dead_nodes_ul(actual_ul);
+        remove_out_of_time_nodes_ul(actual_ul);
         exec_trans(tuple,
                    p,
                    std::move(actual_ul),
@@ -132,7 +132,7 @@ class Evaluator {
     return (ul.at(0)->maximum_start < event_time_of_expiration);
   }
 
-  void remove_dead_nodes_ul(UnionList& ul) {
+  void remove_out_of_time_nodes_ul(UnionList& ul) {
     ZoneScopedN("Evaluator::remove_dead_nodes_ul");
     for (auto it = ul.begin(); it != ul.end();) {
       Node* ul_node = *it;
