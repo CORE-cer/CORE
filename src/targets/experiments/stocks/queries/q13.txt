@@ -1,0 +1,5 @@
+SELECT * FROM S
+WHERE (BUY as T1:((BUY as T2 OR SELL as T3):+ OR (BUY as T1)+))
+FILTER T1[name = 'INTC']
+WITHIN 100 [stock_time]
+CONSUME BY NONE
