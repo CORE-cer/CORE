@@ -56,6 +56,7 @@ class Queue {
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {
       // Current buffer does have enough size.
+      constant_section_buffer_index = current_buffer_index;
       constant_section_index = current_index;
       current_index += minimum_size;
     } else {
@@ -103,7 +104,6 @@ class Queue {
                             char*>::type {
     // Update the pointer positions fo the constant sized section
     auto* current_buffer = &(buffers[current_buffer_index]);
-    auto& constant_section_buffer = buffers[constant_section_buffer_index];
     uint64_t size = (size_in_bytes + 7) / 8;  // Ceiling
     uint64_t index_to_write_in;
     if (current_index < current_buffer->size() - size) {
@@ -119,6 +119,7 @@ class Queue {
     auto start_ptr = reinterpret_cast<char*>(&((*current_buffer)[index_to_write_in]));
     auto end_ptr = &(start_ptr[size_in_bytes]);
 
+    auto& constant_section_buffer = buffers[constant_section_buffer_index];
     char** start_ptr_storage = reinterpret_cast<char**>(
       &constant_section_buffer[constant_section_index++]);
     *start_ptr_storage = start_ptr;
