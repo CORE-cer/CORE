@@ -215,7 +215,12 @@ class Evaluator {
       return {};
     } else {
       tecs.pin(out);
-      return {out, actual_time, time_window, tecs, tecs.time_reservator, enumeration_limit.result_limit};
+      return {out,
+              actual_time,
+              time_window,
+              tecs,
+              tecs.time_reservator,
+              enumeration_limit.result_limit};
     }
   }
 };
