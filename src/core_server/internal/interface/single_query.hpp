@@ -76,7 +76,8 @@ class SingleQuery {
                                                                     tuple_evaluator),
                                                                   time_window.duration,
                                                                   time_of_expiration,
-                                                                  query.consume_by.policy);
+                                                                  query.consume_by.policy,
+                                                                  query.limit);
   }
 
   void start() {

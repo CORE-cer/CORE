@@ -28,7 +28,7 @@ class Enumerator {
 
     iterator& operator++() {
       ZoneScopedN("Internal::Enumerator::iterator::operator++");
-      if (current_number_result >= enumerator.enumeration_limit
+      if (current_number_result == enumerator.enumeration_limit
           || !enumerator.has_next()) {
         is_end = true;
       }
@@ -45,21 +45,22 @@ class Enumerator {
   tECS* tecs{nullptr};
   TimeReservator* time_reservator{nullptr};
   TimeReservator::Node* time_reserved_node{nullptr};
-  uint64_t enumeration_limit;
+  int64_t enumeration_limit;
 
  public:
   Enumerator(Node* node,
              uint64_t original_pos,
              uint64_t time_window,
              tECS& tecs,
-             TimeReservator* time_reservator)
+             TimeReservator* time_reservator,
+             int64_t enumeration_limit)
       : original_pos(original_pos),
         last_time_to_consider((original_pos < time_window) ? 0
                                                            : original_pos - time_window),
         original_node(node),
         tecs(&tecs),
         time_reservator(time_reservator),
-        enumeration_limit(1000000000000000000) {
+        enumeration_limit(enumeration_limit) {
     assert(time_reservator != nullptr);
     time_reserved_node = time_reservator->reserve(last_time_to_consider);
     assert(node != nullptr);
