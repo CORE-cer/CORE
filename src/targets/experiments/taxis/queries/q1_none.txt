@@ -1,0 +1,8 @@
+SELECT * FROM S
+WHERE (TRIP as loc1; TRIP as loc2; TRIP as loc3)
+FILTER 
+    loc1[pickup_zone = 'East Harlem North' and dropoff_zone = 'Midwood'] AND 
+    loc2[pickup_zone = 'Midwood' AND dropoff_zone = 'Gravesend'] AND
+    loc3[pickup_zone = 'Gravesend' AND dropoff_zone = 'West Brighton']
+WITHIN 1000 [dropoff_datetime]
+CONSUME BY NONE
