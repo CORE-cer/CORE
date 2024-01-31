@@ -125,10 +125,11 @@ class Backend {
       for (size_t i = 0; i < query_events_time_window_mode.size(); i++) {
         switch (query_events_time_window_mode[i]) {
           case CEQL::Within::TimeWindowMode::EVENTS:
-          case CEQL::Within::TimeWindowMode::ATTRIBUTE:
             consensus = std::min(query_events_expiration_time[i].get()
                                    * maximum_historic_time_between_events,
                                  consensus);
+          case CEQL::Within::TimeWindowMode::ATTRIBUTE:
+            consensus = 0;
             break;
           case CEQL::Within::TimeWindowMode::NONE:
           case CEQL::Within::TimeWindowMode::NANOSECONDS:
