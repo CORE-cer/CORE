@@ -3,6 +3,7 @@
 
 #include "consume_by.hpp"
 #include "from.hpp"
+#include "limit.hpp"
 #include "partition_by.hpp"
 #include "select.hpp"
 #include "where.hpp"
@@ -16,6 +17,7 @@ struct Query {
   PartitionBy partition_by;  // TODO
   Within within;
   ConsumeBy consume_by;
+  Limit limit;
 
   Query(Select&& select,
         From&& from,

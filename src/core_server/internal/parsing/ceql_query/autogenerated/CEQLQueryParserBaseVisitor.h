@@ -123,6 +123,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitL_integer(CEQLQueryParser::L_integerContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitPar_filter(CEQLQueryParser::Par_filterContext *ctx) override {
     return visitChildren(ctx);
   }
