@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
 
   std::string query_path = argv[1];
   std::string data_path = argv[2];
+  std::ios_base::sync_with_stdio(false);
 
   FrameMark;
   try {
