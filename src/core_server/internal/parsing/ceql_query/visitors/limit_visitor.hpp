@@ -8,7 +8,8 @@
 namespace CORE::Internal::Parsing {
 class LimitVisitor : public CEQLQueryParserBaseVisitor {
  private:
-  int64_t limit = {};
+  // Default to no limit
+  int64_t limit = -1;
 
  public:
   CEQL::Limit get_parsed_limit() { return CEQL::Limit(limit); }
