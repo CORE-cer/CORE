@@ -24,13 +24,15 @@ struct Query {
         Where&& where,
         PartitionBy&& partition_by,
         Within&& within,
-        ConsumeBy&& consume_by)
+        ConsumeBy&& consume_by,
+        Limit&& limit)
       : select(std::move(select)),
         from(std::move(from)),
         where(std::move(where)),
         partition_by(std::move(partition_by)),
         within(std::move(within)),
-        consume_by(std::move(consume_by)) {}
+        consume_by(std::move(consume_by)),
+        limit(std::move(limit)) {}
 
   std::string to_string() const {
     std::string out = select.to_string() + "\n" + from.to_string() + "\n"

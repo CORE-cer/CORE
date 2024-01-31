@@ -92,7 +92,8 @@ CEQL::Query parse_query(std::string query) {  // Only parses where correctly
                            std::move(where_visitor.get_parsed_where()),
                            CEQL::PartitionBy(),
                            CEQL::Within(),
-                           CEQL::ConsumeBy());
+                           CEQL::ConsumeBy(),
+                           CEQL::Limit());
   return parsed_query;
 }
 
