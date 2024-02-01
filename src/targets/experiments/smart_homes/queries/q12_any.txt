@@ -1,0 +1,11 @@
+SELECT LAST * FROM S
+WHERE (LOAD as H1; LOAD as H2; LOAD as H3; LOAD as HNE) as H
+FILTER 
+    H[value > 76] AND 
+    H1[household_id = 0] AND
+    H2[household_id = 2] AND
+    H3[household_id = 4] AND
+    HNE[household_id = 1000]
+WITHIN 10 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000
