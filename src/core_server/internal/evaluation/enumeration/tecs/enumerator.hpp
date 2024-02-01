@@ -28,11 +28,11 @@ class Enumerator {
 
     iterator& operator++() {
       ZoneScopedN("Internal::Enumerator::iterator::operator++");
+      current_number_result++;
       if (current_number_result == enumerator.enumeration_limit
           || !enumerator.has_next()) {
         is_end = true;
       }
-      current_number_result++;
       return *this;
     }
   };
@@ -125,7 +125,7 @@ class Enumerator {
     }
   }
 
-  iterator begin() { return iterator(*this, !has_next()); }
+  iterator begin() { return iterator(*this, !has_next() || enumeration_limit == 0); }
 
   iterator end() { return iterator(*this, true); }
 
