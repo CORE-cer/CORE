@@ -115,7 +115,8 @@ class Evaluator {
 
     if (has_output) {
       tECS::Enumerator enumerator = output();
-      assert(enumeration_limit.result_limit == 0 || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
+      assert(enumeration_limit.result_limit == 0
+             || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
       if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
         historic_ordered_keys.clear();
         for (auto& [state, ul] : historic_union_list_map) {
