@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
+#include "core_server/internal/ceql/query/limit.hpp"
 #include "det_cea/det_cea.hpp"
 #include "det_cea/state.hpp"
 #include "enumeration/tecs/enumerator.hpp"
@@ -47,6 +48,7 @@ class Evaluator {
   tECS::tECS tecs;
 
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
+  CEQL::Limit enumeration_limit;
 
 // Only in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
@@ -58,13 +60,15 @@ class Evaluator {
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
             std::atomic<uint64_t>& event_time_of_expiration,
-            CEQL::ConsumeBy::ConsumptionPolicy consumption_policy)
+            CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
+            CEQL::Limit enumeration_limit)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
         tecs(event_time_of_expiration),
-        consumption_policy(consumption_policy) {}
+        consumption_policy(consumption_policy),
+        enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
   next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
@@ -111,8 +115,8 @@ class Evaluator {
 
     if (has_output) {
       tECS::Enumerator enumerator = output();
-      // TODO: uncomment assert and remove condition from if after fixing has_output bug on empty enumerator
-      assert(enumerator.begin() != enumerator.end() && (enumerator.reset(), true));
+      assert(enumeration_limit.result_limit == 0
+             || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
       if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
         historic_ordered_keys.clear();
         for (auto& [state, ul] : historic_union_list_map) {
@@ -212,7 +216,12 @@ class Evaluator {
       return {};
     } else {
       tecs.pin(out);
-      return {out, actual_time, time_window, tecs, tecs.time_reservator};
+      return {out,
+              actual_time,
+              time_window,
+              tecs,
+              tecs.time_reservator,
+              enumeration_limit.result_limit};
     }
   }
 };

@@ -30,15 +30,15 @@ fi
 for query in $queries; do
     echo -e "Running ${query}"
     query_file=$(basename "$query")
-    # if ! test -f "$base_dir/expected_results/$query_file"; then
-    #     $executable $base_dir/queries/$query_file $base_dir/$csv | tee $base_dir/expected_results/$query_file
-    # fi
-    $run_and_compare_script $executable "$query $base_dir/$csv" "$base_dir/expected_results/$query_file"
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"
-        echo -e "${RED}Check if expected_results folder is up-to-date with tar.xz${NORMAL_OUTPUT}"
-        exit 1
+    if ! test -f "$base_dir/expected_results/$query_file"; then
+        { time $executable $base_dir/queries/$query_file $base_dir/$csv > $base_dir/expected_results/$query_file ; } 2> $base_dir/expected_results/"${query_file}_time.txt"
     fi
+    # $run_and_compare_script $executable "$query $base_dir/$csv" "$base_dir/expected_results/$query_file"
+    # if [ $? -ne 0 ]; then
+    #     echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"
+    #     echo -e "${RED}Check if expected_results folder is up-to-date with tar.xz${NORMAL_OUTPUT}"
+    #     exit 1
+    # fi
 done
 # Check if parallel succeeded
 

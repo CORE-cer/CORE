@@ -22,6 +22,7 @@ core_query
    ( K_PARTITION K_BY partition_list )?
    ( K_WITHIN time_window )?
    ( K_CONSUME K_BY consumption_policy )?
+   ( K_LIMIT limit )?
  ;
 
 selection_strategy
@@ -68,6 +69,10 @@ consumption_policy
  : K_ANY                                                # cp_any
  | K_PARTITION                                          # cp_partition
  | K_NONE                                               # cp_none
+ ;
+
+ limit
+ : integer                                              # l_integer
  ;
 
 filter

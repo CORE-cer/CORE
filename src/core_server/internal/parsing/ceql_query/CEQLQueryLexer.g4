@@ -6,6 +6,7 @@ K_ANY       : A N Y;
 K_AS        : A S;
 K_BY        : B Y;
 K_CONSUME   : C O N S U M E;
+K_LIMIT   : L I M I T;
 K_DISTINCT  : D I S T I N C T;
 K_EVENT     : E V E N T;
 K_EVENTS    : E V E N T S;
