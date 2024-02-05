@@ -16,6 +16,7 @@
 
 namespace CORE::Internal::Parsing {
 
+// Are they necessary?
 class QueryVisitor : public CEQLQueryParserBaseVisitor {
   // Override methods from the base visitor to handle
   // specific grammar rules as needed
