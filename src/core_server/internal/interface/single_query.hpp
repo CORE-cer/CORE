@@ -126,7 +126,7 @@ class SingleQuery {
         // TODO: Extract logic and memoize so it is only done once
         Types::EventTypeId event_type_id = tuple.id();
         uint64_t attribute_index = catalog.get_index_attribute(event_type_id,
-                                                      time_window.attribute_name);
+                                                               time_window.attribute_name);
         time = *tuple[attribute_index];
         break;
       }
