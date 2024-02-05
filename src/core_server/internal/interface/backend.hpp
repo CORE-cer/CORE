@@ -26,6 +26,9 @@ class Backend {
   RingTupleQueue::Queue queue;
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
+  std::vector<std::reference_wrapper<std::atomic<uint64_t*>>> last_received_tuple = {};
+  std::vector<uint64_t*> last_sent_tuple = {};
+
   // TODO: Copied from mediator, check
   std::vector<std::reference_wrapper<std::atomic<uint64_t>>> query_events_expiration_time =
     {};
@@ -38,6 +41,14 @@ class Backend {
 
  public:
   Backend() : queue(100'000, &catalog.tuple_schemas) {}
+
+  ~Backend() {
+    for (int i = 0; i < last_received_tuple.size(); i++) {
+      while (last_sent_tuple[i] != last_received_tuple[i].get().load()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+      }
+    }
+  }
 
   const Catalog& get_catalog_reference() const { return catalog; }
 
@@ -93,6 +104,8 @@ class Backend {
 
     query_events_time_window_mode.push_back(queries.back()->time_window.mode);
     query_events_expiration_time.emplace_back(queries.back()->time_of_expiration);
+    last_received_tuple.emplace_back(queries.back()->last_received_tuple);
+    last_sent_tuple.push_back(nullptr);
 
     zmq::context_t& inproc_context = queries.back()->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
@@ -109,7 +122,9 @@ class Backend {
                                                     ns - previous_event_sent.value());
     previous_event_sent = ns;
     // TODO: send events to specific queries that require it.
-    for (auto& sender : inner_thread_event_senders) {
+    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
+      ZMQMessageSender& sender = inner_thread_event_senders[i];
+      last_sent_tuple[i] = tuple.get_data();
       sender.send(tuple.serialize_data());
     }
 

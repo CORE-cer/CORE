@@ -33,6 +33,7 @@ class SingleQuery {
   int64_t attribute_index = -1;
 
  public:
+  std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
@@ -94,6 +95,7 @@ class SingleQuery {
         if (!tuple.has_value()) {
           continue;
         }
+        last_received_tuple.store(tuple->get_data());
         std::optional<tECS::Enumerator> output = process_event(tuple.value());
         result_handler(std::move(output));
       }

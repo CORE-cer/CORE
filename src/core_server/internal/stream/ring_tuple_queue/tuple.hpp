@@ -141,6 +141,8 @@ class Tuple {
  public:
   explicit Tuple(uint64_t* data, TupleSchemas* schemas) : data(data), schemas(schemas) {}
 
+  uint64_t* get_data() const { return data; }
+
   uint64_t id() const { return data[0]; }
 
   const std::vector<SupportedTypes>& get_schema() const {
