@@ -7,3 +7,4 @@ FILTER
     locNE[pickup_zone = 'Not Exist']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY NONE
+LIMIT 1000

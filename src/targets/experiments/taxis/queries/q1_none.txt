@@ -6,3 +6,4 @@ FILTER
     loc3[pickup_zone = 'Gravesend' AND dropoff_zone = 'West Brighton']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY NONE
+LIMIT 1000

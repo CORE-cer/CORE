@@ -14,3 +14,4 @@ FILTER
     loc9[pickup_zone = 'East Harlem North' AND dropoff_zone = 'Gravesend']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY NONE
+LIMIT 1000

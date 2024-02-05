@@ -19,3 +19,4 @@ FILTER
     NE[pickup_zone = 'NotExists']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY NONE
+LIMIT 1000

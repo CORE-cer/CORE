@@ -10,3 +10,4 @@ FILTER
     loc6[pickup_zone = 'Sutton Place/Turtle Bay North' AND dropoff_zone = 'East Concourse/Concourse Village']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY ANY
+LIMIT 1000

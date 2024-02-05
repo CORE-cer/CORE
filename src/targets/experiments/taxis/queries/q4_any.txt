@@ -18,3 +18,4 @@ FILTER
     loc12[pickup_zone = 'Midwood' AND dropoff_zone = 'Gravesend']
 WITHIN 1000 [dropoff_datetime]
 CONSUME BY ANY
+LIMIT 1000

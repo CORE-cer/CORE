@@ -15,6 +15,7 @@ run_and_compare_script="scripts/run_and_compare.sh"
 base_dir="src/targets/experiments/taxis"
 executable="build/${BUILD_TYPE}/offline_experiment_taxis"
 csv="taxi_data.csv"
+compressed_csv="taxi_data.tar.xz"
 
 queries=$(find "$base_dir/queries" -type f) 
 
@@ -27,18 +28,24 @@ if ! test -d $base_dir/expected_results; then
     tar -xf $base_dir/expected_results.tar.xz --directory $base_dir
 fi
 
+echo -e "Checking if $csv exists"
+if ! test -f $base_dir/$csv; then
+    echo -e "$csv not found, uncompressing"
+    tar -xf $base_dir/$compressed_csv --directory $base_dir
+fi
+
 for query in $queries; do
     echo -e "Running ${query}"
     query_file=$(basename "$query")
-    if ! test -f "$base_dir/expected_results/$query_file"; then
-        $executable $base_dir/queries/$query_file $base_dir/$csv | tee $base_dir/expected_results/$query_file
-    fi
-    # $run_and_compare_script $executable "$query $base_dir/$csv" "$base_dir/expected_results/$query_file"
-    # if [ $? -ne 0 ]; then
-    #     echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"
-    #     echo -e "${RED}Check if expected_results folder is up-to-date with tar.xz${NORMAL_OUTPUT}"
-    #     exit 1
+    # if ! test -f "$base_dir/expected_results/$query_file"; then
+    #     { time $executable $base_dir/queries/$query_file $base_dir/$csv > $base_dir/expected_results/$query_file ; } 2> $base_dir/expected_results/"${query_file}_time.txt"
     # fi
+    $run_and_compare_script $executable "$query $base_dir/$csv" "$base_dir/expected_results/$query_file"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"
+        echo -e "${RED}Check if expected_results folder and $csv is up-to-date with tar.xz${NORMAL_OUTPUT}"
+        exit 1
+    fi
 done
 # Check if parallel succeeded
 
