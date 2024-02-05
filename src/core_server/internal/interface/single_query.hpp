@@ -29,9 +29,6 @@ class SingleQuery {
   std::atomic<bool> stop_condition = false;
   std::thread worker_thread;
 
-  // Used for memoizing the attribute index if the time window mode is attribute
-  int64_t attribute_index = -1;
-
  public:
   std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
@@ -127,11 +124,9 @@ class SingleQuery {
         break;
       case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
         // TODO: Extract logic and memoize so it is only done once
-        if (attribute_index == -1) {
-          Types::EventTypeId event_type_id = tuple.id();
-          attribute_index = catalog.get_index_attribute(event_type_id,
-                                                        time_window.attribute_name);
-        }
+        Types::EventTypeId event_type_id = tuple.id();
+        uint64_t attribute_index = catalog.get_index_attribute(event_type_id,
+                                                      time_window.attribute_name);
         time = *tuple[attribute_index];
         break;
       }
