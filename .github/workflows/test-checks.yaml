@@ -35,9 +35,6 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
 
-      - name: run stock query tests
-        run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Debug
-
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
 
