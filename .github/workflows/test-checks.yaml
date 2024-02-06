@@ -51,7 +51,7 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
         with:
-          root-reserve-mb: 2048
+          root-reserve-mb: 12000
 
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
