@@ -37,6 +37,7 @@ class StreamVisitor : public StreamDeclarationParserBaseVisitor {
       event_visitor.visit(event_declaration_ctx[i]);
       events.push_back(event_visitor.get_parsed_event());
     }
+    return {};
   }
 };
 }  // namespace CORE::Internal::Parsing::Declaration
