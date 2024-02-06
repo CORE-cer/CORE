@@ -1,4 +1,4 @@
-name: Test Checks
+name: Benchmarks
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  run-tests-release:
+  run-benchmarks-release:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
