@@ -1,0 +1,6 @@
+SELECT * FROM S
+WHERE (LOAD as H1; LOAD as H2; LOAD as H3; LOAD as H4; LOAD as H5; LOAD as H6; LOAD as H7; LOAD as H8; LOAD as H9; LOAD as H10; LOAD as H11; LOAD as H12) as H
+FILTER H[value > 76] AND H1[household_id = 0] AND H2[household_id = 2] AND H3[household_id = 4] AND H4[household_id = 6] AND H5[household_id = 9] AND H6[household_id = 10] AND H7[household_id = 12] AND H8[household_id = 14] AND H9[household_id = 15] AND H10[household_id = 4] AND H11[household_id = 9] AND H12[household_id = 10]
+WITHIN 10 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

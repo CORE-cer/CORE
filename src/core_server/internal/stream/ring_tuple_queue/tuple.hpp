@@ -1,6 +1,7 @@
 #ifndef TUPLE_HPP
 #define TUPLE_HPP
 
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
@@ -140,6 +141,8 @@ class Tuple {
  public:
   explicit Tuple(uint64_t* data, TupleSchemas* schemas) : data(data), schemas(schemas) {}
 
+  uint64_t* get_data() const { return data; }
+
   uint64_t id() const { return data[0]; }
 
   const std::vector<SupportedTypes>& get_schema() const {
@@ -165,6 +168,8 @@ class Tuple {
   std::string serialize_data() const {
     // Use memcpy or some other way so that the data ptr is sent as a string, so that
     // it is then converted directly to a uint64_t* pos.
+    std::atomic<uint64_t*> atomic_data;
+    atomic_data.store(data, std::memory_order_release);
     std::string out(sizeof(uint64_t*), '\0');
     std::memcpy(&out[0], &data, sizeof(uint64_t*));
     return out;

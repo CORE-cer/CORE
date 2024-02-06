@@ -1,0 +1,39 @@
+SELECT * FROM S
+WHERE (LOAD as H1; LOAD as H2; LOAD as H3; 
+	LOAD as H4; LOAD as H5; LOAD as H6;
+	LOAD as H7; LOAD as H8; LOAD as H9;
+	LOAD as H10; LOAD as H11; LOAD as H12;
+    LOAD as H13; LOAD as H14; LOAD as H15; 
+	LOAD as H16; LOAD as H17; LOAD as H18;
+	LOAD as H19; LOAD as H20; LOAD as H21;
+	LOAD as H22; LOAD as H23; LOAD as H24; LOAD as NE) as H
+FILTER 
+    H[value > 76] AND 
+    H1[household_id = 0] AND
+    H2[household_id = 2] AND
+    H3[household_id = 4] AND
+    H4[household_id = 6] AND
+    H5[household_id = 9] AND
+    H6[household_id = 10] AND
+    H7[household_id = 12] AND
+    H8[household_id = 14] AND
+    H9[household_id = 15] AND
+    H10[household_id = 4] AND
+    H11[household_id = 9] AND
+    H12[household_id = 10] AND
+    H13[household_id = 0] AND
+    H14[household_id = 2] AND
+    H15[household_id = 4] AND
+    H16[household_id = 6] AND
+    H17[household_id = 9] AND
+    H18[household_id = 10] AND
+    H19[household_id = 12] AND
+    H20[household_id = 14] AND
+    H21[household_id = 15] AND
+    H22[household_id = 4] AND
+    H23[household_id = 9] AND
+    H24[household_id = 10] AND
+    NE[household_id = 1000]
+WITHIN 10 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

@@ -35,9 +35,6 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
 
-      - name: run stock query tests
-        run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Debug
-
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
 
@@ -48,6 +45,11 @@ jobs:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 12000
+
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -75,6 +77,12 @@ jobs:
 
       - name: run stock query tests
         run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Release
+
+      - name: run smart home query tests
+        run: chmod +x ./scripts/build_and_test_smart_homes_queries.sh && ./scripts/build_and_test_smart_homes_queries.sh -b Release
+
+      - name: run taxi query tests
+        run: chmod +x ./scripts/build_and_test_taxi_queries.sh && ./scripts/build_and_test_taxi_queries.sh -b Release
 
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address

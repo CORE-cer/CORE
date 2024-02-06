@@ -10,6 +10,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "visitors/consume_visitor.hpp"
 #include "visitors/from_visitor.hpp"
+#include "visitors/limit_visitor.hpp"
 #include "visitors/select_visitor.hpp"
 #include "visitors/where_visitor.hpp"
 #include "visitors/within_visitor.hpp"
@@ -65,12 +66,17 @@ class Parser {
     consume_visitor.visit(tree);
     CEQL::ConsumeBy consume = consume_visitor.get_parsed_consume();
 
+    LimitVisitor limit_visitor;
+    limit_visitor.visit(tree);
+    CEQL::Limit limit = limit_visitor.get_parsed_limit();
+
     return {std::move(select),
             std::move(from),
             std::move(where),
             {},
             std::move(within),
-            std::move(consume)};
+            std::move(consume),
+            std::move(limit)};
   }
 };
 

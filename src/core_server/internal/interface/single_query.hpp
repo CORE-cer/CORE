@@ -30,6 +30,7 @@ class SingleQuery {
   std::thread worker_thread;
 
  public:
+  std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
@@ -76,7 +77,8 @@ class SingleQuery {
                                                                     tuple_evaluator),
                                                                   time_window.duration,
                                                                   time_of_expiration,
-                                                                  query.consume_by.policy);
+                                                                  query.consume_by.policy,
+                                                                  query.limit);
   }
 
   void start() {
@@ -90,6 +92,7 @@ class SingleQuery {
         if (!tuple.has_value()) {
           continue;
         }
+        last_received_tuple.store(tuple->get_data());
         std::optional<tECS::Enumerator> output = process_event(tuple.value());
         result_handler(std::move(output));
       }

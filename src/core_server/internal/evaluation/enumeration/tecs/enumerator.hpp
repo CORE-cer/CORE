@@ -16,6 +16,7 @@ class Enumerator {
    private:
     Enumerator& enumerator;
     bool is_end;
+    uint64_t current_number_result = 0;
 
    public:
     iterator(Enumerator& enumerator, bool is_end)
@@ -27,7 +28,9 @@ class Enumerator {
 
     iterator& operator++() {
       ZoneScopedN("Internal::Enumerator::iterator::operator++");
-      if (!enumerator.has_next()) {
+      current_number_result++;
+      if (current_number_result == enumerator.enumeration_limit
+          || !enumerator.has_next()) {
         is_end = true;
       }
       return *this;
@@ -42,19 +45,22 @@ class Enumerator {
   tECS* tecs{nullptr};
   TimeReservator* time_reservator{nullptr};
   TimeReservator::Node* time_reserved_node{nullptr};
+  int64_t enumeration_limit;
 
  public:
   Enumerator(Node* node,
              uint64_t original_pos,
              uint64_t time_window,
              tECS& tecs,
-             TimeReservator* time_reservator)
+             TimeReservator* time_reservator,
+             int64_t enumeration_limit)
       : original_pos(original_pos),
         last_time_to_consider((original_pos < time_window) ? 0
                                                            : original_pos - time_window),
         original_node(node),
         tecs(&tecs),
-        time_reservator(time_reservator) {
+        time_reservator(time_reservator),
+        enumeration_limit(enumeration_limit) {
     assert(time_reservator != nullptr);
     time_reserved_node = time_reservator->reserve(last_time_to_consider);
     assert(node != nullptr);
@@ -80,7 +86,8 @@ class Enumerator {
         original_node(other.original_node),
         tecs(other.tecs),
         time_reservator(other.time_reservator),
-        time_reserved_node(other.time_reserved_node) {
+        time_reserved_node(other.time_reserved_node),
+        enumeration_limit(other.enumeration_limit) {
     other.tecs = nullptr;
     other.time_reservator = nullptr;
     other.time_reserved_node = nullptr;
@@ -98,6 +105,7 @@ class Enumerator {
       tecs = other.tecs;
       time_reservator = other.time_reservator;
       time_reserved_node = other.time_reserved_node;
+      enumeration_limit = other.enumeration_limit;
       other.tecs = nullptr;
       other.time_reservator = nullptr;
       other.time_reserved_node = nullptr;
@@ -117,7 +125,7 @@ class Enumerator {
     }
   }
 
-  iterator begin() { return iterator(*this, !has_next()); }
+  iterator begin() { return iterator(*this, !has_next() || enumeration_limit == 0); }
 
   iterator end() { return iterator(*this, true); }
 

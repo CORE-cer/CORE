@@ -140,6 +140,9 @@ target_link_libraries(offline_experiment_stocks PRIVATE core)
 add_executable(offline_experiment_smart_homes src/targets/experiments/smart_homes/offline_experiment_smart_homes.cpp)
 target_link_libraries(offline_experiment_smart_homes PRIVATE core)
 
+add_executable(offline_experiment_taxis src/targets/experiments/taxis/offline_experiment_taxis.cpp)
+target_link_libraries(offline_experiment_taxis PRIVATE core)
+
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
  # install(TARGETS core DESTINATION ~/.local/bin)
