@@ -38,13 +38,13 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
 
       - name: benchmark stock query
-        run: chmod +x ./scripts/build_and_benchmark_stock_queries.sh && ./scripts/build_and_benchmark_stock_queries.sh -b Release
+        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
 
       - name: benchmark smart home query
-        run: chmod +x ./scripts/build_and_benchmark_smart_homes_queries.sh && ./scripts/build_and_benchmark_smart_homes_queries.sh -b Release
+        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
 
       - name: benchmark taxi query
-        run: chmod +x ./scripts/build_and_benchmark_taxi_queries.sh && ./scripts/build_and_benchmark_taxi_queries.sh -b Release
+        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
 
       - uses: actions/upload-artifact@v4
         with:
