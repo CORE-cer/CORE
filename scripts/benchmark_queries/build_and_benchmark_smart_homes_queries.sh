@@ -16,7 +16,7 @@ executable="build/${BUILD_TYPE}/offline_experiment_smart_homes"
 csv="smart_homes_data.csv"
 benchmark_file="$base_dir/benchmark.csv"
 
-queries=$(find "$base_dir/queries" -type f) 
+queries=$(find "$base_dir/queries" -type f | sort -V) 
 TIMEFORMAT=%R
 
 repeats=3
