@@ -38,7 +38,6 @@ jobs:
       - uses: mshick/add-pr-comment@v2
         with:
           message-id: 1
-          update-only: true
           message: |
             Stocks:
             ${{steps.csv-table-output_1.outputs.markdown-table}}
@@ -78,6 +77,7 @@ jobs:
 
       - uses: mshick/add-pr-comment@v2
         with:
+          message-id: 2
           message: |
             Stocks:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
@@ -99,6 +99,7 @@ jobs:
 
       - uses: mshick/add-pr-comment@v2
         with:
+          message-id: 3
           message: |
             Smart Homes:
             ${{steps.csv-table-output_3.outputs.markdown-table}}
@@ -120,6 +121,7 @@ jobs:
 
       - uses: mshick/add-pr-comment@v2
         with:
+          message-id: 4
           message: |
             Taxis:
             ${{steps.csv-table-output_4.outputs.markdown-table}}
