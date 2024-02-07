@@ -23,25 +23,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Read CSV
-        id: csv_1
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ./src/targets/experiments/smart_homes/benchmark_test.csv
-
-      - name: Create MD
-        uses: petems/csv-to-md-table-action@master
-        id: csv-table-output_1
-        with:
-          csvinput: ${{ steps.csv_1.outputs.content }}
-
-      - uses: mshick/add-pr-comment@v2
-        with:
-          message-id: 1
-          message: |
-            Stocks:
-            ${{steps.csv-table-output_1.outputs.markdown-table}}
-
       - name: Install python and pip
         run: sudo apt install -y python3 && sudo apt install -y python3-pip
 
