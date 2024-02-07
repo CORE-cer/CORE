@@ -37,7 +37,10 @@ jobs:
 
       - uses: mshick/add-pr-comment@v2
         with:
+          message-id: 1
+          update-only: true
           message: |
+            Stocks:
             ${{steps.csv-table-output.outputs.markdown-table}}
 
       - name: Install python and pip
@@ -61,11 +64,65 @@ jobs:
       - name: benchmark stock query
         run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
 
+      - name: Read CSV
+        id: csv
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/stocks/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output
+        with:
+          csvinput: ${{ steps.csv.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Stocks:
+            ${{steps.csv-table-output.outputs.markdown-table}}
+
       - name: benchmark smart home query
         run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
 
+      - name: Read CSV
+        id: csv
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/smart_homes/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output
+        with:
+          csvinput: ${{ steps.csv.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Smart Homes:
+            ${{steps.csv-table-output.outputs.markdown-table}}
+
       - name: benchmark taxi query
         run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
+
+      - name: Read CSV
+        id: csv
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/taxis/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output
+        with:
+          csvinput: ${{ steps.csv.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Taxis:
+            ${{steps.csv-table-output.outputs.markdown-table}}
 
       - uses: actions/upload-artifact@v4
         with:

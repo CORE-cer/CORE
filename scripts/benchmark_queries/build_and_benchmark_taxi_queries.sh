@@ -17,7 +17,7 @@ csv="taxi_data.csv"
 compressed_csv="taxi_data.tar.xz"
 benchmark_file="$base_dir/benchmark.csv"
 
-queries=$(find "$base_dir/queries" -type f) 
+queries=$(find "$base_dir/queries" -type f | sort -V) 
 TIMEFORMAT=%R
 
 repeats=3
