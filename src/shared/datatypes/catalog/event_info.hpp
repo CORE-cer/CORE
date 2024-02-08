@@ -13,6 +13,8 @@ struct EventInfo {
   EventTypeId id;
   std::string name;
   std::vector<AttributeInfo> attributes_info;
+
+  // In tested circumstances faster then unordered_map
   std::map<std::string, size_t> attribute_names_to_ids;
 
   EventInfo() noexcept {}
