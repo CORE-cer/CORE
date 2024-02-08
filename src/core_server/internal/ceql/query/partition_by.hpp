@@ -6,7 +6,11 @@
 namespace CORE::Internal::CEQL {
 
 struct PartitionBy {
-  std::vector<Attribute> attributes;
+  std::vector<Attribute> attributes = {};
+
+  PartitionBy() {}
+
+  PartitionBy(std::vector<Attribute>&& attributes) : attributes(attributes) {}
 
   std::string to_string() const {
     if (attributes.size() == 0) return "";
