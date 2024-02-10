@@ -14,7 +14,7 @@
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface {
-template <typename ResultHandlerT>
+template <typename Derived, typename ResultHandlerT>
 class GenericQuery {
  protected:
   uint64_t current_stream_position = 0;
@@ -33,7 +33,8 @@ class GenericQuery {
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  GenericQuery(Internal::Catalog& catalog,
+  GenericQuery(Internal::CEQL::Query&& query,
+               Internal::Catalog& catalog,
                RingTupleQueue::Queue& queue,
                std::string inproc_receiver_address,
                ResultHandlerT& result_handler)
@@ -41,9 +42,7 @@ class GenericQuery {
         queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
-        result_handler(result_handler) {}
-
-  void init(Internal::CEQL::Query&& query) {
+        result_handler(result_handler) {
     create_query(std::move(query), catalog);
     start();
   }
@@ -53,7 +52,9 @@ class GenericQuery {
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
  private:
-  virtual void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) = 0;
+  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
+    static_cast<Derived*>(this)->create_query(std::move(query), catalog);
+  }
 
   void start() {
     worker_thread = std::thread([&]() {
@@ -84,7 +85,9 @@ class GenericQuery {
     }
   }
 
-  virtual std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) = 0;
+  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
+    return static_cast<Derived*>(this)->process_event(tuple);
+  }
 
   std::optional<RingTupleQueue::Tuple>
   serialized_message_to_tuple(std::string& serialized_message) {

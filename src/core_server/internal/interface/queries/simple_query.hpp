@@ -16,24 +16,27 @@
 
 namespace CORE::Internal::Interface {
 template <typename ResultHandlerT>
-class SimpleQuery : public GenericQuery<ResultHandlerT> {
+class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT> {
+  friend GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
   // Underlying evaluator for tuples
   std::unique_ptr<SingleEvaluator> evaluator;
 
  public:
   std::atomic<uint64_t> time_of_expiration = 0;
 
-  SimpleQuery(Internal::Catalog& catalog,
+  SimpleQuery(Internal::CEQL::Query&& query,
+              Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
               ResultHandlerT& result_handler)
-      : GenericQuery<ResultHandlerT>(catalog,
-                                     queue,
-                                     inproc_receiver_address,
-                                     result_handler) {}
+      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query,
+                                                                  catalog,
+                                                                  queue,
+                                                                  inproc_receiver_address,
+                                                                  result_handler) {}
 
  private:
-  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) override {
+  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
 
     query = transformer(std::move(query));
@@ -66,7 +69,7 @@ class SimpleQuery : public GenericQuery<ResultHandlerT> {
                                                   this->queue);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) override {
+  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
     return evaluator->process_event(tuple);
   }
 };
