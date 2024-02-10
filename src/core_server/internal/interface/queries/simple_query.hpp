@@ -7,6 +7,7 @@
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/evaluator.hpp"
+#include "core_server/internal/interface/single_evaluator.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
@@ -14,14 +15,14 @@
 
 namespace CORE::Internal::Interface {
 template <typename ResultHandlerT>
-class SingleQuery {
+class SimpleQuery {
   uint64_t current_stream_position = 0;
   Internal::Catalog& catalog;
   RingTupleQueue::Queue& queue;
   ResultHandlerT& result_handler;
 
   // Underlying evaluator for tuples
-  std::unique_ptr<Internal::Evaluation::Evaluator> evaluator;
+  std::unique_ptr<SingleEvaluator> evaluator;
 
   // Receiver for tuples
   std::string receiver_address;
@@ -34,7 +35,7 @@ class SingleQuery {
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  SingleQuery(Internal::CEQL::Query&& query,
+  SimpleQuery(Internal::CEQL::Query&& query,
               Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
@@ -48,7 +49,7 @@ class SingleQuery {
     start();
   }
 
-  ~SingleQuery() { stop(); };
+  ~SimpleQuery() { stop(); };
 
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
@@ -72,13 +73,18 @@ class SingleQuery {
 
     time_window = query.within.time_window;
 
-    evaluator = std::make_unique<Internal::Evaluation::Evaluator>(std::move(cea),
-                                                                  std::move(
-                                                                    tuple_evaluator),
-                                                                  time_window.duration,
-                                                                  time_of_expiration,
-                                                                  query.consume_by.policy,
-                                                                  query.limit);
+    auto internal_evaluator = std::make_unique<Internal::Evaluation::Evaluator>(
+      std::move(cea),
+      std::move(tuple_evaluator),
+      time_window.duration,
+      time_of_expiration,
+      query.consume_by.policy,
+      query.limit);
+
+    evaluator = std::make_unique<SingleEvaluator>(std::move(internal_evaluator),
+                                                  time_window,
+                                                  catalog,
+                                                  queue);
   }
 
   void start() {
@@ -87,13 +93,13 @@ class SingleQuery {
       result_handler.start();
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
-        std::optional<RingTupleQueue::Tuple> tuple = serialized_message_to_tuple(
+        std::optional<RingTupleQueue::Tuple> tuple = evaluator->serialized_message_to_tuple(
           serialized_message);
         if (!tuple.has_value()) {
           continue;
         }
         last_received_tuple.store(tuple->get_data());
-        std::optional<tECS::Enumerator> output = process_event(tuple.value());
+        std::optional<tECS::Enumerator> output = evaluator->process_event(tuple.value());
         result_handler(std::move(output));
       }
     });
@@ -108,45 +114,6 @@ class SingleQuery {
     } catch (std::exception& e) {
       std::cout << "Exception: " << e.what() << std::endl;
     }
-  }
-
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    ZoneScopedN("SingleQuery::process_event");
-    uint64_t time;
-
-    switch (time_window.mode) {
-      case CEQL::Within::TimeWindowMode::NONE:
-      case CEQL::Within::TimeWindowMode::EVENTS:
-        time = current_stream_position++;
-        break;
-      case CEQL::Within::TimeWindowMode::NANOSECONDS:
-        time = tuple.nanoseconds();
-        break;
-      case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
-        // TODO: Extract logic and memoize so it is only done once
-        Types::EventTypeId event_type_id = tuple.id();
-        uint64_t attribute_index = catalog.get_index_attribute(event_type_id,
-                                                               time_window.attribute_name);
-        time = *tuple[attribute_index];
-        break;
-      }
-      default:
-        assert(false && "Unknown time_window mode in next_data.");
-        break;
-    }
-    return evaluator->next(tuple, time);
-  }
-
-  std::optional<RingTupleQueue::Tuple>
-  serialized_message_to_tuple(std::string& serialized_message) {
-    if (serialized_message == "STOP") {
-      return {};
-    }
-    assert(serialized_message.size() == sizeof(uint64_t*));
-    uint64_t* data;
-    memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
-    RingTupleQueue::Tuple tuple = queue.get_tuple(data);
-    return tuple;
   }
 };
 }  // namespace CORE::Internal::Interface

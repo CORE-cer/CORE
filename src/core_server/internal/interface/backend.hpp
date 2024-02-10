@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
+#include "queries/simple_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -15,7 +16,6 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
-#include "single_query.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Interface {
@@ -36,7 +36,7 @@ class Backend {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  std::vector<std::unique_ptr<SingleQuery<ResultHandlerT>>> queries;
+  std::vector<std::unique_ptr<SimpleQuery<ResultHandlerT>>> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
@@ -99,7 +99,7 @@ class Backend {
     Internal::CEQL::Query parsed_query = Internal::Parsing::Parser::parse_query(query);
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    queries.emplace_back(std::make_unique<SingleQuery<ResultHandlerT>>(
+    queries.emplace_back(std::make_unique<SimpleQuery<ResultHandlerT>>(
       std::move(parsed_query), catalog, queue, inproc_receiver_address, result_handler));
 
     query_events_time_window_mode.push_back(queries.back()->time_window.mode);
