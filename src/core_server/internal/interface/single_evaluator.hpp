@@ -60,17 +60,5 @@ class SingleEvaluator {
     }
     return evaluator->next(tuple, time);
   }
-
-  std::optional<RingTupleQueue::Tuple>
-  serialized_message_to_tuple(std::string& serialized_message) {
-    if (serialized_message == "STOP") {
-      return {};
-    }
-    assert(serialized_message.size() == sizeof(uint64_t*));
-    uint64_t* data;
-    memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
-    RingTupleQueue::Tuple tuple = queue.get_tuple(data);
-    return tuple;
-  }
 };
 }  // namespace CORE::Internal::Interface
