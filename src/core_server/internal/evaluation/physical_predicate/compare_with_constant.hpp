@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tracy/Tracy.hpp>
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -30,6 +31,7 @@ class CompareWithConstant : public PhysicalPredicate {
   ~CompareWithConstant() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("CompareWithConstant::eval()");
     uint64_t* pos = tuple[pos_to_compare];
     RingTupleQueue::Value<ValueType> attribute_val(pos);
     if constexpr (Comp == ComparisonType::EQUALS)

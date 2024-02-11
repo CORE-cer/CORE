@@ -61,14 +61,14 @@ uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
   }
 }
 
-Types::EventInfo
+const Types::EventInfo&
 Catalog::get_event_info(const Types::EventTypeId event_type_id) const noexcept {
   if (event_type_id < events_info.size()) {
     return events_info[event_type_id];
   } else {
     // EventTypeId not found. Return an empty vector
     // maybe in the future, we will want to raise an exception.
-    return {};
+    return em;
   }
 }
 

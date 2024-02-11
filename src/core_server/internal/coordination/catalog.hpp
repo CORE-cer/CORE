@@ -32,6 +32,7 @@ class Catalog {
   std::vector<Types::QueryInfo> queries_info;
   std::map<std::string, std::set<Types::ValueTypes>> possible_attribute_types;
   std::map<std::string, std::set<Types::EventTypeId>> event_types_with_attribute;
+  Types::EventInfo em = {};
 
  public:
   // Events
@@ -41,7 +42,8 @@ class Catalog {
   bool event_name_is_taken(std::string event_name) const;
   uint64_t get_index_attribute(const Types::EventTypeId event_type_id,
                                std::string attribute_name) const;
-  Types::EventInfo get_event_info(const Types::EventTypeId event_type_id) const noexcept;
+  const Types::EventInfo&
+  get_event_info(const Types::EventTypeId event_type_id) const noexcept;
   Types::EventInfo get_event_info(std::string event_name) const noexcept;
   const std::vector<Types::EventInfo>& get_all_events_info() const noexcept;
 

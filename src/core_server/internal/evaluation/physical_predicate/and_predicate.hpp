@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <tracy/Tracy.hpp>
 
 #include "cassert"
 #include "comparison_type.hpp"
@@ -28,6 +29,7 @@ class AndPredicate : public PhysicalPredicate {
   ~AndPredicate() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("AndPredicate::eval()");
     for (auto& predicate : predicates) {
       if (!(predicate->eval(tuple))) {
         return false;
