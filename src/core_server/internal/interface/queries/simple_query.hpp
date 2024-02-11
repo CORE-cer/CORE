@@ -24,13 +24,11 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
  public:
   std::atomic<uint64_t> time_of_expiration = 0;
 
-  SimpleQuery(Internal::CEQL::Query&& query,
-              Internal::Catalog& catalog,
+  SimpleQuery(Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
               ResultHandlerT& result_handler)
-      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query,
-                                                                  catalog,
+      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(catalog,
                                                                   queue,
                                                                   inproc_receiver_address,
                                                                   result_handler) {}

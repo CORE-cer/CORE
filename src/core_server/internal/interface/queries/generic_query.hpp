@@ -33,8 +33,7 @@ class GenericQuery {
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  GenericQuery(Internal::CEQL::Query&& query,
-               Internal::Catalog& catalog,
+  GenericQuery(Internal::Catalog& catalog,
                RingTupleQueue::Queue& queue,
                std::string inproc_receiver_address,
                ResultHandlerT& result_handler)
@@ -42,7 +41,9 @@ class GenericQuery {
         queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
-        result_handler(result_handler) {
+        result_handler(result_handler) {}
+
+  void init(Internal::CEQL::Query&& query) {
     create_query(std::move(query), catalog);
     start();
   }

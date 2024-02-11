@@ -36,8 +36,7 @@ class Backend {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  using QueryVariant = std::variant<
-    std::unique_ptr<GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>>>;
+  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>>;
 
   std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
@@ -106,26 +105,25 @@ class Backend {
     using QueryDirectType = SimpleQuery<ResultHandlerT>;
     using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
 
-    queries.emplace_back(std::make_unique<QueryDirectType>(std::move(parsed_query),
-                                                           catalog,
-                                                           queue,
-                                                           inproc_receiver_address,
-                                                           result_handler));
-    initialize_last_query<std::unique_ptr<QueryBaseType>>(inproc_receiver_address);
+    queries.emplace_back(std::make_unique<SimpleQuery<ResultHandlerT>>(
+      catalog, queue, inproc_receiver_address, result_handler));
+    initialize_last_query<std::unique_ptr<QueryDirectType>, QueryBaseType>(
+      std::move(parsed_query), inproc_receiver_address);
   }
 
-  template <typename QueryType>
-  void initialize_last_query(std::string inproc_receiver_address) {
-    query_events_time_window_mode.push_back(
-      std::get<QueryType>(queries.back())->time_window.mode);
-    query_events_expiration_time.emplace_back(
-      std::get<QueryType>(queries.back())->time_of_expiration);
-    last_received_tuple.emplace_back(
-      std::get<QueryType>(queries.back())->last_received_tuple);
+  template <typename VariantType, typename QueryBaseType>
+  void initialize_last_query(Internal::CEQL::Query&& parsed_query,
+                             std::string inproc_receiver_address) {
+    QueryBaseType* query = static_cast<QueryBaseType*>(
+      std::get<VariantType>(queries.back()).get());
+
+    query->init(std::move(parsed_query));
+    query_events_time_window_mode.push_back(query->time_window.mode);
+    query_events_expiration_time.emplace_back(query->time_of_expiration);
+    last_received_tuple.emplace_back(query->last_received_tuple);
     last_sent_tuple.push_back(nullptr);
 
-    zmq::context_t& inproc_context = std::get<QueryType>(queries.back())
-                                       ->get_inproc_context();
+    zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 
