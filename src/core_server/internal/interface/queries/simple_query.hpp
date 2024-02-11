@@ -22,8 +22,6 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   std::unique_ptr<SingleEvaluator> evaluator;
 
  public:
-  std::atomic<uint64_t> time_of_expiration = 0;
-
   SimpleQuery(Internal::Catalog& catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
@@ -57,7 +55,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
       std::move(cea),
       std::move(tuple_evaluator),
       this->time_window.duration,
-      time_of_expiration,
+      this->time_of_expiration,
       query.consume_by.policy,
       query.limit);
 
