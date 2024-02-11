@@ -44,7 +44,7 @@ class GenericQuery {
         result_handler(result_handler) {}
 
   void init(Internal::CEQL::Query&& query) {
-    create_query(std::move(query), catalog);
+    create_query(std::move(query));
     start();
   }
 
@@ -53,8 +53,8 @@ class GenericQuery {
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
  private:
-  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
-    static_cast<Derived*>(this)->create_query(std::move(query), catalog);
+  void create_query(Internal::CEQL::Query&& query) {
+    static_cast<Derived*>(this)->create_query(std::move(query));
   }
 
   void start() {

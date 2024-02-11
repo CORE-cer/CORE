@@ -32,8 +32,8 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                                   result_handler) {}
 
  private:
-  void create_query(Internal::CEQL::Query&& query, Internal::Catalog& catalog) {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(catalog);
+  void create_query(Internal::CEQL::Query&& query) {
+    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->catalog);
 
     query = transformer(std::move(query));
 
@@ -41,7 +41,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
 
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
 
-    auto visitor = Internal::CEQL::FormulaToLogicalCEA(catalog);
+    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->catalog);
     query.where.formula->accept_visitor(visitor);
     if (!query.select.is_star) {
       query.select.formula->accept_visitor(visitor);
@@ -61,7 +61,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
 
     evaluator = std::make_unique<SingleEvaluator>(std::move(internal_evaluator),
                                                   this->time_window,
-                                                  catalog,
+                                                  this->catalog,
                                                   this->queue);
   }
 
