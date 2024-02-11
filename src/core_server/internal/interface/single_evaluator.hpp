@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <thread>
+#include <unordered_map>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
@@ -9,6 +10,7 @@
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
@@ -20,6 +22,7 @@ class SingleEvaluator {
 
   // Underlying evaluator for tuples
   std::unique_ptr<Internal::Evaluation::Evaluator> evaluator;
+  std::unordered_map<Types::EventTypeId, uint64_t> indexes{};
 
  public:
   std::atomic<uint64_t> time_of_expiration = 0;
@@ -47,10 +50,13 @@ class SingleEvaluator {
         time = tuple.nanoseconds();
         break;
       case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
-        // TODO: Extract logic and memoize so it is only done once
         Types::EventTypeId event_type_id = tuple.id();
-        uint64_t attribute_index = catalog.get_index_attribute(event_type_id,
+        auto index = indexes.find(event_type_id);
+        if (index == indexes.end()) [[unlikely]] {
+          indexes[event_type_id] = catalog.get_index_attribute(event_type_id,
                                                                time_window.attribute_name);
+        }
+        uint64_t attribute_index = indexes[event_type_id];
         time = *tuple[attribute_index];
         break;
       }
