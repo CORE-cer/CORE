@@ -262,7 +262,8 @@ Types::ComplexEvent Catalog::tuples_to_complex_event(
 Types::Event Catalog::tuple_to_event(const Types::EventInfo& event_info,
                                      RingTupleQueue::Tuple& tuple) const {
   ZoneScopedN("Catalog::tuple_to_event");
-  assert(tuple.id() == event_info.id);
+  assert(event_info.id.has_value());
+  assert(tuple.id() == event_info.id.value());
   std::vector<std::shared_ptr<Types::Value>> values;
   for (auto i = 0; i < event_info.attributes_info.size(); i++) {
     const Types::AttributeInfo& att_info = event_info.attributes_info[i];
@@ -293,7 +294,8 @@ Types::Event Catalog::tuple_to_event(const Types::EventInfo& event_info,
     }
     values.push_back(std::move(val));
   }
-  return {event_info.id, std::move(values)};
+  assert(event_info.id.has_value());
+  return {event_info.id.value(), std::move(values)};
 }
 
 }  // namespace CORE::Internal

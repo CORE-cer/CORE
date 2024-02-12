@@ -37,7 +37,7 @@ struct EventInfo {
   }
 
   bool operator==(const EventInfo& other) const {
-    bool out = id == other.id && name == other.name
+    bool out = id.value_or(-1) == other.id.value_or(-1) && name == other.name
                && attributes_info.size() == other.attributes_info.size()
                && attribute_names_to_ids.size() == other.attribute_names_to_ids.size();
     if (!out) {

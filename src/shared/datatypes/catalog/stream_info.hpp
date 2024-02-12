@@ -35,7 +35,7 @@ struct StreamInfo {
   ~StreamInfo() noexcept = default;
 
   bool operator==(const StreamInfo& other) const {
-    bool out = id == other.id && name == other.name
+    bool out = id.value_or(-1) == other.id.value_or(-1) && name == other.name
                && events_info.size() == other.events_info.size();
     if (!out) return false;
     for (uint64_t i = 0; i < events_info.size(); i++) {

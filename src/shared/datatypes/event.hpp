@@ -39,8 +39,8 @@ struct Event {
   Event() noexcept {}
 
   Event(EventTypeId event_type_id,
-        std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
-      : event_type_id(event_type_id), attributes(attributes) {}
+        std::vector<std::shared_ptr<Types::Value>>&& attributes) noexcept
+      : event_type_id(event_type_id), attributes(std::move(attributes)) {}
 
   std::string to_string() const {
     std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";

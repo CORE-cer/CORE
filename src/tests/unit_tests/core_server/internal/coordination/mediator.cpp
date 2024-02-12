@@ -25,7 +25,9 @@ declare_and_check_for_event(Client& client,
     Types::EventInfo event_info_from_id = client.get_event_info(id);
     Types::EventInfo event_info_from_name = client.get_event_info(id);
     REQUIRE(event_info_from_id == event_info_from_name);
-    REQUIRE(event_info_from_id.id == id);
+    REQUIRE(event_info_from_id.id.has_value());
+    assert(event_info_from_id.id.has_value());
+    REQUIRE(event_info_from_id.id.value() == id);
     REQUIRE(event_info_from_id.name == name);
     return id;
   } catch (std::runtime_error) {
@@ -42,7 +44,9 @@ Types::EventTypeId declare_and_check_for_stream(Client& client,
     Types::StreamInfo stream_info_from_id = client.get_stream_info(id);
     Types::StreamInfo stream_info_from_name = client.get_stream_info(id);
     REQUIRE(stream_info_from_id == stream_info_from_name);
-    REQUIRE(stream_info_from_id.id == id);
+    REQUIRE(stream_info_from_id.id.has_value());
+    assert(stream_info_from_id.id.has_value());
+    REQUIRE(stream_info_from_id.id.value() == id);
     REQUIRE(stream_info_from_id.name == name);
     return id;
   } catch (std::runtime_error) {

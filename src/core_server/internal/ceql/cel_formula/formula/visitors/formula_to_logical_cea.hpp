@@ -43,8 +43,9 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    uint64_t event_type_id = catalog.get_event_info(formula.event_type_name).id;
-    current_cea = CEA::LogicalCEA::atomic_cea(event_type_id);
+    Types::EventInfo event_info = catalog.get_event_info(formula.event_type_name);
+    assert(event_info.id.has_value());
+    current_cea = CEA::LogicalCEA::atomic_cea(event_info.id.value());
   }
 
   void visit(FilterFormula& formula) override {
