@@ -1,0 +1,22 @@
+SELECT * FROM S
+WHERE (TRIP as loc1; TRIP as loc2; TRIP as loc3; 
+	TRIP as loc4; TRIP as loc5; TRIP as loc6; 
+	TRIP as loc7; TRIP as loc8; TRIP as loc9; 
+	TRIP as loc10; TRIP as loc11; TRIP as loc12; TRIP as NE)
+FILTER 
+    loc1[pickup_zone = 'East Harlem North' and dropoff_zone = 'Midwood'] AND 
+    loc2[pickup_zone = 'Midwood' AND dropoff_zone = 'Gravesend'] AND
+    loc3[pickup_zone = 'Gravesend' AND dropoff_zone = 'West Brighton'] AND
+    loc4[pickup_zone = 'West Brighton' AND dropoff_zone = 'Lincoln Square West'] AND
+    loc5[pickup_zone = 'Lincoln Square West' AND dropoff_zone = 'Sutton Place/Turtle Bay North'] AND
+    loc6[pickup_zone = 'Sutton Place/Turtle Bay North' AND dropoff_zone = 'East Concourse/Concourse Village'] AND
+    loc7[pickup_zone = 'East Concourse/Concourse Village' AND dropoff_zone = 'East Harlem North'] AND
+    loc8[pickup_zone = 'East Harlem North' AND dropoff_zone = 'East Harlem North'] AND
+    loc9[pickup_zone = 'East Harlem North' AND dropoff_zone = 'Gravesend'] AND
+    loc10[pickup_zone = 'Gravesend' AND dropoff_zone = 'Midwood'] AND
+    loc11[pickup_zone = 'Midwood' AND dropoff_zone = 'Midwood'] AND
+    loc12[pickup_zone = 'Midwood' AND dropoff_zone = 'Gravesend'] AND
+    NE[pickup_zone = 'NotExists']
+WITHIN 1000 [dropoff_datetime]
+CONSUME BY NONE
+LIMIT 1000

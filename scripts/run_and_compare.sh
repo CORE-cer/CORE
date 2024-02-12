@@ -18,6 +18,7 @@ arguments=$2
 expected_output_file=$3
 
 temp_output_file=$(mktemp)
+trap 'rm -f -- "$temp_output_file"' EXIT
 
 # Run the executable with the arguments and pipe input into temporary file
 $executable $arguments > $temp_output_file

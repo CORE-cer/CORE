@@ -28,3 +28,8 @@ cmake-build-debug
 
 src/targets/experiments/stocks/expected_results
 src/targets/experiments/smart_homes/expected_results
+src/targets/experiments/taxis/expected_results
+src/targets/experiments/taxis/taxi_data.csv
+src/targets/experiments/smart_homes/benchmark.csv
+src/targets/experiments/stocks/benchmark.csv
+src/targets/experiments/taxis/benchmark.csv

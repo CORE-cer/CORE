@@ -13,45 +13,46 @@ class  CEQLQueryParser : public antlr4::Parser {
 public:
   enum {
     K_ALL = 1, K_AND = 2, K_ANY = 3, K_AS = 4, K_BY = 5, K_CONSUME = 6, 
-    K_DISTINCT = 7, K_EVENT = 8, K_EVENTS = 9, K_FILTER = 10, K_FROM = 11, 
-    K_HOURS = 12, K_IN = 13, K_LAST = 14, K_LIKE = 15, K_MAX = 16, K_MINUTES = 17, 
-    K_NEXT = 18, K_NONE = 19, K_NOT = 20, K_OR = 21, K_PARTITION = 22, K_RANGE = 23, 
-    K_SECONDS = 24, K_SELECT = 25, K_STREAM = 26, K_STRICT = 27, K_UNLESS = 28, 
-    K_WHERE = 29, K_WITHIN = 30, PERCENT = 31, PLUS = 32, MINUS = 33, STAR = 34, 
-    SLASH = 35, LE = 36, LEQ = 37, GE = 38, GEQ = 39, EQ = 40, NEQ = 41, 
-    SEMICOLON = 42, COLON = 43, COMMA = 44, DOUBLE_DOT = 45, LEFT_PARENTHESIS = 46, 
-    RIGHT_PARENTHESIS = 47, LEFT_SQUARE_BRACKET = 48, RIGHT_SQUARE_BRACKET = 49, 
-    LEFT_CURLY_BRACKET = 50, RIGHT_CURLY_BRACKET = 51, COLON_PLUS = 52, 
-    IDENTIFIER = 53, DOUBLE_LITERAL = 54, INTEGER_LITERAL = 55, NUMERICAL_EXPONENT = 56, 
-    STRING_LITERAL = 57, SINGLE_LINE_COMMENT = 58, MULTILINE_COMMENT = 59, 
-    SPACES = 60, UNEXPECTED_CHAR = 61, REGEX_START = 62, REGEX_END = 63, 
-    REGEX_END_ESCAPED = 64, REGEX_PIPE = 65, REGEX_EXCLAMAITON = 66, REGEX_L_CURLY = 67, 
-    REGEX_R_CURLY = 68, REGEX_L_PAR = 69, REGEX_R_PAR = 70, REGEX_COMMA = 71, 
-    REGEX_QUESTION = 72, REGEX_PLUS = 73, REGEX_STAR = 74, REGEX_HAT = 75, 
-    REGEX_HYPHEN = 76, REGEX_L_BRACK = 77, REGEX_R_BRACK = 78, REGEX_BACKSLASH = 79, 
-    REGEX_ALPHA = 80, REGEX_DOT = 81, REGEX_DOUBLED_DOT = 82, UNRECOGNIZED = 83, 
-    REGEX_DECIMAL_DIGIT = 84, REGEX_NOT_DECIMAL_DIGIT = 85, REGEX_WHITESPACE = 86, 
-    REGEX_NOT_WHITESPACE = 87, REGEX_ALPHANUMERIC = 88, REGEX_NOT_ALPHANUMERIC = 89, 
-    REGEX_DIGIT = 90
+    K_LIMIT = 7, K_DISTINCT = 8, K_EVENT = 9, K_EVENTS = 10, K_FILTER = 11, 
+    K_FROM = 12, K_HOURS = 13, K_IN = 14, K_LAST = 15, K_LIKE = 16, K_MAX = 17, 
+    K_MINUTES = 18, K_NEXT = 19, K_NONE = 20, K_NOT = 21, K_OR = 22, K_PARTITION = 23, 
+    K_RANGE = 24, K_SECONDS = 25, K_SELECT = 26, K_STREAM = 27, K_STRICT = 28, 
+    K_UNLESS = 29, K_WHERE = 30, K_WITHIN = 31, PERCENT = 32, PLUS = 33, 
+    MINUS = 34, STAR = 35, SLASH = 36, LE = 37, LEQ = 38, GE = 39, GEQ = 40, 
+    EQ = 41, NEQ = 42, SEMICOLON = 43, COLON = 44, COMMA = 45, DOUBLE_DOT = 46, 
+    LEFT_PARENTHESIS = 47, RIGHT_PARENTHESIS = 48, LEFT_SQUARE_BRACKET = 49, 
+    RIGHT_SQUARE_BRACKET = 50, LEFT_CURLY_BRACKET = 51, RIGHT_CURLY_BRACKET = 52, 
+    COLON_PLUS = 53, IDENTIFIER = 54, DOUBLE_LITERAL = 55, INTEGER_LITERAL = 56, 
+    NUMERICAL_EXPONENT = 57, STRING_LITERAL = 58, SINGLE_LINE_COMMENT = 59, 
+    MULTILINE_COMMENT = 60, SPACES = 61, UNEXPECTED_CHAR = 62, REGEX_START = 63, 
+    REGEX_END = 64, REGEX_END_ESCAPED = 65, REGEX_PIPE = 66, REGEX_EXCLAMAITON = 67, 
+    REGEX_L_CURLY = 68, REGEX_R_CURLY = 69, REGEX_L_PAR = 70, REGEX_R_PAR = 71, 
+    REGEX_COMMA = 72, REGEX_QUESTION = 73, REGEX_PLUS = 74, REGEX_STAR = 75, 
+    REGEX_HAT = 76, REGEX_HYPHEN = 77, REGEX_L_BRACK = 78, REGEX_R_BRACK = 79, 
+    REGEX_BACKSLASH = 80, REGEX_ALPHA = 81, REGEX_DOT = 82, REGEX_DOUBLED_DOT = 83, 
+    UNRECOGNIZED = 84, REGEX_DECIMAL_DIGIT = 85, REGEX_NOT_DECIMAL_DIGIT = 86, 
+    REGEX_WHITESPACE = 87, REGEX_NOT_WHITESPACE = 88, REGEX_ALPHANUMERIC = 89, 
+    REGEX_NOT_ALPHANUMERIC = 90, REGEX_DIGIT = 91
   };
 
   enum {
     RuleParse = 0, RuleError = 1, RuleCore_query = 2, RuleSelection_strategy = 3, 
     RuleList_of_variables = 4, RuleFrom_clause = 5, RuleCel_formula = 6, 
     RulePartition_list = 7, RuleAttribute_list = 8, RuleConsumption_policy = 9, 
-    RuleFilter = 10, RulePredicate = 11, RuleString_literal = 12, RuleString_literal_or_regexp = 13, 
-    RuleMath_expr = 14, RuleValue_seq = 15, RuleNumber_seq = 16, RuleString_seq = 17, 
-    RuleTime_window = 18, RuleEvent_span = 19, RuleTime_span = 20, RuleHour_span = 21, 
-    RuleMinute_span = 22, RuleSecond_span = 23, RuleCustom_span = 24, RuleNamed_event = 25, 
-    RuleS_event_name = 26, RuleEvent_name = 27, RuleStream_name = 28, RuleAttribute_name = 29, 
-    RuleInteger = 30, RuleDouble = 31, RuleNumber = 32, RuleString = 33, 
-    RuleAny_name = 34, RuleKeyword = 35, RuleRegexp = 36, RuleRegexp_alternation = 37, 
-    RuleRegexp_exp = 38, RuleRegexp_element = 39, RuleRegexp_group = 40, 
-    RuleParenthesis = 41, RuleQuantifier = 42, RuleQuantity = 43, RuleQuantExact = 44, 
-    RuleQuantRange = 45, RuleQuantMin = 46, RuleQuantMax = 47, RuleAtom = 48, 
-    RuleCharacterClass = 49, RuleCcAtom = 50, RuleCcRange = 51, RuleCcSingle = 52, 
-    RuleCcLiteral = 53, RuleCcEscapes = 54, RuleCcOther = 55, RuleLiteral = 56, 
-    RuleEscapes = 57, RuleOther = 58, RuleSharedAtom = 59, RuleRegexp_number = 60
+    RuleLimit = 10, RuleFilter = 11, RulePredicate = 12, RuleString_literal = 13, 
+    RuleString_literal_or_regexp = 14, RuleMath_expr = 15, RuleValue_seq = 16, 
+    RuleNumber_seq = 17, RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, 
+    RuleTime_span = 21, RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, 
+    RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name = 27, RuleEvent_name = 28, 
+    RuleStream_name = 29, RuleAttribute_name = 30, RuleInteger = 31, RuleDouble = 32, 
+    RuleNumber = 33, RuleString = 34, RuleAny_name = 35, RuleKeyword = 36, 
+    RuleRegexp = 37, RuleRegexp_alternation = 38, RuleRegexp_exp = 39, RuleRegexp_element = 40, 
+    RuleRegexp_group = 41, RuleParenthesis = 42, RuleQuantifier = 43, RuleQuantity = 44, 
+    RuleQuantExact = 45, RuleQuantRange = 46, RuleQuantMin = 47, RuleQuantMax = 48, 
+    RuleAtom = 49, RuleCharacterClass = 50, RuleCcAtom = 51, RuleCcRange = 52, 
+    RuleCcSingle = 53, RuleCcLiteral = 54, RuleCcEscapes = 55, RuleCcOther = 56, 
+    RuleLiteral = 57, RuleEscapes = 58, RuleOther = 59, RuleSharedAtom = 60, 
+    RuleRegexp_number = 61
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -81,6 +82,7 @@ public:
   class Partition_listContext;
   class Attribute_listContext;
   class Consumption_policyContext;
+  class LimitContext;
   class FilterContext;
   class PredicateContext;
   class String_literalContext;
@@ -182,6 +184,8 @@ public:
     Time_windowContext *time_window();
     antlr4::tree::TerminalNode *K_CONSUME();
     Consumption_policyContext *consumption_policy();
+    antlr4::tree::TerminalNode *K_LIMIT();
+    LimitContext *limit();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -507,6 +511,30 @@ public:
   };
 
   Consumption_policyContext* consumption_policy();
+
+  class  LimitContext : public antlr4::ParserRuleContext {
+  public:
+    LimitContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    LimitContext() = default;
+    void copyFrom(LimitContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
+
+    virtual size_t getRuleIndex() const override;
+
+   
+  };
+
+  class  L_integerContext : public LimitContext {
+  public:
+    L_integerContext(LimitContext *ctx);
+
+    IntegerContext *integer();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  LimitContext* limit();
 
   class  FilterContext : public antlr4::ParserRuleContext {
   public:

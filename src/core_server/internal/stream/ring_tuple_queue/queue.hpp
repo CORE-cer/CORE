@@ -21,7 +21,7 @@ class Queue {
   std::vector<std::vector<uint64_t>> buffers;
   std::vector<std::chrono::system_clock::time_point> last_updated;
 
-  // This parameter specifies from what buffer it is possible to overwrite.
+  // Oldest buffer that has not yet been overwritten.
   uint64_t start_buffer_index;
 
   uint64_t constant_section_buffer_index;
@@ -34,6 +34,7 @@ class Queue {
 
   TupleSchemas* schemas;
   std::chrono::system_clock::time_point overwrite_timepoint;
+  std::chrono::system_clock::time_point start_timepoint;
 
  public:
   Tuple get_tuple(uint64_t* data) { return Tuple(data, schemas); }
@@ -48,7 +49,8 @@ class Queue {
         current_buffer_index(0),
         current_index(0),
         schemas(schemas),
-        overwrite_timepoint(std::chrono::system_clock::now()) {}
+        overwrite_timepoint(std::chrono::system_clock::now()),
+        start_timepoint(std::chrono::system_clock::now()) {}
 
   uint64_t* start_tuple(uint64_t tuple_type_id) {
     uint64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
@@ -56,6 +58,7 @@ class Queue {
 
     if (current_index < buffers[current_buffer_index].size() - minimum_size) {
       // Current buffer does have enough size.
+      constant_section_buffer_index = current_buffer_index;
       constant_section_index = current_index;
       current_index += minimum_size;
     } else {
@@ -102,24 +105,23 @@ class Queue {
                               && std::is_convertible<T, std::string>::value,
                             char*>::type {
     // Update the pointer positions fo the constant sized section
-
-    auto& current_buffer = buffers[current_buffer_index];
-    auto& constant_section_buffer = buffers[constant_section_buffer_index];
+    auto* current_buffer = &(buffers[current_buffer_index]);
     uint64_t size = (size_in_bytes + 7) / 8;  // Ceiling
     uint64_t index_to_write_in;
-    if (current_index < current_buffer.size() - size) {
+    if (current_index < current_buffer->size() - size) {
       index_to_write_in = current_index;
       current_index += size;
     } else {
       increase_size_if_necessary();
       current_buffer_index = (current_buffer_index + 1) % buffers.size();
-      current_buffer = buffers[current_buffer_index];
+      current_buffer = &(buffers[current_buffer_index]);
       current_index = size;
       index_to_write_in = 0;
     }
-    auto start_ptr = reinterpret_cast<char*>(&current_buffer[index_to_write_in]);
+    auto start_ptr = reinterpret_cast<char*>(&((*current_buffer)[index_to_write_in]));
     auto end_ptr = &(start_ptr[size_in_bytes]);
 
+    auto& constant_section_buffer = buffers[constant_section_buffer_index];
     char** start_ptr_storage = reinterpret_cast<char**>(
       &constant_section_buffer[constant_section_index++]);
     *start_ptr_storage = start_ptr;
@@ -150,8 +152,7 @@ class Queue {
   }
 
   void update_overwrite_timepoint(uint64_t ns_from_compile_time) {
-    auto compile_time_point = get_compile_time_point();
-    auto timepoint = compile_time_point + std::chrono::nanoseconds(ns_from_compile_time);
+    auto timepoint = start_timepoint + std::chrono::nanoseconds(ns_from_compile_time);
     overwrite_timepoint = timepoint;
   }
 
@@ -201,24 +202,6 @@ class Queue {
     if (last_updated[start_buffer_index] <= overwrite_timepoint) {
       start_buffer_index = (start_buffer_index + 1) % buffers.size();
     }
-  }
-
-  const static std::chrono::system_clock::time_point get_compile_time_point() {
-    static const auto compile_time_point = []() {
-      std::istringstream compile_time_stream(__DATE__ " " __TIME__);
-      std::tm compile_time_tm = {};
-      compile_time_stream >> std::get_time(&compile_time_tm, "%b %d %Y %H:%M:%S");
-
-      if (compile_time_stream.fail()) {
-        assert(false
-               && "The compiler should be able to give the date and time of "
-                  "compilation!");
-      }
-
-      return std::chrono::system_clock::from_time_t(std::mktime(&compile_time_tm));
-    }();
-
-    return compile_time_point;
   }
 };
 

@@ -73,6 +73,8 @@ public:
 
     virtual std::any visitCp_none(CEQLQueryParser::Cp_noneContext *context) = 0;
 
+    virtual std::any visitL_integer(CEQLQueryParser::L_integerContext *context) = 0;
+
     virtual std::any visitPar_filter(CEQLQueryParser::Par_filterContext *context) = 0;
 
     virtual std::any visitAnd_filter(CEQLQueryParser::And_filterContext *context) = 0;
