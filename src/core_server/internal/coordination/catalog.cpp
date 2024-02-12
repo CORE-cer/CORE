@@ -52,7 +52,7 @@ bool Catalog::event_name_is_taken(std::string event_name) const {
 
 uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
                                       std::string attribute_name) const {
-  Types::EventInfo event_info = get_event_info(event_type_id);
+  const Types::EventInfo& event_info = get_event_info(event_type_id);
   if (auto search = event_info.attribute_names_to_ids.find(attribute_name);
       search != event_info.attribute_names_to_ids.end()) {
     return search->second;
