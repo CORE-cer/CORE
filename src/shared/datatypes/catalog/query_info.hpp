@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -7,7 +8,7 @@
 namespace CORE::Types {
 
 struct QueryInfo {
-  PortNumber port_number;
+  std::optional<PortNumber> port_number;
   std::string query_string;
 
   QueryInfo() noexcept {}

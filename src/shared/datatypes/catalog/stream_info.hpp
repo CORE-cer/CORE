@@ -15,7 +15,7 @@ struct StreamInfo {
    * follow that they are ordered by timestamp. (Least to greatest).
    */
 
-  StreamTypeId id;
+  std::optional<StreamTypeId> id;
   std::string name;
   std::vector<EventInfo> events_info;
 
@@ -25,6 +25,9 @@ struct StreamInfo {
              std::string stream_name,
              std::vector<EventInfo>&& events_info) noexcept
       : id(stream_type_id), name(stream_name), events_info(std::move(events_info)) {}
+
+  StreamInfo(std::string stream_name, std::vector<EventInfo>&& events_info) noexcept
+      : name(stream_name), events_info(std::move(events_info)) {}
 
   StreamInfo(std::initializer_list<EventInfo>&& events_info) noexcept
       : events_info(std::move(events_info)) {}

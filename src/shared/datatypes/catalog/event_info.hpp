@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -10,17 +11,26 @@
 namespace CORE::Types {
 
 struct EventInfo {
-  EventTypeId id;
+  std::optional<EventTypeId> id;
   std::string name;
   std::vector<AttributeInfo> attributes_info;
   std::map<std::string, size_t> attribute_names_to_ids;
 
   EventInfo() noexcept {}
 
+  EventInfo(std::string name, std::vector<AttributeInfo>&& attributes_info) noexcept
+      : name(name), attributes_info(attributes_info) {
+    init_attribute_names_to_ids();
+  }
+
   EventInfo(EventTypeId event_type_id,
             std::string name,
             std::vector<AttributeInfo>&& attributes_info) noexcept
       : id(event_type_id), name(name), attributes_info(attributes_info) {
+    init_attribute_names_to_ids();
+  }
+
+  void init_attribute_names_to_ids() {
     for (size_t id = 0; id < attributes_info.size(); id++) {
       attribute_names_to_ids[attributes_info[id].name] = id;
     }
