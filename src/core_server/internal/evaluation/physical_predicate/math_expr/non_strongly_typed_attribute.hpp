@@ -30,12 +30,11 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
   ~NonStronglyTypedAttribute() override = default;
 
   GlobalType eval(RingTupleQueue::Tuple& tuple) override {
-    size_t pos;
-    const Types::EventInfo& event_info = catalog.get_event_info(tuple.id());
     // It must be determined at the predicate level whether this eval
     // makes sense for the tuple.
+    size_t pos = catalog.get_index_attribute(tuple.id(), name);
+    const Types::EventInfo& event_info = catalog.get_event_info(tuple.id());
     assert(event_info.attribute_names_to_ids.contains(name));
-    pos = event_info.attribute_names_to_ids.at(name);
     Types::ValueTypes attribute_type = event_info.attributes_info[pos].value_type;
 
     switch (attribute_type) {
