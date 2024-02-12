@@ -13,7 +13,7 @@ class StreamVisitor : public StreamDeclarationParserBaseVisitor {
   std::vector<Event> events;
 
  public:
-  Stream get_parsed_stream() { return Stream(name, events); }
+  Stream get_parsed_stream() { return Stream(name, std::move(events)); }
 
   virtual std::any
   visitCore_declaration(StreamDeclarationParser::Core_declarationContext* ctx) {
