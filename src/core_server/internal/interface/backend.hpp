@@ -1,20 +1,41 @@
 #pragma once
 
+#include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <ctime>
 #include <functional>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <thread>
+#include <utility>
+#include <variant>
 #include <vector>
+#include <zmq.hpp>
 
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "queries/simple_query.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
-#include "shared/datatypes/stream.hpp"
+#include "shared/datatypes/value.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "tracy/Tracy.hpp"
 

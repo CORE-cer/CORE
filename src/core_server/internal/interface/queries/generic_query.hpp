@@ -1,14 +1,23 @@
 #pragma once
 
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <cstring>
+#include <exception>
+#include <iostream>
 #include <optional>
+#include <string>
 #include <thread>
+#include <tracy/Tracy.hpp>
+#include <utility>
+#include <zmq.hpp>
 
-#include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
-#include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/evaluation/evaluator.hpp"
-#include "core_server/internal/interface/single_evaluator.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
