@@ -2,8 +2,8 @@
 #include <memory>
 #include <string>
 
-#include "visitors/value_visitor.hpp"
 #include "value.hpp"
+#include "visitors/value_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 struct Attribute final : public Value {

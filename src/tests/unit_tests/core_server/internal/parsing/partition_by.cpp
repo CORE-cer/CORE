@@ -73,7 +73,8 @@ TEST_CASE("Partition by captures two attributes correctly", "[Partition By]") {
   // clang-format on
 }
 
-TEST_CASE("Partition by captures two attributes with alternative correctly", "[Partition By]") {
+TEST_CASE("Partition by captures two attributes with alternative correctly",
+          "[Partition By]") {
   // clang-format off
   REQUIRE(parse_partition_by(create_partition_by_query("[name], [name2, name3]")).partition_attributes.size() == 2);
   REQUIRE(parse_partition_by(create_partition_by_query("[name], [name2, name3]")).partition_attributes[0].size() == 1);
