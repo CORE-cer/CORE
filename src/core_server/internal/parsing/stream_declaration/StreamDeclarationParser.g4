@@ -48,7 +48,6 @@ datatype
  : 'int'
  | 'string'
  | 'double'
- | 'long'
  | 'boolean'
  | IDENTIFIER
  ;

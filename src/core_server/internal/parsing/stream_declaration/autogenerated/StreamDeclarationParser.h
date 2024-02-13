@@ -215,7 +215,6 @@ public:
     antlr4::tree::TerminalNode *INT();
     antlr4::tree::TerminalNode *STRING();
     antlr4::tree::TerminalNode *DOUBLE();
-    antlr4::tree::TerminalNode *LONG();
     antlr4::tree::TerminalNode *BOOLEAN();
     antlr4::tree::TerminalNode *IDENTIFIER();
 

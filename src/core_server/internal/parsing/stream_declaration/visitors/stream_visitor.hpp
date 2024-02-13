@@ -5,12 +5,13 @@
 #include "core_server/internal/parsing/stream_declaration/event.hpp"
 #include "core_server/internal/parsing/stream_declaration/stream.hpp"
 #include "core_server/internal/parsing/stream_declaration/visitors/event_visitor.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORE::Internal::Parsing::Declaration {
 class StreamVisitor : public StreamDeclarationParserBaseVisitor {
  private:
   std::string name;
-  std::vector<Event> events;
+  std::vector<Types::EventInfo> events;
 
  public:
   Stream get_parsed_stream() { return Stream(name, std::move(events)); }
