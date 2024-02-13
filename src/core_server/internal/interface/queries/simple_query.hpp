@@ -14,8 +14,8 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/interface/evaluators/single_evaluator.hpp"
+#include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 

@@ -127,14 +127,14 @@ class Backend {
       using QueryDirectType = PartitionByQuery<ResultHandlerT>;
       using QueryBaseType = GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
 
-      initialize_query<QueryDirectType, QueryBaseType>(
-        std::move(parsed_query), result_handler);
+      initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
+                                                       result_handler);
     } else {
       using QueryDirectType = SimpleQuery<ResultHandlerT>;
       using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
 
-      initialize_query<QueryDirectType, QueryBaseType>(
-        std::move(parsed_query), result_handler);
+      initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
+                                                       result_handler);
     }
   }
 

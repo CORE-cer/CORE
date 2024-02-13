@@ -12,7 +12,8 @@
 #include "tests/unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
-TEST_CASE("Evaluation on the example stream of the papers with partition-by single evaluator") {
+TEST_CASE(
+  "Evaluation on the example stream of the papers with partition-by single evaluator") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
@@ -160,7 +161,8 @@ TEST_CASE("Evaluation on the example stream of the papers with partition-by sing
   REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
 }
 
-TEST_CASE("Evaluation on the example stream of the papers with partition-by two evaluators") {
+TEST_CASE(
+  "Evaluation on the example stream of the papers with partition-by two evaluators") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 

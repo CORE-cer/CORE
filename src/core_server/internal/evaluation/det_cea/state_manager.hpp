@@ -1,8 +1,9 @@
 #pragma once
 
+#include <gmpxx.h>
+
 #include <cassert>
 #include <cstdint>
-#include <gmpxx.h>
 #include <cstdlib>
 #include <iostream>
 #include <map>
