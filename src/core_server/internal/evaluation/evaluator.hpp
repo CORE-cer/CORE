@@ -1,10 +1,18 @@
 #pragma once
-#include <cwchar>
+#include <gmpxx.h>
+
+#include <atomic>
+#include <cassert>
+#include <cstdint>
 #include <optional>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
 #include "core_server/internal/ceql/query/limit.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "det_cea/det_cea.hpp"
 #include "det_cea/state.hpp"
 #include "enumeration/tecs/enumerator.hpp"
@@ -64,6 +72,20 @@ class Evaluator {
             CEQL::Limit enumeration_limit)
       : cea(std::move(cea)),
         tuple_evaluator(std::move(tuple_evaluator)),
+        time_window(time_bound),
+        event_time_of_expiration(event_time_of_expiration),
+        tecs(event_time_of_expiration),
+        consumption_policy(consumption_policy),
+        enumeration_limit(enumeration_limit) {}
+
+  Evaluator(const CEA::DetCEA& cea,
+            const PredicateEvaluator& tuple_evaluator,
+            uint64_t time_bound,
+            std::atomic<uint64_t>& event_time_of_expiration,
+            CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
+            CEQL::Limit enumeration_limit)
+      : cea(cea),
+        tuple_evaluator(tuple_evaluator),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
         tecs(event_time_of_expiration),

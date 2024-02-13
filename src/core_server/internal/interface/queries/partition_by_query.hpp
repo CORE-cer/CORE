@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -41,7 +42,7 @@ class PartitionByQuery
       return seed;
     }
 
-    uint64_t hash(uint64_t x) {
+    uint64_t hash(uint64_t x) const noexcept {
       x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
       x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
       x = x ^ (x >> 31);
@@ -51,9 +52,10 @@ class PartitionByQuery
 
   friend GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
 
-  CEQL::Query query;
-  DynamicEvaluator evaluator;
-  std::unordered_map<std::vector<uint64_t>, size_t, VectorHash> partition_by_attrs_to_evaluator_idx;
+  std::optional<CEQL::Query> query;
+  std::unique_ptr<DynamicEvaluator> evaluator;
+  std::unordered_map<std::vector<uint64_t>, size_t, VectorHash>
+    partition_by_attrs_to_evaluator_idx;
 
   // Use optional to show that event type has already been processed and should not be consumed by any evaluator
   std::unordered_map<Types::EventTypeId, std::optional<std::vector<uint64_t>>>
@@ -89,10 +91,10 @@ class PartitionByQuery
     Internal::CEA::DetCEA cea(Internal::CEA::CEA(std::move(visitor.current_cea)));
 
     this->time_window = query.within.time_window;
+    this->query = std::make_optional(std::move(query));
 
     evaluator = std::make_unique<DynamicEvaluator>(std::move(cea),
                                                    std::move(tuple_evaluator),
-                                                   this->time_window.duration,
                                                    this->time_of_expiration,
                                                    query.consume_by.policy,
                                                    query.limit,
@@ -116,7 +118,7 @@ class PartitionByQuery
 
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
       tuple, tuple_indexes->value());
-    evaluator.process_event(tuple, evaluator_idx);
+    return evaluator->process_event(tuple, evaluator_idx);
   }
 
   std::optional<std::vector<uint64_t>>*
@@ -126,20 +128,24 @@ class PartitionByQuery
     Types::EventTypeId event_id = tuple.id();
     const Types::EventInfo& event_info = this->catalog.get_event_info(event_id);
 
-    for (auto& attr_group : query.partition_by.partition_attributes) {
+    assert(query.has_value());
+    for (auto& attr_group : query.value().partition_by.partition_attributes) {
       for (auto& attr : attr_group) {
         if (auto it_attr_id = event_info.attribute_names_to_ids.find(attr.value);
             it_attr_id != event_info.attribute_names_to_ids.end()) {
           tuple_indexes.push_back(it_attr_id->second);
-          continue;
+          break;
         }
       }
-      // Could not find any attr for the attr_group in tuple.
-      return &(event_id_to_tuple_idx.emplace(event_id, std::nullopt).first->second);
     }
 
-    // Found indexes for all attributes
-    return &(event_id_to_tuple_idx.emplace(event_id, tuple_indexes).first->second);
+    if (tuple_indexes.size() < query.value().partition_by.partition_attributes.size()) {
+      // Could not find any attr for the attr_group in tuple.
+      return &(event_id_to_tuple_idx.emplace(event_id, std::nullopt).first->second);
+    } else {
+      // Found indexes for all attributes
+      return &(event_id_to_tuple_idx.emplace(event_id, tuple_indexes).first->second);
+    }
   }
 
   size_t
@@ -156,10 +162,11 @@ class PartitionByQuery
         evaluator_it != partition_by_attrs_to_evaluator_idx.end()) [[likely]] {
       return evaluator_it->second;
     } else {
-      partition_by_attrs_to_evaluator_idx
+      return partition_by_attrs_to_evaluator_idx
         .emplace(std::piecewise_construct,
                  std::forward_as_tuple(tuple_values),
-                 std::forward_as_tuple(partition_by_attrs_to_evaluator_idx.size()));
+                 std::forward_as_tuple(partition_by_attrs_to_evaluator_idx.size()))
+        .first->second;
     }
   }
 };

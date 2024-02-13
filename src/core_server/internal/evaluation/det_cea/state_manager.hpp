@@ -1,7 +1,16 @@
 #pragma once
 
+#include <cassert>
+#include <cstdint>
+#include <gmpxx.h>
 #include <cstdlib>
+#include <iostream>
+#include <map>
+#include <ostream>
+#include <string>
+#include <vector>
 
+#include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "state.hpp"
 

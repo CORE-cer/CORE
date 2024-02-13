@@ -58,7 +58,8 @@ class Backend {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>, std::unique_ptr<PartitionByQuery<ResultHandlerT>>>;
+  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>,
+                                    std::unique_ptr<PartitionByQuery<ResultHandlerT>>>;
 
   std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
@@ -121,23 +122,33 @@ class Backend {
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(std::string query, ResultHandlerT& result_handler) {
     Internal::CEQL::Query parsed_query = Internal::Parsing::Parser::parse_query(query);
-    std::string inproc_receiver_address = "inproc://"
-                                          + std::to_string(next_available_inproc_port++);
 
-    using QueryDirectType = SimpleQuery<ResultHandlerT>;
-    using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
+    if (parsed_query.partition_by.partition_attributes.size() != 0) {
+      using QueryDirectType = PartitionByQuery<ResultHandlerT>;
+      using QueryBaseType = GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
 
-    queries.emplace_back(std::make_unique<SimpleQuery<ResultHandlerT>>(
-      catalog, queue, inproc_receiver_address, result_handler));
-    initialize_last_query<std::unique_ptr<QueryDirectType>, QueryBaseType>(
-      std::move(parsed_query), inproc_receiver_address);
+      initialize_query<QueryDirectType, QueryBaseType>(
+        std::move(parsed_query), result_handler);
+    } else {
+      using QueryDirectType = SimpleQuery<ResultHandlerT>;
+      using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
+
+      initialize_query<QueryDirectType, QueryBaseType>(
+        std::move(parsed_query), result_handler);
+    }
   }
 
-  template <typename VariantType, typename QueryBaseType>
-  void initialize_last_query(Internal::CEQL::Query&& parsed_query,
-                             std::string inproc_receiver_address) {
+  template <typename QueryDirectType, typename QueryBaseType>
+  void
+  initialize_query(Internal::CEQL::Query&& parsed_query, ResultHandlerT& result_handler) {
+    std::string inproc_receiver_address = "inproc://"
+                                          + std::to_string(next_available_inproc_port++);
+    queries.emplace_back(std::make_unique<QueryDirectType>(catalog,
+                                                           queue,
+                                                           inproc_receiver_address,
+                                                           result_handler));
     QueryBaseType* query = static_cast<QueryBaseType*>(
-      std::get<VariantType>(queries.back()).get());
+      std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
     query_events_time_window_mode.push_back(query->time_window.mode);

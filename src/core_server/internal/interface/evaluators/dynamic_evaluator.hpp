@@ -33,7 +33,7 @@ class DynamicEvaluator : public GenericEvaluator {
   };
 
   EvaluatorArgs evaluator_args;
-  std::vector<Evaluation::Evaluator> evaluators = {};
+  std::vector<std::unique_ptr<Evaluation::Evaluator>> evaluators = {};
 
  public:
   DynamicEvaluator(CEA::DetCEA&& cea,
@@ -57,15 +57,17 @@ class DynamicEvaluator : public GenericEvaluator {
     uint64_t time = tuple_time(tuple);
 
     if (evaluator_idx >= evaluators.size()) {
-      evaluators.emplace_back(std::move(evaluator_args.cea),
-                              std::move(evaluator_args.tuple_evaluator),
-                              time_window.duration,
-                              evaluator_args.event_time_of_expiration,
-                              evaluator_args.consumption_policy,
-                              evaluator_args.limit);
+      std::unique_ptr<Evaluation::Evaluator> evaluator = std::make_unique<
+        Evaluation::Evaluator>(evaluator_args.cea,
+                               evaluator_args.tuple_evaluator,
+                               time_window.duration,
+                               evaluator_args.event_time_of_expiration,
+                               evaluator_args.consumption_policy,
+                               evaluator_args.limit);
+      evaluators.push_back(std::move(evaluator));
     }
 
-    return evaluators[evaluator_idx].next(tuple, time);
+    return evaluators[evaluator_idx]->next(tuple, time);
   }
 };
 }  // namespace CORE::Internal::Interface

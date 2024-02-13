@@ -1,11 +1,11 @@
 #pragma once
 #include <gmpxx.h>
 
+#include <cassert>
 #include <cstdint>
-#include <cwchar>
-#include <map>
-#include <memory>
+#include <string>
 #include <tracy/Tracy.hpp>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
@@ -31,6 +31,14 @@ class DetCEA {
   StateManager state_manager;
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
+    mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
+    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
+                                                                         0,
+                                                                         cea);
+    this->initial_state = initial_state;
+  }
+
+  DetCEA(const DetCEA& other) : cea(other.cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
     State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
                                                                          0,
