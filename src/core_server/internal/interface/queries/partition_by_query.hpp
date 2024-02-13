@@ -96,8 +96,8 @@ class PartitionByQuery
     evaluator = std::make_unique<DynamicEvaluator>(std::move(cea),
                                                    std::move(tuple_evaluator),
                                                    this->time_of_expiration,
-                                                   query.consume_by.policy,
-                                                   query.limit,
+                                                   this->query.value().consume_by.policy,
+                                                   this->query.value().limit,
                                                    this->time_window,
                                                    this->catalog,
                                                    this->queue);
@@ -122,7 +122,7 @@ class PartitionByQuery
   }
 
   std::optional<std::vector<uint64_t>>*
-  find_tuple_indexes(RingTupleQueue::Tuple& tuple) noexcept {
+  find_tuple_indexes(RingTupleQueue::Tuple& tuple) {
     std::vector<uint64_t> tuple_indexes = {};
 
     Types::EventTypeId event_id = tuple.id();
