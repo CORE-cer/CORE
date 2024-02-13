@@ -21,10 +21,10 @@ class DetermineFinalValueDataType : public ValueVisitor {
   DataType final_value_datatype = Undetermined;
 
  private:
-  Types::EventInfo event_info;
+  Types::CatalogEventInfo catalog_event_info;
 
  public:
-  DetermineFinalValueDataType(Types::EventInfo event_info) : event_info(event_info) {}
+  DetermineFinalValueDataType(Types::CatalogEventInfo event_info) : catalog_event_info(event_info) {}
 
   DataType get_final_data_type() {
     auto out = final_value_datatype;
@@ -33,13 +33,13 @@ class DetermineFinalValueDataType : public ValueVisitor {
   }
 
   void visit(Attribute& attribute) override {
-    auto attribute_id = event_info.attribute_names_to_ids.find(attribute.value);
-    if (attribute_id == event_info.attribute_names_to_ids.end()) {
+    auto attribute_id = catalog_event_info.event_info.attribute_names_to_ids.find(attribute.value);
+    if (attribute_id == catalog_event_info.event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event " + event_info.name);
+                               + " does not exist in event " + catalog_event_info.event_info.name);
     }
     size_t id = attribute_id->second;
-    auto info = event_info.attributes_info[id];
+    auto info = catalog_event_info.event_info.attributes_info[id];
 
     DataType event_type = attribute_info_type_convertor(info.value_type);
     update_final_data_type(event_type);

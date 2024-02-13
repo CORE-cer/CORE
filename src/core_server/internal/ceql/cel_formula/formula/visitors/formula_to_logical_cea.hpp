@@ -31,7 +31,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
 
   FormulaToLogicalCEA(Catalog& catalog) : catalog(catalog) {
     for (uint64_t event_id = 0; event_id < catalog.number_of_events(); event_id++) {
-      variables_to_id[catalog.get_event_info(event_id).name] = event_id;
+      variables_to_id[catalog.get_catalog_event_info(event_id).event_info.name] = event_id;
     }
   }
 
@@ -43,9 +43,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    Types::EventInfo event_info = catalog.get_event_info(formula.event_type_name);
-    assert(event_info.id.has_value());
-    current_cea = CEA::LogicalCEA::atomic_cea(event_info.id.value());
+    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(formula.event_type_name);
+    current_cea = CEA::LogicalCEA::atomic_cea(catalog_event_info.id);
   }
 
   void visit(FilterFormula& formula) override {

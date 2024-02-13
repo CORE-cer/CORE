@@ -20,7 +20,7 @@ TEST_CASE("Compare with constant predicate computed correctly.", "[ValueToMathEx
   attributes_info.emplace_back("Integer2", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", Types::ValueTypes::DOUBLE);
   attributes_info.emplace_back("Double2", Types::ValueTypes::DOUBLE);
-  Types::EventInfo event_info(0, "some_event_name", std::move(attributes_info));
+  Types::CatalogEventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   TupleSchemas schemas;
   Queue ring_tuple_queue(100, &schemas);

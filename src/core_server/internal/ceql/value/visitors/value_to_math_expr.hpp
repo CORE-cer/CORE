@@ -11,21 +11,21 @@ namespace CORE::Internal::CEQL {
 template <typename Type>
 class ValueToMathExpr : public ValueVisitor {
  private:
-  Types::EventInfo& event_info;
+  Types::CatalogEventInfo& catalog_event_info;
 
  public:
-  ValueToMathExpr(Types::EventInfo& event_info) : event_info(event_info) {}
+  ValueToMathExpr(Types::CatalogEventInfo& event_info) : catalog_event_info(event_info) {}
 
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
-    auto attribute_id = event_info.attribute_names_to_ids.find(attribute.value);
-    if (attribute_id == event_info.attribute_names_to_ids.end()) {
+    auto attribute_id = catalog_event_info.event_info.attribute_names_to_ids.find(attribute.value);
+    if (attribute_id == catalog_event_info.event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event " + event_info.name);
+                               + " does not exist in event " + catalog_event_info.event_info.name);
     }
     size_t id = attribute_id->second;
-    Types::AttributeInfo info = event_info.attributes_info[id];
+    Types::AttributeInfo info = catalog_event_info.event_info.attributes_info[id];
     switch (info.value_type) {
       case Types::INT64:
         math_expr = std::make_unique<CEA::Attribute<Type, int64_t>>(id);

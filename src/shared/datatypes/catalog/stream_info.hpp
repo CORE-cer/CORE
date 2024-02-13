@@ -15,28 +15,21 @@ struct StreamInfo {
    * follow that they are ordered by timestamp. (Least to greatest).
    */
 
-  std::optional<StreamTypeId> id;
   std::string name;
-  std::vector<EventInfo> events_info;
+  std::vector<CatalogEventInfo> events_info;
 
   StreamInfo() noexcept = default;
 
-  StreamInfo(StreamTypeId stream_type_id,
-             std::string stream_name,
-             std::vector<EventInfo>&& events_info) noexcept
-      : id(stream_type_id), name(stream_name), events_info(std::move(events_info)) {}
-
-  StreamInfo(std::string stream_name, std::vector<EventInfo>&& events_info) noexcept
+  StreamInfo(std::string stream_name, std::vector<CatalogEventInfo>&& events_info) noexcept
       : name(stream_name), events_info(std::move(events_info)) {}
 
-  StreamInfo(std::initializer_list<EventInfo>&& events_info) noexcept
+  StreamInfo(std::initializer_list<CatalogEventInfo>&& events_info) noexcept
       : events_info(std::move(events_info)) {}
 
   ~StreamInfo() noexcept = default;
 
   bool operator==(const StreamInfo& other) const {
-    bool out = id.value_or(-1) == other.id.value_or(-1) && name == other.name
-               && events_info.size() == other.events_info.size();
+    bool out = name == other.name && events_info.size() == other.events_info.size();
     if (!out) return false;
     for (uint64_t i = 0; i < events_info.size(); i++) {
       if (events_info.at(i) != other.events_info.at(i)) {
@@ -48,7 +41,34 @@ struct StreamInfo {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(id, name, events_info);
+    archive(name, events_info);
+  }
+};
+
+struct CatalogStreamInfo {
+  StreamTypeId id;
+  StreamInfo stream_info;
+
+  CatalogStreamInfo() noexcept : stream_info() {}
+
+  CatalogStreamInfo(StreamTypeId stream_type_id,
+                    std::string stream_name,
+                    std::vector<CatalogEventInfo>&& events_info) noexcept
+      : id(stream_type_id), stream_info(stream_name, std::move(events_info)) {}
+
+  CatalogStreamInfo(std::initializer_list<CatalogEventInfo>&& events_info) noexcept
+      : stream_info(std::move(events_info)) {}
+
+  ~CatalogStreamInfo() noexcept = default;
+
+  bool operator==(const CatalogStreamInfo& other) const {
+    bool out = id == other.id && stream_info == other.stream_info;
+    return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive) {
+    archive(id, stream_info);
   }
 };
 }  // namespace CORE::Types

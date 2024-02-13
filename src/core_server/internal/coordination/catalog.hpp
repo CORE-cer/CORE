@@ -25,9 +25,9 @@ class Catalog {
   RingTupleQueue::TupleSchemas tuple_schemas;
 
  private:
-  std::vector<Types::EventInfo> events_info;
+  std::vector<Types::CatalogEventInfo> catalog_events_info;
   std::map<std::string, Types::EventTypeId> event_name_to_id;
-  std::vector<Types::StreamInfo> streams_info;
+  std::vector<Types::CatalogStreamInfo> catalog_streams_info;
   std::map<std::string, Types::StreamTypeId> stream_name_to_id;
   std::vector<Types::QueryInfo> queries_info;
   std::map<std::string, std::set<Types::ValueTypes>> possible_attribute_types;
@@ -41,9 +41,9 @@ class Catalog {
   bool event_name_is_taken(std::string event_name) const;
   uint64_t get_index_attribute(const Types::EventTypeId event_type_id,
                                std::string attribute_name) const;
-  Types::EventInfo get_event_info(const Types::EventTypeId event_type_id) const noexcept;
-  Types::EventInfo get_event_info(std::string event_name) const noexcept;
-  const std::vector<Types::EventInfo>& get_all_events_info() const noexcept;
+  Types::CatalogEventInfo get_catalog_event_info(const Types::EventTypeId event_type_id) const noexcept;
+  Types::CatalogEventInfo get_catalog_event_info(std::string event_name) const noexcept;
+  const std::vector<Types::CatalogEventInfo>& get_all_catalog_events_info() const noexcept;
 
   // Streams
   [[nodiscard]] Types::StreamTypeId
@@ -52,18 +52,18 @@ class Catalog {
 
   bool stream_name_is_taken(std::string stream_name) const noexcept;
   // clang-format off
-  Types::StreamInfo get_stream_info(const Types::StreamTypeId stream_type_id) const noexcept;
+  Types::CatalogStreamInfo get_catalog_stream_info(const Types::StreamTypeId stream_type_id) const noexcept;
   // clang-format on
-  Types::StreamInfo get_stream_info(std::string stream_name) const noexcept;
+  Types::CatalogStreamInfo get_catalog_stream_info(std::string stream_name) const noexcept;
 
-  const std::vector<Types::StreamInfo>& get_all_streams_info() const noexcept;
+  const std::vector<Types::CatalogStreamInfo>& get_all_catalog_streams_info() const noexcept;
 
   // Queries
   Types::QueryInfoId add_query(Types::QueryInfo query_info) noexcept;
   Types::QueryInfo get_query_info(Types::QueryInfoId query_info_id) const noexcept;
   const std::vector<Types::QueryInfo>& get_all_query_infos() const noexcept;
 
-  uint64_t number_of_events() const { return events_info.size(); }
+  uint64_t number_of_events() const { return catalog_events_info.size(); }
 
   std::set<Types::ValueTypes>
   get_possible_attribute_types(std::string attribute_name) const noexcept;
@@ -83,7 +83,7 @@ class Catalog {
     std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const;
 
   Types::Event
-  tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
+  tuple_to_event(const Types::CatalogEventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
 };
 
 }  // namespace CORE::Internal

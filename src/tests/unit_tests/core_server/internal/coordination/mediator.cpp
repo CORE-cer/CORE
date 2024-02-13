@@ -22,13 +22,11 @@ declare_and_check_for_event(Client& client,
                             std::vector<Types::AttributeInfo> attribute_info) {
   try {
     auto id = client.declare_event_type(name, std::move(attribute_info));
-    Types::EventInfo event_info_from_id = client.get_event_info(id);
-    Types::EventInfo event_info_from_name = client.get_event_info(id);
+    Types::CatalogEventInfo event_info_from_id = client.get_catalog_event_info(id);
+    Types::CatalogEventInfo event_info_from_name = client.get_catalog_event_info(id);
     REQUIRE(event_info_from_id == event_info_from_name);
-    REQUIRE(event_info_from_id.id.has_value());
-    assert(event_info_from_id.id.has_value());
-    REQUIRE(event_info_from_id.id.value() == id);
-    REQUIRE(event_info_from_id.name == name);
+    REQUIRE(event_info_from_id.id == id);
+    REQUIRE(event_info_from_id.event_info.name == name);
     return id;
   } catch (std::runtime_error) {
     REQUIRE((false && "A response gave an error"));
@@ -41,13 +39,11 @@ Types::EventTypeId declare_and_check_for_stream(Client& client,
                                                 std::vector<Types::EventTypeId> ids) {
   try {
     auto id = client.declare_stream_type(name, std::move(ids));
-    Types::StreamInfo stream_info_from_id = client.get_stream_info(id);
-    Types::StreamInfo stream_info_from_name = client.get_stream_info(id);
-    REQUIRE(stream_info_from_id == stream_info_from_name);
-    REQUIRE(stream_info_from_id.id.has_value());
-    assert(stream_info_from_id.id.has_value());
-    REQUIRE(stream_info_from_id.id.value() == id);
-    REQUIRE(stream_info_from_id.name == name);
+    Types::CatalogStreamInfo catalog_stream_info_from_id = client.get_catalog_stream_info(id);
+    Types::CatalogStreamInfo catalog_stream_info_from_name = client.get_catalog_stream_info(id);
+    REQUIRE(catalog_stream_info_from_id == catalog_stream_info_from_name);
+    REQUIRE(catalog_stream_info_from_id.id == id);
+    REQUIRE(catalog_stream_info_from_id.stream_info.name == name);
     return id;
   } catch (std::runtime_error) {
     REQUIRE((false && "A response gave an error"));

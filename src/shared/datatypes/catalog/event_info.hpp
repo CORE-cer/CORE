@@ -11,7 +11,6 @@
 namespace CORE::Types {
 
 struct EventInfo {
-  std::optional<EventTypeId> id;
   std::string name;
   std::vector<AttributeInfo> attributes_info;
   std::map<std::string, size_t> attribute_names_to_ids;
@@ -26,7 +25,7 @@ struct EventInfo {
   EventInfo(EventTypeId event_type_id,
             std::string name,
             std::vector<AttributeInfo>&& attributes_info) noexcept
-      : id(event_type_id), name(name), attributes_info(attributes_info) {
+      : name(name), attributes_info(attributes_info) {
     init_attribute_names_to_ids();
   }
 
@@ -37,7 +36,7 @@ struct EventInfo {
   }
 
   bool operator==(const EventInfo& other) const {
-    bool out = id.value_or(-1) == other.id.value_or(-1) && name == other.name
+    bool out = name == other.name
                && attributes_info.size() == other.attributes_info.size()
                && attribute_names_to_ids.size() == other.attribute_names_to_ids.size();
     if (!out) {
@@ -54,7 +53,29 @@ struct EventInfo {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(id, name, attributes_info);
+    archive(name, attributes_info);
+  }
+};
+
+struct CatalogEventInfo {
+  EventTypeId id;
+  EventInfo event_info;
+
+  CatalogEventInfo(EventTypeId event_type_id,
+                   std::string name,
+                   std::vector<AttributeInfo>&& attributes_info) noexcept
+      : id(event_type_id), event_info(name, std::move(attributes_info)) {}
+
+  CatalogEventInfo() noexcept : event_info() {}
+
+  bool operator==(const CatalogEventInfo& other) const {
+    bool out = event_info == other.event_info && id == other.id;
+    return out;
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive) {
+    archive(id, event_info);
   }
 };
 

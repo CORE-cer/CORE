@@ -54,7 +54,7 @@ class AnnotatePredicatesWithNewPhysicalPredicates
         filters[i]->predicate->physical_predicate_id = predicate_id;
       } else {
         CEQLStrongTypedPredicateToPhysicalPredicate visitor(
-          catalog.get_event_info(event_name));
+          catalog.get_catalog_event_info(event_name));
         filters[i]->predicate->accept_visitor(visitor);
         physical_predicates.push_back(std::move(visitor.predicate));
         filters[i]->predicate->physical_predicate_id = predicate_id;

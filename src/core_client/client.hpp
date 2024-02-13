@@ -57,32 +57,32 @@ class Client {
     return id;
   }
 
-  Types::EventInfo get_event_info(Types::EventTypeId id) {
+  Types::CatalogEventInfo get_catalog_event_info(Types::EventTypeId id) {
     Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
                                    id),
                                  Types::ClientRequestType::EventInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
+    auto event_info = Internal::CerealSerializer<Types::CatalogEventInfo>::deserialize(
       response.serialized_response_data);
     return event_info;
   }
 
-  Types::EventInfo get_event_info(std::string name) {
+  Types::CatalogEventInfo get_catalog_event_info(std::string name) {
     Types::ClientRequest request(Internal::CerealSerializer<std::string>::serialize(name),
                                  Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
+    auto event_info = Internal::CerealSerializer<Types::CatalogEventInfo>::deserialize(
       response.serialized_response_data);
     return event_info;
   }
 
-  std::vector<Types::EventInfo> get_all_event_types() {
+  std::vector<Types::CatalogEventInfo> get_all_catalog_event_types() {
     Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto events_info = Internal::CerealSerializer<std::vector<Types::EventInfo>>::deserialize(
+    auto events_info = Internal::CerealSerializer<std::vector<Types::CatalogEventInfo>>::deserialize(
       response.serialized_response_data);
     return events_info;
   }
@@ -99,13 +99,13 @@ class Client {
       res.serialized_response_data);
   }
 
-  Types::StreamInfo get_stream_info(Types::StreamTypeId id) {
+  Types::CatalogStreamInfo get_catalog_stream_info(Types::StreamTypeId id) {
     Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
                                    id),
                                  Types::ClientRequestType::StreamInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::StreamInfo);
-    auto stream_info = Internal::CerealSerializer<Types::StreamInfo>::deserialize(
+    auto stream_info = Internal::CerealSerializer<Types::CatalogStreamInfo>::deserialize(
       response.serialized_response_data);
     return stream_info;
   }

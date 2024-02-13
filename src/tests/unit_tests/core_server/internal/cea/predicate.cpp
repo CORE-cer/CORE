@@ -17,7 +17,7 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate", "[ValueToMathExpr
   attributes_info.emplace_back("Integer2", Types::ValueTypes::INT64);
   attributes_info.emplace_back("Double1", Types::ValueTypes::DOUBLE);
   attributes_info.emplace_back("Double2", Types::ValueTypes::DOUBLE);
-  Types::EventInfo event_info(0, "some_event_name", std::move(attributes_info));
+  Types::CatalogEventInfo event_info(0, "some_event_name", std::move(attributes_info));
 
   RingTupleQueue::TupleSchemas schemas;
 

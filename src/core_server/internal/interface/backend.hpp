@@ -61,16 +61,16 @@ class Backend {
     return id;
   }
 
-  Types::EventInfo get_event_info(Types::EventTypeId event_type_id) {
-    return catalog.get_event_info(event_type_id);
+  Types::CatalogEventInfo get_catalog_event_info(Types::EventTypeId event_type_id) {
+    return catalog.get_catalog_event_info(event_type_id);
   }
 
-  Types::EventInfo get_event_info(std::string event_name) {
-    return catalog.get_event_info(event_name);
+  Types::CatalogEventInfo get_catalog_event_info(std::string event_name) {
+    return catalog.get_catalog_event_info(event_name);
   }
 
-  std::vector<Types::EventInfo> get_all_events_info() {
-    return catalog.get_all_events_info();
+  std::vector<Types::CatalogEventInfo> get_all_catalog_events_info() {
+    return catalog.get_all_catalog_events_info();
   }
 
   // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
@@ -82,16 +82,16 @@ class Backend {
     return id;
   }
 
-  Types::StreamInfo get_stream_info(Types::StreamTypeId event_type_id) {
-    return catalog.get_stream_info(event_type_id);
+  Types::CatalogStreamInfo get_catalog_stream_info(Types::StreamTypeId event_type_id) {
+    return catalog.get_catalog_stream_info(event_type_id);
   }
 
-  Types::StreamInfo get_stream_info(std::string event_name) {
-    return catalog.get_stream_info(event_name);
+  Types::CatalogStreamInfo get_catalog_stream_info(std::string event_name) {
+    return catalog.get_catalog_stream_info(event_name);
   }
 
-  std::vector<Types::StreamInfo> get_all_streams_info() {
-    return catalog.get_all_streams_info();
+  std::vector<Types::CatalogStreamInfo> get_all_catalog_streams_info() {
+    return catalog.get_all_catalog_streams_info();
   }
 
   // TODO: Propogate parse error to ClientMessageHandler
@@ -165,8 +165,8 @@ class Backend {
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
-    Types::EventInfo event_info = catalog.get_event_info(event.event_type_id);
-    std::vector<Types::AttributeInfo> attr_infos = event_info.attributes_info;
+    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(event.event_type_id);
+    std::vector<Types::AttributeInfo> attr_infos = catalog_event_info.event_info.attributes_info;
     if (attr_infos.size() != event.attributes.size()) {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }
