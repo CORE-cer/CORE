@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include "core_server/internal/interface/backend.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/stream.hpp"
 
 namespace CORE::Library::Components {
 

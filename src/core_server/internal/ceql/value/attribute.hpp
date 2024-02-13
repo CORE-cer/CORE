@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 
+#include "visitors/value_visitor.hpp"
 #include "value.hpp"
 
 namespace CORE::Internal::CEQL {

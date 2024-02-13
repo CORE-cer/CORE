@@ -1,4 +1,7 @@
 #pragma once
+
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/ceql/value/attribute.hpp"
@@ -6,17 +9,23 @@
 namespace CORE::Internal::CEQL {
 
 struct PartitionBy {
-  std::vector<Attribute> attributes = {};
+  // Store attributes to partition on. For each vector, partition on the first attribute that is in the tuple.
+  std::vector<std::vector<Attribute>> partition_attributes = {};
 
   PartitionBy() {}
 
-  PartitionBy(std::vector<Attribute>&& attributes) : attributes(attributes) {}
+  PartitionBy(std::vector<std::vector<Attribute>>&& partition_attributes)
+      : partition_attributes(std::move(partition_attributes)) {}
 
   std::string to_string() const {
-    if (attributes.size() == 0) return "";
+    if (partition_attributes.size() == 0) return "";
     std::string out = "Partition By [";
-    for (auto& att : attributes) {
-      out += att.to_string() + " ";
+    for (auto& attr_group : partition_attributes) {
+      out += '(';
+      for (auto& attr : attr_group) {
+        out += attr.to_string() + " ";
+      }
+      out += ')';
     }
     return out + "]";
   }
