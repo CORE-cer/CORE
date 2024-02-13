@@ -165,8 +165,10 @@ class Backend {
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
-    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(event.event_type_id);
-    std::vector<Types::AttributeInfo> attr_infos = catalog_event_info.event_info.attributes_info;
+    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(
+      event.event_type_id);
+    std::vector<Types::AttributeInfo> attr_infos = catalog_event_info.event_info
+                                                     .attributes_info;
     if (attr_infos.size() != event.attributes.size()) {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }

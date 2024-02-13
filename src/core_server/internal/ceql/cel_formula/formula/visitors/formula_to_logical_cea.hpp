@@ -43,7 +43,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(formula.event_type_name);
+    Types::CatalogEventInfo catalog_event_info = catalog.get_catalog_event_info(
+      formula.event_type_name);
     current_cea = CEA::LogicalCEA::atomic_cea(catalog_event_info.id);
   }
 

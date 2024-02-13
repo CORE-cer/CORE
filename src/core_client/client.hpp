@@ -82,8 +82,8 @@ class Client {
     Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto events_info = Internal::CerealSerializer<std::vector<Types::CatalogEventInfo>>::deserialize(
-      response.serialized_response_data);
+    auto events_info = Internal::CerealSerializer<
+      std::vector<Types::CatalogEventInfo>>::deserialize(response.serialized_response_data);
     return events_info;
   }
 

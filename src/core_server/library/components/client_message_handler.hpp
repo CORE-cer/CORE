@@ -106,9 +106,9 @@ class ClientMessageHandler {
 
   Types::ServerResponse list_all_events() {
     std::vector<Types::CatalogEventInfo> info = backend.get_all_catalog_events_info();
-    return Types::ServerResponse(CerealSerializer<std::vector<Types::CatalogEventInfo>>::serialize(
-                                   info),
-                                 Types::ServerResponseType::EventInfoVector);
+    return Types::ServerResponse(
+      CerealSerializer<std::vector<Types::CatalogEventInfo>>::serialize(info),
+      Types::ServerResponseType::EventInfoVector);
   }
 
   Types::ServerResponse stream_declaration(std::string s_stream_info) {
@@ -125,14 +125,16 @@ class ClientMessageHandler {
   Types::ServerResponse catalog_stream_info_from_id(std::string s_stream_id) {
     auto stream_id = CerealSerializer<Types::StreamTypeId>::deserialize(s_stream_id);
     Types::CatalogStreamInfo info = backend.get_catalog_stream_info(stream_id);
-    return Types::ServerResponse(CerealSerializer<Types::CatalogStreamInfo>::serialize(info),
+    return Types::ServerResponse(CerealSerializer<Types::CatalogStreamInfo>::serialize(
+                                   info),
                                  Types::ServerResponseType::StreamInfo);
   }
 
   Types::ServerResponse catalog_stream_info_from_name(std::string s_stream_name) {
     auto name = CerealSerializer<std::string>::deserialize(s_stream_name);
     Types::CatalogStreamInfo info = backend.get_catalog_stream_info(name);
-    return Types::ServerResponse(CerealSerializer<Types::CatalogStreamInfo>::serialize(info),
+    return Types::ServerResponse(CerealSerializer<Types::CatalogStreamInfo>::serialize(
+                                   info),
                                  Types::ServerResponseType::StreamInfo);
   }
 

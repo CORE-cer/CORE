@@ -39,8 +39,10 @@ Types::EventTypeId declare_and_check_for_stream(Client& client,
                                                 std::vector<Types::EventTypeId> ids) {
   try {
     auto id = client.declare_stream_type(name, std::move(ids));
-    Types::CatalogStreamInfo catalog_stream_info_from_id = client.get_catalog_stream_info(id);
-    Types::CatalogStreamInfo catalog_stream_info_from_name = client.get_catalog_stream_info(id);
+    Types::CatalogStreamInfo catalog_stream_info_from_id = client.get_catalog_stream_info(
+      id);
+    Types::CatalogStreamInfo catalog_stream_info_from_name = client.get_catalog_stream_info(
+      id);
     REQUIRE(catalog_stream_info_from_id == catalog_stream_info_from_name);
     REQUIRE(catalog_stream_info_from_id.id == id);
     REQUIRE(catalog_stream_info_from_id.stream_info.name == name);

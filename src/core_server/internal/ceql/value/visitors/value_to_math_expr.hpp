@@ -19,10 +19,11 @@ class ValueToMathExpr : public ValueVisitor {
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
-    auto attribute_id = catalog_event_info.event_info.attribute_names_to_ids.find(attribute.value);
+    auto attribute_id = catalog_event_info.event_info.attribute_names_to_ids.find(
+      attribute.value);
     if (attribute_id == catalog_event_info.event_info.attribute_names_to_ids.end()) {
-      throw std::runtime_error("Attribute " + attribute.value
-                               + " does not exist in event " + catalog_event_info.event_info.name);
+      throw std::runtime_error("Attribute " + attribute.value + " does not exist in event "
+                               + catalog_event_info.event_info.name);
     }
     size_t id = attribute_id->second;
     Types::AttributeInfo info = catalog_event_info.event_info.attributes_info[id];

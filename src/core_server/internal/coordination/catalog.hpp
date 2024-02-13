@@ -41,7 +41,8 @@ class Catalog {
   bool event_name_is_taken(std::string event_name) const;
   uint64_t get_index_attribute(const Types::EventTypeId event_type_id,
                                std::string attribute_name) const;
-  Types::CatalogEventInfo get_catalog_event_info(const Types::EventTypeId event_type_id) const noexcept;
+  Types::CatalogEventInfo
+  get_catalog_event_info(const Types::EventTypeId event_type_id) const noexcept;
   Types::CatalogEventInfo get_catalog_event_info(std::string event_name) const noexcept;
   const std::vector<Types::CatalogEventInfo>& get_all_catalog_events_info() const noexcept;
 
@@ -56,7 +57,8 @@ class Catalog {
   // clang-format on
   Types::CatalogStreamInfo get_catalog_stream_info(std::string stream_name) const noexcept;
 
-  const std::vector<Types::CatalogStreamInfo>& get_all_catalog_streams_info() const noexcept;
+  const std::vector<Types::CatalogStreamInfo>&
+  get_all_catalog_streams_info() const noexcept;
 
   // Queries
   Types::QueryInfoId add_query(Types::QueryInfo query_info) noexcept;
@@ -82,8 +84,8 @@ class Catalog {
     std::vector<RingTupleQueue::Tuple>& tuples,
     std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const;
 
-  Types::Event
-  tuple_to_event(const Types::CatalogEventInfo& event_info, RingTupleQueue::Tuple& tuple) const;
+  Types::Event tuple_to_event(const Types::CatalogEventInfo& event_info,
+                              RingTupleQueue::Tuple& tuple) const;
 };
 
 }  // namespace CORE::Internal
