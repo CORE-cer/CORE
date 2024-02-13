@@ -23,6 +23,7 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/queries/generic_query.hpp"
+#include "core_server/internal/interface/queries/partition_by_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -57,7 +58,7 @@ class Backend {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>>;
+  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>, std::unique_ptr<PartitionByQuery<ResultHandlerT>>>;
 
   std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};

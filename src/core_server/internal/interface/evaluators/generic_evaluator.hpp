@@ -3,47 +3,36 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <memory>
-#include <optional>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
-#include <utility>
 
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 
 namespace CORE::Internal::Interface {
-class SingleEvaluator {
+
+class GenericEvaluator {
   uint64_t current_stream_position = 0;
   Internal::Catalog& catalog;
   RingTupleQueue::Queue& queue;
-
-  // Underlying evaluator for tuples
-  std::unique_ptr<Internal::Evaluation::Evaluator> evaluator;
   std::unordered_map<Types::EventTypeId, uint64_t> indexes{};
 
  public:
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  SingleEvaluator(std::unique_ptr<Internal::Evaluation::Evaluator>&& evaluator,
-                  CEQL::Within::TimeWindow time_window,
-                  Internal::Catalog& catalog,
-                  RingTupleQueue::Queue& queue)
-      : evaluator(std::move(evaluator)),
-        time_window(time_window),
-        catalog(catalog),
-        queue(queue) {}
+  GenericEvaluator(CEQL::Within::TimeWindow time_window,
+                   Internal::Catalog& catalog,
+                   RingTupleQueue::Queue& queue)
+      : time_window(time_window), catalog(catalog), queue(queue) {}
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    ZoneScopedN("SingleQuery::process_event");
+ protected:
+  uint64_t tuple_time(RingTupleQueue::Tuple& tuple) {
+    ZoneScopedN("Interface::GenericEvaluator::tuple_time");
     uint64_t time;
-
     switch (time_window.mode) {
       case CEQL::Within::TimeWindowMode::NONE:
       case CEQL::Within::TimeWindowMode::EVENTS:
@@ -67,7 +56,8 @@ class SingleEvaluator {
         assert(false && "Unknown time_window mode in next_data.");
         break;
     }
-    return evaluator->next(tuple, time);
+
+    return time;
   }
 };
 }  // namespace CORE::Internal::Interface
