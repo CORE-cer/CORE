@@ -12,7 +12,6 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/evaluators/single_evaluator.hpp"
 #include "core_server/internal/interface/queries/generic_query.hpp"
@@ -56,15 +55,11 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
 
     this->time_window = query.within.time_window;
 
-    auto internal_evaluator = std::make_unique<Internal::Evaluation::Evaluator>(
-      std::move(cea),
-      std::move(tuple_evaluator),
-      this->time_window.duration,
-      this->time_of_expiration,
-      query.consume_by.policy,
-      query.limit);
-
-    evaluator = std::make_unique<SingleEvaluator>(std::move(internal_evaluator),
+    evaluator = std::make_unique<SingleEvaluator>(std::move(cea),
+                                                  std::move(tuple_evaluator),
+                                                  this->time_of_expiration,
+                                                  query.consume_by.policy,
+                                                  query.limit,
                                                   this->time_window,
                                                   this->catalog,
                                                   this->queue);
