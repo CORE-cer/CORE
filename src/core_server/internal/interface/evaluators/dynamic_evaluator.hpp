@@ -30,6 +30,16 @@ class DynamicEvaluator : public GenericEvaluator {
     std::atomic<uint64_t>& event_time_of_expiration;
     Internal::CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
     CEQL::Limit limit;
+
+    EvaluatorArgs(CEA::DetCEA&& cea,
+                  Evaluation::PredicateEvaluator&& tuple_evaluator,
+                  std::atomic<uint64_t>& event_time_of_expiration,
+                  CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
+                  CEQL::Limit limit)
+        : cea(std::move(cea)),
+          tuple_evaluator(std::move(tuple_evaluator)),
+          event_time_of_expiration(event_time_of_expiration),
+          consumption_policy(consumption_policy) {}
   };
 
   EvaluatorArgs evaluator_args;
