@@ -121,8 +121,7 @@ class PartitionByQuery
     return evaluator->process_event(tuple, evaluator_idx);
   }
 
-  std::optional<std::vector<uint64_t>>*
-  find_tuple_indexes(RingTupleQueue::Tuple& tuple) {
+  std::optional<std::vector<uint64_t>>* find_tuple_indexes(RingTupleQueue::Tuple& tuple) {
     std::vector<uint64_t> tuple_indexes = {};
 
     Types::EventTypeId event_id = tuple.id();
