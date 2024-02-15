@@ -401,7 +401,8 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "Evaluation on the example stream of the papers with partition-by two evaluators with consume by any") {
+  "Evaluation on the example stream of the papers with partition-by two evaluators with "
+  "consume by any") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
@@ -615,7 +616,8 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "Evaluation on the example stream of the papers with partition-by two evaluators with consume by partition") {
+  "Evaluation on the example stream of the papers with partition-by two evaluators with "
+  "consume by partition") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 

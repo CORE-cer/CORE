@@ -147,7 +147,8 @@ class Evaluator {
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
-      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
+      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
+          || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
         should_reset.store(true);
       }
       return std::move(enumerator);
