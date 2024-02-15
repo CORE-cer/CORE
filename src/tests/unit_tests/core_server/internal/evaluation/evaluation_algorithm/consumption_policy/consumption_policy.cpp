@@ -1,7 +1,14 @@
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
+#include <string>
 
 #include "core_server/internal/interface/backend.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/enumerator.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/value.hpp"
 #include "tests/unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
