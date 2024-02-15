@@ -399,4 +399,448 @@ TEST_CASE(
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "AMZN", 1900));
 }
+
+TEST_CASE(
+  "Evaluation on the example stream of the papers with partition-by two evaluators with consume by any") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
+
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64},
+                                                 {"part", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64},
+                                                 {"part", Types::ValueTypes::INT64}});
+
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
+    "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
+    "    AND intel[name='INTL']\n"
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "PARTITION BY [part]\n"
+    "CONSUME BY ANY";
+
+  backend.declare_query(string_query, result_handler);
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL MSFT 101 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL MSFT 101 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL MSFT 102 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL MSFT 102 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL INTL 80 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL INTL 80 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("BUY INTL 80 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("BUY INTL 80 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL AMZN 1900 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 8);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 8);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL AMZN 1900 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Should be 0 due to evaluator being reset on result on another partition
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL INTL 81 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL INTL 81 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL AMZN 1920 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL AMZN 1920 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+}
+
+TEST_CASE(
+  "Evaluation on the example stream of the papers with partition-by two evaluators with consume by partition") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+  TestResultHandler result_handler{backend.get_catalog_reference()};
+
+  auto event_type_id_1 = backend.add_event_type("SELL",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64},
+                                                 {"part", Types::ValueTypes::INT64}});
+  auto event_type_id_2 = backend.add_event_type("BUY",
+                                                {{"name", Types::ValueTypes::STRING_VIEW},
+                                                 {"price", Types::ValueTypes::INT64},
+                                                 {"part", Types::ValueTypes::INT64}});
+
+  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
+    "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
+    "    AND intel[name='INTL']\n"
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "PARTITION BY [part]\n"
+    "CONSUME BY PARTITION";
+
+  backend.declare_query(string_query, result_handler);
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL MSFT 101 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL MSFT 101 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL MSFT 102 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL MSFT 102 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL INTL 80 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL INTL 80 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("BUY INTL 80 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("BUY INTL 80 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL AMZN 1900 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 8);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 8);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL AMZN 1900 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Should not be 0 due to evaluator being reset on result on another partition
+  REQUIRE(output.complex_events.size() == 2);
+  REQUIRE(output.complex_events[0].start == 3);
+  REQUIRE(output.complex_events[0].end == 9);
+  REQUIRE(output.complex_events[1].start == 1);
+  REQUIRE(output.complex_events[1].end == 9);
+
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+
+  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1900));
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL INTL 81 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL INTL 81 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920),
+            std::make_shared<Types::IntValue>(0)}};
+  INFO("SELL AMZN 1920 - part 0");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Should be 0 due to this partition being reset on last detection
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920),
+            std::make_shared<Types::IntValue>(1)}};
+  INFO("SELL AMZN 1920 - part 1");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Should be 0 due to this partition being reset on last detection
+  REQUIRE(output.complex_events.size() == 0);
+}
 }  // namespace CORE::Internal::Evaluation::UnitTests
