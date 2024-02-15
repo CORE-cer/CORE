@@ -64,6 +64,8 @@ class Evaluator {
 #endif
 
  public:
+  std::atomic<bool> should_reset = false;
+
   Evaluator(CEA::DetCEA&& cea,
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
@@ -102,6 +104,12 @@ class Evaluator {
 #endif
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
+
+    if (should_reset.load()) {
+      reset();
+      should_reset.store(false);
+    }
+
     mpz_class predicates_satisfied = tuple_evaluator(tuple);
     current_union_list_map = {};
     current_ordered_keys = {};
@@ -139,11 +147,8 @@ class Evaluator {
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
-      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
-        historic_ordered_keys.clear();
-        for (auto& [state, ul] : historic_union_list_map) {
-          tecs.unpin(ul);
-        }
+      if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
+        should_reset.store(true);
       }
       return std::move(enumerator);
     }
@@ -152,6 +157,13 @@ class Evaluator {
 
  private:
   State* get_initial_state() { return cea.initial_state; }
+
+  void reset() {
+    historic_ordered_keys.clear();
+    for (auto& [state, ul] : historic_union_list_map) {
+      tecs.unpin(ul);
+    }
+  }
 
   bool is_ul_out_time_window(const UnionList& ul) {
     ZoneScopedN("Evaluator::is_ul_out_time_window");
