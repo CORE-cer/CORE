@@ -1,6 +1,7 @@
 #pragma once
 #include <cwchar>
 #include <memory>
+#include <tracy/Tracy.hpp>
 
 #include "cassert"
 #include "comparison_type.hpp"
@@ -33,6 +34,8 @@ class CompareMathExprs : public PhysicalPredicate {
   ~CompareMathExprs() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("CompareMathExprs::eval()");
+    // std::cout << to_string() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS) {
       return left->eval(tuple) == right->eval(tuple);
     } else if constexpr (Comp == ComparisonType::GREATER)

@@ -2,10 +2,12 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <utility>
 
 namespace CORE::Internal::tECS {
 
@@ -32,6 +34,12 @@ class TimeReservator {
     head->right->left = head.get();
     tail = head->right.get();
     assert(list_is_well_formed());
+  }
+
+  TimeReservator(TimeReservator&& other) noexcept {
+    std::lock_guard<std::mutex> lock(mtx);
+    other.head = std::move(head);
+    other.tail = tail;
   }
 
   Node* reserve(uint64_t time) {

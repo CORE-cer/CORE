@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <tracy/Tracy.hpp>
 #include <type_traits>
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
@@ -30,7 +31,10 @@ class Literal : public MathExpr<Type> {
     return std::make_unique<Literal<Type>>(val);
   }
 
-  Type eval(RingTupleQueue::Tuple& tuple) override { return val; }
+  Type eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("Literal::eval()");
+    return val;
+  }
 
   std::string to_string() const override {
     if constexpr (std::is_same_v<Type, std::string_view>) {

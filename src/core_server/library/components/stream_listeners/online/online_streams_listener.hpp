@@ -1,11 +1,18 @@
 #pragma once
 
+#include <atomic>
+#include <exception>
+#include <iostream>
+#include <ostream>
+#include <string>
 #include <thread>
-#include <vector>
 
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
+#include "shared/networking/message_sender/zmq_message_sender.hpp"
+#include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
 

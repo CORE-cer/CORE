@@ -36,6 +36,8 @@ class NodeManager {
         time_list_manager(*this),
         expiration_time(event_time_of_expiration) {}
 
+  NodeManager(NodeManager&& other) = default;
+
   ~NodeManager() {
     for (NodePool* mp = minipool_head; mp != nullptr;) {
       NodePool* next = mp->next();

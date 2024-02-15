@@ -1,9 +1,13 @@
 #pragma once
+
 #include <cassert>
-#include <iostream>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "core_server/internal/ceql/value/visitors/value_visitor.hpp"
 #include "value.hpp"
 
 namespace CORE::Internal::CEQL {

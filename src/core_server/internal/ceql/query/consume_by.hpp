@@ -1,6 +1,5 @@
 #pragma once
 #include <cassert>
-#include <stdexcept>
 #include <string>
 
 namespace CORE::Internal::CEQL {
@@ -12,12 +11,7 @@ struct ConsumeBy {
   };
   ConsumptionPolicy policy;
 
-  ConsumeBy(ConsumptionPolicy policy = ConsumptionPolicy::ANY) : policy(policy) {
-    if (policy == ConsumptionPolicy::PARTITION) {
-      throw std::invalid_argument(
-        "Consumption Policy 'partition' not currently supported");
-    }
-  }
+  ConsumeBy(ConsumptionPolicy policy = ConsumptionPolicy::ANY) : policy(policy) {}
 
   std::string to_string() const {
     switch (policy) {

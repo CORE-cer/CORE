@@ -21,6 +21,7 @@ Checks: >
   bugprone-*,
   bugprone-assert-side-effect,
   -bugprone-easily-swappable-parameters,
+  misc-include-cleaner,
 # google-*,
 # misc-*,
 # modernize-*,

@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <tracy/Tracy.hpp>
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
@@ -27,6 +28,7 @@ class Attribute : public MathExpr<GlobalType> {
   ~Attribute() override = default;
 
   GlobalType eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("Attribute::eval()");
     RingTupleQueue::Value<LocalType> val(tuple[pos]);
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();

@@ -3,6 +3,7 @@
 #include <string>
 
 #include "value.hpp"
+#include "visitors/value_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 struct Attribute final : public Value {

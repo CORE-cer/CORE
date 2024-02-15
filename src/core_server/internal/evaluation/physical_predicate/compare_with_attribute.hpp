@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cwchar>
+#include <tracy/Tracy.hpp>
 
 #include "cassert"
 #include "comparison_type.hpp"
@@ -30,6 +31,7 @@ class CompareWithAttribute : public PhysicalPredicate {
   ~CompareWithAttribute() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("CompareWithAttribute::eval()");
     uint64_t* pos1 = tuple[first_pos];
     uint64_t* pos2 = tuple[second_pos];
     RingTupleQueue::Value<LeftValueType> first_val(pos1);

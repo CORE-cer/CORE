@@ -1,21 +1,43 @@
 #pragma once
 
+#include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <ctime>
 #include <functional>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <thread>
+#include <utility>
+#include <variant>
 #include <vector>
+#include <zmq.hpp>
 
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/interface/queries/generic_query.hpp"
+#include "core_server/internal/interface/queries/partition_by_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "queries/simple_query.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
-#include "shared/datatypes/stream.hpp"
+#include "shared/datatypes/value.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
-#include "single_query.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Interface {
@@ -36,7 +58,10 @@ class Backend {
   uint64_t maximum_historic_time_between_events = 0;
   std::optional<uint64_t> previous_event_sent;
 
-  std::vector<std::unique_ptr<SingleQuery<ResultHandlerT>>> queries;
+  using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>,
+                                    std::unique_ptr<PartitionByQuery<ResultHandlerT>>>;
+
+  std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
@@ -97,17 +122,41 @@ class Backend {
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(std::string query, ResultHandlerT& result_handler) {
     Internal::CEQL::Query parsed_query = Internal::Parsing::Parser::parse_query(query);
+
+    if (parsed_query.partition_by.partition_attributes.size() != 0) {
+      using QueryDirectType = PartitionByQuery<ResultHandlerT>;
+      using QueryBaseType = GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
+
+      initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
+                                                       result_handler);
+    } else {
+      using QueryDirectType = SimpleQuery<ResultHandlerT>;
+      using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
+
+      initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
+                                                       result_handler);
+    }
+  }
+
+  template <typename QueryDirectType, typename QueryBaseType>
+  void
+  initialize_query(Internal::CEQL::Query&& parsed_query, ResultHandlerT& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    queries.emplace_back(std::make_unique<SingleQuery<ResultHandlerT>>(
-      std::move(parsed_query), catalog, queue, inproc_receiver_address, result_handler));
+    queries.emplace_back(std::make_unique<QueryDirectType>(catalog,
+                                                           queue,
+                                                           inproc_receiver_address,
+                                                           result_handler));
+    QueryBaseType* query = static_cast<QueryBaseType*>(
+      std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
-    query_events_time_window_mode.push_back(queries.back()->time_window.mode);
-    query_events_expiration_time.emplace_back(queries.back()->time_of_expiration);
-    last_received_tuple.emplace_back(queries.back()->last_received_tuple);
+    query->init(std::move(parsed_query));
+    query_events_time_window_mode.push_back(query->time_window.mode);
+    query_events_expiration_time.emplace_back(query->time_of_expiration);
+    last_received_tuple.emplace_back(query->last_received_tuple);
     last_sent_tuple.push_back(nullptr);
 
-    zmq::context_t& inproc_context = queries.back()->get_inproc_context();
+    zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 
