@@ -17,8 +17,8 @@
 
 namespace CORE::Internal::CEA::Det {
 
-const size_t STATE_MANAGER_STARTING_SIZE = 64;
-const size_t STATE_MANAGER_MAX_SIZE = 512;
+const size_t STATE_MANAGER_STARTING_SIZE = 1;
+const size_t STATE_MANAGER_MAX_SIZE = 8;
 
 /**
  * The Node Manager class stores the pointers to all allocated
@@ -58,31 +58,16 @@ class StateManager {
     }
   }
 
-  // Update the last used iteration of the states in the transition
-  void
-  update_iteration_states(const States& next_states, const uint64_t& current_iteration) {
-    assert(next_states.marked_state != nullptr);
-    assert(next_states.unmarked_state != nullptr);
-    update_last_used_iteration_state(next_states.marked_state, current_iteration);
-    update_last_used_iteration_state(next_states.unmarked_state, current_iteration);
-  }
-
-  void update_evicted_states(const std::vector<State*>& evicted_states,
-                             const uint64_t& current_iteration) {
+  void unpin_states(const std::vector<State*>& evicted_states) {
+    std::cout << "Amount of used states " << amount_of_used_states << std::endl;
+    std::cout << "Amount of allowed states " << amount_of_allowed_states << std::endl;
     for (State* state : evicted_states) {
-      if (state->is_evictable(current_iteration)) {
+      state->unpin();
+      if (state->is_evictable()) {
+        std::cout << "Evicting" << std::endl;
         set_evictable_state(state);
-        if (this->evictable_state_head == nullptr) {
-          this->evictable_state_head = state;
-        }
       }
     }
-  }
-
-  void update_last_used_iteration_state(State* const& state,
-                                        const uint64_t& current_iteration) {
-    state->last_used_iteration = current_iteration;
-    unset_evictable_state(state);
   }
 
   std::string to_string() {
@@ -95,30 +80,28 @@ class StateManager {
     return out;
   }
 
-  State* create_or_return_existing_state(mpz_class bitset,
-                                         const uint64_t& current_iteration,
-                                         CEA& cea) {
+  State* create_or_return_existing_state(mpz_class bitset, CEA& cea) {
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());
       return states[it->second];
     } else {
-      State* state = alloc(current_iteration, bitset, cea);
+      State* state = alloc(bitset, cea);
       return state;
     }
   }
 
  private:
   template <class... Args>
-  State* alloc(const uint64_t current_iteration, Args&&... args) {
+  State* alloc(Args&&... args) {
     State* new_state;
-    new_state = allocate_state(std::forward<Args>(args)..., current_iteration);
+    new_state = allocate_state(std::forward<Args>(args)...);
     if (new_state == nullptr) {
       // Not enough memory, try to evict a state.
       new_state = evictable_state_head;
       if (new_state != nullptr) {
         // Successfully evicted a state, reset it and return it.
-        reset_state(new_state, current_iteration, std::forward<Args>(args)...);
+        reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
         size_t amount_force_added_states = increase_mempool_size();
@@ -126,7 +109,7 @@ class StateManager {
         std::cout << "Forcing memory pool increase, increasing allowed "
                      "states to "
                   << amount_of_allowed_states << std::endl;
-        new_state = allocate_state(std::forward<Args>(args)..., current_iteration);
+        new_state = allocate_state(std::forward<Args>(args)...);
       }
     } else {
     }
@@ -168,6 +151,7 @@ class StateManager {
   }
 
   void set_evictable_state(State* const& state) {
+    assert(state->is_evictable());
     assert_state_list_consistency();
     if (evictable_state_head == nullptr) {
       evictable_state_head = state;
@@ -177,6 +161,9 @@ class StateManager {
     }
     state->set_evictable(evictable_state_tail);
     evictable_state_tail = state;
+    if (this->evictable_state_head == nullptr) {
+      this->evictable_state_head = state;
+    }
     assert_state_list_consistency();
   }
 
@@ -217,10 +204,11 @@ class StateManager {
   }
 
   template <class... Args>
-  void reset_state(State* const& state, const uint64_t current_iteration, Args&&... args) {
+  void reset_state(State* const& state, Args&&... args) {
+    std::cout << "Using Reset State" << std::endl;
     mpz_class old_states = state->states;
     unset_evictable_state(state);
-    state->reset(std::forward<Args>(args)..., current_iteration);
+    state->reset(std::forward<Args>(args)...);
     states_bitset_to_index[state->states] = states_bitset_to_index[old_states];
     states_bitset_to_index.erase(old_states);
   }

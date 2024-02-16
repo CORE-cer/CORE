@@ -133,10 +133,8 @@ class Evaluator {
                    current_time);  // Send the tuple in exec_trans.
       }
     }
-    // Update last used q0 so it can be used in the next iteration.
-    cea.state_manager.update_last_used_iteration_state(q0, current_iteration);
     // Update the evicted states.
-    cea.state_manager.update_evicted_states(historic_ordered_keys, current_iteration);
+    cea.state_manager.unpin_states(historic_ordered_keys);
     historic_union_list_map = std::move(current_union_list_map);
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
@@ -205,6 +203,7 @@ class Evaluator {
       } else {
         UnionList new_ulist = tecs.new_ulist(new_node);
         current_ordered_keys.push_back(marked_state);
+        marked_state->pin();
         current_union_list_map[marked_state] = new_ulist;
         if (marked_state->is_final) {
           final_states.push_back(marked_state);
@@ -218,6 +217,7 @@ class Evaluator {
           std::move(current_union_list_map[unmarked_state]), new_node);
       } else {
         current_ordered_keys.push_back(unmarked_state);
+        unmarked_state->pin();
         current_union_list_map[unmarked_state] = ul;
         recycle_ulist = true;
         if (unmarked_state->is_final) {
