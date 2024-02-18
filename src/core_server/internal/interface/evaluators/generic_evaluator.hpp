@@ -5,9 +5,11 @@
 #include <cstdint>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
+#include <utility>
 
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -20,14 +22,18 @@ class GenericEvaluator {
   RingTupleQueue::Queue& queue;
   std::unordered_map<Types::EventTypeId, uint64_t> indexes{};
 
+ protected:
+  CEA::DetCEA cea;
+
  public:
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  GenericEvaluator(CEQL::Within::TimeWindow time_window,
+  GenericEvaluator(CEA::DetCEA&& cea,
+                   CEQL::Within::TimeWindow time_window,
                    Internal::Catalog& catalog,
                    RingTupleQueue::Queue& queue)
-      : time_window(time_window), catalog(catalog), queue(queue) {}
+      : cea(std::move(cea)), time_window(time_window), catalog(catalog), queue(queue) {}
 
  protected:
   uint64_t tuple_time(RingTupleQueue::Tuple& tuple) {

@@ -28,7 +28,7 @@ class Evaluator {
   using States = CEA::Det::State::States;
   using Node = tECS::Node;
   //                                   // Name in paper
-  CEA::DetCEA cea;                     // A
+  CEA::DetCEA& cea;                     // A
   PredicateEvaluator tuple_evaluator;  // t generator
   uint64_t time_window;                // ε
 
@@ -66,13 +66,13 @@ class Evaluator {
  public:
   std::atomic<bool> should_reset = false;
 
-  Evaluator(CEA::DetCEA&& cea,
+  Evaluator(CEA::DetCEA& cea,
             PredicateEvaluator&& tuple_evaluator,
             uint64_t time_bound,
             std::atomic<uint64_t>& event_time_of_expiration,
             CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
             CEQL::Limit enumeration_limit)
-      : cea(std::move(cea)),
+      : cea(cea),
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
@@ -80,7 +80,7 @@ class Evaluator {
         consumption_policy(consumption_policy),
         enumeration_limit(enumeration_limit) {}
 
-  Evaluator(const CEA::DetCEA& cea,
+  Evaluator(CEA::DetCEA& cea,
             const PredicateEvaluator& tuple_evaluator,
             uint64_t time_bound,
             std::atomic<uint64_t>& event_time_of_expiration,
