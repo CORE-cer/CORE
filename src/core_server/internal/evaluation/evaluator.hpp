@@ -28,7 +28,7 @@ class Evaluator {
   using States = CEA::Det::State::States;
   using Node = tECS::Node;
   //                                   // Name in paper
-  CEA::DetCEA& cea;                     // A
+  CEA::DetCEA& cea;                    // A
   PredicateEvaluator tuple_evaluator;  // t generator
   uint64_t time_window;                // ε
 
