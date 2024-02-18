@@ -158,6 +158,7 @@ class Evaluator {
   State* get_initial_state() { return cea.initial_state; }
 
   void reset() {
+    cea.state_manager.unpin_states(historic_ordered_keys);
     historic_ordered_keys.clear();
     for (auto& [state, ul] : historic_union_list_map) {
       tecs.unpin(ul);
@@ -203,7 +204,7 @@ class Evaluator {
       } else {
         UnionList new_ulist = tecs.new_ulist(new_node);
         current_ordered_keys.push_back(marked_state);
-        marked_state->pin();
+        cea.state_manager.pin_state(marked_state);
         current_union_list_map[marked_state] = new_ulist;
         if (marked_state->is_final) {
           final_states.push_back(marked_state);
@@ -217,7 +218,7 @@ class Evaluator {
           std::move(current_union_list_map[unmarked_state]), new_node);
       } else {
         current_ordered_keys.push_back(unmarked_state);
-        unmarked_state->pin();
+        cea.state_manager.pin_state(unmarked_state);
         current_union_list_map[unmarked_state] = ul;
         recycle_ulist = true;
         if (unmarked_state->is_final) {

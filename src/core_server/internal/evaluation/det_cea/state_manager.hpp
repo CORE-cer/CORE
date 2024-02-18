@@ -5,9 +5,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
-#include <iostream>
 #include <map>
-#include <ostream>
 #include <string>
 #include <vector>
 
@@ -58,13 +56,15 @@ class StateManager {
     }
   }
 
+  void pin_state(State* const state) {
+    state->pin();
+    unset_evictable_state(state);
+  }
+
   void unpin_states(const std::vector<State*>& evicted_states) {
-    std::cout << "Amount of used states " << amount_of_used_states << std::endl;
-    std::cout << "Amount of allowed states " << amount_of_allowed_states << std::endl;
     for (State* state : evicted_states) {
       state->unpin();
       if (state->is_evictable()) {
-        std::cout << "Evicting" << std::endl;
         set_evictable_state(state);
       }
     }
@@ -106,9 +106,6 @@ class StateManager {
         // Not enough memory, force increase the memory pool.
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
-        std::cout << "Forcing memory pool increase, increasing allowed "
-                     "states to "
-                  << amount_of_allowed_states << std::endl;
         new_state = allocate_state(std::forward<Args>(args)...);
       }
     } else {
@@ -205,7 +202,6 @@ class StateManager {
 
   template <class... Args>
   void reset_state(State* const& state, Args&&... args) {
-    std::cout << "Using Reset State" << std::endl;
     mpz_class old_states = state->states;
     unset_evictable_state(state);
     state->reset(std::forward<Args>(args)...);

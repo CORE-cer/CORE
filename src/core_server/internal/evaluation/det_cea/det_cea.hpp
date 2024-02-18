@@ -35,7 +35,7 @@ class DetCEA {
     State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
                                                                          cea);
     this->initial_state = initial_state;
-    this->initial_state->pin();
+    state_manager.pin_state(this->initial_state);
   }
 
   DetCEA(const DetCEA& other) : cea(other.cea), state_manager() {
@@ -43,7 +43,7 @@ class DetCEA {
     State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
                                                                          cea);
     this->initial_state = initial_state;
-    this->initial_state->pin();
+    state_manager.pin_state(this->initial_state);
   }
 
   States next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
