@@ -1,10 +1,16 @@
 #pragma once
 
-#include <cassert>
+#include <iostream>
+#include <memory>
 #include <optional>
+#include <string>
 #include <thread>
+#include <tracy/Tracy.hpp>
+#include <utility>
 
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
 #include "shared/serializer/cereal_serializer.hpp"

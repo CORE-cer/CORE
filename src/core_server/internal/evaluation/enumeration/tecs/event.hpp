@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
+#include <ctime>
+#include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
-#include <utility>
 #include <vector>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -16,8 +19,6 @@ class Event {
   std::vector<RingTupleQueue::SupportedTypes> schema = event.get_schema();
 
   Event(RingTupleQueue::Tuple event) : event(event) {}
-
-  enum Type { INT64, DOUBLE, BOOL, STRING_VIEW, DATE };
 
   std::string to_string() const {
     ZoneScopedN("Internal::Event::to_string");
