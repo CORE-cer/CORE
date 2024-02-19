@@ -32,13 +32,13 @@ class SingleEvaluator : public GenericEvaluator {
                   CEQL::Within::TimeWindow time_window,
                   Internal::Catalog& catalog,
                   RingTupleQueue::Queue& queue)
-      : evaluator(std::move(cea),
+      : GenericEvaluator(std::move(cea), time_window, catalog, queue),
+        evaluator(this->cea,
                   std::move(tuple_evaluator),
                   time_window.duration,
                   event_time_of_expiration,
                   consumption_policy,
-                  limit),
-        GenericEvaluator(time_window, catalog, queue) {}
+                  limit) {}
 
   std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
     ZoneScopedN("Interface::SingleEvaluator::process_event");

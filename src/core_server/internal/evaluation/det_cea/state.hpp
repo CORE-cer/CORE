@@ -1,9 +1,11 @@
 #pragma once
 #include <gmpxx.h>
 
+#include <atomic>
+#include <cassert>
 #include <cstdint>
-#include <cwchar>
 #include <map>
+#include <utility>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 
@@ -42,31 +44,35 @@ class State {
 
   State* prev_evictable_state = nullptr;
   State* next_evictable_state = nullptr;
-  // Store the last iteration in which this state was used. Only save when node is jumped to,
-  // therefore it corresponds to last time it was added to current_union_list_map in the evaluator
-  uint64_t last_used_iteration;
 
  private:
   inline static uint64_t IdCounter = 0;
+  uint64_t ref_count = 0;
   std::map<mpz_class, StatesData> transitions;
 
  public:
-  State(mpz_class states, CEA& cea, const uint64_t& current_iteration)
+  State(mpz_class states, CEA& cea)
       : id(IdCounter++),
         states(states),
         cea(cea),
-        last_used_iteration(current_iteration),
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
 
-  void reset(mpz_class states, CEA& cea, const uint64_t& current_iteration) {
+  void reset(mpz_class states, CEA& cea) {
     this->id = IdCounter++;
     this->states = states;
     this->cea = cea;
-    this->last_used_iteration = current_iteration;
+    this->ref_count = 0;
     is_final = (states & cea.final_states) != 0;
     is_empty = states == 0;
     transitions.clear();
+  }
+
+  void pin() { ref_count += 1; }
+
+  void unpin() {
+    assert(ref_count != 0);
+    ref_count -= 1;
   }
 
   States next(mpz_class evaluation, uint64_t& n_hits) {
@@ -94,9 +100,7 @@ class State {
                                                  next_states.unmarked_state}));
   }
 
-  bool is_evictable(const uint64_t& current_iteration) {
-    return last_used_iteration < current_iteration;
-  }
+  bool is_evictable() { return ref_count == 0; }
 
   void set_evictable(State* const tail_evictable_state) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
