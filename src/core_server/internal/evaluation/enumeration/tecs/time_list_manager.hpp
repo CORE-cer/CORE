@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 
-#include <cstdlib>
+#include <cstdint>
 #include <memory>
 
 #include "node.hpp"

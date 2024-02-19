@@ -1,5 +1,10 @@
 #include "time_list_manager.hpp"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <memory>
 
+#include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
 #include "node_manager.hpp"
 
 namespace CORE::Internal::tECS {
