@@ -1,10 +1,18 @@
 #include <thread>
 
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/library/server.hpp"
 #include "stocks_data.hpp"
 
 using namespace CORE;
+
+std::string create_stream_declaration() {
+  return "DECLARE STREAM Stock {\n"
+         "EVENT BUY { id:int, name:string, volume:int, price:double, stock_time:int },\n"
+         "EVENT SELL { id:int, name:string, volume:int, price:double, stock_time:int }\n"
+         "}";
+}
 
 int main(int argc, char** argv) {
   if (argc != 3) {
