@@ -66,6 +66,9 @@ struct CatalogEventInfo {
                    std::vector<AttributeInfo>&& attributes_info) noexcept
       : id(event_type_id), event_info(name, std::move(attributes_info)) {}
 
+  CatalogEventInfo(EventTypeId event_type_id, EventInfo event_info) noexcept
+      : id(event_type_id), event_info(event_info) {}
+
   CatalogEventInfo() noexcept : event_info() {}
 
   bool operator==(const CatalogEventInfo& other) const {

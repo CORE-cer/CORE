@@ -11,7 +11,7 @@
 
 namespace CORE::Internal::CEQL::UnitTests {
 
-Parsing::Declaration::Stream parse_stream(std::string stream) {
+Types::StreamInfo parse_stream(std::string stream) {
   antlr4::ANTLRInputStream input(stream);
   StreamDeclarationLexer lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
@@ -29,11 +29,11 @@ TEST_CASE("Correct stream visitor parsing") {
     "EVENT Hum { ID:int, Value3:double },\n"
     "EVENT Hum2 { ID:int }\n"
     "}";
-  Parsing::Declaration::Stream stream = parse_stream(declaration);
+  Types::StreamInfo stream = parse_stream(declaration);
 
   REQUIRE(stream.name == "MySensor");
 
-  Types::EventInfo first_event = stream.events[0];
+  Types::EventInfo first_event = stream.events_info[0].event_info;
 
   REQUIRE(first_event.name == "Temp");
   REQUIRE(first_event.attributes_info[0].name == "ID");
@@ -43,7 +43,7 @@ TEST_CASE("Correct stream visitor parsing") {
   REQUIRE(first_event.attributes_info[2].name == "Value2");
   REQUIRE(first_event.attributes_info[2].value_type == Types::ValueTypes::BOOL);
 
-  Types::EventInfo second_event = stream.events[1];
+  Types::EventInfo second_event = stream.events_info[1].event_info;
 
   REQUIRE(second_event.name == "Hum");
   REQUIRE(second_event.attributes_info[0].name == "ID");
@@ -51,7 +51,7 @@ TEST_CASE("Correct stream visitor parsing") {
   REQUIRE(second_event.attributes_info[1].name == "Value3");
   REQUIRE(second_event.attributes_info[1].value_type == Types::ValueTypes::DOUBLE);
 
-  Types::EventInfo third_event = stream.events[2];
+  Types::EventInfo third_event = stream.events_info[2].event_info;
 
   REQUIRE(third_event.name == "Hum2");
   REQUIRE(third_event.attributes_info[0].name == "ID");

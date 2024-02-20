@@ -6,15 +6,19 @@
 #include "core_server/internal/parsing/stream_declaration/stream.hpp"
 #include "core_server/internal/parsing/stream_declaration/visitors/event_visitor.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Internal::Parsing::Declaration {
 class StreamVisitor : public StreamDeclarationParserBaseVisitor {
  private:
   std::string name;
-  std::vector<Types::EventInfo> events;
+  std::vector<Types::CatalogEventInfo> events_info;
+  uint64_t event_type_counter = 0;
 
  public:
-  Stream get_parsed_stream() { return Stream(name, std::move(events)); }
+  Types::StreamInfo get_parsed_stream() {
+    return Types::StreamInfo(name, std::move(events_info));
+  }
 
   virtual std::any
   visitCore_declaration(StreamDeclarationParser::Core_declarationContext* ctx) {
@@ -36,7 +40,9 @@ class StreamVisitor : public StreamDeclarationParserBaseVisitor {
     for (size_t i = 0; i < event_declaration_ctx.size(); ++i) {
       EventVisitor event_visitor;
       event_visitor.visit(event_declaration_ctx[i]);
-      events.push_back(event_visitor.get_parsed_event());
+      events_info.push_back(
+        Types::CatalogEventInfo{event_type_counter, event_visitor.get_parsed_event()});
+      event_type_counter++;
     }
     return {};
   }

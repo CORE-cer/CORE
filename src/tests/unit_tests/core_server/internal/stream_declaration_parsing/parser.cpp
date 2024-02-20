@@ -19,10 +19,10 @@ std::string create_stream() {
 
 TEST_CASE("Correct stream declaration parsing") {
   Parsing::Declaration::Parser parser;
-  Parsing::Declaration::Stream stream = parser.parse_stream(create_stream());
+  Types::StreamInfo stream = parser.parse_stream(create_stream());
   REQUIRE(stream.name == "MySensor");
 
-  Types::EventInfo first_event = stream.events[0];
+  Types::EventInfo first_event = stream.events_info[0].event_info;
 
   REQUIRE(first_event.name == "Temp");
   REQUIRE(first_event.attributes_info[0].name == "ID");
@@ -32,7 +32,7 @@ TEST_CASE("Correct stream declaration parsing") {
   REQUIRE(first_event.attributes_info[2].name == "Value2");
   REQUIRE(first_event.attributes_info[2].value_type == Types::ValueTypes::BOOL);
 
-  Types::EventInfo second_event = stream.events[1];
+  Types::EventInfo second_event = stream.events_info[1].event_info;
 
   REQUIRE(second_event.name == "Hum");
   REQUIRE(second_event.attributes_info[0].name == "ID");
@@ -40,7 +40,7 @@ TEST_CASE("Correct stream declaration parsing") {
   REQUIRE(second_event.attributes_info[1].name == "Value3");
   REQUIRE(second_event.attributes_info[1].value_type == Types::ValueTypes::DOUBLE);
 
-  Types::EventInfo third_event = stream.events[2];
+  Types::EventInfo third_event = stream.events_info[2].event_info;
 
   REQUIRE(third_event.name == "Hum2");
   REQUIRE(third_event.attributes_info[0].name == "ID");
