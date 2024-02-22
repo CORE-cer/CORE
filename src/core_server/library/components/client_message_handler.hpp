@@ -1,11 +1,25 @@
 #pragma once
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/library/components/result_handler/result_handler.hpp"
-#include "core_server/library/components/result_handler/result_handler_factory.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
+#include "shared/datatypes/server_response_type.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -63,6 +77,8 @@ class ClientMessageHandler {
         return event_info_from_name(request.serialized_request_data);
       case Types::ClientRequestType::ListEvents:
         return list_all_events();
+      case Types::ClientRequestType::StreamDeclarationOld:
+        return stream_declaration_old(request.serialized_request_data);
       case Types::ClientRequestType::StreamDeclaration:
         return stream_declaration(request.serialized_request_data);
       case Types::ClientRequestType::StreamInfoFromId:
@@ -111,7 +127,7 @@ class ClientMessageHandler {
                                  Types::ServerResponseType::EventInfoVector);
   }
 
-  Types::ServerResponse stream_declaration(std::string s_stream_info) {
+  Types::ServerResponse stream_declaration_old(std::string s_stream_info) {
     auto stream_info = CerealSerializer<
       std::pair<std::string, std::vector<Types::EventTypeId>>>::deserialize(s_stream_info);
     std::string name = stream_info.first;
@@ -120,6 +136,14 @@ class ClientMessageHandler {
                                                      std::move(event_types));
     return Types::ServerResponse(CerealSerializer<Types::EventTypeId>::serialize(id),
                                  Types::ServerResponseType::StreamTypeId);
+  }
+
+  Types::ServerResponse stream_declaration(std::string s_parsed_stream_info) {
+    auto parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
+      s_parsed_stream_info);
+    Types::StreamInfo id = backend.add_stream_type(std::move(parsed_stream_info));
+    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(id),
+                                 Types::ServerResponseType::StreamInfo);
   }
 
   Types::ServerResponse stream_info_from_id(std::string s_stream_id) {

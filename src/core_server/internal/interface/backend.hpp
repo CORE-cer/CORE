@@ -36,6 +36,7 @@
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/value.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "tracy/Tracy.hpp"
@@ -99,10 +100,16 @@ class Backend {
   }
 
   // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
+  Types::StreamInfo add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) {
+    Types::StreamInfo stream_info = catalog.add_stream_type(std::move(parsed_stream_info));
+    return stream_info;
+  }
+
+  // TODO: Add error to catalog add stream type and propogate to ClientMessageHandler
   Types::StreamTypeId
   add_stream_type(std::string stream_name, std::vector<Types::EventTypeId> event_types) {
-    Types::StreamTypeId id = catalog.add_stream_type(std::move(stream_name),
-                                                     std::move(event_types));
+    Types::StreamTypeId id = catalog.add_stream_type_old(std::move(stream_name),
+                                                         std::move(event_types));
 
     return id;
   }

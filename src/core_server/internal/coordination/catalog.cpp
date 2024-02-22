@@ -1,14 +1,37 @@
 #include "catalog.hpp"
 
 #include <cassert>
+#include <cstdint>
+#include <ctime>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <set>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/query_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/complex_event.hpp"
+#include "shared/datatypes/enumerator.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal {
 
@@ -100,9 +123,45 @@ const std::vector<Types::EventInfo>& Catalog::get_all_events_info() const noexce
     \ (    (   )
      \_)    ) /
            (_/ */
-[[nodiscard]] Types::StreamTypeId
-Catalog::add_stream_type(std::string stream_name,
-                         std::vector<Types::EventTypeId>&& stream_event_types) noexcept {
+[[nodiscard]] Types::StreamInfo
+Catalog::add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) noexcept {
+  std::vector<Types::EventInfo> events_info;
+  events_info.reserve(parsed_stream_info.events_info.size());
+  for (Types::EventInfoParsed& parsed_event_info : parsed_stream_info.events_info) {
+    Types::EventInfo event_info = add_event_type(std::move(parsed_event_info));
+    events_info.push_back(event_info);
+  }
+
+  stream_name_to_id.insert(std::make_pair(parsed_stream_info.name, streams_info.size()));
+  streams_info.push_back(Types::StreamInfo(streams_info.size(),
+                                           parsed_stream_info.name,
+                                           std::move(events_info)));
+  return streams_info.back();
+}
+
+[[nodiscard]] Types::EventInfo
+Catalog::add_event_type(Types::EventInfoParsed&& parsed_event_info) noexcept {
+  event_name_to_id.insert(std::make_pair(parsed_event_info.name, events_info.size()));
+  for (auto& attribute : parsed_event_info.attributes_info) {
+    if (possible_attribute_types.contains(attribute.name)) {
+      possible_attribute_types[attribute.name].insert(attribute.value_type);
+      event_types_with_attribute[attribute.name].insert(events_info.size());
+    } else {
+      possible_attribute_types[attribute.name] = {attribute.value_type};
+      event_types_with_attribute[attribute.name] = {events_info.size()};
+    }
+  }
+  uint64_t ring_tuple_schema_id = add_type_to_schema(parsed_event_info.attributes_info);
+  events_info.push_back(Types::EventInfo(events_info.size(),
+                                         std::move(parsed_event_info.name),
+                                         std::move(parsed_event_info.attributes_info)));
+  assert(ring_tuple_schema_id == events_info.size() - 1);
+  return events_info.back();
+}
+
+[[nodiscard]] Types::StreamTypeId Catalog::add_stream_type_old(
+  std::string stream_name,
+  std::vector<Types::EventTypeId>&& stream_event_types) noexcept {
   // We assume the stream_name is unique and event_types have valid
   // ids.
   stream_name_to_id.insert(std::make_pair(stream_name, streams_info.size()));

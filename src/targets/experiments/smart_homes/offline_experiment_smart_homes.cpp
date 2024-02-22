@@ -1,7 +1,12 @@
+#include <ios>
+#include <iostream>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <utility>
 
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "smart_homes_data.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -24,10 +29,7 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    SmartHomesData::do_declaration(client,
-                                   "SmartHomes",
-                                   SmartHomesData::event_types,
-                                   SmartHomesData::attributes);
+    SmartHomesData::do_declaration(client);
 
     SmartHomesData::DataReader reader(query_path, data_path);
     reader.read_query();

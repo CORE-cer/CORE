@@ -6,32 +6,28 @@
 #include <string>
 #include <vector>
 
-#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 
 namespace CORE::Types {
 
-struct EventInfo {
-  EventTypeId id;
+struct EventInfoParsed {
   std::string name;
   std::vector<AttributeInfo> attributes_info;
 
   // In tested circumstances faster then unordered_map
   std::map<std::string, size_t> attribute_names_to_ids;
 
-  EventInfo() noexcept {}
+  EventInfoParsed() noexcept {}
 
-  EventInfo(EventTypeId event_type_id,
-            std::string name,
-            std::vector<AttributeInfo>&& attributes_info) noexcept
-      : id(event_type_id), name(name), attributes_info(attributes_info) {
+  EventInfoParsed(std::string name, std::vector<AttributeInfo>&& attributes_info) noexcept
+      : name(name), attributes_info(attributes_info) {
     for (size_t id = 0; id < attributes_info.size(); id++) {
       attribute_names_to_ids[attributes_info[id].name] = id;
     }
   }
 
-  bool operator==(const EventInfo& other) const {
-    bool out = id == other.id && name == other.name
+  bool operator==(const EventInfoParsed& other) const {
+    bool out = name == other.name
                && attributes_info.size() == other.attributes_info.size()
                && attribute_names_to_ids.size() == other.attribute_names_to_ids.size();
     if (!out) {
@@ -48,7 +44,7 @@ struct EventInfo {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(id, name, attributes_info);
+    archive(name, attributes_info);
   }
 };
 
