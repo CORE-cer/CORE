@@ -1,10 +1,14 @@
-#include <ctype.h>
 
 #include <atomic>
+#include <cassert>
+#include <cstdint>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "message_handler.hpp"
@@ -12,14 +16,16 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
-#include "shared/datatypes/catalog/datatypes.hpp"
-#include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
+#include "shared/datatypes/client_request_type.hpp"
+#include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
+#include "shared/datatypes/server_response_type.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 #include "tracy/Tracy.hpp"
@@ -42,6 +48,16 @@ class Client {
  public:
   Client(std::string address, Types::PortNumber dealer_port)
       : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
+
+  Types::StreamInfo declare_stream(Types::StreamInfoParsed parsed_stream_info) {
+    Types::ClientRequest stream_declaration(
+      Internal::CerealSerializer<Types::StreamInfoParsed>::serialize(parsed_stream_info),
+      Types::ClientRequestType::StreamDeclaration);
+    Types::ServerResponse res = send_request(stream_declaration);
+    assert(res.response_type == Types::ServerResponseType::StreamInfo);
+    return Internal::CerealSerializer<Types::StreamInfo>::deserialize(
+      res.serialized_response_data);
+  }
 
   Types::EventTypeId
   declare_event_type(std::string name,
@@ -78,12 +94,12 @@ class Client {
     return event_info;
   }
 
-  std::vector<Types::EventInfo> get_all_event_types() {
+  std::vector<Types::EventInfoParsed> get_all_event_types() {
     Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto events_info = Internal::CerealSerializer<std::vector<Types::EventInfo>>::deserialize(
-      response.serialized_response_data);
+    auto events_info = Internal::CerealSerializer<
+      std::vector<Types::EventInfoParsed>>::deserialize(response.serialized_response_data);
     return events_info;
   }
 
@@ -92,7 +108,7 @@ class Client {
     Types::ClientRequest stream_declaration(
       Internal::CerealSerializer<std::pair<std::string, std::vector<Types::EventTypeId>>>::
         serialize(std::pair(stream_name, events)),
-      Types::ClientRequestType::StreamDeclaration);
+      Types::ClientRequestType::StreamDeclarationOld);
     Types::ServerResponse res = send_request(stream_declaration);
     assert(res.response_type == Types::ServerResponseType::StreamTypeId);
     return Internal::CerealSerializer<Types::StreamTypeId>::deserialize(

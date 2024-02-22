@@ -1,33 +1,36 @@
 #include <stdint.h>
 
+#include <array>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core_client/client.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::SmartHomesData {
 
-template <typename TTypes, std::size_t NTypes, typename TAttributes, std::size_t NAttributes>
-CORE::Types::StreamTypeId
-do_declaration(Client& client,
-               std::string stream_name,
-               const std::array<TTypes, NTypes>& types,
-               const std::array<TAttributes, NAttributes>& attributes) {
-  std::vector<Types::EventTypeId> event_types{};
-  for (auto& type : types) {
-    std::vector<Types::AttributeInfo> attributes_info{};
-    for (auto& attribute : attributes) {
-      attributes_info.push_back({attribute.first, attribute.second});
-    }
-    event_types.push_back(client.declare_event_type(type, std::move(attributes_info)));
-  }
-  return client.declare_stream_type(stream_name, std::move(event_types));
+CORE::Types::StreamInfo do_declaration(Client& client) {
+  Types::StreamInfoParsed
+    parsed_stream_info{"SmartHomes",
+                       {
+                         {"LOAD",
+                          {{"id", CORE::Types::ValueTypes::INT64},
+                           {"plug_timestamp", CORE::Types::ValueTypes::INT64},
+                           {"value", CORE::Types::ValueTypes::DOUBLE},
+                           {"plug_id", CORE::Types::ValueTypes::INT64},
+                           {"household_id", CORE::Types::ValueTypes::INT64}}},
+                       }};
+
+  return client.declare_stream(parsed_stream_info);
 }
 
 enum EventType { LOAD };

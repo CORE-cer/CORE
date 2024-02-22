@@ -1,22 +1,26 @@
 #pragma once
+#include <cstdint>
 #include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "core_server/internal/ceql/value/value_types.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 
 namespace CORE::Internal {
 
@@ -48,9 +52,11 @@ class Catalog {
   const std::vector<Types::EventInfo>& get_all_events_info() const noexcept;
 
   // Streams
+  [[nodiscard]] Types::StreamInfo
+  add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) noexcept;
   [[nodiscard]] Types::StreamTypeId
-  add_stream_type(std::string stream_name,
-                  std::vector<Types::EventTypeId>&& stream_event_types) noexcept;
+  add_stream_type_old(std::string stream_name,
+                      std::vector<Types::EventTypeId>&& stream_event_types) noexcept;
 
   bool stream_name_is_taken(std::string stream_name) const noexcept;
   // clang-format off
@@ -78,6 +84,9 @@ class Catalog {
   Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator) const;
 
  private:
+  [[nodiscard]] Types::EventInfo
+  add_event_type(Types::EventInfoParsed&& parsed_event_info) noexcept;
+
   Types::ComplexEvent tuples_to_complex_event(
     uint64_t start,
     uint64_t end,

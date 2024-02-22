@@ -1,7 +1,13 @@
+#include <ios>
+#include <iostream>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <tracy/Tracy.hpp>
+#include <utility>
 
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "taxi_data.hpp"
 
 using namespace CORE;
@@ -23,10 +29,7 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    TaxisData::do_declaration(client,
-                              "Stocks",
-                              TaxisData::event_types,
-                              TaxisData::attributes);
+    TaxisData::do_declaration(client);
 
     TaxisData::DataReader reader(query_path, data_path);
     reader.read_query();

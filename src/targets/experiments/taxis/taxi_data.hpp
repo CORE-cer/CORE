@@ -1,33 +1,47 @@
 #include <stdint.h>
 
+#include <array>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core_client/client.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::TaxisData {
 
-template <typename TTypes, std::size_t NTypes, typename TAttributes, std::size_t NAttributes>
-CORE::Types::StreamTypeId
-do_declaration(Client& client,
-               std::string stream_name,
-               const std::array<TTypes, NTypes>& types,
-               const std::array<TAttributes, NAttributes>& attributes) {
-  std::vector<Types::EventTypeId> event_types{};
-  for (auto& type : types) {
-    std::vector<Types::AttributeInfo> attributes_info{};
-    for (auto& attribute : attributes) {
-      attributes_info.push_back({attribute.first, attribute.second});
-    }
-    event_types.push_back(client.declare_event_type(type, std::move(attributes_info)));
-  }
-  return client.declare_stream_type(stream_name, std::move(event_types));
+CORE::Types::StreamInfo do_declaration(Client& client) {
+  Types::StreamInfoParsed
+    parsed_stream_info{"S",
+                       {
+                         {"TRIP",
+                          {{"id", Types::ValueTypes::INT64},
+                           {"medallion", Types::ValueTypes::STRING_VIEW},
+                           {"hack_license", Types::ValueTypes::STRING_VIEW},
+                           {"pickup_datetime", Types::ValueTypes::INT64},
+                           {"dropoff_datetime", Types::ValueTypes::INT64},
+                           {"long_time_in_secs", Types::ValueTypes::INT64},
+                           {"trip_distance", Types::ValueTypes::DOUBLE},
+                           {"pickup_zone", Types::ValueTypes::STRING_VIEW},
+                           {"dropoff_zone", Types::ValueTypes::STRING_VIEW},
+                           {"payment_type", Types::ValueTypes::STRING_VIEW},
+                           {"fare_amount", Types::ValueTypes::DOUBLE},
+                           {"surcharge", Types::ValueTypes::DOUBLE},
+                           {"mta_tax", Types::ValueTypes::DOUBLE},
+                           {"tip_amount", Types::ValueTypes::DOUBLE},
+                           {"tolls_amount", Types::ValueTypes::DOUBLE},
+                           {"total_amount", Types::ValueTypes::DOUBLE}}},
+                       }};
+
+  return client.declare_stream(parsed_stream_info);
 }
 
 enum EventType { TRIP };

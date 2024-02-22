@@ -1,7 +1,12 @@
-#include <thread>
+#include <exception>
+#include <iostream>
+#include <ostream>
+#include <string>
+#include <tracy/Tracy.hpp>
+#include <utility>
 
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "stocks_data.hpp"
 
 using namespace CORE;
@@ -22,10 +27,7 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    StocksData::do_declaration(client,
-                               "Stocks",
-                               StocksData::event_types,
-                               StocksData::attributes);
+    StocksData::do_declaration(client);
 
     StocksData::DataReader reader(query_path, data_path);
     reader.read_query();
