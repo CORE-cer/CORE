@@ -1,20 +1,22 @@
 #pragma once
+#include <cstdint>
 #include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "core_server/internal/ceql/value/value_types.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 
