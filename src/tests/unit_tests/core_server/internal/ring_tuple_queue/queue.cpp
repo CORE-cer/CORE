@@ -2,8 +2,13 @@
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <iostream>
+#include <cstdint>
+#include <cstring>
+#include <string>
+#include <string_view>
+#include <vector>
 
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
 namespace RingTupleQueue::UnitTests {

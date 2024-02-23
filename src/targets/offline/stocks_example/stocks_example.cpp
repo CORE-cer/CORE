@@ -1,26 +1,39 @@
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <tracy/Tracy.hpp>
+#include <utility>
+#include <vector>
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 #include "stocks_data.hpp"
 
 using namespace CORE;
 
-using namespace CORE;
-
 void do_declarations(Client& client) {
-  std::vector<Types::EventTypeId> event_types{};
+  std::vector<Types::EventInfoParsed> event_types{};
   for (std::string name : {"BUY", "SELL"}) {
-    event_types.push_back(client.declare_event_type(
+    event_types.emplace_back(
       name,
-      {Types::AttributeInfo("id", Types::ValueTypes::INT64),
-       Types::AttributeInfo("name", Types::ValueTypes::STRING_VIEW),
-       Types::AttributeInfo("volume", Types::ValueTypes::INT64),
-       Types::AttributeInfo("price", Types::ValueTypes::DOUBLE),
-       Types::AttributeInfo("stock_time", Types::ValueTypes::INT64)}));
+      std::vector<Types::AttributeInfo>{{"id", Types::ValueTypes::INT64},
+                                        {"name", Types::ValueTypes::STRING_VIEW},
+                                        {"volume", Types::ValueTypes::INT64},
+                                        {"price", Types::ValueTypes::DOUBLE},
+                                        {"stock_time", Types::ValueTypes::INT64}});
   }
-  client.declare_stream_type("S", std::move(event_types));
+  client.declare_stream({"S", std::move(event_types)});
 }
 
 void create_queries(Client& client) {

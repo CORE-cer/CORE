@@ -20,7 +20,7 @@ struct EventInfoParsed {
   EventInfoParsed() noexcept {}
 
   EventInfoParsed(std::string name, std::vector<AttributeInfo>&& attributes_info) noexcept
-      : name(name), attributes_info(attributes_info) {
+      : name(name), attributes_info(std::move(attributes_info)) {
     for (size_t id = 0; id < attributes_info.size(); id++) {
       attribute_names_to_ids[attributes_info[id].name] = id;
     }

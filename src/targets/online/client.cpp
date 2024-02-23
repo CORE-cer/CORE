@@ -1,8 +1,22 @@
 #include "core_client/client.hpp"
 
+#include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <vector>
 
+#include "core_client/message_handler.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/value.hpp"
 
 using namespace CORE;
 
@@ -18,17 +32,16 @@ std::string create_query(std::string filter_clause) {
 }
 
 void do_declarations(Client& client) {
-  auto event_type_id_1 = client.declare_event_type(
-    "Ints",
-    {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
-     Types::AttributeInfo("Int2", Types::ValueTypes::INT64)});
-  client.declare_stream_type("S1", {event_type_id_1});
-  auto event_type_id_2 = client.declare_event_type(
-    "Mixed",
-    {Types::AttributeInfo("Int1", Types::ValueTypes::INT64),
-     Types::AttributeInfo("Int2", Types::ValueTypes::INT64),
-     Types::AttributeInfo("Double1", Types::ValueTypes::DOUBLE)});
-  client.declare_stream_type("S2", {event_type_id_1, event_type_id_2});
+  client.declare_stream(
+    {"S1",
+     {{"Ints", {{"Int1", Types::ValueTypes::INT64}, {"Int2", Types::ValueTypes::INT64}}}}});
+  client.declare_stream(
+    {"S2",
+     {{"Ints", {{"Int1", Types::ValueTypes::INT64}, {"Int2", Types::ValueTypes::INT64}}},
+      {"Mixed",
+       {{"Int1", Types::ValueTypes::INT64},
+        {"Int2", Types::ValueTypes::INT64},
+        {"Double1", Types::ValueTypes::DOUBLE}}}}});
 }
 
 Types::PortNumber create_queries(Client& client) {

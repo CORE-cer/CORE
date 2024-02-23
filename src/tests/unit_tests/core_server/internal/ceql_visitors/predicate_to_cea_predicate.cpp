@@ -1,13 +1,27 @@
+#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
-#include <iostream>
+#include <cstdint>
+#include <cstring>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "core_server/internal/ceql/cel_formula/predicate/and_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/not_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/or_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_strong_typed_predicate_to_physical_predicate.hpp"
-#include "core_server/internal/ceql/cel_formula/predicate/visitors/ceql_weakly_typed_predicate_to_physical_predicate.hpp"
-#include "core_server/internal/ceql/value/all_value_headers.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/integer_literal.hpp"
+#include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 using namespace RingTupleQueue;
 

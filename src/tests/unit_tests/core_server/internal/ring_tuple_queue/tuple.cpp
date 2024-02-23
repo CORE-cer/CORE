@@ -2,6 +2,9 @@
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+#include <cstring>
+#include <vector>
 
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 

@@ -1,4 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
+#include <ctime>
+#include <string>
 
 #include "shared/datatypes/value.hpp"
 #include "shared/serializer/cereal_serializer.hpp"

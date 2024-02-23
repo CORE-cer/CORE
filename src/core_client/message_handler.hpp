@@ -1,8 +1,9 @@
 #pragma once
 
-#include <atomic>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
+#include <vector>
 
 #include "shared/datatypes/enumerator.hpp"
 

@@ -11,12 +11,10 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
-#include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
@@ -69,16 +67,14 @@ class ClientMessageHandler {
  private:
   Types::ServerResponse handle_client_request(Types::ClientRequest request) {
     switch (request.request_type) {
-      case Types::ClientRequestType::EventDeclaration:
-        return event_declaration(request.serialized_request_data);
+      // case Types::ClientRequestType::EventDeclaration:
+      //   return event_declaration(request.serialized_request_data);
       case Types::ClientRequestType::EventInfoFromId:
         return event_info_from_id(request.serialized_request_data);
       case Types::ClientRequestType::EventInfoFromName:
         return event_info_from_name(request.serialized_request_data);
       case Types::ClientRequestType::ListEvents:
         return list_all_events();
-      case Types::ClientRequestType::StreamDeclarationOld:
-        return stream_declaration_old(request.serialized_request_data);
       case Types::ClientRequestType::StreamDeclaration:
         return stream_declaration(request.serialized_request_data);
       case Types::ClientRequestType::StreamInfoFromId:
@@ -92,18 +88,6 @@ class ClientMessageHandler {
       default:
         throw std::runtime_error("Not Implemented!");
     }
-  }
-
-  Types::ServerResponse event_declaration(std::string s_event_info) {
-    auto event_info = CerealSerializer<
-      std::pair<std::string, std::vector<Types::AttributeInfo>>>::deserialize(s_event_info);
-    std::string name = event_info.first;
-    std::vector<Types::AttributeInfo> attributes_info = event_info.second;
-
-    Types::EventTypeId id = backend.add_event_type(std::move(name),
-                                                   std::move(attributes_info));
-    return Types::ServerResponse(CerealSerializer<Types::EventTypeId>::serialize(id),
-                                 Types::ServerResponseType::EventTypeId);
   }
 
   Types::ServerResponse event_info_from_id(std::string s_event_id) {
@@ -125,17 +109,6 @@ class ClientMessageHandler {
     return Types::ServerResponse(CerealSerializer<std::vector<Types::EventInfo>>::serialize(
                                    info),
                                  Types::ServerResponseType::EventInfoVector);
-  }
-
-  Types::ServerResponse stream_declaration_old(std::string s_stream_info) {
-    auto stream_info = CerealSerializer<
-      std::pair<std::string, std::vector<Types::EventTypeId>>>::deserialize(s_stream_info);
-    std::string name = stream_info.first;
-    std::vector<Types::EventTypeId> event_types = stream_info.second;
-    Types::StreamTypeId id = backend.add_stream_type(std::move(name),
-                                                     std::move(event_types));
-    return Types::ServerResponse(CerealSerializer<Types::EventTypeId>::serialize(id),
-                                 Types::ServerResponseType::StreamTypeId);
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_info) {

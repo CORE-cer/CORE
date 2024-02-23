@@ -1,11 +1,19 @@
+#include <algorithm>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/cea/cea.hpp"
+#include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
+#include "core_server/internal/evaluation/predicate_set.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA {
 
@@ -20,8 +28,7 @@ std::string create_query(std::string clause) {
 TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -51,8 +58,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
 TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
