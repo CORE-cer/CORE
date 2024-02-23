@@ -1,7 +1,14 @@
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <memory>
+#include <string>
 
 #include "core_server/internal/interface/backend.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/enumerator.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/value.hpp"
 #include "tests/unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
@@ -9,14 +16,7 @@ TEST_CASE("Evaluation on the example stream of the papers") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -149,14 +149,7 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -281,14 +274,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -424,14 +410,7 @@ TEST_CASE("Evaluation of long query") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -636,14 +615,7 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -772,14 +744,7 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1004,14 +969,7 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1240,14 +1198,7 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1338,14 +1289,7 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1433,14 +1377,7 @@ TEST_CASE(
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -1501,14 +1438,7 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   Internal::Interface::Backend<TestResultHandler> backend;
   TestResultHandler result_handler{backend.get_catalog_reference()};
 
-  auto event_type_id_1 = backend.add_event_type("SELL",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-  auto event_type_id_2 = backend.add_event_type("BUY",
-                                                {{"name", Types::ValueTypes::STRING_VIEW},
-                                                 {"price", Types::ValueTypes::INT64}});
-
-  auto stream_type = backend.add_stream_type("Stock", {event_type_id_1, event_type_id_2});
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
   std::string string_query =
     "SELECT * FROM Stock\n"

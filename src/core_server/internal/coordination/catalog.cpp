@@ -48,30 +48,26 @@ namespace CORE::Internal {
 \_______________________/
        ___)( )(___
       (((__) (__)))       */
-[[nodiscard]] Types::EventTypeId
-Catalog::add_event_type(std::string&& event_name,
-                        std::vector<Types::AttributeInfo>&& event_attributes) noexcept {
-  event_name_to_id.insert(std::make_pair(event_name, events_info.size()));
-  for (auto& attribute : event_attributes) {
-    if (possible_attribute_types.contains(attribute.name)) {
-      possible_attribute_types[attribute.name].insert(attribute.value_type);
-      event_types_with_attribute[attribute.name].insert(events_info.size());
-    } else {
-      possible_attribute_types[attribute.name] = {attribute.value_type};
-      event_types_with_attribute[attribute.name] = {events_info.size()};
-    }
-  }
-  uint64_t ring_tuple_schema_id = add_type_to_schema(event_attributes);
-  events_info.push_back(Types::EventInfo(events_info.size(),
-                                         std::move(event_name),
-                                         std::move(event_attributes)));
-  assert(ring_tuple_schema_id == events_info.size() - 1);
-  return events_info.size() - 1;
-}
-
-bool Catalog::event_name_is_taken(std::string event_name) const {
-  return event_name_to_id.contains(event_name);
-}
+// [[nodiscard]] Types::EventTypeId
+// Catalog::add_event_type(std::string&& event_name,
+//                         std::vector<Types::AttributeInfo>&& event_attributes) noexcept {
+//   event_name_to_id.insert(std::make_pair(event_name, events_info.size()));
+//   for (auto& attribute : event_attributes) {
+//     if (possible_attribute_types.contains(attribute.name)) {
+//       possible_attribute_types[attribute.name].insert(attribute.value_type);
+//       event_types_with_attribute[attribute.name].insert(events_info.size());
+//     } else {
+//       possible_attribute_types[attribute.name] = {attribute.value_type};
+//       event_types_with_attribute[attribute.name] = {events_info.size()};
+//     }
+//   }
+//   uint64_t ring_tuple_schema_id = add_type_to_schema(event_attributes);
+//   events_info.push_back(Types::EventInfo(events_info.size(),
+//                                          std::move(event_name),
+//                                          std::move(event_attributes)));
+//   assert(ring_tuple_schema_id == events_info.size() - 1);
+//   return events_info.size() - 1;
+// }
 
 uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
                                       std::string attribute_name) const {
@@ -157,24 +153,6 @@ Catalog::add_event_type(Types::EventInfoParsed&& parsed_event_info) noexcept {
                                          std::move(parsed_event_info.attributes_info)));
   assert(ring_tuple_schema_id == events_info.size() - 1);
   return events_info.back();
-}
-
-[[nodiscard]] Types::StreamTypeId Catalog::add_stream_type_old(
-  std::string stream_name,
-  std::vector<Types::EventTypeId>&& stream_event_types) noexcept {
-  // We assume the stream_name is unique and event_types have valid
-  // ids.
-  stream_name_to_id.insert(std::make_pair(stream_name, streams_info.size()));
-  std::vector<Types::EventInfo> stream_events_info;
-  stream_events_info.reserve(stream_event_types.size());
-  for (Types::EventTypeId id : stream_event_types) {
-    // We are not validating that the id is correct, it should be
-    // validated elsewhere
-    stream_events_info.push_back(get_event_info(id));
-  }
-  streams_info.push_back(
-    Types::StreamInfo(streams_info.size(), stream_name, std::move(stream_events_info)));
-  return streams_info.size() - 1;
 }
 
 bool Catalog::stream_name_is_taken(std::string stream_name) const noexcept {

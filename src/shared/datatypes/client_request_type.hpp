@@ -6,7 +6,6 @@ enum struct ClientRequestType {
   EventInfoFromId,
   EventInfoFromName,
   ListEvents,
-  StreamDeclarationOld,
   StreamDeclaration,
   StreamInfoFromId,
   StreamInfoFromName,

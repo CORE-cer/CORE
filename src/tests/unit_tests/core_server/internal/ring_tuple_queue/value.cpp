@@ -2,6 +2,7 @@
 
 #include <array>
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
 
 namespace RingTupleQueue::UnitTests {
 TEST_CASE("Get method returns correct value for constant sized type", "[Value]") {

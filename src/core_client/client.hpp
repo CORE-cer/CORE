@@ -1,3 +1,4 @@
+#pragma once
 
 #include <atomic>
 #include <cassert>
@@ -16,6 +17,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
@@ -59,20 +61,6 @@ class Client {
       res.serialized_response_data);
   }
 
-  Types::EventTypeId
-  declare_event_type(std::string name,
-                     std::vector<Types::AttributeInfo>&& attributes_info) {
-    Types::ClientRequest event_declaration(
-      Internal::CerealSerializer<std::pair<std::string, std::vector<Types::AttributeInfo>>>::
-        serialize(std::pair(name, attributes_info)),
-      Types::ClientRequestType::EventDeclaration);
-    Types::ServerResponse response = send_request(event_declaration);
-    assert(response.response_type == Types::ServerResponseType::EventTypeId);
-    auto id = Internal::CerealSerializer<Types::EventTypeId>::deserialize(
-      response.serialized_response_data);
-    return id;
-  }
-
   Types::EventInfo get_event_info(Types::EventTypeId id) {
     Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
                                    id),
@@ -101,18 +89,6 @@ class Client {
     auto events_info = Internal::CerealSerializer<
       std::vector<Types::EventInfoParsed>>::deserialize(response.serialized_response_data);
     return events_info;
-  }
-
-  Types::StreamTypeId
-  declare_stream_type(std::string stream_name, std::vector<Types::EventTypeId>&& events) {
-    Types::ClientRequest stream_declaration(
-      Internal::CerealSerializer<std::pair<std::string, std::vector<Types::EventTypeId>>>::
-        serialize(std::pair(stream_name, events)),
-      Types::ClientRequestType::StreamDeclarationOld);
-    Types::ServerResponse res = send_request(stream_declaration);
-    assert(res.response_type == Types::ServerResponseType::StreamTypeId);
-    return Internal::CerealSerializer<Types::StreamTypeId>::deserialize(
-      res.serialized_response_data);
   }
 
   Types::StreamInfo get_stream_info(Types::StreamTypeId id) {

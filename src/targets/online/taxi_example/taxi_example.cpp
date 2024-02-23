@@ -1,34 +1,51 @@
+#include <cassert>
+#include <chrono>
+#include <cstddef>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "core_client/client.hpp"
+#include "core_client/message_handler.hpp"
 #include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 #include "taxi_data.hpp"
 
 using namespace CORE;
 
 void do_declarations(Client& client) {
-  std::vector<Types::EventTypeId> event_types{};
+  std::vector<Types::EventInfoParsed> event_types{};
   std::string name = "TRIP";
-  event_types.push_back(client.declare_event_type(
+  event_types.emplace_back(
     name,
-    {Types::AttributeInfo("id", Types::ValueTypes::INT64),
-     Types::AttributeInfo("medallion", Types::ValueTypes::STRING_VIEW),
-     Types::AttributeInfo("hack_license", Types::ValueTypes::STRING_VIEW),
-     Types::AttributeInfo("pickup_datetime", Types::ValueTypes::INT64),
-     Types::AttributeInfo("dropoff_datetime", Types::ValueTypes::INT64),
-     Types::AttributeInfo("long_time_in_secs", Types::ValueTypes::INT64),
-     Types::AttributeInfo("trip_distance", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("pickup_zone", Types::ValueTypes::STRING_VIEW),
-     Types::AttributeInfo("dropoff_zone", Types::ValueTypes::STRING_VIEW),
-     Types::AttributeInfo("payment_type", Types::ValueTypes::STRING_VIEW),
-     Types::AttributeInfo("fare_amount", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("surcharge", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("mta_tax", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("tip_amount", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("tolls_amount", Types::ValueTypes::DOUBLE),
-     Types::AttributeInfo("total_amount", Types::ValueTypes::DOUBLE)}));
-  client.declare_stream_type("S", std::move(event_types));
+    std::vector<Types::AttributeInfo>{{"id", Types::ValueTypes::INT64},
+                                      {"medallion", Types::ValueTypes::STRING_VIEW},
+                                      {"hack_license", Types::ValueTypes::STRING_VIEW},
+                                      {"pickup_datetime", Types::ValueTypes::INT64},
+                                      {"dropoff_datetime", Types::ValueTypes::INT64},
+                                      {"long_time_in_secs", Types::ValueTypes::INT64},
+                                      {"trip_distance", Types::ValueTypes::DOUBLE},
+                                      {"pickup_zone", Types::ValueTypes::STRING_VIEW},
+                                      {"dropoff_zone", Types::ValueTypes::STRING_VIEW},
+                                      {"payment_type", Types::ValueTypes::STRING_VIEW},
+                                      {"fare_amount", Types::ValueTypes::DOUBLE},
+                                      {"surcharge", Types::ValueTypes::DOUBLE},
+                                      {"mta_tax", Types::ValueTypes::DOUBLE},
+                                      {"tip_amount", Types::ValueTypes::DOUBLE},
+                                      {"tolls_amount", Types::ValueTypes::DOUBLE},
+                                      {"total_amount", Types::ValueTypes::DOUBLE}});
+  client.declare_stream({"S", std::move(event_types)});
 }
 
 Types::PortNumber create_queries(Client& client) {

@@ -1,14 +1,29 @@
+#include <cassert>
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "polkura_data.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/value.hpp"
 
 using namespace CORE;
 
 void do_declarations(Client& client) {
-  std::vector<Types::EventTypeId> event_types{};
+  std::vector<Types::EventInfoParsed> event_types{};
   for (std::string name : {"WindSpeed",
                            "WindDirection",
                            "GustSpeed",
@@ -36,13 +51,13 @@ void do_declarations(Client& client) {
                            "SoilTemperatureAt90CmDepth",
                            "ApparentDielectricPermittivityAt90CmDepth",
                            "AtmosphericPressure"}) {
-    event_types.push_back(client.declare_event_type(
+    event_types.emplace_back(
       name,
-      {Types::AttributeInfo("id", Types::ValueTypes::INT64),
-       Types::AttributeInfo("sitio", Types::ValueTypes::STRING_VIEW),
-       Types::AttributeInfo("value", Types::ValueTypes::DOUBLE)}));
+      std::vector<Types::AttributeInfo>{{"id", Types::ValueTypes::INT64},
+                                        {"sitio", Types::ValueTypes::STRING_VIEW},
+                                        {"value", Types::ValueTypes::DOUBLE}});
   }
-  client.declare_stream_type("S", std::move(event_types));
+  client.declare_stream({"S", std::move(event_types)});
 }
 
 void create_queries(Client& client) {

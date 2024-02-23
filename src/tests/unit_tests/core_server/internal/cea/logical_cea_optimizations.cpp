@@ -1,15 +1,23 @@
+#include <algorithm>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/duplicate.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_epsilon_transitions.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"
+#include "core_server/internal/evaluation/predicate_set.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations {
 
@@ -25,7 +33,7 @@ std::string create_query(std::string clause) {
 
 TEST_CASE("Remove Epsilons of Simple Contiguous Iteration", "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H:+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -46,7 +54,7 @@ TEST_CASE("Remove Epsilons of Simple Contiguous Iteration", "[LogicalCEA Optimiz
 TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -90,8 +98,7 @@ TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
 
 TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -119,8 +126,7 @@ TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
 TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -152,8 +158,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
 TEST_CASE("Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -240,8 +245,7 @@ TEST_CASE(
   "unreachable state (2).",
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -274,7 +278,10 @@ TEST_CASE(
   "RemoveUselessStates.",
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S",
+                                                           {
+                                                             {"H", {}},
+                                                           }});
   auto query = Parsing::Parser::parse_query(create_query("H"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -298,8 +305,7 @@ TEST_CASE(
   "A unique intial state is added correctly. (basic test 1)"
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -331,8 +337,7 @@ TEST_CASE(
   "Adding unique initial state combination test. (basic test 2)"
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);
@@ -368,8 +373,7 @@ TEST_CASE(
   "duplicate works. (basic test 1)"
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
-  auto event_type_id_1 = catalog.add_event_type("H", {});
-  auto event_type_id_2 = catalog.add_event_type("S", {});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
   auto visitor = FormulaToLogicalCEA(catalog);
   query.where.formula->accept_visitor(visitor);

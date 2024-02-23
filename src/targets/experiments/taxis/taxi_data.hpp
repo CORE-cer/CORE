@@ -19,8 +19,8 @@
 namespace CORE::TaxisData {
 
 CORE::Types::StreamInfo do_declaration(Client& client) {
-  Types::StreamInfoParsed
-    parsed_stream_info{"S",
+
+  return client.declare_stream({"S",
                        {
                          {"TRIP",
                           {{"id", Types::ValueTypes::INT64},
@@ -39,9 +39,7 @@ CORE::Types::StreamInfo do_declaration(Client& client) {
                            {"tip_amount", Types::ValueTypes::DOUBLE},
                            {"tolls_amount", Types::ValueTypes::DOUBLE},
                            {"total_amount", Types::ValueTypes::DOUBLE}}},
-                       }};
-
-  return client.declare_stream(parsed_stream_info);
+                       }});
 }
 
 enum EventType { TRIP };

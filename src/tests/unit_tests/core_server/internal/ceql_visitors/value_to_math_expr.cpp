@@ -1,9 +1,27 @@
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
 
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/integer_literal.hpp"
+#include "core_server/internal/ceql/value/operations/addition.hpp"
+#include "core_server/internal/ceql/value/operations/division.hpp"
+#include "core_server/internal/ceql/value/operations/modulo.hpp"
+#include "core_server/internal/ceql/value/operations/multiplication.hpp"
+#include "core_server/internal/ceql/value/operations/subtraction.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 using namespace RingTupleQueue;
 
