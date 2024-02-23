@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/catalog/attribute_info.hpp"
@@ -21,8 +22,8 @@ struct EventInfoParsed {
 
   EventInfoParsed(std::string name, std::vector<AttributeInfo>&& attributes_info) noexcept
       : name(name), attributes_info(std::move(attributes_info)) {
-    for (size_t id = 0; id < attributes_info.size(); id++) {
-      attribute_names_to_ids[attributes_info[id].name] = id;
+    for (size_t id = 0; id < this->attributes_info.size(); id++) {
+      attribute_names_to_ids[this->attributes_info[id].name] = id;
     }
   }
 

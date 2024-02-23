@@ -40,6 +40,7 @@ class Catalog {
 
  public:
   // Events
+  bool event_name_is_taken(std::string event_name) const;
   uint64_t get_index_attribute(const Types::EventTypeId event_type_id,
                                std::string attribute_name) const;
   const Types::EventInfo&

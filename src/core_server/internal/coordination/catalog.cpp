@@ -69,6 +69,10 @@ namespace CORE::Internal {
 //   return events_info.size() - 1;
 // }
 
+bool Catalog::event_name_is_taken(std::string event_name) const {
+  return event_name_to_id.contains(event_name);
+}
+
 uint64_t Catalog::get_index_attribute(const Types::EventTypeId event_type_id,
                                       std::string attribute_name) const {
   const Types::EventInfo& event_info = get_event_info(event_type_id);
