@@ -1,10 +1,12 @@
 #include "core_server/library/server.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
+
 #include <chrono>
 #include <exception>
 #include <iostream>
 #include <ostream>
 #include <thread>
+
+#include "shared/datatypes/aliases/port_number.hpp"
 
 using namespace CORE;
 using namespace CORE::Internal;
