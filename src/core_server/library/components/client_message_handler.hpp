@@ -75,6 +75,8 @@ class ClientMessageHandler {
         return event_info_from_name(request.serialized_request_data);
       case Types::ClientRequestType::ListEvents:
         return list_all_events();
+      case Types::ClientRequestType::StreamDeclarationOld:
+        return stream_declaration_old(request.serialized_request_data);
       case Types::ClientRequestType::StreamDeclaration:
         return stream_declaration(request.serialized_request_data);
       case Types::ClientRequestType::StreamInfoFromId:
@@ -109,6 +111,14 @@ class ClientMessageHandler {
     return Types::ServerResponse(CerealSerializer<std::vector<Types::EventInfo>>::serialize(
                                    info),
                                  Types::ServerResponseType::EventInfoVector);
+  }
+
+  Types::ServerResponse stream_declaration(std::string s_parsed_stream_info) {
+    auto parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
+      s_parsed_stream_info);
+    Types::StreamInfo id = backend.add_stream_type(std::move(parsed_stream_info));
+    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(id),
+                                 Types::ServerResponseType::StreamInfo);
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_info) {
