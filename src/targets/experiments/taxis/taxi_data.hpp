@@ -19,27 +19,26 @@
 namespace CORE::TaxisData {
 
 CORE::Types::StreamInfo do_declaration(Client& client) {
-
   return client.declare_stream({"S",
-                       {
-                         {"TRIP",
-                          {{"id", Types::ValueTypes::INT64},
-                           {"medallion", Types::ValueTypes::STRING_VIEW},
-                           {"hack_license", Types::ValueTypes::STRING_VIEW},
-                           {"pickup_datetime", Types::ValueTypes::INT64},
-                           {"dropoff_datetime", Types::ValueTypes::INT64},
-                           {"long_time_in_secs", Types::ValueTypes::INT64},
-                           {"trip_distance", Types::ValueTypes::DOUBLE},
-                           {"pickup_zone", Types::ValueTypes::STRING_VIEW},
-                           {"dropoff_zone", Types::ValueTypes::STRING_VIEW},
-                           {"payment_type", Types::ValueTypes::STRING_VIEW},
-                           {"fare_amount", Types::ValueTypes::DOUBLE},
-                           {"surcharge", Types::ValueTypes::DOUBLE},
-                           {"mta_tax", Types::ValueTypes::DOUBLE},
-                           {"tip_amount", Types::ValueTypes::DOUBLE},
-                           {"tolls_amount", Types::ValueTypes::DOUBLE},
-                           {"total_amount", Types::ValueTypes::DOUBLE}}},
-                       }});
+                                {
+                                  {"TRIP",
+                                   {{"id", Types::ValueTypes::INT64},
+                                    {"medallion", Types::ValueTypes::STRING_VIEW},
+                                    {"hack_license", Types::ValueTypes::STRING_VIEW},
+                                    {"pickup_datetime", Types::ValueTypes::INT64},
+                                    {"dropoff_datetime", Types::ValueTypes::INT64},
+                                    {"long_time_in_secs", Types::ValueTypes::INT64},
+                                    {"trip_distance", Types::ValueTypes::DOUBLE},
+                                    {"pickup_zone", Types::ValueTypes::STRING_VIEW},
+                                    {"dropoff_zone", Types::ValueTypes::STRING_VIEW},
+                                    {"payment_type", Types::ValueTypes::STRING_VIEW},
+                                    {"fare_amount", Types::ValueTypes::DOUBLE},
+                                    {"surcharge", Types::ValueTypes::DOUBLE},
+                                    {"mta_tax", Types::ValueTypes::DOUBLE},
+                                    {"tip_amount", Types::ValueTypes::DOUBLE},
+                                    {"tolls_amount", Types::ValueTypes::DOUBLE},
+                                    {"total_amount", Types::ValueTypes::DOUBLE}}},
+                                }});
 }
 
 enum EventType { TRIP };
