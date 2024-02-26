@@ -30,7 +30,7 @@ struct StreamInfo {
       : name(stream_name), events_info(std::move(events_info)) {
     for (size_t i = 0; i < this->events_info.size(); ++i) {
       CatalogEventInfo actual_event_info = this->events_info[i];
-      event_names_to_index[actual_event_info.event_info.name] = actual_event_info.id;
+      event_names_to_index[actual_event_info.event_info.name] = i;
     }
   }
 
