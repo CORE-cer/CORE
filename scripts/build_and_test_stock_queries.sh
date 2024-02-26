@@ -32,7 +32,7 @@ for query in $queries; do
     # if ! test -f "$base_dir/expected_results/$query_file"; then
     #     ./build/Debug/offline_experiment_stocks /home/nicobuzeta/Documents/CORE-Project/CORE/src/targets/experiments/stocks/queries/$query_file /home/nicobuzeta/Documents/CORE-Project/CORE/src/targets/experiments/stocks/stock_data.csv | tee /home/nicobuzeta/Documents/CORE-Project/CORE/src/targets/experiments/stocks/expected_results/$query_file
     # fi
-    $run_and_compare_script $executable "$query $base_dir/stock_data.csv" "$base_dir/expected_results/$query_file"
+    $run_and_compare_script $executable "$query $base_dir/stock_data.csv $base_dir/declaration.core" "$base_dir/expected_results/$query_file"
     if [ $? -ne 0 ]; then
         rm -rf $base_dir/expected_results
         echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"

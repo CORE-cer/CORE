@@ -15,7 +15,7 @@ std::string create_stream_declaration() {
 }
 
 int main(int argc, char** argv) {
-  if (argc != 3) {
+  if (argc != 4) {
     std::cout << "There must be 2 arguments: The query path and the data path."
               << std::endl;
     return 1;
@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
 
   std::string query_path = argv[1];
   std::string data_path = argv[2];
+  std::string declaration_path = argv[3];
 
   FrameMark;
   try {
@@ -37,8 +38,11 @@ int main(int argc, char** argv) {
 
     StocksData::DataReader reader(query_path, data_path);
     reader.read_query();
-    reader.read_csv();
-    reader.to_events();
+
+    Internal::Parsing::Declaration::Parser parser;
+    Types::StreamInfo stream_info = parser.parse_stream(
+      reader.read_declaration_file(declaration_path));
+    std::vector<Types::Event> events = stream_info.get_events_from_csv(data_path);
 
     std::string query_string = reader.query;
 
@@ -46,14 +50,14 @@ int main(int argc, char** argv) {
 
     client.add_query(std::move(query_string));
 
-    std::cout << "Read events " << reader.events.size() << std::endl;
+    std::cout << "Read events " << events.size() << std::endl;
     FrameMark;
 
     // for (Types::Event event_to_send : reader.events) {
     //   ZoneScopedN("main::send_event");
     //   server.receive_stream({0, {event_to_send}});
     // }
-    server.receive_stream({0, std::move(reader.events)});
+    server.receive_stream({0, std::move(events)});
 
     return 0;
   } catch (std::exception& e) {

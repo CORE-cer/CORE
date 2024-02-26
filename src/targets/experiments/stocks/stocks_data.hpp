@@ -69,6 +69,13 @@ class DataReader {
     query = buffer.str();
   }
 
+  std::string read_declaration_file(std::string declaration_path) {
+    std::ifstream file(declaration_path);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+  }
+
   void to_events() {
     for (auto& data : csv_data) {
       Types::Event event_to_send{data.event_type,

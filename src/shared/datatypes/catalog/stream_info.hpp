@@ -79,7 +79,7 @@ struct StreamInfo {
       events.emplace_back(id, std::move(attributes));
     }
 
-    void read_csv() {
+    std::vector<Types::Event> read_csv() {
       std::ifstream file(csv_path);
       std::string line;
       std::getline(file, line);  // Skip header.
@@ -92,10 +92,14 @@ struct StreamInfo {
         }
         to_events(tokens);
       }
+      return events;
     }
   };
 
-  void get_events_from_csv() {}
+  std::vector<Types::Event> get_events_from_csv(std::string csv_path) {
+    DataReader data_reader(csv_path, events_info, event_names_to_index);
+    return data_reader.read_csv();
+  }
 
   bool operator==(const StreamInfo& other) const {
     bool out = name == other.name && events_info.size() == other.events_info.size();
