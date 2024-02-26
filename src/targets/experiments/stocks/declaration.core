@@ -1,0 +1,4 @@
+DECLARE STREAM Stock {
+EVENT BUY { id:int, name:string, volume:int, price:double, stock_time:int },
+EVENT SELL { id:int, name:string, volume:int, price:double, stock_time:int }
+}
