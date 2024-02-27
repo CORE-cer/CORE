@@ -575,7 +575,7 @@ public:
   public:
     Atomic_filterContext(FilterContext *ctx);
 
-    Event_nameContext *event_name();
+    S_event_nameContext *s_event_name();
     antlr4::tree::TerminalNode *LEFT_SQUARE_BRACKET();
     PredicateContext *predicate();
     antlr4::tree::TerminalNode *RIGHT_SQUARE_BRACKET();
