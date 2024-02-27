@@ -185,7 +185,7 @@ void ceqlqueryparserParserInitialize() {
   	0,0,241,17,1,0,0,0,242,240,1,0,0,0,243,247,5,3,0,0,244,247,5,23,0,0,245,
   	247,5,20,0,0,246,243,1,0,0,0,246,244,1,0,0,0,246,245,1,0,0,0,247,19,1,
   	0,0,0,248,249,3,62,31,0,249,21,1,0,0,0,250,251,6,11,-1,0,251,252,5,47,
-  	0,0,252,253,3,22,11,0,253,254,5,48,0,0,254,261,1,0,0,0,255,256,3,56,28,
+  	0,0,252,253,3,22,11,0,253,254,5,48,0,0,254,261,1,0,0,0,255,256,3,54,27,
   	0,256,257,5,49,0,0,257,258,3,24,12,0,258,259,5,50,0,0,259,261,1,0,0,0,
   	260,250,1,0,0,0,260,255,1,0,0,0,261,270,1,0,0,0,262,263,10,2,0,0,263,
   	264,5,2,0,0,264,269,3,22,11,3,265,266,10,1,0,0,266,267,5,22,0,0,267,269,
@@ -1830,8 +1830,8 @@ std::any CEQLQueryParser::And_filterContext::accept(tree::ParseTreeVisitor *visi
 }
 //----------------- Atomic_filterContext ------------------------------------------------------------------
 
-CEQLQueryParser::Event_nameContext* CEQLQueryParser::Atomic_filterContext::event_name() {
-  return getRuleContext<CEQLQueryParser::Event_nameContext>(0);
+CEQLQueryParser::S_event_nameContext* CEQLQueryParser::Atomic_filterContext::s_event_name() {
+  return getRuleContext<CEQLQueryParser::S_event_nameContext>(0);
 }
 
 tree::TerminalNode* CEQLQueryParser::Atomic_filterContext::LEFT_SQUARE_BRACKET() {
@@ -1926,7 +1926,7 @@ CEQLQueryParser::FilterContext* CEQLQueryParser::filter(int precedence) {
         _ctx = _localctx;
         previousContext = _localctx;
         setState(255);
-        event_name();
+        s_event_name();
         setState(256);
         match(CEQLQueryParser::LEFT_SQUARE_BRACKET);
         setState(257);

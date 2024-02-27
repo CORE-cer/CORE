@@ -77,7 +77,7 @@ consumption_policy
 
 filter
  : LEFT_PARENTHESIS filter RIGHT_PARENTHESIS                                 # par_filter
- | event_name LEFT_SQUARE_BRACKET predicate RIGHT_SQUARE_BRACKET             # atomic_filter
+ | s_event_name LEFT_SQUARE_BRACKET predicate RIGHT_SQUARE_BRACKET             # atomic_filter
  | filter K_AND filter                                                       # and_filter
  | filter K_OR filter                                                        # or_filter
  ;
