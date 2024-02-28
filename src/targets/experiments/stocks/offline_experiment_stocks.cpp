@@ -31,18 +31,16 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    StocksData::do_declaration(client,
-                               "Stocks",
-                               StocksData::event_types,
-                               StocksData::attributes);
-
-    StocksData::DataReader reader(query_path, data_path);
+    StocksData::DataReader reader(query_path);
     reader.read_query();
 
     Internal::Parsing::Declaration::Parser parser;
     Types::StreamInfo stream_info = parser.parse_stream(
       reader.read_declaration_file(declaration_path));
     std::vector<Types::Event> events = stream_info.get_events_from_csv(data_path);
+
+    StocksData::do_declaration(client,
+                               stream_info);
 
     std::string query_string = reader.query;
 
