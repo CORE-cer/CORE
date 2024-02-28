@@ -3,16 +3,9 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/library/server.hpp"
-#include "stocks_data.hpp"
+#include "targets/experiments/data_handler.hpp"
 
 using namespace CORE;
-
-std::string create_stream_declaration() {
-  return "DECLARE STREAM Stock {\n"
-         "EVENT BUY { id:int, name:string, volume:int, price:double, stock_time:int },\n"
-         "EVENT SELL { id:int, name:string, volume:int, price:double, stock_time:int }\n"
-         "}";
-}
 
 int main(int argc, char** argv) {
   if (argc != 4) {
@@ -31,7 +24,7 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{starting_port};
     Client client{"tcp://localhost", 5000};
 
-    StocksData::DataReader reader(query_path);
+    DataHandler::DataReader reader(query_path);
     reader.read_query();
 
     Internal::Parsing::Declaration::Parser parser;
@@ -39,7 +32,7 @@ int main(int argc, char** argv) {
       reader.read_declaration_file(declaration_path));
     std::vector<Types::Event> events = stream_info.get_events_from_csv(data_path);
 
-    StocksData::do_declaration(client,
+    DataHandler::do_declaration(client,
                                stream_info);
 
     std::string query_string = reader.query;
