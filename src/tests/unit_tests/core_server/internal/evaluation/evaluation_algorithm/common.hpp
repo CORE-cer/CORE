@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -27,14 +27,15 @@ class TestResultHandler : public Library::Components::ResultHandler<TestResultHa
   Types::Enumerator output;
 
  public:
-  TestResultHandler(const Catalog& catalog)
-      : CORE::Library::Components::ResultHandler<TestResultHandler>(catalog) {}
+  TestResultHandler(const QueryCatalog& query_catalog)
+      : CORE::Library::Components::ResultHandler<TestResultHandler>(query_catalog) {}
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = query_catalog.convert_enumerator(
+        std::move(internal_enumerator.value()));
     }
     std::unique_lock lk(output_mutex);
 

@@ -1,14 +1,18 @@
 #pragma once
+
 #include <gmpxx.h>
 
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <set>
+#include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/duplicate.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_epsilon_transitions.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"

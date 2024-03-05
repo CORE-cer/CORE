@@ -16,7 +16,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
@@ -58,23 +58,23 @@ class PartitionByQuery
     partition_by_attrs_to_evaluator_idx;
 
   // Use optional to show that event type has already been processed and should not be consumed by any evaluator
-  std::unordered_map<Types::EventTypeId, std::optional<std::vector<uint64_t>>>
+  std::unordered_map<Types::UniqueEventTypeId, std::optional<std::vector<uint64_t>>>
     event_id_to_tuple_idx;
 
  public:
-  PartitionByQuery(Internal::Catalog& catalog,
+  PartitionByQuery(Internal::QueryCatalog query_catalog,
                    RingTupleQueue::Queue& queue,
                    std::string inproc_receiver_address,
-                   ResultHandlerT& result_handler)
+                   std::unique_ptr<ResultHandlerT>&& result_handler)
       : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
-        catalog,
+        query_catalog,
         queue,
         inproc_receiver_address,
-        result_handler) {}
+                                                                  std::move(result_handler)) {}
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->catalog);
+    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->query_catalog);
 
     query = transformer(std::move(query));
 
@@ -82,7 +82,7 @@ class PartitionByQuery
 
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
 
-    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->catalog);
+    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
     query.where.formula->accept_visitor(visitor);
     if (!query.select.is_star) {
       query.select.formula->accept_visitor(visitor);
@@ -99,7 +99,7 @@ class PartitionByQuery
                                                    this->query.value().consume_by.policy,
                                                    this->query.value().limit,
                                                    this->time_window,
-                                                   this->catalog,
+                                                   this->query_catalog,
                                                    this->queue);
   }
 
@@ -124,8 +124,8 @@ class PartitionByQuery
   std::optional<std::vector<uint64_t>>* find_tuple_indexes(RingTupleQueue::Tuple& tuple) {
     std::vector<uint64_t> tuple_indexes = {};
 
-    Types::EventTypeId event_id = tuple.id();
-    const Types::EventInfo& event_info = this->catalog.get_event_info(event_id);
+    Types::UniqueEventTypeId event_id = tuple.id();
+    const Types::EventInfo& event_info = this->query_catalog.get_event_info(event_id);
 
     assert(query.has_value());
     for (auto& attr_group : query.value().partition_by.partition_attributes) {

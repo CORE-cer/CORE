@@ -3,8 +3,12 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -14,7 +18,6 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -27,7 +30,13 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
     "CONSUME BY NONE\n"
     "LIMIT 1";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -124,7 +133,6 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 
 TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -137,7 +145,13 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
     "CONSUME BY NONE\n"
     "LIMIT 0";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;

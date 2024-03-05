@@ -1,8 +1,17 @@
 #pragma once
 
-#include "core_server/internal/ceql/value/all_value_headers.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include <stdexcept>
+
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/operations/addition.hpp"
+#include "core_server/internal/ceql/value/operations/division.hpp"
+#include "core_server/internal/ceql/value/operations/modulo.hpp"
+#include "core_server/internal/ceql/value/operations/multiplication.hpp"
+#include "core_server/internal/ceql/value/operations/negation.hpp"
+#include "core_server/internal/ceql/value/operations/subtraction.hpp"
+#include "core_server/internal/ceql/value/sequence.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
 #include "value_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
@@ -21,10 +30,11 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   DataType final_value_datatype = Undetermined;
 
  private:
-  Catalog& catalog;
+  QueryCatalog& query_catalog;
 
  public:
-  DetermineFinalValueDataTypeWithCatalog(Catalog& catalog) : catalog(catalog) {}
+  DetermineFinalValueDataTypeWithCatalog(QueryCatalog& query_catalog)
+      : query_catalog(query_catalog) {}
 
   DataType get_final_data_type() {
     auto out = final_value_datatype;
@@ -35,7 +45,7 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   void reset() { final_value_datatype = Undetermined; }
 
   void visit(Attribute& attribute) override {
-    auto value_types = catalog.get_possible_attribute_types(attribute.value);
+    auto value_types = query_catalog.get_possible_attribute_types(attribute.value);
     if (value_types.size() == 0) {
       final_value_datatype = Invalid;
     }

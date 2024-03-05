@@ -12,7 +12,7 @@
 namespace CORE::Types {
 
 struct EventInfo {
-  EventTypeId id;
+  UniqueEventTypeId id;
   std::string name;
   std::vector<AttributeInfo> attributes_info;
 
@@ -21,7 +21,7 @@ struct EventInfo {
 
   EventInfo() noexcept {}
 
-  EventInfo(EventTypeId event_type_id,
+  EventInfo(UniqueEventTypeId event_type_id,
             std::string name,
             std::vector<AttributeInfo>&& attributes_info) noexcept
       : id(event_type_id), name(name), attributes_info(attributes_info) {

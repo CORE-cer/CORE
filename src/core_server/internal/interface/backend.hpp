@@ -22,6 +22,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/interface/queries/partition_by_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
@@ -78,13 +79,13 @@ class Backend {
 
   const Catalog& get_catalog_reference() const { return catalog; }
 
-  Types::EventInfo get_event_info(Types::EventTypeId event_type_id) {
+  Types::EventInfo get_event_info(Types::UniqueEventTypeId event_type_id) {
     return catalog.get_event_info(event_type_id);
   }
 
-  Types::EventInfo get_event_info(std::string event_name) {
-    return catalog.get_event_info(event_name);
-  }
+  // Types::EventInfo get_event_info(std::string event_name) {
+  //   return catalog.get_event_info(event_name);
+  // }
 
   std::vector<Types::EventInfo> get_all_events_info() {
     return catalog.get_all_events_info();
@@ -100,42 +101,36 @@ class Backend {
     return catalog.get_stream_info(event_type_id);
   }
 
-  Types::StreamInfo get_stream_info(std::string event_name) {
-    return catalog.get_stream_info(event_name);
-  }
-
   std::vector<Types::StreamInfo> get_all_streams_info() {
     return catalog.get_all_streams_info();
   }
 
   // TODO: Propogate parse error to ClientMessageHandler
-  void declare_query(std::string query, ResultHandlerT& result_handler) {
-    Internal::CEQL::Query parsed_query = Internal::Parsing::Parser::parse_query(query);
-
+  void declare_query(Internal::CEQL::Query&& parsed_query, std::unique_ptr<ResultHandlerT>&& result_handler) {
     if (parsed_query.partition_by.partition_attributes.size() != 0) {
       using QueryDirectType = PartitionByQuery<ResultHandlerT>;
       using QueryBaseType = GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
 
       initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
-                                                       result_handler);
+                                                       std::move(result_handler));
     } else {
       using QueryDirectType = SimpleQuery<ResultHandlerT>;
       using QueryBaseType = GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
 
       initialize_query<QueryDirectType, QueryBaseType>(std::move(parsed_query),
-                                                       result_handler);
+                                                       std::move(result_handler));
     }
   }
 
   template <typename QueryDirectType, typename QueryBaseType>
   void
-  initialize_query(Internal::CEQL::Query&& parsed_query, ResultHandlerT& result_handler) {
+  initialize_query(Internal::CEQL::Query&& parsed_query, std::unique_ptr<ResultHandlerT>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    queries.emplace_back(std::make_unique<QueryDirectType>(catalog,
+    queries.emplace_back(std::make_unique<QueryDirectType>(QueryCatalog(catalog),
                                                            queue,
                                                            inproc_receiver_address,
-                                                           result_handler));
+                                                           std::move(result_handler)));
     QueryBaseType* query = static_cast<QueryBaseType*>(
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 

@@ -9,7 +9,7 @@
 #include "core_server/internal/ceql/query/consume_by.hpp"
 #include "core_server/internal/ceql/query/limit.hpp"
 #include "core_server/internal/ceql/query/within.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/evaluator.hpp"
@@ -30,9 +30,9 @@ class SingleEvaluator : public GenericEvaluator {
                   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
                   CEQL::Limit limit,
                   CEQL::Within::TimeWindow time_window,
-                  Internal::Catalog& catalog,
+                  Internal::QueryCatalog& query_catalog,
                   RingTupleQueue::Queue& queue)
-      : GenericEvaluator(std::move(cea), time_window, catalog, queue),
+      : GenericEvaluator(std::move(cea), time_window, query_catalog, queue),
         evaluator(this->cea,
                   std::move(tuple_evaluator),
                   time_window.duration,

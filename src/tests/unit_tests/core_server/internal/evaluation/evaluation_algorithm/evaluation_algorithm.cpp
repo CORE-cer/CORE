@@ -3,8 +3,12 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -14,7 +18,6 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -26,7 +29,13 @@ TEST_CASE("Evaluation on the example stream of the papers") {
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "CONSUME BY NONE";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -147,7 +156,6 @@ TEST_CASE(
   "Evaluation on the example stream of the paper with within of 4 "
   "seconds") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -159,7 +167,13 @@ TEST_CASE(
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "WITHIN 5 EVENTS";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -272,7 +286,6 @@ TEST_CASE(
 
 TEST_CASE("Evaluation of a query with contiguous events") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -283,7 +296,13 @@ TEST_CASE("Evaluation of a query with contiguous events") {
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -408,7 +427,6 @@ TEST_CASE("Evaluation of a query with contiguous events") {
 
 TEST_CASE("Evaluation of long query") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -418,7 +436,13 @@ TEST_CASE("Evaluation of long query") {
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -613,7 +637,6 @@ TEST_CASE("Evaluation of long query") {
 
 TEST_CASE("Evaluation of long query with continuous and OR") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -622,7 +645,13 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
     "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -742,7 +771,6 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
 
 TEST_CASE("Evaluation of longer query with continuous and OR v2") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -753,7 +781,13 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
     "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -967,7 +1001,6 @@ TEST_CASE(
   "iteration, and "
   "OR") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -978,7 +1011,13 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -1196,7 +1235,6 @@ TEST_CASE(
   "sequencing, non contiguous sequencing, and "
   "OR v2") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1207,10 +1245,15 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  Types::Event event;
-  Types::Enumerator output;
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event; Types::Enumerator output;
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
@@ -1287,7 +1330,6 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1295,7 +1337,13 @@ TEST_CASE(
     "SELECT * FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -1375,7 +1423,6 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, OR, and "
   "AS") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1384,7 +1431,13 @@ TEST_CASE(
     "WHERE (SELL OR BUY)+ as msft\n"
     "FILTER msft[name='MSFT']";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;
@@ -1436,7 +1489,6 @@ TEST_CASE(
 
 TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") {
   Internal::Interface::Backend<TestResultHandler> backend;
-  TestResultHandler result_handler{backend.get_catalog_reference()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1445,7 +1497,13 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
     "WHERE (SELL)+ as msft\n"
     "FILTER msft[name='MSFT']";
 
-  backend.declare_query(string_query, result_handler);
+  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
   Types::Event event;
   Types::Enumerator output;

@@ -9,6 +9,7 @@
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/duplicate.hpp"
@@ -35,7 +36,8 @@ TEST_CASE("Remove Epsilons of Simple Contiguous Iteration", "[LogicalCEA Optimiz
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H:+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -56,7 +58,8 @@ TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -100,7 +103,8 @@ TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -128,7 +132,8 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -160,7 +165,8 @@ TEST_CASE("Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -247,7 +253,8 @@ TEST_CASE(
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::RemoveEpsilonTransitions()(std::move(cea));
@@ -283,7 +290,8 @@ TEST_CASE(
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::Parser::parse_query(create_query("H"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea.add_n_states(1);
@@ -307,7 +315,8 @@ TEST_CASE(
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
   cea = CEA::AddUniqueInitialState()(std::move(cea));
@@ -339,7 +348,8 @@ TEST_CASE(
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   // clang-format off
   CEA::LogicalCEA cea = CEA::RemoveUnreachableStates()(
@@ -375,7 +385,8 @@ TEST_CASE(
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H ; S"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   // clang-format off
   CEA::LogicalCEA cea = CEA::Duplicate()(

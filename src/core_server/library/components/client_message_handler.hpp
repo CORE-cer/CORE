@@ -7,7 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/query/query.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -30,14 +33,14 @@ class ClientMessageHandler {
   // use ::element_type to remove the unique_ptr and get the internal type.
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>::element_type;
+    ResultHandlerFactoryT*,
+    Internal::QueryCatalog>::element_type;
 
   using Backend = CORE::Internal::Interface::Backend<HandlerType>;
 
  private:
   Backend& backend;
   ResultHandlerFactoryT result_handler_factory;
-  std::vector<std::unique_ptr<HandlerType>> result_handlers;
 
  public:
   ClientMessageHandler(Backend& backend, ResultHandlerFactoryT result_handler_factory)
@@ -49,8 +52,7 @@ class ClientMessageHandler {
 
   ClientMessageHandler(ClientMessageHandler&& other)
       : backend(other.backend),
-        result_handler_factory(other.result_handler_factory),
-        result_handlers(std::move(other.result_handlers)) {}
+        result_handler_factory(other.result_handler_factory) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
@@ -71,16 +73,12 @@ class ClientMessageHandler {
       //   return event_declaration(request.serialized_request_data);
       case Types::ClientRequestType::EventInfoFromId:
         return event_info_from_id(request.serialized_request_data);
-      case Types::ClientRequestType::EventInfoFromName:
-        return event_info_from_name(request.serialized_request_data);
       case Types::ClientRequestType::ListEvents:
         return list_all_events();
       case Types::ClientRequestType::StreamDeclaration:
         return stream_declaration(request.serialized_request_data);
       case Types::ClientRequestType::StreamInfoFromId:
         return stream_info_from_id(request.serialized_request_data);
-      case Types::ClientRequestType::StreamInfoFromName:
-        return stream_info_from_name(request.serialized_request_data);
       case Types::ClientRequestType::ListStreams:
         return list_all_streams();
       case Types::ClientRequestType::AddQuery:
@@ -91,18 +89,18 @@ class ClientMessageHandler {
   }
 
   Types::ServerResponse event_info_from_id(std::string s_event_id) {
-    auto event_id = CerealSerializer<Types::EventTypeId>::deserialize(s_event_id);
+    auto event_id = CerealSerializer<Types::UniqueEventTypeId>::deserialize(s_event_id);
     Types::EventInfo info = backend.get_event_info(event_id);
     return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(info),
                                  Types::ServerResponseType::EventInfo);
   }
 
-  Types::ServerResponse event_info_from_name(std::string s_event_name) {
-    auto name = CerealSerializer<std::string>::deserialize(s_event_name);
-    Types::EventInfo info = backend.get_event_info(name);
-    return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(info),
-                                 Types::ServerResponseType::EventInfo);
-  }
+  // Types::ServerResponse event_info_from_name(std::string s_event_name) {
+  //   auto name = CerealSerializer<std::string>::deserialize(s_event_name);
+  //   Types::EventInfo info = backend.get_event_info(name);
+  //   return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(info),
+  //                                Types::ServerResponseType::EventInfo);
+  // }
 
   Types::ServerResponse list_all_events() {
     std::vector<Types::EventInfo> info = backend.get_all_events_info();
@@ -126,12 +124,12 @@ class ClientMessageHandler {
                                  Types::ServerResponseType::StreamInfo);
   }
 
-  Types::ServerResponse stream_info_from_name(std::string s_stream_name) {
-    auto name = CerealSerializer<std::string>::deserialize(s_stream_name);
-    Types::StreamInfo info = backend.get_stream_info(name);
-    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(info),
-                                 Types::ServerResponseType::StreamInfo);
-  }
+  // Types::ServerResponse stream_info_from_name(std::string s_stream_name) {
+  //   auto name = CerealSerializer<std::string>::deserialize(s_stream_name);
+  //   Types::StreamInfo info = backend.get_stream_info(name);
+  //   return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(info),
+  //                                Types::ServerResponseType::StreamInfo);
+  // }
 
   Types::ServerResponse list_all_streams() {
     std::vector<Types::StreamInfo> info = backend.get_all_streams_info();
@@ -144,10 +142,11 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler();
+    Internal::CEQL::Query parsed_query = Parsing::Parser::parse_query(s_query_info);
+
+    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(backend.get_catalog_reference());
     std::optional<Types::PortNumber> possible_port = result_handler->get_port();
-    backend.declare_query(std::move(s_query_info), *result_handler);
-    result_handlers.push_back(std::move(result_handler));
+    backend.declare_query(std::move(parsed_query), std::move(result_handler));
 
     return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
                                    possible_port.value_or(0)),

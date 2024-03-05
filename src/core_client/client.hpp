@@ -16,7 +16,6 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
@@ -61,8 +60,8 @@ class Client {
       res.serialized_response_data);
   }
 
-  Types::EventInfo get_event_info(Types::EventTypeId id) {
-    Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
+  Types::EventInfo get_event_info(Types::UniqueEventTypeId id) {
+    Types::ClientRequest request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(
                                    id),
                                  Types::ClientRequestType::EventInfoFromId);
     Types::ServerResponse response = send_request(request);
@@ -72,15 +71,15 @@ class Client {
     return event_info;
   }
 
-  Types::EventInfo get_event_info(std::string name) {
-    Types::ClientRequest request(Internal::CerealSerializer<std::string>::serialize(name),
-                                 Types::ClientRequestType::EventInfoFromName);
-    Types::ServerResponse response = send_request(request);
-    assert(response.response_type == Types::ServerResponseType::EventInfo);
-    auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
-      response.serialized_response_data);
-    return event_info;
-  }
+  // Types::EventInfo get_event_info(std::string name) {
+  //   Types::ClientRequest request(Internal::CerealSerializer<std::string>::serialize(name),
+  //                                Types::ClientRequestType::EventInfoFromName);
+  //   Types::ServerResponse response = send_request(request);
+  //   assert(response.response_type == Types::ServerResponseType::EventInfo);
+  //   auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
+  //     response.serialized_response_data);
+  //   return event_info;
+  // }
 
   std::vector<Types::EventInfoParsed> get_all_event_types() {
     Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
@@ -92,7 +91,7 @@ class Client {
   }
 
   Types::StreamInfo get_stream_info(Types::StreamTypeId id) {
-    Types::ClientRequest request(Internal::CerealSerializer<Types::EventTypeId>::serialize(
+    Types::ClientRequest request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(
                                    id),
                                  Types::ClientRequestType::StreamInfoFromId);
     Types::ServerResponse response = send_request(request);

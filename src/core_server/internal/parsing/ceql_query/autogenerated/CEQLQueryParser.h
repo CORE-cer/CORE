@@ -289,8 +289,8 @@ public:
   public:
     S_list_of_variablesContext(List_of_variablesContext *ctx);
 
-    std::vector<Any_nameContext *> any_name();
-    Any_nameContext* any_name(size_t i);
+    std::vector<S_event_nameContext *> s_event_name();
+    S_event_nameContext* s_event_name(size_t i);
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 

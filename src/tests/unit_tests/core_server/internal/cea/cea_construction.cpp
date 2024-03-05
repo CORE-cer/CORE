@@ -9,6 +9,7 @@
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
@@ -30,7 +31,8 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA logical_cea = visitor.current_cea;
   INFO(logical_cea.to_string());
@@ -60,7 +62,8 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::Parser::parse_query(create_query("H+"));
-  auto visitor = FormulaToLogicalCEA(catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA logical_cea = visitor.current_cea;
   INFO(logical_cea.to_string());

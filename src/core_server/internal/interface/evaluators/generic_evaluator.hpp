@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "core_server/internal/ceql/query/within.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -18,9 +18,9 @@ namespace CORE::Internal::Interface {
 
 class GenericEvaluator {
   uint64_t current_stream_position = 0;
-  Internal::Catalog& catalog;
+  Internal::QueryCatalog& query_catalog;
   RingTupleQueue::Queue& queue;
-  std::unordered_map<Types::EventTypeId, uint64_t> indexes{};
+  std::unordered_map<Types::UniqueEventTypeId, uint64_t> indexes{};
 
  protected:
   CEA::DetCEA cea;
@@ -31,9 +31,9 @@ class GenericEvaluator {
 
   GenericEvaluator(CEA::DetCEA&& cea,
                    CEQL::Within::TimeWindow time_window,
-                   Internal::Catalog& catalog,
+                   Internal::QueryCatalog& query_catalog,
                    RingTupleQueue::Queue& queue)
-      : cea(std::move(cea)), time_window(time_window), catalog(catalog), queue(queue) {}
+      : cea(std::move(cea)), time_window(time_window), query_catalog(query_catalog), queue(queue) {}
 
  protected:
   uint64_t tuple_time(RingTupleQueue::Tuple& tuple) {
@@ -48,10 +48,10 @@ class GenericEvaluator {
         time = tuple.nanoseconds();
         break;
       case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
-        Types::EventTypeId event_type_id = tuple.id();
+        Types::UniqueEventTypeId event_type_id = tuple.id();
         auto index = indexes.find(event_type_id);
         if (index == indexes.end()) [[unlikely]] {
-          indexes[event_type_id] = catalog.get_index_attribute(event_type_id,
+          indexes[event_type_id] = query_catalog.get_index_attribute(event_type_id,
                                                                time_window.attribute_name);
         }
         uint64_t attribute_index = indexes[event_type_id];

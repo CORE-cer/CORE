@@ -1,6 +1,9 @@
 #pragma once
 
-#include <memory>
+#include <cstdint>
+#include <initializer_list>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/event.hpp"

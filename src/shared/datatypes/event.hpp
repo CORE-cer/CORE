@@ -1,7 +1,7 @@
 #pragma once
 
-#include <chrono>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -22,7 +22,7 @@ struct Event {
    * attributes vector represent. To obtain this, it needs to be requested
    * to the Schema
    */
-  EventTypeId event_type_id;
+  UniqueEventTypeId event_type_id;
   /**
    * Shared pointers are used because it can be exploited in serialization,
    * officially from cereal (our current serialization provider):
@@ -38,7 +38,7 @@ struct Event {
 
   Event() noexcept {}
 
-  Event(EventTypeId event_type_id,
+  Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
 

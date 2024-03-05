@@ -16,9 +16,9 @@
 
 namespace CORE::Library::Components {
 
-template <typename ResultHandlerT>
+template <typename ResultHandlerFactoryT>
 class OnlineStreamsListener {
-  using Backend = CORE::Internal::Interface::Backend<ResultHandlerT>;
+  using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT>;
 
  private:
   Backend& backend;

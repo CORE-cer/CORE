@@ -1,15 +1,44 @@
 #pragma once
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <ctime>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
-#include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/and_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/in_range_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/like_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/or_predicate.hpp"
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/boolean_literal.hpp"
+#include "core_server/internal/ceql/value/double_literal.hpp"
+#include "core_server/internal/ceql/value/integer_literal.hpp"
+#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/value/string_literal.hpp"
+#include "core_server/internal/ceql/value/value.hpp"
+#include "core_server/internal/ceql/value/value_types.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/and_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_math_exprs.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_with_constant.hpp"
+#include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/in_range_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_strongly_typed.hpp"
-#include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/evaluation/physical_predicate/not_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "predicate_visitor.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORE::Internal::CEQL {
 

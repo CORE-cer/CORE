@@ -1,8 +1,11 @@
 #pragma once
-#include <memory>
+
+#include <cstdint>
 #include <set>
+#include <string>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -10,11 +13,11 @@ class PhysicalPredicate {
  public:
   virtual ~PhysicalPredicate() = default;
 
-  std::set<uint64_t> admissible_event_types;
+  std::set<Types::UniqueEventTypeId> admissible_event_types;
 
   bool admits_any_event_type = false;
 
-  PhysicalPredicate(uint64_t event_type_id) : admissible_event_types({event_type_id}) {}
+  PhysicalPredicate(Types::UniqueEventTypeId event_type_id) : admissible_event_types({event_type_id}) {}
 
   PhysicalPredicate(std::set<uint64_t> admissible_event_types)
       : admissible_event_types(admissible_event_types) {}
