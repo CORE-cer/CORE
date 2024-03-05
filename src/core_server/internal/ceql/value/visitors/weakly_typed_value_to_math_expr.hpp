@@ -1,27 +1,48 @@
 #pragma once
-#include <memory>
-#include <stdexcept>
 
-#include "core_server/internal/ceql/value/all_value_headers.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr_headers.hpp"
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <string_view>
+
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/double_literal.hpp"
+#include "core_server/internal/ceql/value/integer_literal.hpp"
+#include "core_server/internal/ceql/value/long_literal.hpp"
+#include "core_server/internal/ceql/value/operations/addition.hpp"
+#include "core_server/internal/ceql/value/operations/division.hpp"
+#include "core_server/internal/ceql/value/operations/modulo.hpp"
+#include "core_server/internal/ceql/value/operations/multiplication.hpp"
+#include "core_server/internal/ceql/value/operations/subtraction.hpp"
+#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/value/string_literal.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/addition.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/division.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/literal.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/modulo.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/multiplication.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/subtraction.hpp"
 #include "value_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 template <typename Type>
 class WeaklyTypedValueToMathExpr : public ValueVisitor {
  private:
-  Catalog& catalog;
+  QueryCatalog& query_catalog;
 
  public:
-  WeaklyTypedValueToMathExpr(Catalog& catalog) : catalog(catalog) {}
+  WeaklyTypedValueToMathExpr(QueryCatalog& query_catalog)
+      : query_catalog(query_catalog) {}
 
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
 
   void visit(Attribute& attribute) override {
     // TODO: Add local type and Global Type.
     math_expr = std::make_unique<CEA::NonStronglyTypedAttribute<Type>>(attribute.value,
-                                                                       catalog);
+                                                                       query_catalog);
   }
 
   void visit(StringLiteral& literal) override {

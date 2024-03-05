@@ -1,11 +1,13 @@
 #pragma once
 
+#include <string>
 #include <thread>
+#include <type_traits>
 
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/client_message_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
-#include "shared/datatypes/client_request.hpp"
-#include "shared/datatypes/server_response.hpp"
 #include "shared/networking/message_router/zmq_message_router.hpp"
 
 namespace CORE::Library::Components {
@@ -14,7 +16,8 @@ template <typename ResultHandlerFactoryT>
 class Router {
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>::element_type;
+    ResultHandlerFactoryT*,
+    Internal::QueryCatalog>::element_type;
 
  private:
   Internal::ZMQMessageRouter<ClientMessageHandler<ResultHandlerFactoryT>> router;

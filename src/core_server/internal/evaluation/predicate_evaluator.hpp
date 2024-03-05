@@ -2,11 +2,15 @@
 
 #include <gmpxx.h>
 
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <tracy/Tracy.hpp>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
 namespace CORE::Internal::Evaluation {
 

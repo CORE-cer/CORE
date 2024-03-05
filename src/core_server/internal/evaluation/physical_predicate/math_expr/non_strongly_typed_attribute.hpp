@@ -1,10 +1,20 @@
 #pragma once
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -12,7 +22,7 @@ template <typename GlobalType>
 class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
  public:
   std::string name;
-  Catalog& catalog;
+  QueryCatalog& query_catalog;
 
   // If Type == std::string_view, then the underlying string is stored, if not
   // a char is stored.
@@ -20,11 +30,11 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
                             std::string,
                             char>::type stored_string;
 
-  NonStronglyTypedAttribute(std::string name, Catalog& catalog)
-      : name(name), catalog(catalog) {}
+  NonStronglyTypedAttribute(std::string name, QueryCatalog& query_catalog)
+      : name(name), query_catalog(query_catalog) {}
 
   std::unique_ptr<MathExpr<GlobalType>> clone() const override {
-    return std::make_unique<NonStronglyTypedAttribute<GlobalType>>(name, catalog);
+    return std::make_unique<NonStronglyTypedAttribute<GlobalType>>(name, query_catalog);
   }
 
   ~NonStronglyTypedAttribute() override = default;
@@ -32,8 +42,8 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
   GlobalType eval(RingTupleQueue::Tuple& tuple) override {
     // It must be determined at the predicate level whether this eval
     // makes sense for the tuple.
-    size_t pos = catalog.get_index_attribute(tuple.id(), name);
-    const Types::EventInfo& event_info = catalog.get_event_info(tuple.id());
+    size_t pos = query_catalog.get_index_attribute(tuple.id(), name);
+    const Types::EventInfo& event_info = query_catalog.get_event_info(tuple.id());
     assert(event_info.attribute_names_to_ids.contains(name));
     Types::ValueTypes attribute_type = event_info.attributes_info[pos].value_type;
 

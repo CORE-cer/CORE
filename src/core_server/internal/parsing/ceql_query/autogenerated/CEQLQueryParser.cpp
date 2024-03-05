@@ -162,7 +162,7 @@ void ceqlqueryparserParserInitialize() {
   	163,169,5,3,0,0,164,169,5,15,0,0,165,169,5,17,0,0,166,169,5,19,0,0,167,
   	169,5,28,0,0,168,162,1,0,0,0,168,163,1,0,0,0,168,164,1,0,0,0,168,165,
   	1,0,0,0,168,166,1,0,0,0,168,167,1,0,0,0,169,7,1,0,0,0,170,181,5,35,0,
-  	0,171,181,5,20,0,0,172,177,3,70,35,0,173,174,5,45,0,0,174,176,3,70,35,
+  	0,171,181,5,20,0,0,172,177,3,54,27,0,173,174,5,45,0,0,174,176,3,54,27,
   	0,175,173,1,0,0,0,176,179,1,0,0,0,177,175,1,0,0,0,177,178,1,0,0,0,178,
   	181,1,0,0,0,179,177,1,0,0,0,180,170,1,0,0,0,180,171,1,0,0,0,180,172,1,
   	0,0,0,181,9,1,0,0,0,182,183,5,12,0,0,183,188,3,58,29,0,184,185,5,45,0,
@@ -855,12 +855,12 @@ std::any CEQLQueryParser::S_starContext::accept(tree::ParseTreeVisitor *visitor)
 }
 //----------------- S_list_of_variablesContext ------------------------------------------------------------------
 
-std::vector<CEQLQueryParser::Any_nameContext *> CEQLQueryParser::S_list_of_variablesContext::any_name() {
-  return getRuleContexts<CEQLQueryParser::Any_nameContext>();
+std::vector<CEQLQueryParser::S_event_nameContext *> CEQLQueryParser::S_list_of_variablesContext::s_event_name() {
+  return getRuleContexts<CEQLQueryParser::S_event_nameContext>();
 }
 
-CEQLQueryParser::Any_nameContext* CEQLQueryParser::S_list_of_variablesContext::any_name(size_t i) {
-  return getRuleContext<CEQLQueryParser::Any_nameContext>(i);
+CEQLQueryParser::S_event_nameContext* CEQLQueryParser::S_list_of_variablesContext::s_event_name(size_t i) {
+  return getRuleContext<CEQLQueryParser::S_event_nameContext>(i);
 }
 
 std::vector<tree::TerminalNode *> CEQLQueryParser::S_list_of_variablesContext::COMMA() {
@@ -931,7 +931,7 @@ CEQLQueryParser::List_of_variablesContext* CEQLQueryParser::list_of_variables() 
         _localctx = _tracker.createInstance<CEQLQueryParser::S_list_of_variablesContext>(_localctx);
         enterOuterAlt(_localctx, 3);
         setState(172);
-        any_name();
+        s_event_name();
         setState(177);
         _errHandler->sync(this);
         _la = _input->LA(1);
@@ -939,7 +939,7 @@ CEQLQueryParser::List_of_variablesContext* CEQLQueryParser::list_of_variables() 
           setState(173);
           match(CEQLQueryParser::COMMA);
           setState(174);
-          any_name();
+          s_event_name();
           setState(179);
           _errHandler->sync(this);
           _la = _input->LA(1);

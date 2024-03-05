@@ -37,7 +37,7 @@ selection_strategy
 list_of_variables
  : STAR                         # s_star
  | K_NONE                         # s_none
- | any_name ( COMMA any_name )*   # s_list_of_variables
+ | s_event_name ( COMMA s_event_name )*   # s_list_of_variables
  ;
 
 from_clause

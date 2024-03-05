@@ -1,9 +1,16 @@
 #pragma once
 
+#include <atomic>
+#include <type_traits>
+
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
 #include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/stream.hpp"
 
 namespace CORE::Library {
 
@@ -25,10 +32,11 @@ class OfflineServer {
 
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*>::element_type;
+    ResultHandlerFactoryT*,
+    Internal::QueryCatalog>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
-  ResultHandlerFactoryT result_handler_factory{backend.get_catalog_reference()};
+  ResultHandlerFactoryT result_handler_factory{};
   Components::Router<ResultHandlerFactoryT> router;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
@@ -60,8 +68,10 @@ class OnlineServer {
 
   std::atomic<Types::PortNumber> next_available_port;
 
-  using HandlerType = std::invoke_result_t<decltype(&ResultHandlerFactoryT::create_handler),
-                                           ResultHandlerFactoryT*>::element_type;
+  using HandlerType = typename std::invoke_result_t<
+    decltype(&ResultHandlerFactoryT::create_handler),
+    ResultHandlerFactoryT*,
+    Internal::QueryCatalog>::element_type;
   Internal::Interface::Backend<HandlerType> backend;
 
   ResultHandlerFactoryT result_handler_factory;
@@ -71,7 +81,7 @@ class OnlineServer {
  public:
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
-        result_handler_factory{backend.get_catalog_reference(), next_available_port},
+        result_handler_factory{next_available_port},
         router{backend, next_available_port++, result_handler_factory},
         stream_listener{backend, next_available_port++} {}
 

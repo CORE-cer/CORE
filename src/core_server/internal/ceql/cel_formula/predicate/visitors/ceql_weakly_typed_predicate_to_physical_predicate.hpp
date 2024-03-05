@@ -1,17 +1,41 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
+#include <ctime>
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
-#include "core_server/internal/ceql/cel_formula/predicate/predicate_headers.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/and_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/in_range_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/like_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/or_predicate.hpp"
+#include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/value/value.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type_with_catalog.hpp"
-#include "core_server/internal/ceql/value/visitors/determine_value_type.hpp"
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/evaluation/physical_predicate/and_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_math_exprs.hpp"
+#include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/in_range_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_weakly_typed.hpp"
-#include "core_server/internal/evaluation/physical_predicate/predicate_headers.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/literal.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
+#include "core_server/internal/evaluation/physical_predicate/not_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "predicate_visitor.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 
 namespace CORE::Internal::CEQL {
 
@@ -27,25 +51,25 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
  private:
   // In the construction, we will determine the event types
   // that could satisfy all of the predicates that will be used.
-  Catalog& catalog;
-  std::set<Types::EventTypeId> admissible_event_types;
+  QueryCatalog& query_catalog;
+  std::set<Types::UniqueEventTypeId> admissible_event_types;
   bool has_added_admissible_event_types = false;
   DetermineFinalValueDataTypeWithCatalog final_data_type_visitor;
 
  public:
-  CEQLWeaklyTypedPredicateToCEAPredicate(Catalog& catalog)
-      : catalog(catalog), final_data_type_visitor(catalog) {}
+  CEQLWeaklyTypedPredicateToCEAPredicate(QueryCatalog& query_catalog)
+      : query_catalog(query_catalog), final_data_type_visitor(query_catalog) {}
 
   void visit(InPredicate& in_predicate) override {
     throw std::logic_error("visit InPredicate not implemented.");
   }
 
   void visit(InequalityPredicate& inequality_predicate) override {
-    ObtainCompatibleEventTypes determine_event_types(catalog);
+    ObtainCompatibleEventTypes determine_event_types(query_catalog);
     inequality_predicate.left->accept_visitor(determine_event_types);
     inequality_predicate.right->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
-                                                            .get_compatible_event_types();
+    std::set<Types::UniqueEventTypeId>
+      compatible_event_types = determine_event_types.get_compatible_event_types();
 
     if (has_added_admissible_event_types) {
       admissible_event_types = intersect(admissible_event_types, compatible_event_types);
@@ -60,11 +84,11 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
   }
 
   void visit(LikePredicate& like_predicate) override {
-    ObtainCompatibleEventTypes determine_event_types(catalog);
+    ObtainCompatibleEventTypes determine_event_types(query_catalog);
     like_predicate.left->accept_visitor(determine_event_types);
     like_predicate.right->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
-                                                            .get_compatible_event_types();
+    std::set<Types::UniqueEventTypeId>
+      compatible_event_types = determine_event_types.get_compatible_event_types();
 
     if (has_added_admissible_event_types) {
       admissible_event_types = intersect(admissible_event_types, compatible_event_types);
@@ -77,12 +101,12 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
   }
 
   void visit(InRangePredicate& in_range_predicate) override {
-    ObtainCompatibleEventTypes determine_event_types(catalog);
+    ObtainCompatibleEventTypes determine_event_types(query_catalog);
     in_range_predicate.left->accept_visitor(determine_event_types);
     in_range_predicate.lower_bound->accept_visitor(determine_event_types);
     in_range_predicate.upper_bound->accept_visitor(determine_event_types);
-    std::set<Types::EventTypeId> compatible_event_types = determine_event_types
-                                                            .get_compatible_event_types();
+    std::set<Types::UniqueEventTypeId>
+      compatible_event_types = determine_event_types.get_compatible_event_types();
     if (has_added_admissible_event_types) {
       admissible_event_types = intersect(admissible_event_types, compatible_event_types);
     } else {
@@ -247,7 +271,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
 
   template <typename ValueType>
   std::unique_ptr<CEA::MathExpr<ValueType>> get_expr(std::unique_ptr<CEQL::Value>& val) {
-    WeaklyTypedValueToMathExpr<ValueType> convertor(catalog);
+    WeaklyTypedValueToMathExpr<ValueType> convertor(query_catalog);
     val->accept_visitor(convertor);
     return std::move(convertor.math_expr);
   }
@@ -281,7 +305,7 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
     assert(dynamic_cast<const CEQL::Attribute*>(left.get()) != nullptr);
     auto left_value_attr = static_cast<CEQL::Attribute*>(left.get());
     auto left_expr_attr = std::make_unique<
-      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value, catalog);
+      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value, query_catalog);
 
     assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
     auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());
@@ -308,19 +332,21 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
       std::move(get_expr<ValueType>(upper_bound)));
   }
 
-  static std::set<Types::EventTypeId>
-  intersect(std::set<Types::EventTypeId> left, std::set<Types::EventTypeId> right) {
+  static std::set<Types::UniqueEventTypeId>
+  intersect(std::set<Types::UniqueEventTypeId> left,
+            std::set<Types::UniqueEventTypeId> right) {
     // TODO: Replace with std::set_intersection
-    std::set<Types::EventTypeId> out;
+    std::set<Types::UniqueEventTypeId> out;
     for (auto& elem : left)
       if (right.contains(elem)) out.insert(elem);
     return out;
   }
 
-  static std::set<Types::EventTypeId>
-  unite(std::set<Types::EventTypeId>&& left, std::set<Types::EventTypeId>&& right) {
+  static std::set<Types::UniqueEventTypeId>
+  unite(std::set<Types::UniqueEventTypeId>&& left,
+        std::set<Types::UniqueEventTypeId>&& right) {
     // TODO: Replace with std::set_intersection
-    std::set<Types::EventTypeId> out = std::move(left);
+    std::set<Types::UniqueEventTypeId> out = std::move(left);
     for (auto& elem : right) out.insert(elem);
     return out;
   }

@@ -1,10 +1,16 @@
 #pragma once
 
-#include <cassert>
+#include <iostream>
+#include <memory>
 #include <optional>
-#include <thread>
+#include <stdexcept>
+#include <string>
+#include <tracy/Tracy.hpp>
+#include <utility>
 
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
@@ -15,10 +21,10 @@ template <class Derived>
 class ResultHandler {
  protected:
   std::optional<Types::PortNumber> port{};
-  const Internal::Catalog& catalog;
+  const Internal::QueryCatalog query_catalog;
 
  public:
-  ResultHandler(const Internal::Catalog& catalog) : catalog(catalog) {}
+  ResultHandler(const Internal::QueryCatalog query_catalog) : query_catalog(query_catalog) {}
 
   void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
     static_cast<Derived*>(this)->handle_complex_event(std::move(enumerator));
@@ -26,14 +32,14 @@ class ResultHandler {
 
   void start() { static_cast<Derived*>(this)->start_impl(); }
 
-  std::optional<Types::PortNumber> get_port() { return port; }
+  std::optional<Types::PortNumber> get_port() const { return port; }
 
   virtual ~ResultHandler() = default;
 };
 
 class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
-  OfflineResultHandler(const Internal::Catalog& catalog) : ResultHandler(catalog) {}
+  OfflineResultHandler(const Internal::QueryCatalog& query_catalog) : ResultHandler(query_catalog) {}
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
@@ -53,8 +59,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
  public:
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
 
-  OnlineResultHandler(const Internal::Catalog& catalog, Types::PortNumber assigned_port)
-      : ResultHandler(catalog), broadcaster{nullptr} {
+  OnlineResultHandler(const Internal::QueryCatalog& query_catalog, Types::PortNumber assigned_port)
+      : ResultHandler(query_catalog), broadcaster{nullptr} {
     port = assigned_port;
   }
 
@@ -70,7 +76,7 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = catalog.convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = query_catalog.convert_enumerator(std::move(internal_enumerator.value()));
     }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};

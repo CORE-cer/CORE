@@ -8,7 +8,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
@@ -26,18 +26,18 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   std::unique_ptr<SingleEvaluator> evaluator;
 
  public:
-  SimpleQuery(Internal::Catalog& catalog,
+  SimpleQuery(Internal::QueryCatalog query_catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
-              ResultHandlerT& result_handler)
-      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(catalog,
+              std::unique_ptr<ResultHandlerT>&& result_handler)
+      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
                                                                   queue,
                                                                   inproc_receiver_address,
-                                                                  result_handler) {}
+                                                                  std::move(result_handler)) {}
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->catalog);
+    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->query_catalog);
 
     query = transformer(std::move(query));
 
@@ -45,7 +45,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
 
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
 
-    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->catalog);
+    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
     query.where.formula->accept_visitor(visitor);
     if (!query.select.is_star) {
       query.select.formula->accept_visitor(visitor);
@@ -61,7 +61,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   query.consume_by.policy,
                                                   query.limit,
                                                   this->time_window,
-                                                  this->catalog,
+                                                  this->query_catalog,
                                                   this->queue);
   }
 
