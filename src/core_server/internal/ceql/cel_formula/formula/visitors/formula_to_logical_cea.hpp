@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <exception>
 #include <iostream>
 #include <map>
 #include <ostream>
