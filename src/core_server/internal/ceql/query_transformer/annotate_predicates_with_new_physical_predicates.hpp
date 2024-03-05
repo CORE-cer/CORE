@@ -77,7 +77,14 @@ class AnnotatePredicatesWithNewPhysicalPredicates
       std::set<Types::UniqueEventTypeId>
         unique_events_with_name = query_catalog.get_unique_events_from_event_name(
           variable_name);
-      if (stream_name.has_value() && unique_events_with_name.size() == 1) {
+      if (stream_name.has_value()) {
+        CEQLStrongTypedPredicateToPhysicalPredicate visitor(
+          query_catalog.get_unique_event_from_stream_event_name(stream_name.value(),
+                                                                variable_name));
+        filters[i]->predicate->accept_visitor(visitor);
+        physical_predicates.push_back(std::move(visitor.predicate));
+        filters[i]->predicate->physical_predicate_id = predicate_id;
+      } else if (unique_events_with_name.size() == 1) {
         CEQLStrongTypedPredicateToPhysicalPredicate visitor(
           query_catalog.get_event_info(*unique_events_with_name.begin()));
         filters[i]->predicate->accept_visitor(visitor);

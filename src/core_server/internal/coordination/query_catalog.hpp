@@ -200,6 +200,36 @@ class QueryCatalog {
     }
   }
 
+  const Types::EventInfo&
+  get_unique_event_from_stream_event_name(std::string stream_name,
+                                          std::string event_name) const {
+    auto stream_iter = std::find_if(streams_info.begin(),
+                                    streams_info.end(),
+                                    [&stream_name](const Types::StreamInfo& stream_info) {
+                                      return stream_info.name == stream_name;
+                                    });
+
+    if (stream_iter == streams_info.end()) {
+      throw std::runtime_error(
+        "Stream name not found in get_unique_event_id_from_stream_event_name");
+    }
+
+    Types::StreamInfo stream_info = *stream_iter;
+
+    auto event_iter = std::find_if(stream_info.events_info.begin(),
+                                   stream_info.events_info.end(),
+                                   [&event_name](const Types::EventInfo& event_info) {
+                                     return event_info.name == event_name;
+                                   });
+
+    if (event_iter == stream_info.events_info.end()) {
+      throw std::runtime_error(
+        "Event name not found in get_unique_event_id_from_stream_event_name");
+    }
+
+    return *event_iter;
+  }
+
   uint64_t get_index_attribute(const Types::UniqueEventTypeId unique_event_id,
                                std::string attribute_name) const {
     const Types::EventInfo& event_info = get_event_info(unique_event_id);
