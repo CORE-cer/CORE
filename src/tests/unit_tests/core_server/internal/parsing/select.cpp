@@ -76,6 +76,7 @@ TEST_CASE("Select captures list_of_variables correctly", "[Select, list_of_varia
   select = parse_select(create_select_query("", "A, B"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.contains("A") && vars.contains("B") && vars.size() == 2
               && streams_events.size() == 0;
   REQUIRE(condition);
@@ -83,6 +84,7 @@ TEST_CASE("Select captures list_of_variables correctly", "[Select, list_of_varia
   select = parse_select(create_select_query("", "A, B, C"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.contains("A") && vars.contains("B") && vars.contains("C")
               && vars.size() == 3 && streams_events.size() == 0;
 
@@ -91,12 +93,14 @@ TEST_CASE("Select captures list_of_variables correctly", "[Select, list_of_varia
   select = parse_select(create_select_query("", "*"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.size() == 0 && streams_events.size() == 0;
   REQUIRE(condition);
 
   select = parse_select(create_select_query("", "A, A"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.contains("A") && vars.size() == 1 && streams_events.size() == 0;
   REQUIRE(condition);
 }
@@ -119,6 +123,7 @@ TEST_CASE("Select captures list_of_variables with streams correctly",
   select = parse_select(create_select_query("", "A, S>B"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.contains("A") && vars.size() == 1
               && streams_events.contains({"S", "B"}) && streams_events.size() == 1;
 
@@ -127,14 +132,16 @@ TEST_CASE("Select captures list_of_variables with streams correctly",
   select = parse_select(create_select_query("", "A, B, S2>C"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
-  condition = vars.contains("A") && vars.contains("B") && vars.size() == 1
-              && streams_events.contains({"S2", "C"}) && streams_events.size() == 0;
+  streams_events = formula->streams_events;
+  condition = vars.contains("A") && vars.contains("B") && vars.size() == 2
+              && streams_events.contains({"S2", "C"}) && streams_events.size() == 1;
 
   REQUIRE(condition);
 
   select = parse_select(create_select_query("", "S>A, S>A"));
   formula = static_cast<ProjectionFormula*>(select.formula.get());
   vars = formula->variables;
+  streams_events = formula->streams_events;
   condition = vars.size() == 0 && streams_events.contains({"S", "A"})
               && streams_events.size() == 1;
   REQUIRE(condition);

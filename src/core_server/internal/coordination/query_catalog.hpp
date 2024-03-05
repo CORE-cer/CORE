@@ -92,7 +92,7 @@ class QueryCatalog {
 
   const Types::EventInfo& get_event_info(Types::UniqueEventTypeId unique_event_id) const {
     auto iter = unique_event_id_to_events_info_idx.find(unique_event_id);
-    if (iter != unique_event_type_id_to_stream_event_type_id.end()) {
+    if (iter != unique_event_id_to_events_info_idx.end()) {
       return events_info[iter->second];
     } else {
       throw std::runtime_error("Event ID not found in get_event_info");
@@ -137,7 +137,6 @@ class QueryCatalog {
     if (iter != event_name_to_event_name_id.end()) {
       return iter->second;
     } else {
-      return {};
       throw std::runtime_error("Event name not found in event_name_id_from_event_name");
     }
   }
@@ -157,11 +156,12 @@ class QueryCatalog {
   }
 
   // Get query id of a given stream name. Where the id corresponds to its unique positions within this specific query.
-  Types::StreamTypeId
-  get_query_stream_id_from_stream_name(std::string stream_name) const {
+  Types::StreamTypeId get_query_stream_id_from_stream_name(std::string stream_name) const {
     auto iter = std::find_if(streams_info.begin(),
-                          streams_info.end(),
-                          [&stream_name](const Types::StreamInfo& s) {return s.name == stream_name;});
+                             streams_info.end(),
+                             [&stream_name](const Types::StreamInfo& s) {
+                               return s.name == stream_name;
+                             });
     if (iter != streams_info.end()) {
       return std::distance(iter, streams_info.begin());
     } else {

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <map>
 #include <ostream>
@@ -58,7 +59,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
         stream_event_to_id.insert({{stream.name, event.name}, next_id++});
       }
     }
-    assert(next_id + query_catalog.number_of_unique_event_names_query() == next_variable_id);
+    assert(next_id + query_catalog.number_of_unique_event_names_query()
+           == next_variable_id);
   }
 
   ~FormulaToLogicalCEA() override = default;
@@ -135,16 +137,24 @@ class FormulaToLogicalCEA : public FormulaVisitor {
         // As variable
         variables_to_project |= mpz_class(1) << variables_to_id.find(var_name)->second;
       } else {
-        Types::EventNameTypeId
-          query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
-            var_name);
-        variables_to_project |= mpz_class(1)
-                                << (stream_event_to_id.size() + query_event_name_id);
+        try {
+          Types::EventNameTypeId
+            query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
+              var_name);
+          variables_to_project |= mpz_class(1)
+                                  << (stream_event_to_id.size() + query_event_name_id);
+        } catch (std::runtime_error e) {
+          std::cout << "Projecting on unknown variable" << std::endl;
+        }
       }
     }
     for (auto&& [stream_name, event_name] : formula.streams_events) {
-      const uint64_t stream_event_id = stream_event_to_id[{stream_name, event_name}];
-      variables_to_project |= mpz_class(1) << (stream_event_id);
+      auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
+      if (stream_event_id_iter == stream_event_to_id.end()) {
+        std::cout << "Projecting on unknown variable" << std::endl;
+        continue;
+      }
+      variables_to_project |= mpz_class(1) << (stream_event_id_iter->second);
     }
     current_cea = CEA::Project(variables_to_project)(std::move(current_cea));
   }
