@@ -62,10 +62,8 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
                                    "Stream/Event name combination not found");
 
     VariablesToMark stream_event = mpz_class(1) << stream_event_id;
-    VariablesToMark event = mpz_class(1)
-                            << (stream_event_to_id.size() + query_event_name_id);
 
-    variables_to_filter = stream_event | event;
+    variables_to_filter = stream_event;
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
@@ -85,21 +83,10 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
       query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
         event_name);
 
-    VariablesToMark stream_event = mpz_class(0);
-
-    for (auto&& [current_stream_event_name, current_stream_event_id] :
-         stream_event_to_id) {
-      auto&& [current_stream_name, current_event_name] = current_stream_event_name;
-      if (current_event_name == event_name) {
-        VariablesToMark current_stream_event = mpz_class(1) < current_stream_event_id;
-        stream_event |= current_stream_event;
-      }
-    }
-
     VariablesToMark event = mpz_class(1)
                             << (stream_event_to_id.size() + query_event_name_id);
 
-    variables_to_filter = stream_event | event;
+    variables_to_filter = event;
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");

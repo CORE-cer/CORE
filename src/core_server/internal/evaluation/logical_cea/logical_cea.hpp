@@ -114,24 +114,19 @@ struct LogicalCEA {
     mpz_class expected_eval = event_name_predicate_position;
     mpz_class predicate_mask = expected_eval;
 
-    VariablesToMark stream_event_mark = mpz_class(0);
+    VariablesToMark event_mark = mpz_class(1)
+                                 << (stream_event_to_id.size() + query_event_name_id);
 
     for (auto&& [current_stream_event_name, current_stream_event_id] :
          stream_event_to_id) {
       auto&& [current_stream_name, current_event_name] = current_stream_event_name;
       if (current_event_name == event_name) {
         VariablesToMark current_stream_event_mark = mpz_class(1) < current_stream_event_id;
-        stream_event_mark |= current_stream_event_mark;
+        VariablesToMark mark = current_stream_event_mark | event_mark;
+        atomic_cea.transitions[0].push_back(
+          std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
       }
     }
-
-    VariablesToMark event_mark = mpz_class(1)
-                                 << (stream_event_to_id.size() + query_event_name_id);
-
-    VariablesToMark mark = stream_event_mark | event_mark;
-
-    atomic_cea.transitions[0].push_back(
-      std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
 
     atomic_cea.initial_states = mpz_class(1) << 0;
     atomic_cea.final_states = mpz_class(1) << 1;

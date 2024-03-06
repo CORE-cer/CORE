@@ -63,6 +63,7 @@ class Backend {
   using QueryVariant = std::variant<std::unique_ptr<SimpleQuery<ResultHandlerT>>,
                                     std::unique_ptr<PartitionByQuery<ResultHandlerT>>>;
 
+  std::vector<QueryCatalog> query_catalogs;
   std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
@@ -82,10 +83,6 @@ class Backend {
   Types::EventInfo get_event_info(Types::UniqueEventTypeId event_type_id) {
     return catalog.get_event_info(event_type_id);
   }
-
-  // Types::EventInfo get_event_info(std::string event_name) {
-  //   return catalog.get_event_info(event_name);
-  // }
 
   std::vector<Types::EventInfo> get_all_events_info() {
     return catalog.get_all_events_info();
@@ -128,7 +125,9 @@ class Backend {
                         std::unique_ptr<ResultHandlerT>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    queries.emplace_back(std::make_unique<QueryDirectType>(QueryCatalog(catalog),
+    QueryCatalog query_catalog(catalog, parsed_query.from.streams);
+    query_catalogs.push_back(query_catalog);
+    queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,
                                                            queue,
                                                            inproc_receiver_address,
                                                            std::move(result_handler)));
@@ -155,11 +154,13 @@ class Backend {
     maximum_historic_time_between_events = std::max(maximum_historic_time_between_events,
                                                     ns - previous_event_sent.value());
     previous_event_sent = ns;
-    // TODO: send events to specific queries that require it.
     for (int i = 0; i < inner_thread_event_senders.size(); i++) {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
-      last_sent_tuple[i] = tuple.get_data();
-      sender.send(tuple.serialize_data());
+      QueryCatalog& query_catalog = query_catalogs[i];
+      if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
+        last_sent_tuple[i] = tuple.get_data();
+        sender.send(tuple.serialize_data());
+      }
     }
 
     // TODO: Don't do this always.
