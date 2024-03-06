@@ -70,11 +70,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
                                " is not in the catalog, and base cases "
                                "that are variables are not allowed.");
     }
-    Types::EventNameTypeId event_name_type_id = query_catalog.event_name_id_from_event_name(
-      formula.event_name);
     if (formula.stream_name.has_value()) {
-      Types::StreamInfo stream_info = query_catalog.get_stream_info(
-        formula.stream_name.value());
       current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
                                                 stream_event_to_id,
                                                 formula.stream_name.value(),

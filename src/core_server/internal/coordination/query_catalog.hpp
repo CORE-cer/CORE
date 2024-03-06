@@ -148,7 +148,7 @@ class QueryCatalog {
                           unique_event_names_query.end(),
                           event_name);
     if (iter != unique_event_names_query.end()) {
-      return std::distance(iter, unique_event_names_query.begin());
+      return std::distance(unique_event_names_query.begin(), iter);
     } else {
       throw std::runtime_error(
         "Event name not found in query_event_name_id_from_event_name");
