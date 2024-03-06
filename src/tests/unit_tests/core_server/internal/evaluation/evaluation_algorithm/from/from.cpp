@@ -42,7 +42,6 @@ TEST_CASE("Evaluation on two streams using for ignores second") {
          {"name", Types::ValueTypes::STRING_VIEW},
        }}}});
 
-  std::cout << "Here" << std::endl;
   std::string string_query =
     "SELECT * FROM S1 \n"
     "WHERE BUY \n"
