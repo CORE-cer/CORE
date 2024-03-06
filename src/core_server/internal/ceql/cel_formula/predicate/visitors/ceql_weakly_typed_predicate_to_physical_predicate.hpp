@@ -304,8 +304,8 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
                      std::unique_ptr<CEQL::Value>& right) {
     assert(dynamic_cast<const CEQL::Attribute*>(left.get()) != nullptr);
     auto left_value_attr = static_cast<CEQL::Attribute*>(left.get());
-    auto left_expr_attr = std::make_unique<
-      CEA::NonStronglyTypedAttribute<std::string_view>>(left_value_attr->value, query_catalog);
+    auto left_expr_attr = std::make_unique<CEA::NonStronglyTypedAttribute<std::string_view>>(
+      left_value_attr->value, query_catalog);
 
     assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
     auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());

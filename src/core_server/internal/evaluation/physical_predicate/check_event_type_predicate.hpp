@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 #include "cassert"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -14,14 +15,20 @@ class CheckEventNamePredicate : public PhysicalPredicate {
   Types::EventNameTypeId event_name_type_id;
 
  public:
-  CheckEventNamePredicate(Types::EventNameTypeId event_name_type_id, QueryCatalog& query_catalog) : PhysicalPredicate(), event_name_type_id(event_name_type_id), query_catalog(query_catalog) {}
+  CheckEventNamePredicate(Types::EventNameTypeId event_name_type_id,
+                          QueryCatalog& query_catalog)
+      : PhysicalPredicate(),
+        event_name_type_id(event_name_type_id),
+        query_catalog(query_catalog) {}
 
   ~CheckEventNamePredicate() override = default;
 
   bool eval(RingTupleQueue::Tuple& tuple) override {
     Types::UniqueEventTypeId tuple_unique_event_id = tuple.id();
 
-    Types::EventNameTypeId tuple_event_name_type_id = query_catalog.event_name_id_from_unique_event_id(tuple_unique_event_id);
+    Types::EventNameTypeId
+      tuple_event_name_type_id = query_catalog.event_name_id_from_unique_event_id(
+        tuple_unique_event_id);
 
     return tuple_event_name_type_id == event_name_type_id;
   }

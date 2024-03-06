@@ -32,8 +32,9 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -147,8 +148,9 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));

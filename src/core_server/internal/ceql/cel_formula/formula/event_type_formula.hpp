@@ -14,8 +14,7 @@ struct EventTypeFormula : public Formula {
 
   EventTypeFormula(std::string event_name) : event_name(event_name) {}
 
-  EventTypeFormula(std::optional<std::string> stream_name,
-                   std::string event_name)
+  EventTypeFormula(std::optional<std::string> stream_name, std::string event_name)
       : stream_name(stream_name), event_name(event_name) {}
 
   ~EventTypeFormula() override = default;
@@ -25,8 +24,7 @@ struct EventTypeFormula : public Formula {
   }
 
   bool operator==(const EventTypeFormula& other) const {
-    return stream_name == other.stream_name
-           && event_name == other.event_name;
+    return stream_name == other.stream_name && event_name == other.event_name;
   }
 
   bool equals(Formula* other) const override {
@@ -37,8 +35,7 @@ struct EventTypeFormula : public Formula {
   }
 
   std::string to_string() const override {
-    return (stream_name.has_value() ? stream_name.value() + ">" : "")
-           + event_name;
+    return (stream_name.has_value() ? stream_name.value() + ">" : "") + event_name;
   }
 
   void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }

@@ -33,7 +33,10 @@ class GenericEvaluator {
                    CEQL::Within::TimeWindow time_window,
                    Internal::QueryCatalog& query_catalog,
                    RingTupleQueue::Queue& queue)
-      : cea(std::move(cea)), time_window(time_window), query_catalog(query_catalog), queue(queue) {}
+      : cea(std::move(cea)),
+        time_window(time_window),
+        query_catalog(query_catalog),
+        queue(queue) {}
 
  protected:
   uint64_t tuple_time(RingTupleQueue::Tuple& tuple) {
@@ -51,8 +54,9 @@ class GenericEvaluator {
         Types::UniqueEventTypeId event_type_id = tuple.id();
         auto index = indexes.find(event_type_id);
         if (index == indexes.end()) [[unlikely]] {
-          indexes[event_type_id] = query_catalog.get_index_attribute(event_type_id,
-                                                               time_window.attribute_name);
+          indexes[event_type_id] = query_catalog
+                                     .get_index_attribute(event_type_id,
+                                                          time_window.attribute_name);
         }
         uint64_t attribute_index = indexes[event_type_id];
         time = *tuple[attribute_index];

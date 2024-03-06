@@ -51,8 +51,7 @@ class ClientMessageHandler {
   ClientMessageHandler& operator=(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler(ClientMessageHandler&& other)
-      : backend(other.backend),
-        result_handler_factory(other.result_handler_factory) {}
+      : backend(other.backend), result_handler_factory(other.result_handler_factory) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
@@ -144,7 +143,8 @@ class ClientMessageHandler {
     // TODO: Check if it is possible to parse it.
     Internal::CEQL::Query parsed_query = Parsing::Parser::parse_query(s_query_info);
 
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(backend.get_catalog_reference());
+    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+      backend.get_catalog_reference());
     std::optional<Types::PortNumber> possible_port = result_handler->get_port();
     backend.declare_query(std::move(parsed_query), std::move(result_handler));
 

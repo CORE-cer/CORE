@@ -24,7 +24,8 @@ class ResultHandler {
   const Internal::QueryCatalog query_catalog;
 
  public:
-  ResultHandler(const Internal::QueryCatalog query_catalog) : query_catalog(query_catalog) {}
+  ResultHandler(const Internal::QueryCatalog query_catalog)
+      : query_catalog(query_catalog) {}
 
   void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
     static_cast<Derived*>(this)->handle_complex_event(std::move(enumerator));
@@ -39,7 +40,8 @@ class ResultHandler {
 
 class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
  public:
-  OfflineResultHandler(const Internal::QueryCatalog& query_catalog) : ResultHandler(query_catalog) {}
+  OfflineResultHandler(const Internal::QueryCatalog& query_catalog)
+      : ResultHandler(query_catalog) {}
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
@@ -59,7 +61,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
  public:
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
 
-  OnlineResultHandler(const Internal::QueryCatalog& query_catalog, Types::PortNumber assigned_port)
+  OnlineResultHandler(const Internal::QueryCatalog& query_catalog,
+                      Types::PortNumber assigned_port)
       : ResultHandler(query_catalog), broadcaster{nullptr} {
     port = assigned_port;
   }
@@ -76,7 +79,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog.convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = query_catalog.convert_enumerator(
+        std::move(internal_enumerator.value()));
     }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};

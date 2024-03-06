@@ -61,9 +61,9 @@ class Client {
   }
 
   Types::EventInfo get_event_info(Types::UniqueEventTypeId id) {
-    Types::ClientRequest request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(
-                                   id),
-                                 Types::ClientRequestType::EventInfoFromId);
+    Types::ClientRequest
+      request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(id),
+              Types::ClientRequestType::EventInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::EventInfo);
     auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
@@ -91,9 +91,9 @@ class Client {
   }
 
   Types::StreamInfo get_stream_info(Types::StreamTypeId id) {
-    Types::ClientRequest request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(
-                                   id),
-                                 Types::ClientRequestType::StreamInfoFromId);
+    Types::ClientRequest
+      request(Internal::CerealSerializer<Types::UniqueEventTypeId>::serialize(id),
+              Types::ClientRequestType::StreamInfoFromId);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::StreamInfo);
     auto stream_info = Internal::CerealSerializer<Types::StreamInfo>::deserialize(
