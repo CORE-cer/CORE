@@ -20,7 +20,7 @@ namespace CORE::StocksData {
 
 CORE::Types::StreamInfo do_declaration(Client& client) {
   Types::StreamInfoParsed
-    parsed_stream_info{"Stocks",
+    parsed_stream_info{"S",
                        {{"BUY",
                          {{"id", CORE::Types::ValueTypes::INT64},
                           {"name", CORE::Types::ValueTypes::STRING_VIEW},
