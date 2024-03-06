@@ -31,8 +31,9 @@ TEST_CASE("Evaluation on the example stream of the papers") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -169,8 +170,9 @@ TEST_CASE(
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -298,8 +300,9 @@ TEST_CASE("Evaluation of a query with contiguous events") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -438,8 +441,9 @@ TEST_CASE("Evaluation of long query") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -647,8 +651,9 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -783,8 +788,9 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1013,8 +1019,9 @@ TEST_CASE(
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1247,13 +1254,15 @@ TEST_CASE(
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-  Types::Event event; Types::Enumerator output;
+  Types::Event event;
+  Types::Enumerator output;
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
@@ -1339,8 +1348,9 @@ TEST_CASE(
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1433,8 +1443,9 @@ TEST_CASE(
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1499,8 +1510,9 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
 
   CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
 
-  std::unique_ptr<TestResultHandler> result_handler_ptr = std::make_unique<TestResultHandler>(
-    QueryCatalog(backend.get_catalog_reference()));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
   TestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));

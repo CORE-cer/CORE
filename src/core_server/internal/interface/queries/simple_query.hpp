@@ -33,11 +33,13 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
       : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
                                                                   queue,
                                                                   inproc_receiver_address,
-                                                                  std::move(result_handler)) {}
+                                                                  std::move(
+                                                                    result_handler)) {}
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(this->query_catalog);
+    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
+      this->query_catalog);
 
     query = transformer(std::move(query));
 

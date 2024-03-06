@@ -17,7 +17,8 @@ class PhysicalPredicate {
 
   bool admits_any_event_type = false;
 
-  PhysicalPredicate(Types::UniqueEventTypeId event_type_id) : admissible_event_types({event_type_id}) {}
+  PhysicalPredicate(Types::UniqueEventTypeId event_type_id)
+      : admissible_event_types({event_type_id}) {}
 
   PhysicalPredicate(std::set<uint64_t> admissible_event_types)
       : admissible_event_types(admissible_event_types) {}

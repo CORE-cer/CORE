@@ -62,9 +62,7 @@ class GenericQuery {
 
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
-  ResultHandlerT& get_result_handler_reference() const {
-    return *result_handler;
-  }
+  ResultHandlerT& get_result_handler_reference() const { return *result_handler; }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {

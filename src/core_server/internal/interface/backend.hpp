@@ -106,7 +106,8 @@ class Backend {
   }
 
   // TODO: Propogate parse error to ClientMessageHandler
-  void declare_query(Internal::CEQL::Query&& parsed_query, std::unique_ptr<ResultHandlerT>&& result_handler) {
+  void declare_query(Internal::CEQL::Query&& parsed_query,
+                     std::unique_ptr<ResultHandlerT>&& result_handler) {
     if (parsed_query.partition_by.partition_attributes.size() != 0) {
       using QueryDirectType = PartitionByQuery<ResultHandlerT>;
       using QueryBaseType = GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
@@ -123,8 +124,8 @@ class Backend {
   }
 
   template <typename QueryDirectType, typename QueryBaseType>
-  void
-  initialize_query(Internal::CEQL::Query&& parsed_query, std::unique_ptr<ResultHandlerT>&& result_handler) {
+  void initialize_query(Internal::CEQL::Query&& parsed_query,
+                        std::unique_ptr<ResultHandlerT>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     queries.emplace_back(std::make_unique<QueryDirectType>(QueryCatalog(catalog),
