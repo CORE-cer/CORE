@@ -20,7 +20,7 @@ namespace CORE::SmartHomesData {
 
 CORE::Types::StreamInfo do_declaration(Client& client) {
   Types::StreamInfoParsed
-    parsed_stream_info{"SmartHomes",
+    parsed_stream_info{"S",
                        {
                          {"LOAD",
                           {{"id", CORE::Types::ValueTypes::INT64},
