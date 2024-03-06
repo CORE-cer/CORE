@@ -105,7 +105,8 @@ class QueryCatalog {
 
   std::size_t number_of_streams() const { return streams_info.size(); }
 
-  bool is_unique_event_id_relevant_to_query(Types::UniqueEventTypeId unique_event_id) const {
+  bool
+  is_unique_event_id_relevant_to_query(Types::UniqueEventTypeId unique_event_id) const {
     return relevant_unique_event_ids.contains(unique_event_id);
   }
 
@@ -278,7 +279,6 @@ class QueryCatalog {
   void add_event_type(Types::EventInfo event_info) noexcept {
     Types::UniqueEventTypeId unique_event_id = event_info.id;
     std::size_t query_event_id = events_info.size();
-
 
     relevant_unique_event_ids.insert(unique_event_id);
 
