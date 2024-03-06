@@ -88,16 +88,11 @@ Catalog::add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) {
 
 [[nodiscard]] Types::EventInfo
 Catalog::add_event_type(Types::EventInfoParsed&& parsed_event_info) noexcept {
-  Types::UniqueEventTypeId unique_event_id = events_info.size();
-  Types::EventNameTypeId name_event_id;
   auto iter = std::find(unique_event_names.begin(),
                         unique_event_names.end(),
                         parsed_event_info.name);
   if (iter == unique_event_names.end()) {
-    Types::EventNameTypeId name_event_id = unique_event_names.size();
     unique_event_names.push_back(parsed_event_info.name);
-  } else {
-    name_event_id = std::distance(unique_event_names.begin(), iter);
   }
 
   uint64_t ring_tuple_schema_id = add_type_to_schema(parsed_event_info.attributes_info);
