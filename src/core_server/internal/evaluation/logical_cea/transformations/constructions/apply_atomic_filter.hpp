@@ -52,9 +52,6 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
       : physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
-    Types::EventNameTypeId
-      query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
-        event_name);
     auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
     uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
                                  ? stream_event_id_iter->second
