@@ -26,6 +26,7 @@ class CheckStreamTypePredicate : public PhysicalPredicate {
   bool eval(RingTupleQueue::Tuple& tuple) override {
     Types::UniqueEventTypeId tuple_unique_event_id = tuple.id();
 
+    // If errors out, probably sent a tuple that is not in the from for this query
     Types::StreamTypeId tuple_stream_type_id = query_catalog.stream_id_from_unique_event_id(
       tuple_unique_event_id);
 

@@ -93,6 +93,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final : public PredicateVisito
         case ValueTypes::IntegerLiteral:
         case ValueTypes::BooleanLiteral:
         case ValueTypes::DoubleLiteral:
+        case ValueTypes::StringLiteral:
           predicate = compare_with_constant(
             inequality_predicate.left,
             convert_op(inequality_predicate.logical_op),

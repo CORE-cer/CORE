@@ -14,6 +14,7 @@
 #include <string_view>
 #include <tracy/Tracy.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -40,6 +41,7 @@ class QueryCatalog {
   std::vector<Types::EventInfo> events_info;
   std::vector<Types::StreamInfo> streams_info;
   std::vector<std::string> unique_event_names_query;
+  std::unordered_set<Types::UniqueEventTypeId> relevant_unique_event_ids;
   std::map<std::string, Types::EventNameTypeId> event_name_to_event_name_id;
   std::map<std::string, Types::StreamTypeId> stream_name_to_id;
   // Maps the unique id assigned to each event to a pair consisting of the stream id and the id of the string representing the event type.
@@ -102,6 +104,10 @@ class QueryCatalog {
   std::size_t number_of_events() const { return events_info.size(); }
 
   std::size_t number_of_streams() const { return streams_info.size(); }
+
+  bool is_unique_event_id_relevant_to_query(Types::UniqueEventTypeId unique_event_id) const {
+    return relevant_unique_event_ids.contains(unique_event_id);
+  }
 
   const std::vector<std::string> get_unique_event_names_query() const {
     return unique_event_names_query;
@@ -214,7 +220,7 @@ class QueryCatalog {
         "Stream name not found in get_unique_event_id_from_stream_event_name");
     }
 
-    Types::StreamInfo stream_info = *stream_iter;
+    const Types::StreamInfo& stream_info = *stream_iter;
 
     auto event_iter = std::find_if(stream_info.events_info.begin(),
                                    stream_info.events_info.end(),
@@ -272,6 +278,9 @@ class QueryCatalog {
   void add_event_type(Types::EventInfo event_info) noexcept {
     Types::UniqueEventTypeId unique_event_id = event_info.id;
     std::size_t query_event_id = events_info.size();
+
+
+    relevant_unique_event_ids.insert(unique_event_id);
 
     auto iter = std::find(unique_event_names_query.begin(),
                           unique_event_names_query.end(),

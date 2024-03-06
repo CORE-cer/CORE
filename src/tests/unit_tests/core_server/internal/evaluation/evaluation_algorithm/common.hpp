@@ -3,6 +3,7 @@
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <chrono>
 #include <condition_variable>
 #include <cstdint>
 #include <mutex>
@@ -51,9 +52,12 @@ class TestResultHandler : public Library::Components::ResultHandler<TestResultHa
   Types::Enumerator get_enumerator() {
     std::unique_lock lk(output_mutex);
 
-    cv.wait(lk, [this] { return ready; });
+    Types::Enumerator enumerator;
+    cv.wait_for(lk, std::chrono::milliseconds(100), [this] { return ready; });
 
-    Types::Enumerator enumerator = output;
+    if (ready) {
+      enumerator = output;
+    }
     ready = false;
 
     lk.unlock();
