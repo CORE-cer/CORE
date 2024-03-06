@@ -54,9 +54,7 @@ class ApplyFiltersToLogicalCEA : public FilterVisitor {
       uint64_t pertaining_variable_id = variables_to_id.at(filter.variable_name);
       logical_cea = CEA::ApplyAtomicFilter(pertaining_variable_id,
                                            filter)(std::move(logical_cea));
-      return;
-    }
-    if (filter.stream_name.has_value()) {
+    } else if (filter.stream_name.has_value()) {
       logical_cea = CEA::ApplyAtomicFilter(query_catalog,
                                            stream_event_to_id,
                                            filter.stream_name.value(),

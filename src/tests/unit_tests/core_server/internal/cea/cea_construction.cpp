@@ -45,13 +45,13 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   REQUIRE(cea.transitions[2].size() == 1);
   REQUIRE(cea.transitions[3].size() == 1);
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 2)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2)));
   REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b10, 0b10), true, 2)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2)));
   REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
+  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
   // clang-format on
   REQUIRE(cea.initial_state == 3);
   REQUIRE(cea.final_states == 0b100);
@@ -78,7 +78,7 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
 
   REQUIRE(std::count(logical_cea.transitions[0].begin(),
                      logical_cea.transitions[0].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+                     std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 1)));
   REQUIRE(std::count(logical_cea.transitions[2].begin(),
                      logical_cea.transitions[2].end(),
                      std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),
@@ -99,11 +99,11 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
   REQUIRE(cea.transitions[1].size() == 2);
   REQUIRE(cea.transitions[2].size() == 1);
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
   REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
   REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 0)));
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
   // clang-format on
   REQUIRE(cea.initial_state == 0b010);
   REQUIRE(cea.final_states == 0b001);

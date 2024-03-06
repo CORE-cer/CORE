@@ -44,7 +44,7 @@ TEST_CASE("Basic Event Type", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(1, 1), 1, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
 }
@@ -65,7 +65,7 @@ TEST_CASE("Basic Event Type Filtered", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b11, 0b11), 1, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b110, 0b110), 0b10, 1));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
 }
@@ -87,9 +87,9 @@ TEST_CASE("Or Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[2].size() == 0);
   REQUIRE(cea.epsilon_transitions[3].size() == 0);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b100, 1));
   REQUIRE(cea.transitions[2][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+          == std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 3));
   REQUIRE(cea.initial_states == 0b101);
   REQUIRE(cea.final_states == 0b1010);
 }
@@ -112,9 +112,9 @@ TEST_CASE("Sequencing Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.epsilon_transitions[1].size() == 1);
   REQUIRE(cea.epsilon_transitions[2].size() == 0);
   REQUIRE(cea.epsilon_transitions[3].size() == 0);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b01, 0b01), 1, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 1));
   REQUIRE(cea.transitions[2][0]
-          == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 3));
+          == std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 3));
   REQUIRE(cea.transitions[2][1]
           == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 2));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
@@ -138,7 +138,7 @@ TEST_CASE("Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 1);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 1, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b10, 1));
   REQUIRE(cea.epsilon_transitions[1].contains(0));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
@@ -166,7 +166,7 @@ TEST_CASE("Non-Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
 
   REQUIRE(std::count(cea.transitions[0].begin(),
                      cea.transitions[0].end(),
-                     std::make_tuple(CEA::PredicateSet(0b01, 0b01), true, 1)));
+                     std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b10, 1)));
   REQUIRE(std::count(cea.transitions[2].begin(),
                      cea.transitions[2].end(),
                      std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),
@@ -199,7 +199,7 @@ TEST_CASE("As Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.transitions[1].size() == 0);
   REQUIRE(cea.epsilon_transitions[0].size() == 0);
   REQUIRE(cea.epsilon_transitions[1].size() == 0);
-  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b1, 0b1), 0b11, 1));
+  REQUIRE(cea.transitions[0][0] == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b110, 1));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
 }
