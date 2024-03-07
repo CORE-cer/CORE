@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -11,6 +12,7 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -74,6 +76,8 @@ class ClientMessageHandler {
         return event_info_from_id(request.serialized_request_data);
       case Types::ClientRequestType::ListEvents:
         return list_all_events();
+      case Types::ClientRequestType::StreamDeclarationFromString:
+        return stream_declaration_from_string(request.serialized_request_data);
       case Types::ClientRequestType::StreamDeclaration:
         return stream_declaration(request.serialized_request_data);
       case Types::ClientRequestType::StreamInfoFromId:
@@ -108,11 +112,27 @@ class ClientMessageHandler {
                                  Types::ServerResponseType::EventInfoVector);
   }
 
-  Types::ServerResponse stream_declaration(std::string s_parsed_stream_info) {
-    auto parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
-      s_parsed_stream_info);
-    Types::StreamInfo id = backend.add_stream_type(std::move(parsed_stream_info));
-    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(id),
+  Types::ServerResponse
+  stream_declaration_from_string(std::string s_parsed_stream_declaration) {
+    auto stream_declaration = CerealSerializer<std::string>::deserialize(
+      s_parsed_stream_declaration);
+    Types::StreamInfoParsed parsed_stream_info = Parsing::StreamParser::parse_stream(
+      stream_declaration);
+
+    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
+    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                   stream_info),
+                                 Types::ServerResponseType::StreamInfo);
+  }
+
+  Types::ServerResponse stream_declaration(std::string s_parsed_stream_declaration) {
+    Types::StreamInfoParsed
+      parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
+        s_parsed_stream_declaration);
+
+    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
+    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                   stream_info),
                                  Types::ServerResponseType::StreamInfo);
   }
 
@@ -141,7 +161,7 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    Internal::CEQL::Query parsed_query = Parsing::Parser::parse_query(s_query_info);
+    Internal::CEQL::Query parsed_query = Parsing::QueryParser::parse_query(s_query_info);
 
     std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
       backend.get_catalog_reference());

@@ -35,7 +35,7 @@ std::string create_query(std::string clause) {
 TEST_CASE("Remove Epsilons of Simple Contiguous Iteration", "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H:+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H:+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -59,7 +59,7 @@ TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -104,7 +104,7 @@ TEST_CASE("Remove Epsilons of Simple Non-Contiguous Iteration",
 TEST_CASE("Remove Epsilons of Sequencing", "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H ; S"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -134,7 +134,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -170,7 +170,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Non-Contiguous Iteration Combined",
           "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("(H+ ; S)+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("(H+ ; S)+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -258,7 +258,7 @@ TEST_CASE(
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H ; S"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -296,7 +296,7 @@ TEST_CASE(
                                                            {
                                                              {"H", {}},
                                                            }});
-  auto query = Parsing::Parser::parse_query(create_query("H"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -322,7 +322,7 @@ TEST_CASE(
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H ; S"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -356,7 +356,7 @@ TEST_CASE(
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H ; S"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -394,7 +394,7 @@ TEST_CASE(
   "[LogicalCEA Optimizations]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H ; S"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H ; S"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);

@@ -30,7 +30,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("(H:+ ; S):+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -61,7 +61,7 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::Parser::parse_query(create_query("H+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H+"));
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);

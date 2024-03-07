@@ -1,0 +1,3 @@
+DECLARE STREAM S {
+EVENT LOAD { id:int, plug_timestamp:int, value:double, plug_id:int, household_id:int }
+}

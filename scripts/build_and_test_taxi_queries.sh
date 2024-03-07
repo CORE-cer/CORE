@@ -13,8 +13,9 @@ build
 
 run_and_compare_script="scripts/run_and_compare.sh"
 base_dir="src/targets/experiments/taxis"
-executable="build/${BUILD_TYPE}/offline_experiment_taxis"
+executable="build/${BUILD_TYPE}/offline"
 csv="taxi_data.csv"
+declaration="declaration.core"
 compressed_csv="taxi_data.tar.xz"
 
 queries=$(find "$base_dir/queries" -type f) 
@@ -40,7 +41,7 @@ for query in $queries; do
     # if ! test -f "$base_dir/expected_results/$query_file"; then
     #     { time $executable $base_dir/queries/$query_file $base_dir/$csv > $base_dir/expected_results/$query_file ; } 2> $base_dir/expected_results/"${query_file}_time.txt"
     # fi
-    $run_and_compare_script $executable "$query $base_dir/$csv" "$base_dir/expected_results/$query_file"
+    $run_and_compare_script $executable "$query $base_dir/$declaration $base_dir/$csv" "$base_dir/expected_results/$query_file"
     if [ $? -ne 0 ]; then
         rm -rf $base_dir/expected_results
         rm -f $base_dir/$csv

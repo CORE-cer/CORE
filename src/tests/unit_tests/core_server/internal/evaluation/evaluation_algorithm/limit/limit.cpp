@@ -30,7 +30,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
     "CONSUME BY NONE\n"
     "LIMIT 1";
 
-  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -146,7 +146,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
     "CONSUME BY NONE\n"
     "LIMIT 0";
 
-  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
