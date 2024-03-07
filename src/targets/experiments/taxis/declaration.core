@@ -1,0 +1,10 @@
+DECLARE STREAM S {
+EVENT TRIP {
+    id:int, medallion:string, hack_license:string, 
+    pickup_datetime:int, dropoff_datetime:int, 
+    long_time_in_secs:int, trip_distance:double, 
+    pickup_zone:string, dropoff_zone:string, 
+    payment_type:string, fare_amount:double, 
+    surcharge:double, mta_tax:double, 
+    tip_amount:double, tolls_amount:double, total_amount:double }
+}

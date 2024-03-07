@@ -12,9 +12,9 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "visitors/stream_visitor.hpp"
 
-namespace CORE::Internal::Parsing::Declaration {
+namespace CORE::Internal::Parsing {
 
-class Parser {
+class StreamParser {
  public:
   static Types::StreamInfoParsed parse_stream(std::string stream) {
     // Convert the input string to a stream
@@ -32,11 +32,11 @@ class Parser {
     // Parse the input
     antlr4::tree::ParseTree* tree = parser.parse();
 
-    StreamVisitor stream_visitor;
+    Declaration::StreamVisitor stream_visitor;
     stream_visitor.visit(tree);
     Types::StreamInfoParsed stream_created = stream_visitor.get_parsed_stream();
 
     return stream_created;
   }
 };
-}  // namespace CORE::Internal::Parsing::Declaration
+}  // namespace CORE::Internal::Parsing

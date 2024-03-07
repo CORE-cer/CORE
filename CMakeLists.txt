@@ -134,15 +134,9 @@ target_link_libraries(offline_polkura_example PRIVATE core)
 target_link_libraries(offline_stocks_example PRIVATE core)
 target_link_libraries(offline_taxi_example PRIVATE core)
 
-# Experiments
-add_executable(offline_experiment_stocks src/targets/experiments/stocks/offline_experiment_stocks.cpp)
-target_link_libraries(offline_experiment_stocks PRIVATE core)
-
-add_executable(offline_experiment_smart_homes src/targets/experiments/smart_homes/offline_experiment_smart_homes.cpp)
-target_link_libraries(offline_experiment_smart_homes PRIVATE core)
-
-add_executable(offline_experiment_taxis src/targets/experiments/taxis/offline_experiment_taxis.cpp)
-target_link_libraries(offline_experiment_taxis PRIVATE core)
+# Main Offline
+add_executable(offline src/targets/offline/offline.cpp)
+target_link_libraries(offline PRIVATE core)
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:

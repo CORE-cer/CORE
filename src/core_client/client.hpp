@@ -3,8 +3,10 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
+#include <fstream>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -50,11 +52,21 @@ class Client {
   Client(std::string address, Types::PortNumber dealer_port)
       : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
 
+  Types::StreamInfo declare_stream(std::string stream_declaration) {
+    Types::ClientRequest stream_declaration_req(
+      Internal::CerealSerializer<std::string>::serialize(stream_declaration),
+      Types::ClientRequestType::StreamDeclarationFromString);
+    Types::ServerResponse res = send_request(stream_declaration_req);
+    assert(res.response_type == Types::ServerResponseType::StreamInfo);
+    return Internal::CerealSerializer<Types::StreamInfo>::deserialize(
+      res.serialized_response_data);
+  }
+
   Types::StreamInfo declare_stream(Types::StreamInfoParsed parsed_stream_info) {
-    Types::ClientRequest stream_declaration(
+    Types::ClientRequest stream_declaration_req(
       Internal::CerealSerializer<Types::StreamInfoParsed>::serialize(parsed_stream_info),
       Types::ClientRequestType::StreamDeclaration);
-    Types::ServerResponse res = send_request(stream_declaration);
+    Types::ServerResponse res = send_request(stream_declaration_req);
     assert(res.response_type == Types::ServerResponseType::StreamInfo);
     return Internal::CerealSerializer<Types::StreamInfo>::deserialize(
       res.serialized_response_data);
@@ -70,16 +82,6 @@ class Client {
       response.serialized_response_data);
     return event_info;
   }
-
-  // Types::EventInfo get_event_info(std::string name) {
-  //   Types::ClientRequest request(Internal::CerealSerializer<std::string>::serialize(name),
-  //                                Types::ClientRequestType::EventInfoFromName);
-  //   Types::ServerResponse response = send_request(request);
-  //   assert(response.response_type == Types::ServerResponseType::EventInfo);
-  //   auto event_info = Internal::CerealSerializer<Types::EventInfo>::deserialize(
-  //     response.serialized_response_data);
-  //   return event_info;
-  // }
 
   std::vector<Types::EventInfoParsed> get_all_event_types() {
     Types::ClientRequest request("", Types::ClientRequestType::EventInfoFromName);
@@ -162,6 +164,13 @@ class Client {
     for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
       subscriber_threads[id].join();
     }
+  }
+
+  std::string read_file(std::string path) {
+    std::ifstream file(path);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
   }
 
  private:

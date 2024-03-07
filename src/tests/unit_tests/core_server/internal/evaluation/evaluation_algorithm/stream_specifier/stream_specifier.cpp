@@ -47,7 +47,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers") {
     "WHERE BUY \n"
     "FILTER S1>BUY[name='MSFT'] AND S2>BUY[name='INTL']";
 
-  CEQL::Query parsed_query = Parsing::Parser::parse_query(string_query);
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
