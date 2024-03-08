@@ -12,8 +12,9 @@ _setArgs "$@"
 build
 
 base_dir="src/targets/experiments/smart_homes"
-executable="build/${BUILD_TYPE}/offline_experiment_smart_homes"
+executable="build/${BUILD_TYPE}/offline"
 csv="smart_homes_data.csv"
+declaration="declaration.core"
 benchmark_file="$base_dir/benchmark.csv"
 
 queries=$(find "$base_dir/queries" -type f | sort -V) 

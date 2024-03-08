@@ -13,7 +13,6 @@ build
 
 base_dir="src/targets/experiments/stocks"
 executable="build/${BUILD_TYPE}/offline"
-declaration="declaration.core"
 csv="stock_data.csv"
 declaration="declaration.core"
 benchmark_file="$base_dir/benchmark.csv"

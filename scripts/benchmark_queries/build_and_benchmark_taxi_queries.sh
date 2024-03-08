@@ -12,7 +12,7 @@ _setArgs "$@"
 build
 
 base_dir="src/targets/experiments/taxis"
-executable="build/${BUILD_TYPE}/offline_experiment_taxis"
+executable="build/${BUILD_TYPE}/offline"
 csv="taxi_data.csv"
 compressed_csv="taxi_data.tar.xz"
 declaration="declaration.core"
