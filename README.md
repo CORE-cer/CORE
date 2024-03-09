@@ -20,13 +20,11 @@ This is a C++ reimplementation of the CORE engine, as presented in the paper ["C
 
 ### In Development
 
-- **Partition-by Operator**: The feature to support the partition-by event correlation operator is currently under development.
-
 - **Support for UDP**: TCP network transport is the current bottleneck.
 
 ## Quick Start
 
-To get started quickly, a Docker setup is available:
+To get started quickly in your local machine: 
 
 ```bash
 # Clone the repository
@@ -35,14 +33,28 @@ git clone https://github.com/CER-CORE/CORE
 # Navigate into the directory
 cd CORE
 
-# Start the Docker container
-sudo docker-compose run core-terminal bash
-```
+# Compile the project and run third party and unit tests
+./scripts/build_and_test.sh
 
-Inside the docker terminal run:
+```
+You can also use Dockers, a Docker setup is available:
 
 ```bash
-./scripts/compile_and_test.sh
+# Start the Docker container
+sudo docker-compose run core-terminal bash
+
+# Inside the docker terminal run:
+./scripts/build_and_test.sh
+```
+
+Following these steps you will be building the project in Debug mode. There are another build options, which are Release, RelWithDebInfo and MinSizeRel:
+
+```bash
+./scripts/compile_and_test.sh -b Release
+
+./scripts/compile_and_test.sh -b RelWithDebInfo
+
+./scripts/compile_and_test.sh -b MinSizeRel
 ```
 
 For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/INSTALLATION.md).
@@ -59,6 +71,24 @@ For more detailed installation and setup instructions, including manual installa
 ### Simulation1 and Simulation2
 - **Files**: `src/targets/simulation1.cpp` `src/targets/simulation2.cpp`
 - Combines the server and client inside a single simulation.
+
+## Experiments
+
+Currently there are three data sets used as streams for doing experiments with this project. The files can be found in `src/targets/experiments`. Each experiment file has its own data, queries and expected results for every specific query.
+
+There is also a script for every experiment which runs every query and compares the result with the expected results automarically. For example, to run the script of the smart_homes experiments you have to run the following command:
+
+```bash
+./scripts/build_and_test_smart_homes_queries.sh
+```
+
+For the same experiment, if you only want to try an specific query you'll have to run the following command:
+
+```bash
+build/Debug/offline_experiment_smart_homes src/targets/experiments/smart_homes/queries/q1_any.txt src/targets/experiments/smart_homes/smart_homes_data.csv
+```
+
+In this example, we are running the executable of the smart homes experiment in Debug mode for the specific query q1_any.txt, and the data set is the one in smart_homes_data.csv.
 
 ## Detailed Documentation
 
