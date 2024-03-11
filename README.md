@@ -20,7 +20,7 @@ This is a C++ reimplementation of the CORE engine, as presented in the paper ["C
 
 ### In Development
 
-- **Support for UDP**: TCP network transport is the current bottleneck.
+- **Support for Windows and Mac native machines**: Currently we can only run the program in either native linux machines or virtual machines with a linux distro.
 
 ## Quick Start
 
