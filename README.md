@@ -65,12 +65,34 @@ For more detailed installation and setup instructions, including manual installa
 
 #### Files:
 
-- `src/targets/server.cpp`
-- `src/targets/client.cpp`
+- `src/targets/online/server.cpp`
+- `src/targets/online/client.cpp`
 
-### Simulation1 and Simulation2
-- **Files**: `src/targets/simulation1.cpp` `src/targets/simulation2.cpp`
-- Combines the server and client inside a single simulation.
+To run the server and client you can run them either in online and offline method:
+
+##### Offline:
+
+The offline method only allows one cient at a time. In the build folder there will be an executable for runing a stream in a data set for an specific query.  The command to run the executable is the following:
+
+```bash
+./build/BUILD_METHOD/offline /path/to/specific/query /path/to/stream/declaration path/to/stream/data
+```
+
+where BUILD_METHOD corresponds to the method you used to build the project (see more info. in the Quick Start section). You will need the path to the specific query, the path to the stream declaration and the path to the data set you are using as a stream.
+
+##### Online:
+
+The online method allows more clients to connect to the server. First you need to start the server, for this, you'll need to run the following command:
+
+```bash
+./build/BUILDING_METHOD/online_server
+```
+
+Once the server has started, you can start adding clients to it. To add a client you'll need to run a command similar to the one in the online method, so you'll need the path to the query, to the stream declaration and the data set:
+
+```bash
+./build/BUILD_METHOD/online_client /path/to/specific/query /path/to/stream/declaration path/to/stream/data
+```
 
 ## Experiments
 
@@ -85,10 +107,10 @@ There is also a script for every experiment which runs every query and compares 
 For the same experiment, if you only want to try an specific query you'll have to run the following command:
 
 ```bash
-build/Debug/offline_experiment_smart_homes src/targets/experiments/smart_homes/queries/q1_any.txt src/targets/experiments/smart_homes/smart_homes_data.csv
+./build/Debug/offline ./src/targets/experiments/smart_homes/queries/q1_none.txt ./src/targets/experiments/smart_homes/declaration.core ./src/targets/experiments/smart_homes/smart_homes_data.csv
 ```
 
-In this example, we are running the executable of the smart homes experiment in Debug mode for the specific query q1_any.txt, and the data set is the one in smart_homes_data.csv.
+In this example, we are running the executable of the smart homes experiment in Debug mode for the specific query q1_any.txt, the stream declaration is declaration.core and the data set is the one in smart_homes_data.csv.
 
 ## Detailed Documentation
 

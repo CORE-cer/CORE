@@ -92,18 +92,11 @@
 6. Compile the project:
 
    ```
-   mkdir -p build
-   mkdir -p build/Debug
-   conan source .
-   conan install . -s build_type=Debug -s:h compiler=gcc -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2 --build missing -vquiet
-   conan build . -s build_type=Debug -s:h compiler=gcc -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2 --build missing -vquiet
+   ./scripts/build.sh
    ```
 
    If changes were made to the grammar, rebuild it using:
 
    ```
-   cd build/Debug
-   make grammar
-   cd ../../
-   conan build . -s build_type=Debug -s:h compiler=gcc -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2 --build missing -vquiet
+   ./scripts/build_grammar.sh
    ```
