@@ -47,15 +47,14 @@ To understand the general data flow, we recommend to first read the description 
     "SELECT * FROM S\n"
     "WHERE (SELL as T1; BUY as T2; BUY as T3)\n"
     "FILTER T1[name = 'INTC'] AND T2[name = 'RIMM'] AND T3[name = 'QQQ'] \n"
-    "WITHIN TIMESTAMP [stock_time]\n");
+    "WITHIN TIMESTAMP [stock_time]\n";
     ```
 
-2. Inside ClientMessageHandler::add_query this string is converted
-   into a CEQL (Complex Event Query Language) query.
-   - See this file for the data structure: `core_server/internal/ceql/query/query.hpp`.
+2. A ClientMessageHandler object then receives the query from the client and parse it to obtain the information in an object calles Query. It also creates a ResultHandlerT which is in charge of sending the results of the query back to the specific client.
 
-3. The AnnotatePredicatesWithNewPhysicalPredicates visitor then identifies
-   all predicates (for example `T1[name = 'INTC']`) and:
+3. The Backend is in charge of receiving the Query object and creates another object for the specific query, which can be a SimpleQuery (when we don't consider partition by) or a PartitionByQuery. After this, the Backend initializes the query, where the QueryCatalog is created and the method create_query of the specific query object is called. This method is in charge of steps ...
+
+4. The AnnotatePredicatesWithNewPhysicalPredicates visitor is created, which identifies all predicates (for example `T1[name = 'INTC']`) and:
     - Transforms the CEQL Predicate into a Physical Predicate either
       with the visitor CEQLStrongTypedPredicateToPhysicalPredicate or
       CEQLWeaklyTypedPredicateToPhysicalPredicate. A strongly typed
@@ -66,7 +65,7 @@ To understand the general data flow, we recommend to first read the description 
     - Stores all these physical predicates and annotates every CEQL predicate
       with an id that represents the physical predicate that is created.
 
-4. With the newly created PhysicalPredicates, a PredicateEvaluator
+5. With the newly created PhysicalPredicates, a PredicateEvaluator
    is created
    that evaluates tuples and returns a mpz_class object, that is, a bitset that
    represents what physical predicate is correctly evaluated.
@@ -76,16 +75,17 @@ To understand the general data flow, we recommend to first read the description 
       five positions will determine what type of event it is, and the rest determines
       whether a specific predicate is met.
 
-5. The WHERE clause of the query is transformed to a LogicalCEA
+6. The WHERE clause of the query is transformed to a LogicalCEA
    using the visitor: CEQL::FormulaToLogicalCEA.
 
-6. The LogicalCEA is transformed into a CEA, and then into a DetCEA. These
+7. The LogicalCEA is transformed into a CEA, and then into a DetCEA. These
    transformations can be seen inside the constructors of these classes.
 
-7. With the CEA and the PredicateEvaluator the query_evaluator is created inside
-   Mediator::create_complex_event_stream, this query_evaluator is then stored
-   and messages will be sent to it when pertinent tuples are sent through
-   a streamer.
+8. An evaluator is then created in the specific query object (the evaluator in SimpleQuery and PartitionBy are different)
+
+9. The evaluator is in charge of processing the events following the algorithm described in the paper. After processing the events, if there is a result it creates an enumerator. 
+
+10. The results are send back to the client with the ResultHandler.
 
 ## Architecture of the CoreServer
 
