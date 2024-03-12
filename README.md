@@ -59,6 +59,20 @@ Following these steps you will be building the project in Debug mode. There are 
 
 For more detailed installation and setup instructions, including manual installation steps, please refer to our [Installation Guide](docs/users/INSTALLATION.md).
 
+## Stream Declaration
+
+If a user wants to connect a stream to CORE he has to declare the stream that is going to connect. In order to declare the stream, the client has to specify the name of the stream, the events that this stream has and the attributes of each event as text. Here is an example:  
+
+```bash
+"DECLARE STREAM MySensor {\n"
+"EVENT Temp { ID:int, Value1:string, Value2:boolean },\n"
+"EVENT Hum { ID:int, Value3:double },\n"
+"EVENT Hum2 { ID:int }\n"
+"}";
+```
+
+One feature that CORE supports is that it allows multiple streams to share events. For that, the event must have the same name in every stream that is declared.  
+
 ## Target Files
 
 ### Client - Server in separate files:
