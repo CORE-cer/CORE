@@ -1,37 +1,6 @@
 # Installation Guide for CORE Project
 
-## Easy Install with Docker
-
-### Dependencies
-
-- Docker
-
-#### Steps
-
-1. Pull the repository:
-   ```bash
-   git pull https://github.com/CER-CORE/CORE
-   ```
-2. Change to the project directory:
-   ```bash
-   cd CORE
-   ```
-3. Start the Docker daemon if it's not running:
-   ```bash
-   systemctl start docker
-   ```
-4. Run docker-compose with bash:
-   ```bash
-   sudo docker-compose run core-terminal bash
-   ```
-5. Compile for the first time (inside the docker terminal):
-   ```bash
-   chmod +x ./scripts/* && ./scripts/build.sh && ./scripts/build_grammar.sh
-   ```
-6. Compile and test:
-   ```bash
-   ./scripts/compile_and_test.sh
-   ```
+Currently we can only run the program in either native linux machines or virtual machines with a linux distro. We are looking forward to support Windows and Mac OS machines in the future.
 
 ## Manual Installation
 
@@ -99,4 +68,37 @@
 
    ```
    ./scripts/build_grammar.sh
+   ```
+
+## Install with Docker
+
+### Dependencies
+
+- Docker
+
+#### Steps
+
+1. Pull the repository:
+   ```bash
+   git pull https://github.com/CER-CORE/CORE
+   ```
+2. Change to the project directory:
+   ```bash
+   cd CORE
+   ```
+3. Start the Docker daemon if it's not running:
+   ```bash
+   systemctl start docker
+   ```
+4. Run docker-compose with bash:
+   ```bash
+   sudo docker-compose run core-terminal bash
+   ```
+5. Compile for the first time (inside the docker terminal):
+   ```bash
+   chmod +x ./scripts/* && ./scripts/build.sh && ./scripts/build_grammar.sh
+   ```
+6. Compile and test:
+   ```bash
+   ./scripts/compile_and_test.sh
    ```

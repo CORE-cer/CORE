@@ -18,10 +18,6 @@ This is a C++ reimplementation of the CORE engine, as presented in the paper ["C
 
 - **Conan Package Manager**
 
-### In Development
-
-- **Support for Windows and Mac native machines**: Currently we can only run the program in either native linux machines or virtual machines with a linux distro.
-
 ## Quick Start
 
 To get started quickly in your local machine: 
@@ -71,7 +67,7 @@ If a user wants to connect a stream to CORE he has to declare the stream that is
 "}";
 ```
 
-The types of attributes that are available are int, string, double and boolean.
+The types of attributes that are available are int, string, double and bool.
 
 One feature that CORE supports is that it allows multiple streams to share events. For that, the event must have the same name in every stream that is declared.
 
@@ -132,7 +128,7 @@ In this example, we are running the executable of the smart homes experiment in 
 
 For comprehensive documentation:
 
-- **Users**: Navigate to [User Documentation](./docs/users/README.md).
+- **Users**: Navigate to [User Documentation](./docs/users/README.md). (Documentation in development)
   
 - **Developers**: Navigate to [Developer Documentation](./docs/developers/README.md).
 

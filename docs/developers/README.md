@@ -89,7 +89,7 @@ To understand the general data flow, we recommend to first read the description 
 
 ## Architecture of the CoreServer
 
-The following figure describes the arquitecture of CoreServer. 
+The following figure describes the arquitecture of CoreServer. (Not updated, figure in development)
 
 ![UML Diagram](imgs/architecture.png)
 
