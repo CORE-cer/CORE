@@ -1,5 +1,3 @@
-#include "core_client/client.hpp"
-
 #include <cassert>
 #include <chrono>
 #include <cstddef>
@@ -11,6 +9,7 @@
 #include <thread>
 #include <vector>
 
+#include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
