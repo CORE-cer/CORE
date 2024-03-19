@@ -52,7 +52,7 @@ To understand the general data flow, we recommend to first read the description 
 
 2. A ClientMessageHandler object then receives the query from the client and parse it to obtain the information in an object calles Query. It also creates a ResultHandlerT which is in charge of sending the results of the query back to the specific client.
 
-3. The Backend is in charge of receiving the Query object and creates another object for the specific query, which can be a SimpleQuery (when we don't consider partition by) or a PartitionByQuery. After this, the Backend initializes the query, where the QueryCatalog is created and the method create_query of the specific query object is called. This method is in charge of steps ...
+3. The Backend is in charge of receiving the Query object and creates another object for the specific query, which can be a SimpleQuery (when we don't consider partition by) or a PartitionByQuery. After this, the Backend initializes the query, where the QueryCatalog is created and the method create_query of the specific query object is called. This method is in charge of the following steps
 
 4. The AnnotatePredicatesWithNewPhysicalPredicates visitor is created, which identifies all predicates (for example `T1[name = 'INTC']`) and:
     - Transforms the CEQL Predicate into a Physical Predicate either
