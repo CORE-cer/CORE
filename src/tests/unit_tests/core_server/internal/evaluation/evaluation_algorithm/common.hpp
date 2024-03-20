@@ -69,6 +69,8 @@ class TestResultHandler : public Library::Components::ResultHandler<TestResultHa
   void start_impl() {}
 };
 
+bool is_the_same_as(Types::Event event, uint64_t event_type_id, std::string name);
+
 bool is_the_same_as(Types::Event event,
                     uint64_t event_type_id,
                     std::string name,

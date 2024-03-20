@@ -37,7 +37,7 @@ using std::make_unique;
 
 TEST_CASE("EventType stream>name syntax", "[Where]") {
   auto query = create_where_query("S>T");
-  auto expected_formula = make_unique<EventTypeFormula>("S>T");
+  auto expected_formula = make_unique<EventTypeFormula>("S", "T");
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
@@ -119,7 +119,7 @@ TEST_CASE("Example test NonContiguous", "[Where, Composite] NonContiguous") {
   auto expected_formula = make_unique<AsFormula>(
     make_unique<NonContiguousSequencingFormula>(
       make_unique<NonContiguousSequencingFormula>(
-        make_unique<EventTypeFormula>("S>T"),
+        make_unique<EventTypeFormula>("S", "T"),
         make_unique<NonContiguousIterationFormula>(make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
     "all_events");
@@ -133,7 +133,7 @@ TEST_CASE("Example test Contiguous", "[Where, Composite]") {
   auto query = create_where_query("( S>T ; H :+ ; T AS t2) AS all_events");
   auto expected_formula = make_unique<AsFormula>(
     make_unique<NonContiguousSequencingFormula>(
-      make_unique<NonContiguousSequencingFormula>(make_unique<EventTypeFormula>("S>T"),
+      make_unique<NonContiguousSequencingFormula>(make_unique<EventTypeFormula>("S", "T"),
                                                   make_unique<ContiguousIterationFormula>(
                                                     make_unique<EventTypeFormula>("H"))),
       make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2")),
