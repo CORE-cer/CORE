@@ -170,7 +170,7 @@ class QueryCatalog {
                                return s.name == stream_name;
                              });
     if (iter != streams_info.end()) {
-      return std::distance(iter, streams_info.begin());
+      return std::distance(streams_info.begin(), iter);
     } else {
       throw std::runtime_error(
         "Stream name not found in query_stream_id_from_event_name");
