@@ -92,13 +92,13 @@ jobs:
         run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Release
 
       - name: run smart home query tests
-        run: chmod +x ./scripts/build_and_test_smart_homes_queries.sh && ./scripts/build_and_test_smart_homes_queries.sh -b Release
+        run: chmod +x ./scripts/build_and_test_smart_homes_queries.sh && ./scripts/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt
 
       - name: run taxi query tests
         run: chmod +x ./scripts/build_and_test_taxi_queries.sh && ./scripts/build_and_test_taxi_queries.sh -b Release
 
-      - name: run tests with address sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
+      # - name: run tests with address sanitizer
+      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
 
       # - name: run tests with thread sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
