@@ -21,7 +21,9 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
         with:
-          root-reserve-mb: 12000
+          overprovision-lvm: true
+          remove-dotnet: true
+          remove-android: true
 
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code

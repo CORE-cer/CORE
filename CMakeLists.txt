@@ -138,6 +138,12 @@ target_link_libraries(offline_taxi_example PRIVATE core)
 add_executable(offline src/targets/offline/offline.cpp)
 target_link_libraries(offline PRIVATE core)
 
+# Main Online
+add_executable(online_client src/targets/online/client.cpp)
+target_link_libraries(online_client PRIVATE core)
+add_executable(online_server src/targets/online/server.cpp)
+target_link_libraries(online_server PRIVATE core)
+
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:
  # install(TARGETS core DESTINATION ~/.local/bin)
