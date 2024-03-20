@@ -1,3 +1,6 @@
+# Global array for excluded queries
+declare -a EXCLUDED_QUERIES
+
 function _setArgs() {
   while [ "${1:-}" != "" ]; do
     case "$1" in
@@ -12,6 +15,10 @@ function _setArgs() {
       "-s" | "--sanitizer")
         shift
         SANITIZER=$1
+        ;;
+      "--exclude")
+        shift
+        EXCLUDED_QUERIES+=("$1") # Add the excluded query to the array
         ;;
     esac
     shift

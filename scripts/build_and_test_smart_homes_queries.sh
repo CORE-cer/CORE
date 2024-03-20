@@ -29,8 +29,14 @@ if ! test -d $base_dir/expected_results; then
 fi
 
 for query in $queries; do
-    echo -e "Running ${query}"
     query_file=$(basename "$query")
+
+    if printf '%s\n' "${EXCLUDED_QUERIES[@]}" | grep -qx "$query_file"; then
+        echo -e "${PURPLE}Skipping excluded query: $query_file${NORMAL_OUTPUT}"
+        continue # Skip this iteration, moving to the next query
+    fi
+
+    echo -e "Running ${query}"
     # if ! test -f "$base_dir/expected_results/$query_file"; then
     #     { time $executable $base_dir/queries/$query_file $base_dir/$csv > $base_dir/expected_results/$query_file ; } 2> $base_dir/expected_results/"${query_file}_time.txt"
     # fi
