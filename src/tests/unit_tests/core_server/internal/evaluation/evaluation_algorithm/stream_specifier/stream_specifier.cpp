@@ -150,7 +150,8 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
   REQUIRE(output.complex_events.size() == 1);
 }
 
-TEST_CASE("Evaluation on two streams using stream specifiers and only where on one stream") {
+TEST_CASE(
+  "Evaluation on two streams using stream specifiers and only where on one stream") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
@@ -216,7 +217,9 @@ TEST_CASE("Evaluation on two streams using stream specifiers and only where on o
   REQUIRE(output.complex_events.size() == 1);
 }
 
-TEST_CASE("Evaluation on two streams using stream specifiers and OR with projection on only one event") {
+TEST_CASE(
+  "Evaluation on two streams using stream specifiers and OR with projection on only one "
+  "event") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
@@ -269,7 +272,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR with project
 
   REQUIRE(output.complex_events.size() == 1);
 
-  REQUIRE(output.complex_events[0].start ==0);
+  REQUIRE(output.complex_events[0].start == 0);
   REQUIRE(output.complex_events[0].end == 0);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
@@ -287,14 +290,16 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR with project
 
   REQUIRE(output.complex_events.size() == 1);
 
-  REQUIRE(output.complex_events[0].start ==1);
+  REQUIRE(output.complex_events[0].start == 1);
   REQUIRE(output.complex_events[0].end == 1);
 
   // Empty since we are not selecting on S2>BUY
   REQUIRE(output.complex_events[0].events.size() == 0);
 }
 
-TEST_CASE("Evaluation on two streams using stream specifiers and OR with projection on repeated event") {
+TEST_CASE(
+  "Evaluation on two streams using stream specifiers and OR with projection on repeated "
+  "event") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
@@ -347,7 +352,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR with project
 
   REQUIRE(output.complex_events.size() == 1);
 
-  REQUIRE(output.complex_events[0].start ==0);
+  REQUIRE(output.complex_events[0].start == 0);
   REQUIRE(output.complex_events[0].end == 0);
 
   REQUIRE(output.complex_events[0].events.size() == 1);
@@ -365,7 +370,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR with project
 
   REQUIRE(output.complex_events.size() == 1);
 
-  REQUIRE(output.complex_events[0].start ==1);
+  REQUIRE(output.complex_events[0].start == 1);
   REQUIRE(output.complex_events[0].end == 1);
 
   // Empty since we are not selecting on S2>BUY
