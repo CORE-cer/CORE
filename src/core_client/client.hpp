@@ -179,7 +179,9 @@ class Client {
     auto serialized_response = dealer.send_and_receive(serialized_request);
     auto res = ServerResSerializer::deserialize(serialized_response);
     if (res.response_type == Types::ServerResponseType::Error) {
-      throw std::runtime_error("The request sent was invalid!");
+      auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+        res.serialized_response_data);
+      throw std::runtime_error(response_string);
     }
     return res;
   }

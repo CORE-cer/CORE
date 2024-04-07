@@ -102,6 +102,10 @@ class Backend {
     return catalog.get_all_streams_info();
   }
 
+  Internal::CEQL::Query parse_sent_query(std::string query_info) {
+    return Parsing::QueryParser::parse_query(query_info, catalog);
+  }
+
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(Internal::CEQL::Query&& parsed_query,
                      std::unique_ptr<ResultHandlerT>&& result_handler) {

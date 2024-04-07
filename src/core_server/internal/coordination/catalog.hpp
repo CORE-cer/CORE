@@ -54,6 +54,10 @@ class Catalog {
 
   Types::QueryInfo get_query_info(Types::QueryInfoId query_info_id) const noexcept;
 
+  const std::set<std::string>& get_stream_names() const noexcept;
+
+  const std::vector<Types::StreamInfo>& get_stream_info_vector() const noexcept;
+
   const std::vector<Types::QueryInfo>& get_all_query_infos() const noexcept;
 
   std::size_t number_of_events() const { return events_info.size(); }
