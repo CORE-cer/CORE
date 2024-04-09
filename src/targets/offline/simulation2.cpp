@@ -1,8 +1,20 @@
+#include <cassert>
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/event.hpp"
+#include "shared/datatypes/value.hpp"
 #include "tracy/Tracy.hpp"
 
 using namespace CORE;

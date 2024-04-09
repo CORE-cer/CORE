@@ -1,11 +1,12 @@
 #pragma once
 
-#include <atomic>
-#include <functional>
-#include <iostream>
+#include <cstring>
+#include <stdexcept>
+#include <string>
 #include <zmq.hpp>
 
-#include "shared/networking/message_dealer/message_dealer.hpp"
+// TODO: Actually use interface
+// #include "shared/networking/message_dealer/message_dealer.hpp"
 
 namespace CORE::Internal {
 class ZMQMessageDealer {

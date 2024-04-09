@@ -3,7 +3,6 @@
 #include <quill/Config.h>
 #include <quill/LogLevel.h>
 #include <quill/Quill.h>
-#include <quill/detail/LogMacros.h>
 #include <quill/handlers/RotatingFileHandler.h>
 
 #include <memory>

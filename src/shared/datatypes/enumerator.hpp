@@ -1,10 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 
 #include "shared/datatypes/complex_event.hpp"
-#include "shared/datatypes/event.hpp"
 
 namespace CORE::Types {
 /**

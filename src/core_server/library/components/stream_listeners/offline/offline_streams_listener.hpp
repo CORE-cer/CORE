@@ -1,7 +1,6 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>
 #include <quill/detail/LogMacros.h>
 
 #include "core_server/internal/interface/backend.hpp"

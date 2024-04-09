@@ -1,8 +1,11 @@
 #pragma once
+#include <zmq.h>
+
 #include <atomic>
+#include <cerrno>
 #include <chrono>
-#include <functional>
-#include <iostream>
+#include <cstring>
+#include <string>
 #include <zmq.hpp>
 
 #include "shared/networking/message_router/message_router.hpp"
