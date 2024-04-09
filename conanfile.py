@@ -61,8 +61,8 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", None]}
-    default_options = {"sanitizer": None}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l3"]}
+    default_options = {"sanitizer": "none", "logging": "info"}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
@@ -84,6 +84,7 @@ class CORE(ConanFile):
     LIBPQXX_VERSION = "7.7.5"
     GMP_VERSION = "6.2.1"
     RE2_VERSION = "20230602"
+    QUILL_VERSION = "3.7.0"
 
     def layout(self):
         cmake_layout(self)
@@ -108,6 +109,7 @@ class CORE(ConanFile):
         self.requires("libpqxx/" + CORE.LIBPQXX_VERSION)
         self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
+        self.requires("quill/" + CORE.QUILL_VERSION)
 
     def generate(self):
         tc = CMakeToolchain(self, generator="Ninja")
@@ -120,6 +122,8 @@ class CORE(ConanFile):
         else:
             tc.cache_variables["ADDRESS_SANITIZER"] = False
             tc.cache_variables["THREAD_SANITIZER"] = False
+
+        tc.cache_variables["LOGGING"] = self.options.logging
         tc.generate()
 
     def build(self):

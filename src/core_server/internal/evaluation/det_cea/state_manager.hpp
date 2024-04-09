@@ -1,6 +1,9 @@
 #pragma once
 
+#define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
 
 #include <cassert>
 #include <cstdint>
@@ -104,6 +107,7 @@ class StateManager {
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
+        LOG_DEBUG("Not enough memory in StateManager, increasing size of memory pool");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);

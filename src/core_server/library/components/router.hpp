@@ -24,7 +24,7 @@ class Router {
   std::thread router_thread;
 
  public:
-  Router(Internal::Interface::Backend<HandlerType>& backend,
+  Router(Internal::Interface::Backend<HandlerType, false>& backend,
          Types::PortNumber port_number,
          ResultHandlerFactoryT result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),

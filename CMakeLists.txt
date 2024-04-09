@@ -19,6 +19,7 @@ find_package(cppzmq REQUIRED)
 find_package(libpqxx REQUIRED)
 find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
+find_package(quill REQUIRED)
 
 
 # Profiler
@@ -75,7 +76,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 TracyClient)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 quill::quill TracyClient)
 if (ENABLE_PROFILING)
   target_link_libraries(core PUBLIC debuginfod)
 endif()
@@ -102,7 +103,25 @@ if (THREAD_SANITIZER)
   target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
 endif()
 
+if (LOGGING MATCHES "critical")
+  message("Logging set to critical")
+  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_CRITICAL)
+endif()
 
+if (LOGGING MATCHES "info")
+  message("Logging set to info")
+  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_INFO)
+endif()
+
+if (LOGGING MATCHES "debug")
+  message("Logging set to debug")
+  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_DEBUG)
+endif()
+
+if (LOGGING MATCHES "trace_l3")
+  message("Logging set to trace_l3")
+  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L3)
+endif()
 # executable target
 # Commented out due to from multiple streams not currently implemented
 

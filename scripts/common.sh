@@ -20,21 +20,19 @@ function _setArgs() {
         shift
         EXCLUDED_QUERIES+=("$1") # Add the excluded query to the array
         ;;
+      "-l"| "--logging")
+        shift
+        LOGGING="$1"
+        ;;
     esac
     shift
   done
 }
 
 function build() {
-  if [ ! -z "$SANITIZER" ]; then
-      conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
-          -s build_type=${BUILD_TYPE}\
-          --build missing -o sanitizer=${SANITIZER}
-  else
-      conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
-          -s build_type=${BUILD_TYPE}\
-          --build missing
-  fi 
+  conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
+      -s build_type=${BUILD_TYPE}\
+      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING}
 
   build_result=$?
   if [ $build_result -ne 0 ]; then
@@ -46,6 +44,8 @@ function build() {
 # Default values
 BUILD_TYPE="Debug"
 CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
+SANITIZER=none
+LOGGING=info
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
