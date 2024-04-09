@@ -1,6 +1,5 @@
 #pragma once
 
-#include <exception>
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>
 #include <quill/detail/LogMacros.h>
@@ -12,7 +11,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <expected>
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
