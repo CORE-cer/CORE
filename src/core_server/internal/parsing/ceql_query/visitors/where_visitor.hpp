@@ -77,6 +77,16 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
+  virtual std::any
+  visitAnd_cel_formula(CEQLQueryParser::And_cel_formulaContext* ctx) override {
+    visit(ctx->cel_formula()[0]);
+    auto first_formula = std::move(formula);
+    visit(ctx->cel_formula()[1]);
+    formula = std::make_unique<CEQL::AndFormula>(std::move(first_formula),
+                                                std::move(formula));
+    return {};
+  }
+
   virtual std::any visitContiguous_sequencing_cel_formula(
     CEQLQueryParser::Contiguous_sequencing_cel_formulaContext* ctx) override {
     visit(ctx->cel_formula()[0]);

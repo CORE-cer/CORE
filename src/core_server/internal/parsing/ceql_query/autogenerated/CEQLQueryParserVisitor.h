@@ -53,6 +53,8 @@ public:
 
     virtual std::any visitPar_cel_formula(CEQLQueryParser::Par_cel_formulaContext *context) = 0;
 
+    virtual std::any visitAnd_cel_formula(CEQLQueryParser::And_cel_formulaContext *context) = 0;
+
     virtual std::any visitFilter_cel_formula(CEQLQueryParser::Filter_cel_formulaContext *context) = 0;
 
     virtual std::any visitOr_cel_formula(CEQLQueryParser::Or_cel_formulaContext *context) = 0;
