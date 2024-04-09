@@ -7,7 +7,7 @@ static char const* filename = "logfile.log";
 #define LOG_L3_BACKTRACE(...)   \
   do {                          \
     LOG_BACKTRACE(__VA_ARGS__); \
-    LOG_TRACE_L3(__VA_ARGS__);        \
+    LOG_TRACE_L3(__VA_ARGS__);  \
   } while (0)
 #else
 #error "C++11 or later is required for variadic macro support."

@@ -155,7 +155,8 @@ class Evaluator {
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
       if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
           || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
-        LOG_L3_BACKTRACE("Setting should_reset to true due to consumption policy in Evaluator");
+        LOG_L3_BACKTRACE(
+          "Setting should_reset to true due to consumption policy in Evaluator");
         should_reset.store(true);
       }
       return std::move(enumerator);
@@ -201,7 +202,7 @@ class Evaluator {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
-              tuple.timestamp());
+                     tuple.timestamp());
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;

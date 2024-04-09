@@ -132,8 +132,8 @@ class Backend {
   void initialize_query(Internal::CEQL::Query&& parsed_query,
                         std::unique_ptr<ResultHandlerT>&& result_handler) {
     LOG_INFO("Received query \n '{}' in Backend::initialize_query and assigning id {}",
-              parsed_query.to_string(),
-              inner_thread_event_senders.size());
+             parsed_query.to_string(),
+             inner_thread_event_senders.size());
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
