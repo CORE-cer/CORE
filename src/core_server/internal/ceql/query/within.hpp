@@ -77,7 +77,8 @@ struct Within {
       case EVENTS:
         return "Within " + std::to_string(time_window.duration) + " events";
       case ATTRIBUTE:
-        return "Within " + std::to_string(time_window.duration) + " attribute " + time_window.attribute_name;
+        return "Within " + std::to_string(time_window.duration) + " attribute "
+               + time_window.attribute_name;
       case NONE:
         return "";
       default:
