@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
@@ -104,6 +105,7 @@ class Evaluator {
     ZoneScopedN("Evaluator::next");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
                      tuple.timestamp());
+    auto start_time = std::chrono::steady_clock::now();
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
     assert(current_time >= last_tuple_time);
@@ -159,8 +161,17 @@ class Evaluator {
           "Setting should_reset to true due to consumption policy in Evaluator");
         should_reset.store(true);
       }
+      auto end_time = std::chrono::steady_clock::now();
+      LOG_DEBUG("Took {} seconds to process tuple with timestamp {}",
+                std::chrono::duration_cast<std::chrono::microseconds>(end_time
+                                                                      - start_time),
+                tuple.timestamp());
       return std::move(enumerator);
     }
+    auto end_time = std::chrono::steady_clock::now();
+    LOG_DEBUG("Took {} seconds to process tuple with timestamp {}",
+              std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time),
+              tuple.timestamp());
     return {};
   }
 
