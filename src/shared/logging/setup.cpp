@@ -30,7 +30,7 @@ void enable_logging_rotating() {
   quill::start();
 
   auto logger = quill::get_root_logger();
-  logger->set_log_level(quill::LogLevel::Debug);
+  logger->set_log_level(quill::LogLevel::TraceL3);
   int size_backtrace = 1000;
   logger->init_backtrace(size_backtrace, quill::LogLevel::Critical);
 }
