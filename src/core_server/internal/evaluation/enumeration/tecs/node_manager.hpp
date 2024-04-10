@@ -1,8 +1,18 @@
 #pragma once
 
-#include <atomic>
-#include <cstdlib>
+#define QUILL_ROOT_LOGGER_ONLY
+#include <gmpxx.h>
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
 
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
+#include <sstream>
+#include <string>
+
+#include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
 #include "time_list_manager.hpp"
@@ -109,6 +119,7 @@ class NodeManager {
           return get_node_to_recycle();
         }
       };
+      LOG_DEBUG("Not enough memory to allocate node for TECS");
       increase_mempool_size();
       return nullptr;
     }
@@ -116,6 +127,7 @@ class NodeManager {
   }
 
   void increase_mempool_size() {
+    LOG_DEBUG("Increasing size of memory pool");
     NodePool* new_minipool = new NodePool(minipool_head->size() * 2);
     minipool_head->set_next(new_minipool);
     new_minipool->set_prev(minipool_head);

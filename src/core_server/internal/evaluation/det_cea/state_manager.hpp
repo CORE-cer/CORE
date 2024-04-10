@@ -107,7 +107,7 @@ class StateManager {
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
-        LOG_DEBUG("Not enough memory in StateManager, increasing size of memory pool");
+        LOG_DEBUG("Not enough memory to allocate DetCEA state");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);
@@ -141,6 +141,7 @@ class StateManager {
    * @return The new size of the memory pool.
    */
   size_t increase_mempool_size() {
+    LOG_DEBUG("Increasing size of memory pool");
     size_t new_size = minipool_head->size() * 2;
     StatePool* new_minipool = new StatePool(new_size);
     minipool_head->set_next(new_minipool);
