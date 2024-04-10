@@ -14,6 +14,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
+#include "shared/logging/setup.hpp"
 #include "state.hpp"
 
 namespace CORE::Internal::CEA::Det {
@@ -97,6 +98,11 @@ class StateManager {
  private:
   template <class... Args>
   State* alloc(Args&&... args) {
+    LOG_L3_BACKTRACE(
+      "Adding state to state_manager, currently at {} states used with {} states "
+      "allocated",
+      amount_of_used_states,
+      amount_of_allowed_states);
     State* new_state;
     new_state = allocate_state(std::forward<Args>(args)...);
     if (new_state == nullptr) {

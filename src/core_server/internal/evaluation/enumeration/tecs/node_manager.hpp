@@ -15,6 +15,7 @@
 #include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
+#include "shared/logging/setup.hpp"
 #include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
@@ -58,6 +59,10 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
+    LOG_L3_BACKTRACE(
+      "Adding node to node_manager, currently at {} nodes used with {} nodes recycled",
+      amount_of_nodes_used,
+      amount_of_recycled_nodes);
     Node* out = get_node_to_recycle_or_increase_mempool_size_if_necessary();
     if (out != nullptr) {
       out->reset(std::forward<Args>(args)...);
