@@ -8,6 +8,7 @@ Currently we can only run the program in either native linux machines or virtual
 
 - Conan
 - CMake
+- Ninja
 - g++ (version 11 or later)
 
 #### Steps
@@ -25,7 +26,13 @@ Currently we can only run the program in either native linux machines or virtual
    pip install conan
    ```
 
-3. Install the latest version of CMake:
+3. Install Ninja:
+
+   ```bash
+   sudo apt-get install -y ninja-build
+   ```
+
+4. Install the latest version of CMake:
 
     ```bash
     sudo apt remove --purge --auto-remove cmake
@@ -42,7 +49,7 @@ Currently we can only run the program in either native linux machines or virtual
     source ~/.profile # Or reboot your terminal`
     ```
 
-4. Install g++ version 11 or later:
+5. Install g++ version 11 or later:
 
     ```bash
     sudo apt install software-properties-common
@@ -50,15 +57,16 @@ Currently we can only run the program in either native linux machines or virtual
     sudo apt update
     sudo apt install g++-11
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1000
     ```
 
-5. Setup Conan With Your Computers Configs:
+6. Setup Conan With Your Computers Configs:
 
    ```
    conan profile detect
    ```
 
-6. Compile the project:
+7. Compile the project:
 
    ```
    ./scripts/build.sh
