@@ -1,3 +1,5 @@
+#pragma once
+
 #include "antlr4-runtime.h"
 #include "shared/exceptions/parsing_syntax_exception.hpp"
 
@@ -10,7 +12,7 @@ class ParseErrorListener : public BaseErrorListener {
                    size_t charPositionInLine,
                    const std::string& msg,
                    std::exception_ptr e) override {
-    std::string error_message = "Syntax error in query: ";
+    std::string error_message = "Syntax error: ";
     throw CORE::ParsingSyntaxException(error_message, offendingSymbol->getText(), line);
   }
 };

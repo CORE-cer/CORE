@@ -11,6 +11,7 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/parsing/ceql_query/visitors/partition_by_visitor.hpp"
 #include "core_server/internal/parsing/error_listener.hpp"
+#include "error_handling_utils.hpp"
 #include "visitors/consume_visitor.hpp"
 #include "visitors/from_visitor.hpp"
 #include "visitors/limit_visitor.hpp"
@@ -39,6 +40,7 @@ class QueryParser {
     // Use the token stream to create a parser
     CEQLQueryParser parser(&tokens);
 
+    // Add error listener for parsing errors
     parser.removeErrorListeners();
     antlr4::ParseErrorListener error_listener;
     parser.addErrorListener(&error_listener);
@@ -46,16 +48,18 @@ class QueryParser {
     // Parse the input
     antlr4::tree::ParseTree* tree = parser.parse();
 
-    SelectVisitor select_visitor;
-    select_visitor.visit(tree);
-    CEQL::Select select = select_visitor.get_parsed_select();
-
     FromVisitorCatalog from_visitor(catalog);
     from_visitor.visit(tree);
     CEQL::From from = from_visitor.get_parsed_from_catalog();
     std::set<std::string>& streams = from.streams;
+    std::map<std::string, std::vector<Types::EventInfo>>
+      streams_events = get_streams_events_map(catalog, streams);
 
-    WhereVisitorCatalog where_visitor(catalog, streams);
+    SelectVisitorCatalog select_visitor(catalog, streams_events);
+    select_visitor.visit(tree);
+    CEQL::Select select = select_visitor.get_parsed_select();
+
+    WhereVisitorCatalog where_visitor(catalog, streams_events);
     where_visitor.visit(tree);
     CEQL::Where where = where_visitor.get_parsed_where();
 
