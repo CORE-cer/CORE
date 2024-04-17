@@ -2,6 +2,7 @@ from os import path
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import check_min_cppstd
+import multiprocessing
 def create_script(grammar_name, antlr4_version):
     script = f"""#!/bin/bash
 
@@ -61,8 +62,8 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l3"]}
-    default_options = {"sanitizer": "none", "logging": "info"}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l3"], "j": ["all-1"] + list(range(1, 64))}
+    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1"}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
@@ -129,4 +130,7 @@ class CORE(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.configure()
-        cmake.build()
+
+        compile_cores = self.options.j if self.options.j != 'all-1' else multiprocessing.cpu_count() - 1
+
+        cmake.build(build_tool_args=[f'-j{compile_cores}'])

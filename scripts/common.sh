@@ -24,6 +24,10 @@ function _setArgs() {
         shift
         LOGGING="$1"
         ;;
+      "-j")
+        shift
+        J="$1"
+        ;;
     esac
     shift
   done
@@ -32,7 +36,7 @@ function _setArgs() {
 function build() {
   conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
       -s build_type=${BUILD_TYPE}\
-      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING}
+      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING} -o j=${J}
 
   build_result=$?
   if [ $build_result -ne 0 ]; then
@@ -46,6 +50,7 @@ BUILD_TYPE="Debug"
 CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
 SANITIZER=none
 LOGGING=info
+J="all-1"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
