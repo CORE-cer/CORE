@@ -173,7 +173,7 @@ class Evaluator {
                    tuple.timestamp());
       return std::move(enumerator);
     }
-#if QUILL_ACTIVE_LOG_LEVEL >= QUILL_LOG_LEVEL_TRACE_L2
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto end_time = std::chrono::steady_clock::now();
 #endif
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",

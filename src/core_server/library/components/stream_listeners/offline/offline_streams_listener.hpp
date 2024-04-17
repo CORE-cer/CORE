@@ -30,6 +30,9 @@ class OfflineStreamsListener {
                      stream.id,
                      stream.events.size());
     for (const auto& event : stream.events) {
+      LOG_L3_BACKTRACE("Stream with id {} and event {} in OfflineStreamsListener",
+                       stream.id,
+                       event.to_string());
       backend.send_event_to_queries(stream.id, event);
     }
   }

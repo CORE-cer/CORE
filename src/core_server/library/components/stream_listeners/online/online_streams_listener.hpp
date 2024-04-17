@@ -55,10 +55,13 @@ class OnlineStreamsListener {
         Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
           s_message);
         LOG_L3_BACKTRACE(
-          "Received stream with id {} and {} events in OfflineStreamsListener",
+          "Received stream with id {} and {} events in OnlineStreamsListener",
           stream.id,
           stream.events.size());
         for (auto& event : stream.events) {
+          LOG_L3_BACKTRACE("Stream with id {} and event {} in OnlineStreamsListener",
+                           stream.id,
+                           event.to_string());
           backend.send_event_to_queries(stream.id, event);
         }
       }
