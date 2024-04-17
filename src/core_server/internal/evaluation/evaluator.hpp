@@ -163,15 +163,16 @@ class Evaluator {
       }
       auto end_time = std::chrono::steady_clock::now();
       LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
-                std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
-                                                                     - start_time),
-                tuple.timestamp());
+                   std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
+                                                                        - start_time),
+                   tuple.timestamp());
       return std::move(enumerator);
     }
     auto end_time = std::chrono::steady_clock::now();
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
-              std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time),
-              tuple.timestamp());
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
+                                                                      - start_time),
+                 tuple.timestamp());
     return {};
   }
 
