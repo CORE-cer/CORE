@@ -62,7 +62,7 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l3"], "j": ["all-1"] + list(range(1, 64))}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64))}
     default_options = {"sanitizer": "none", "logging": "info", "j": "all-1"}
 
     exports_sources = "CMakeLists.txt", "src/*"

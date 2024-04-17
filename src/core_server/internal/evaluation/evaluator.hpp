@@ -4,6 +4,7 @@
 #include <gmpxx.h>
 #include <quill/Quill.h>
 #include <quill/detail/LogMacros.h>
+#include <quill/detail/misc/Common.h>
 
 #include <atomic>
 #include <cassert>
@@ -105,7 +106,9 @@ class Evaluator {
     ZoneScopedN("Evaluator::next");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
                      tuple.timestamp());
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto start_time = std::chrono::steady_clock::now();
+#endif
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
     assert(current_time >= last_tuple_time);
@@ -161,14 +164,18 @@ class Evaluator {
           "Setting should_reset to true due to consumption policy in Evaluator");
         should_reset.store(true);
       }
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
       auto end_time = std::chrono::steady_clock::now();
+#endif
       LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                    std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                         - start_time),
                    tuple.timestamp());
       return std::move(enumerator);
     }
+#if QUILL_ACTIVE_LOG_LEVEL >= QUILL_LOG_LEVEL_TRACE_L2
     auto end_time = std::chrono::steady_clock::now();
+#endif
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                  std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                       - start_time),

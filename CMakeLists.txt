@@ -118,6 +118,11 @@ if (LOGGING MATCHES "debug")
   target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_DEBUG)
 endif()
 
+if (LOGGING MATCHES "trace_l2")
+  message("Logging set to trace_l2")
+  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L2)
+endif()
+
 if (LOGGING MATCHES "trace_l3")
   message("Logging set to trace_l3")
   target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L3)
