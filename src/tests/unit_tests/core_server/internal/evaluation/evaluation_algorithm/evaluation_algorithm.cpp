@@ -1573,7 +1573,7 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL AND SELL)";
+    "WHERE ((SELL+) AND SELL)";
 
   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
@@ -1648,14 +1648,131 @@ TEST_CASE(
   output = result_handler.get_enumerator();
 
   REQUIRE(output.complex_events.size() == 1);
-
-
-
-
-  // Always crash!
-  REQUIRE(1 == 2);
+  REQUIRE(output.complex_events[0].events.size() == 1);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
 }
 
+TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL)+ OR SELL";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL MSFT 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Check if sell+ works correctly in combination with AND 
+  // There should be only 1 complex event of size 1 here
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 2);
+
+  REQUIRE(output.complex_events[0].events.size() == 1);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+}
+
+TEST_CASE("Evaluation of a query with combination of non contiguous iteration and non contiguous sequencing") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL;SELL)";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL MSFT 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  // Check if sell+ works correctly in combination with AND 
+  // Stream: SELL, BUY, SELL
+  // query: (SELL+) AND (SELL;SELL)
+  // Result should be: 1 complex event holding both sell events
+
+  //REQUIRE(1 == 2);
+}
 
 
 }  // namespace CORE::Internal::Evaluation::UnitTests
