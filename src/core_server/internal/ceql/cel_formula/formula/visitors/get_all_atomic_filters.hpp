@@ -29,6 +29,8 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
   void visit(OrFormula& formula)         override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
+  void visit(AllFormula& formula)        override {formula.left->accept_visitor(*this);
+                                                   formula.right->accept_visitor(*this);}
   void visit(ContiguousIterationFormula& formula) override {formula.formula->accept_visitor(*this);}
 
   // clang-format on

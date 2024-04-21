@@ -22,6 +22,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/interleaved_conjunction.hpp"
 #include "formula_visitor.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
@@ -97,6 +98,14 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
     current_cea = CEA::Union()(left_cea, right_cea);
+  }
+
+  void visit(AllFormula& formula) override {
+    formula.left->accept_visitor(*this);
+    CEA::LogicalCEA left_cea = std::move(current_cea);
+    formula.right->accept_visitor(*this);
+    CEA::LogicalCEA right_cea = std::move(current_cea);
+    current_cea = CEA::Interleaved_Conjuntion()(left_cea, right_cea);
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {
