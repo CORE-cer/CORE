@@ -17,7 +17,6 @@ public:
         //std::cout << " " << << std::endl;
         std::cout << "Printing info about logical CEA's to understand them better? " << std::endl;
         std::cout << " " << left.to_string() << std::endl;
-
         std::cout << " " << right.to_string() << std::endl;
 
         // Create a new LogicalCEA to store the intersection result.
@@ -45,11 +44,6 @@ public:
                 }
             }
         }
-        std::cout << "Left Initial States: size " << left.get_initial_states().size() << std::endl;
-        std::cout << "Right Initial States: size " << right.get_initial_states().size() << std::endl;
-        std::cout << "Out Initial States: size " << out.get_initial_states().size() << std::endl;
-        std::cout << "Out Initial States: " << out.initial_states << std::endl;
-
 
         // Compute the final state(s) of the out by taking the cross product of the left and right CEA's 
         // And making all combinations of final states new final states
@@ -80,43 +74,47 @@ public:
                     for (const auto& transition2 : right.transitions[j]) {
                         // Compute the intersection of predicates
                         PredicateSet intersection = std::get<0>(transition1) & std::get<0>(transition2);
-                        std::cout << "PredicateSet transition 1 info: " << std::get<0>(transition1).to_string() << std::endl;
-                        std::cout << "PredicateSet transition 2 info: " << std::get<0>(transition2).to_string() << std::endl;
-                        std::cout << "PredicateSet combination info: " << intersection.to_string() << std::endl;
                         // If both transitions hold predicates
                         if (intersection.type != PredicateSet::Contradiction) {
                             // Combine variables to mark
-                            VariablesToMark combined_mark = std::get<1>(transition1) | std::get<1>(transition2);
+                            VariablesToMark combined_mark = std::get<1>(transition1) ^ std::get<1>(transition2);
+                            // marks have to match by taking XOR
+                            if (combined_mark == 0) {
+                                // Compute the target state corresponding to the intersection of source states
+                                EndNodeId source = i * right.amount_of_states + j;
+                                // this is source
+                                EndNodeId target = std::get<2>(transition1) * right.amount_of_states + std::get<2>(transition2);
 
-                            // Compute the target state corresponding to the intersection of source states
-                            EndNodeId target = i * right.amount_of_states + j;
-
-                            // Add the new transition to the resulting automaton
-                            out.transitions[target].push_back(std::make_tuple(intersection, combined_mark, target));
-                        } else {
-                            // If one transition holds a predicate and the other is epsilon transition
-                            if (std::get<0>(transition1).type != PredicateSet::Contradiction &&
-                                std::get<0>(transition2).type == PredicateSet::Contradiction) {
-                                // Combine variables to mark
-                                VariablesToMark combined_mark = std::get<1>(transition1);
+                                // Since both transitions have to mark the exact same variables we can just take the mark of transition 1
+                                VariablesToMark mark = std::get<1>(transition1);
 
                                 // Add the new transition to the resulting automaton
-                                out.transitions[i * right.amount_of_states + j].push_back(
-                                    std::make_tuple(std::get<0>(transition1), combined_mark, j));
-                            } else if (std::get<0>(transition1).type == PredicateSet::Contradiction &&
-                                    std::get<0>(transition2).type != PredicateSet::Contradiction) {
-                                // Combine variables to mark
-                                VariablesToMark combined_mark = std::get<1>(transition2);
-
-                                // Add the new transition to the resulting automaton
-                                out.transitions[i * right.amount_of_states + j].push_back(
-                                    std::make_tuple(std::get<0>(transition2), combined_mark, j));
-                            } else {
-                                // If both transitions are epsilon transitions, add epsilon transition
-                                out.epsilon_transitions[i * right.amount_of_states + j].insert(j);
+                                out.transitions[source].push_back(std::make_tuple(intersection, mark, target));
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Add epsilon transitions from left CEA to the out CEA
+        for (size_t i = 0; i < left.epsilon_transitions.size(); ++i) {
+            for (const auto& target_state : left.epsilon_transitions[i]) {
+                // Add epsilon transition to the corresponding states in the out CEA
+                for (uint64_t j = 0; j < right.amount_of_states; ++j) {
+                    uint64_t adjusted_target_state = target_state * right.amount_of_states + j;
+                    out.epsilon_transitions[i * right.amount_of_states + j].insert(adjusted_target_state);
+                }
+            }
+        }
+
+        // Add epsilon transitions from right CEA to the out CEA
+        for (size_t i = 0; i < right.epsilon_transitions.size(); ++i) {
+            for (const auto& target_state : right.epsilon_transitions[i]) {
+                // Add epsilon transition to the corresponding states in the out CEA
+                for (uint64_t j = 0; j < left.amount_of_states; ++j) {
+                    uint64_t adjusted_target_state = target_state + j * right.amount_of_states;
+                    out.epsilon_transitions[i + right.amount_of_states * j].insert(adjusted_target_state);
                 }
             }
         }
