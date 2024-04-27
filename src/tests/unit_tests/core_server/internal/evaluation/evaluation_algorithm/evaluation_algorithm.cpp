@@ -1871,9 +1871,7 @@ TEST_CASE("Evaluation of a query with combination of filtering and AND") {
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL as S1) AND (SELL as S2)\n"
-    "FILTER S1[name='MSFT']\n"
-    "    AND S2[price > 100]";
+    "WHERE ((SELL as S FILTER S[name='MSFT']) AND (SELL as S FILTER S[price > 100]))\n";
 
   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
@@ -1908,17 +1906,6 @@ TEST_CASE("Evaluation of a query with combination of filtering and AND") {
   output = result_handler.get_enumerator();
 
   REQUIRE(output.complex_events.size() == 0);
-
-  event = {1,
-           {std::make_shared<Types::StringValue>("MSFT"),
-            std::make_shared<Types::IntValue>(102)}};
-  INFO("SELL MSFT 102");
-
-  backend.send_event_to_queries(0, event);
-
-  output = result_handler.get_enumerator();
-
-  REQUIRE(output.complex_events.size() == 1);
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),

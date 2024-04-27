@@ -76,9 +76,9 @@ public:
                         PredicateSet intersection = std::get<0>(transition1) & std::get<0>(transition2);
                         // If both transitions hold predicates
                         if (intersection.type != PredicateSet::Contradiction) {
-                            // Combine variables to mark
+                            // Combine variables to mark, marks have to match by taking XOR
                             VariablesToMark combined_mark = std::get<1>(transition1) ^ std::get<1>(transition2);
-                            // marks have to match by taking XOR
+                            
                             if (combined_mark == 0) {
                                 // Compute the target state corresponding to the intersection of source states
                                 EndNodeId source = i * right.amount_of_states + j;
