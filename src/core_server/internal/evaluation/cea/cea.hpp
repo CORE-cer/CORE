@@ -41,6 +41,7 @@ struct CEA {
     // clang-format on
     amount_of_states = logical_cea.amount_of_states;
     transcribe_transitions(logical_cea);
+    
     auto initial_states_list = logical_cea.get_initial_states();
     assert(initial_states_list.size() == 1);
     initial_state = initial_states_list[0];

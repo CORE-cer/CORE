@@ -1854,14 +1854,6 @@ TEST_CASE("Evaluation of a query with combination of non contiguous iteration an
   output = result_handler.get_enumerator();
 
   REQUIRE(output.complex_events.size() == 1);
-
-
-  // Check if sell+ works correctly in combination with AND 
-  // Stream: SELL, BUY, SELL
-  // query: (SELL+) AND (SELL;SELL)
-  // Result should be: 1 complex event holding both sell events
-
-  //REQUIRE(1 == 2);
 }
 
 TEST_CASE("Evaluation of a query with combination of filtering and AND") {

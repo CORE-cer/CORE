@@ -23,11 +23,6 @@ trap 'rm -f -- "$temp_output_file"' EXIT
 # Run the executable with the arguments and pipe input into temporary file
 $executable $arguments > $temp_output_file
 
-echo "output of temp file:"
-cat $temp_output_file
-echo "expected values:"
-cat $expected_output_file
-
 # Compare the actual output with the expected output
 if diff $temp_output_file $expected_output_file > /dev/null; then
     echo -e "${GREEN}Output matches expected of ${expected_output_file}${NORMAL_OUTPUT}"
