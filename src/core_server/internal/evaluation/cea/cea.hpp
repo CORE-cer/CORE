@@ -33,18 +33,14 @@ struct CEA {
 
  public:
   CEA(LogicalCEA&& logical_cea) {
-    // std::cout << "Logical CEA Initial States in CEA file: " << logical_cea.get_initial_states().size() << std::endl;
     // clang-format off
     logical_cea = RemoveUnreachableStates()(
                   RemoveUselessStates()(
                   RemoveEpsilonTransitions()(
                   AddUniqueInitialState()(std::move(logical_cea)))));
     // clang-format on
-    //std::cout << "Logical CEA Initial States in CEA file after formatting: " << logical_cea.get_initial_states().size() << std::endl;
     amount_of_states = logical_cea.amount_of_states;
     transcribe_transitions(logical_cea);
-
-    //std::cout << "Logical CEA Initial States in CEA file after transcribe: " << logical_cea.get_initial_states().size() << std::endl;
     auto initial_states_list = logical_cea.get_initial_states();
     assert(initial_states_list.size() == 1);
     initial_state = initial_states_list[0];
