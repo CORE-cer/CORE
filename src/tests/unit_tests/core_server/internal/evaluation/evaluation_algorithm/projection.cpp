@@ -28,7 +28,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -170,7 +170,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel")
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -309,7 +309,7 @@ TEST_CASE("Evaluation of long query with projection") {
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -517,7 +517,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -729,7 +729,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -874,7 +874,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -965,7 +965,7 @@ TEST_CASE(
     "SELECT SELL, BUY FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -1060,7 +1060,7 @@ TEST_CASE(
     "SELECT BUY FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -1149,7 +1149,7 @@ TEST_CASE(
     "SELECT nt FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -1240,7 +1240,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -1328,7 +1328,7 @@ TEST_CASE(
     "SELECT BUY, SELL FROM Stock\n"
     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -1426,7 +1426,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(

@@ -40,7 +40,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within") {
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "WITHIN 1000 [stock_time]";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -195,7 +195,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "WITHIN 5 [stock_time]";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -330,7 +330,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within smaller + 1") {
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "WITHIN 6 [stock_time]";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(

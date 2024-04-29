@@ -48,76 +48,18 @@ class QueryParser {
     // Parse the input
     antlr4::tree::ParseTree* tree = parser.parse();
 
-    FromVisitorCatalog from_visitor(catalog);
+    FromVisitor from_visitor(catalog);
     from_visitor.visit(tree);
-    CEQL::From from = from_visitor.get_parsed_from_catalog();
+    CEQL::From from = from_visitor.get_parsed_from();
     std::set<std::string>& streams = from.streams;
     std::map<std::string, std::vector<Types::EventInfo>>
       streams_events = get_streams_events_map(catalog, streams);
-
-    SelectVisitorCatalog select_visitor(catalog, streams_events);
-    select_visitor.visit(tree);
-    CEQL::Select select = select_visitor.get_parsed_select();
-
-    WhereVisitorCatalog where_visitor(catalog, streams_events);
-    where_visitor.visit(tree);
-    CEQL::Where where = where_visitor.get_parsed_where();
-
-    PartitionByVisitor partition_by_visitor;
-    partition_by_visitor.visit(tree);
-    CEQL::PartitionBy partition_by = partition_by_visitor.get_parsed_partition_by();
-
-    WithinVisitor within_visitor;
-    within_visitor.visit(tree);
-    CEQL::Within within = within_visitor.get_parsed_within();
-
-    ConsumeByVisitor consume_visitor;
-    consume_visitor.visit(tree);
-    CEQL::ConsumeBy consume = consume_visitor.get_parsed_consume();
-
-    LimitVisitor limit_visitor;
-    limit_visitor.visit(tree);
-    CEQL::Limit limit = limit_visitor.get_parsed_limit();
-
-    return {std::move(select),
-            std::move(from),
-            std::move(where),
-            std::move(partition_by),
-            std::move(within),
-            std::move(consume),
-            std::move(limit)};
-  }
-
-  static CEQL::Query parse_query(std::string query) {
-    // TODO finish this.
-    // Convert the input string to a stream
-    antlr4::ANTLRInputStream input(query);
-
-    // Use the ANTLR input stream to create a lexer
-    CEQLQueryLexer lexer(&input);
-
-    // Use the lexer to create a token stream
-    antlr4::CommonTokenStream tokens(&lexer);
-
-    // Use the token stream to create a parser
-    CEQLQueryParser parser(&tokens);
-
-    parser.removeErrorListeners();
-    antlr4::ParseErrorListener error_listener;
-    parser.addErrorListener(&error_listener);
-
-    // Parse the input
-    antlr4::tree::ParseTree* tree = parser.parse();
 
     SelectVisitor select_visitor;
     select_visitor.visit(tree);
     CEQL::Select select = select_visitor.get_parsed_select();
 
-    FromVisitor from_visitor;
-    from_visitor.visit(tree);
-    CEQL::From from = from_visitor.get_parsed_from();
-
-    WhereVisitor where_visitor;
+    WhereVisitorCatalog where_visitor(catalog, streams_events);
     where_visitor.visit(tree);
     CEQL::Where where = where_visitor.get_parsed_where();
 

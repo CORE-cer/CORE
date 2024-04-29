@@ -9,41 +9,18 @@
 #include "shared/exceptions/stream_not_found_exception.hpp"
 
 namespace CORE::Internal::Parsing {
-class FromVisitorCatalog : public CEQLQueryParserBaseVisitor {
+class FromVisitor : public CEQLQueryParserBaseVisitor {
  private:
   std::set<std::string> streams;
   Catalog& catalog;
 
  public:
-  FromVisitorCatalog(Catalog& catalog) : catalog(catalog) {}
+  FromVisitor(Catalog& catalog) : catalog(catalog) {}
 
-  CEQL::From get_parsed_from_catalog() {
+  CEQL::From get_parsed_from() {
     check_if_streams_names_are_in_catalog(catalog, streams);
     return CEQL::From(std::move(streams));
   }
-
-  virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
-    // Visiting From clause will identify all streams.
-    auto from_ctx = ctx->from_clause();
-    if (from_ctx) {
-      visit(from_ctx);
-    }
-    return {};  // Only interested in stream names
-  }
-
-  virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext* ctx) override {
-    streams.insert(ctx->getText());
-    return {};
-  }
-};
-
-// TODO: Refactor this
-class FromVisitor : public CEQLQueryParserBaseVisitor {
- private:
-  std::set<std::string> streams;
-
- public:
-  CEQL::From get_parsed_from() { return CEQL::From(std::move(streams)); }
 
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting From clause will identify all streams.
