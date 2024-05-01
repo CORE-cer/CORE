@@ -59,7 +59,7 @@ class QueryParser {
     select_visitor.visit(tree);
     CEQL::Select select = select_visitor.get_parsed_select();
 
-    WhereVisitorCatalog where_visitor(catalog, streams_events);
+    WhereVisitor where_visitor(catalog, streams_events);
     where_visitor.visit(tree);
     CEQL::Where where = where_visitor.get_parsed_where();
 

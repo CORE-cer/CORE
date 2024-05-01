@@ -69,9 +69,7 @@ class SelectVisitorCatalog : public CEQLQueryParserBaseVisitor {
     std::string event_name = ctx->event_name()->getText();
     if (ctx->stream_name()) {
       std::string stream_name = ctx->stream_name()->getText();
-      check_event_in_specific_stream(stream_name,
-                                     event_name,
-                                     streams_events_map);
+      check_event_in_specific_stream(stream_name, event_name, streams_events_map);
       streams_events.insert({stream_name, event_name});
     } else {
       check_if_event_exists_in_streams(event_name, streams_events_map);

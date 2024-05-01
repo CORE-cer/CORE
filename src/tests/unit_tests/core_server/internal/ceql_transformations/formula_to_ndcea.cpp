@@ -54,7 +54,8 @@ TEST_CASE("Basic Event Type Filtered", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type(
     {"S", {{"H", {{"Int", Types::ValueTypes::INT64}}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("H FILTER H[Int > 2]"), catalog);
+  auto query = Parsing::QueryParser::parse_query(create_query("H FILTER H[Int > 2]"),
+                                                 catalog);
   QueryCatalog query_catalog(catalog);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
