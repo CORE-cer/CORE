@@ -25,7 +25,7 @@ class ApplyFiltersToLogicalCEA : public FilterVisitor {
  private:
   CEA::LogicalCEA& logical_cea;
   const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id;
-  const std::map<std::string, std::size_t>& variables_to_id;
+  const std::map<std::string, uint64_t>& variables_to_id;
   const QueryCatalog& query_catalog;
 
  public:
