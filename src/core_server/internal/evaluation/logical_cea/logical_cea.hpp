@@ -121,7 +121,8 @@ struct LogicalCEA {
          stream_event_to_id) {
       auto&& [current_stream_name, current_event_name] = current_stream_event_name;
       if (current_event_name == event_name) {
-        VariablesToMark current_stream_event_mark = mpz_class(1) << current_stream_event_id;
+        VariablesToMark current_stream_event_mark = mpz_class(1)
+                                                    << current_stream_event_id;
         VariablesToMark mark = current_stream_event_mark | event_mark;
         atomic_cea.transitions[0].push_back(
           std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
