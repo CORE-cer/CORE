@@ -183,6 +183,11 @@ class Client {
         res.serialized_response_data);
       throw std::runtime_error(response_string);
     }
+    if (res.response_type == Types::ServerResponseType::Warning) {
+      auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+        res.serialized_response_data);
+      std::cout << response_string << std::flush;
+    }
     return res;
   }
 

@@ -15,6 +15,6 @@ class ParsingSyntaxException : public std::exception {
   virtual const char* what() const noexcept override { return m_message.c_str(); }
 
  private:
-  std::string m_message;  // Mensaje de la excepción
+  std::string m_message;
 };
 }  // namespace CORE

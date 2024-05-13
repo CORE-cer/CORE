@@ -25,7 +25,6 @@ class PartitionByVisitor;
 
 class QueryParser {
  public:
-  // TODO: Refactor the duplicate code
   static CEQL::Query parse_query(std::string query, Catalog& catalog) {
     // TODO finish this.
     // Convert the input string to a stream
@@ -55,13 +54,14 @@ class QueryParser {
     std::map<std::string, std::vector<Types::EventInfo>>
       streams_events = get_streams_events_map(catalog, streams);
 
-    SelectVisitor select_visitor;
-    select_visitor.visit(tree);
-    CEQL::Select select = select_visitor.get_parsed_select();
-
     WhereVisitor where_visitor(catalog, streams_events);
     where_visitor.visit(tree);
     CEQL::Where where = where_visitor.get_parsed_where();
+
+    std::vector<std::string> as_events = where_visitor.get_as_events();
+    SelectVisitor select_visitor(catalog, streams_events, as_events);
+    select_visitor.visit(tree);
+    CEQL::Select select = select_visitor.get_parsed_select();
 
     PartitionByVisitor partition_by_visitor;
     partition_by_visitor.visit(tree);

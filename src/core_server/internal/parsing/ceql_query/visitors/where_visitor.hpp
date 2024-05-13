@@ -30,6 +30,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   std::unique_ptr<CEQL::Formula> formula;
   Catalog& catalog;
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events;
+  std::vector<std::string> as_events;
 
   FilterVisitor filter_visitor;
 
@@ -39,6 +40,8 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
       : catalog(catalog), streams_events(streams_events) {}
 
   CEQL::Where get_parsed_where() { return CEQL::Where(std::move(formula)); }
+
+  std::vector<std::string> get_as_events() { return as_events; }
 
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting Where clause will identify all streams.
@@ -66,6 +69,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     visit(ctx->cel_formula());
     formula = std::make_unique<CEQL::AsFormula>(std::move(formula),
                                                 ctx->event_name()->getText());
+    as_events.push_back(ctx->event_name()->getText());
 
     return {};
   }

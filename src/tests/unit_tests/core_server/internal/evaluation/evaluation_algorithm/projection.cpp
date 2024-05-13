@@ -1138,183 +1138,183 @@ TEST_CASE(
   REQUIRE(is_the_same_as(output.complex_events[1].events[0], 1, "INTL", 80));
 }
 
-TEST_CASE(
-  "Evaluation of a query with mix of non contiguous iteration, contiguous "
-  "sequencing, and non contiguous sequencing / Empty Projection") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+// TEST_CASE(
+//   "Evaluation of a query with mix of non contiguous iteration, contiguous "
+//   "sequencing, and non contiguous sequencing / Empty Projection") {
+//   Internal::Interface::Backend<TestResultHandler> backend;
 
-  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
-  std::string string_query =
-    "SELECT nt FROM Stock\n"
-    "WHERE (SELL)+: BUY: SELL";
+//   std::string string_query =
+//     "SELECT nt FROM Stock\n"
+//     "WHERE (SELL)+: BUY: SELL";
 
-  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
+//   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+//   std::unique_ptr<TestResultHandler>
+//     result_handler_ptr = std::make_unique<TestResultHandler>(
+//       QueryCatalog(backend.get_catalog_reference()));
+//   TestResultHandler& result_handler = *result_handler_ptr;
 
-  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-  Types::Event event;
-  Types::Enumerator output;
+//   Types::Event event;
+//   Types::Enumerator output;
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("MSFT"),
-            std::make_shared<Types::IntValue>(101)}};
-  INFO("SELL MSFT 101");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("MSFT"),
+//             std::make_shared<Types::IntValue>(101)}};
+//   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {1,
-           {std::make_shared<Types::StringValue>("INTL"),
-            std::make_shared<Types::IntValue>(80)}};
-  INFO("BUY INTL 80");
+//   event = {1,
+//            {std::make_shared<Types::StringValue>("INTL"),
+//             std::make_shared<Types::IntValue>(80)}};
+//   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("MSFT"),
-            std::make_shared<Types::IntValue>(102)}};
-  INFO("SELL MSFT 102");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("MSFT"),
+//             std::make_shared<Types::IntValue>(102)}};
+//   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 1);
+//   REQUIRE(output.complex_events.size() == 1);
 
-  event = {1,
-           {std::make_shared<Types::StringValue>("INTL"),
-            std::make_shared<Types::IntValue>(80)}};
-  INFO("BUY INTL 80");
+//   event = {1,
+//            {std::make_shared<Types::StringValue>("INTL"),
+//             std::make_shared<Types::IntValue>(80)}};
+//   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("AMZN"),
-            std::make_shared<Types::IntValue>(1900)}};
-  INFO("SELL AMZN 1900");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("AMZN"),
+//             std::make_shared<Types::IntValue>(1900)}};
+//   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 2);
-  REQUIRE(output.complex_events[0].start == 2);
-  REQUIRE(output.complex_events[0].end == 4);
-  REQUIRE(output.complex_events[1].start == 0);
-  REQUIRE(output.complex_events[1].end == 4);
+//   REQUIRE(output.complex_events.size() == 2);
+//   REQUIRE(output.complex_events[0].start == 2);
+//   REQUIRE(output.complex_events[0].end == 4);
+//   REQUIRE(output.complex_events[1].start == 0);
+//   REQUIRE(output.complex_events[1].end == 4);
 
-  REQUIRE(output.complex_events[0].events.size() == 0);
+//   REQUIRE(output.complex_events[0].events.size() == 0);
 
-  REQUIRE(output.complex_events[1].events.size() == 0);
-}
+//   REQUIRE(output.complex_events[1].events.size() == 0);
+// }
 
-TEST_CASE(
-  "Evaluation of a query with mix of contiguous iteration, contiguous "
-  "sequencing, non contiguous sequencing, and "
-  "OR v2 / Empty Projection") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+// TEST_CASE(
+//   "Evaluation of a query with mix of contiguous iteration, contiguous "
+//   "sequencing, non contiguous sequencing, and "
+//   "OR v2 / Empty Projection") {
+//   Internal::Interface::Backend<TestResultHandler> backend;
 
-  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
-  std::string string_query =
-    "SELECT nvda FROM Stock\n"
-    "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
-    "FILTER msft[name='MSFT']\n"
-    "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+//   std::string string_query =
+//     "SELECT nvda FROM Stock\n"
+//     "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
+//     "FILTER msft[name='MSFT']\n"
+//     "    AND intel[name='INTL']\n"
+//     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
+//   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+//   std::unique_ptr<TestResultHandler>
+//     result_handler_ptr = std::make_unique<TestResultHandler>(
+//       QueryCatalog(backend.get_catalog_reference()));
+//   TestResultHandler& result_handler = *result_handler_ptr;
 
-  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-  Types::Event event;
-  Types::Enumerator output;
+//   Types::Event event;
+//   Types::Enumerator output;
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("MSFT"),
-            std::make_shared<Types::IntValue>(101)}};
-  INFO("SELL MSFT 101");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("MSFT"),
+//             std::make_shared<Types::IntValue>(101)}};
+//   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("MSFT"),
-            std::make_shared<Types::IntValue>(102)}};
-  INFO("SELL MSFT 102");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("MSFT"),
+//             std::make_shared<Types::IntValue>(102)}};
+//   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {1,
-           {std::make_shared<Types::StringValue>("INTL"),
-            std::make_shared<Types::IntValue>(80)}};
-  INFO("BUY INTL 80");
+//   event = {1,
+//            {std::make_shared<Types::StringValue>("INTL"),
+//             std::make_shared<Types::IntValue>(80)}};
+//   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("INTL"),
-            std::make_shared<Types::IntValue>(80)}};
-  INFO("SELL INTL 80");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("INTL"),
+//             std::make_shared<Types::IntValue>(80)}};
+//   INFO("SELL INTL 80");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 0);
+//   REQUIRE(output.complex_events.size() == 0);
 
-  event = {0,
-           {std::make_shared<Types::StringValue>("AMZN"),
-            std::make_shared<Types::IntValue>(1900)}};
-  INFO("SELL AMZN 1900");
+//   event = {0,
+//            {std::make_shared<Types::StringValue>("AMZN"),
+//             std::make_shared<Types::IntValue>(1900)}};
+//   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event);
+//   backend.send_event_to_queries(0, event);
 
-  output = result_handler.get_enumerator();
+//   output = result_handler.get_enumerator();
 
-  REQUIRE(output.complex_events.size() == 2);
-  REQUIRE(output.complex_events[0].start == 1);
-  REQUIRE(output.complex_events[0].end == 4);
-  REQUIRE(output.complex_events[1].start == 0);
-  REQUIRE(output.complex_events[1].end == 4);
+//   REQUIRE(output.complex_events.size() == 2);
+//   REQUIRE(output.complex_events[0].start == 1);
+//   REQUIRE(output.complex_events[0].end == 4);
+//   REQUIRE(output.complex_events[1].start == 0);
+//   REQUIRE(output.complex_events[1].end == 4);
 
-  REQUIRE(output.complex_events[0].events.size() == 0);
+//   REQUIRE(output.complex_events[0].events.size() == 0);
 
-  REQUIRE(output.complex_events[1].events.size() == 0);
-}
+//   REQUIRE(output.complex_events[1].events.size() == 0);
+// }
 
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "

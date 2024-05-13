@@ -23,6 +23,7 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
+#include "shared/exceptions/warning_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -170,6 +171,9 @@ class ClientMessageHandler {
       return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
                                      possible_port.value_or(0)),
                                    Types::ServerResponseType::PortNumber);
+    } catch (WarningException& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Warning);
     } catch (std::exception& e) {
       return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
                                    Types::ServerResponseType::Error);
