@@ -30,18 +30,35 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   std::unique_ptr<CEQL::Formula> formula;
   Catalog& catalog;
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events;
-  std::vector<std::string> as_events;
+  std::vector<std::string> as_events_names;
+  std::vector<Types::EventInfo> as_events_info;
+  std::map<std::string, std::vector<Types::EventInfo>> as_events_map_info;
 
-  FilterVisitor filter_visitor;
+  // FilterVisitor filter_visitor;
+  FilterVisitorCatalog filter_visitor;
 
  public:
   WhereVisitor(Catalog& catalog,
                std::map<std::string, std::vector<Types::EventInfo>>& streams_events)
-      : catalog(catalog), streams_events(streams_events) {}
+      : catalog(catalog),
+        streams_events(streams_events),
+        filter_visitor(catalog, streams_events) {}
 
-  CEQL::Where get_parsed_where() { return CEQL::Where(std::move(formula)); }
+  CEQL::Where get_parsed_where() { 
+    for (const auto& par : as_events_map_info) {
+        std::cout << "Clave: " << par.first << std::endl;
+        std::cout << "Valores: " << std::endl;
+        for (const auto& evento : par.second) {
+            // Aquí debes definir cómo quieres imprimir los datos de cada EventInfo
+            // Por ejemplo, podrías imprimir el nombre de cada evento
+            std::cout << "Nombre del evento: " << evento.name << std::endl;
+            // Aquí imprime otros miembros de EventInfo si es necesario
+        }
+        std::cout << std::endl;
+    }
+    return CEQL::Where(std::move(formula)); }
 
-  std::vector<std::string> get_as_events() { return as_events; }
+  std::vector<std::string> get_as_events() { return as_events_names; }
 
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
     // Visiting Where clause will identify all streams.
@@ -55,10 +72,13 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     std::string event_name = ctx->s_event_name()->event_name()->getText();
     if (ctx->s_event_name()->stream_name() == nullptr) {
       check_if_event_exists_in_streams(event_name, streams_events);
+      as_events_info.push_back(get_event_info_from_stream(event_name, streams_events));
       formula = std::make_unique<CEQL::EventTypeFormula>(event_name);
     } else {
       std::string stream_name = ctx->s_event_name()->stream_name()->getText();
       check_event_in_specific_stream(stream_name, event_name, streams_events);
+      as_events_info.push_back(
+        get_event_info_from_specific_stream(stream_name, event_name, streams_events));
       formula = std::make_unique<CEQL::EventTypeFormula>(stream_name, event_name);
     }
     return {};
@@ -69,8 +89,9 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     visit(ctx->cel_formula());
     formula = std::make_unique<CEQL::AsFormula>(std::move(formula),
                                                 ctx->event_name()->getText());
-    as_events.push_back(ctx->event_name()->getText());
-
+    as_events_names.push_back(ctx->event_name()->getText());
+    as_events_map_info.insert(std::make_pair(ctx->event_name()->getText(), as_events_info));
+    as_events_info.clear();
     return {};
   }
 

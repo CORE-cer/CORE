@@ -85,4 +85,33 @@ void check_if_streams_names_are_in_catalog(Catalog& catalog,
     }
   }
 }
+
+Types::EventInfo get_event_info_from_specific_stream(
+  std::string stream_name,
+  std::string event_name,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  auto it = streams_events.find(stream_name);
+  if (it != streams_events.end()) {
+    for (const auto& event : it->second) {
+      if (event.name == event_name) {
+        return event;
+      }
+    }
+  }
+  return Types::EventInfo();
+}
+
+Types::EventInfo get_event_info_from_stream(
+  std::string event_name,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  for (const auto& pair : streams_events) {
+    for (const auto& event : pair.second) {
+      if (event.name == event_name) {
+        return event;
+      }
+    }
+  }
+  return Types::EventInfo();
+}
+
 }  // namespace CORE::Internal::Parsing

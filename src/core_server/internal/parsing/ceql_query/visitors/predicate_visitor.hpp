@@ -32,6 +32,10 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
  public:
   std::unique_ptr<CEQL::Predicate> get_parsed_predicate() { return std::move(predicate); }
 
+  virtual std::vector<std::string> get_attributes() {
+    return value_visitor.get_attributes();
+  }
+
   virtual std::any
   visitNot_predicate(CEQLQueryParser::Not_predicateContext* ctx) override {
     visit(ctx->predicate());
