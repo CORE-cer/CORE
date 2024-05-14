@@ -114,4 +114,33 @@ Types::EventInfo get_event_info_from_stream(
   return Types::EventInfo();
 }
 
+// TODO: Refactor this
+bool attributes_exist_in_streams(const std::vector<std::string>& attributes,
+                                 const std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+    for (const auto& par : streams_events) {
+        const std::vector<Types::EventInfo>& events_info = par.second;
+        for (const Types::EventInfo& event_info : events_info) {
+            bool all_attributes_found = true;
+            for (const std::string& attribute : attributes) {
+                bool found = false;
+                for (const Types::AttributeInfo& event_attribute : event_info.attributes_info) {
+                    if (attribute == event_attribute.name) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    std::cout << attribute << std::endl;
+                    all_attributes_found = false;
+                    break;
+                }
+            }
+            if (all_attributes_found) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 }  // namespace CORE::Internal::Parsing

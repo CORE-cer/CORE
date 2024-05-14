@@ -38,4 +38,8 @@ Types::EventInfo get_event_info_from_specific_stream(
 Types::EventInfo get_event_info_from_stream(
   std::string event_name,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
+
+bool attributes_exist_in_streams(const std::vector<std::string>& attributes,
+                                 const std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
+
 }  // namespace CORE::Internal::Parsing

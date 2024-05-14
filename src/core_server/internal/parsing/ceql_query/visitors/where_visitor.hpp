@@ -30,9 +30,9 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   std::unique_ptr<CEQL::Formula> formula;
   Catalog& catalog;
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events;
+  // TODO: Change as_events_names for map in filter_visitor
   std::vector<std::string> as_events_names;
   std::vector<Types::EventInfo> as_events_info;
-  std::map<std::string, std::vector<Types::EventInfo>> as_events_map_info;
 
   // FilterVisitor filter_visitor;
   FilterVisitorCatalog filter_visitor;
@@ -44,19 +44,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
         streams_events(streams_events),
         filter_visitor(catalog, streams_events) {}
 
-  CEQL::Where get_parsed_where() { 
-    for (const auto& par : as_events_map_info) {
-        std::cout << "Clave: " << par.first << std::endl;
-        std::cout << "Valores: " << std::endl;
-        for (const auto& evento : par.second) {
-            // Aquí debes definir cómo quieres imprimir los datos de cada EventInfo
-            // Por ejemplo, podrías imprimir el nombre de cada evento
-            std::cout << "Nombre del evento: " << evento.name << std::endl;
-            // Aquí imprime otros miembros de EventInfo si es necesario
-        }
-        std::cout << std::endl;
-    }
-    return CEQL::Where(std::move(formula)); }
+  CEQL::Where get_parsed_where() { return CEQL::Where(std::move(formula)); }
 
   std::vector<std::string> get_as_events() { return as_events_names; }
 
@@ -90,7 +78,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     formula = std::make_unique<CEQL::AsFormula>(std::move(formula),
                                                 ctx->event_name()->getText());
     as_events_names.push_back(ctx->event_name()->getText());
-    as_events_map_info.insert(std::make_pair(ctx->event_name()->getText(), as_events_info));
+    filter_visitor.add_as_events_to_map(ctx->event_name()->getText(), as_events_info);
     as_events_info.clear();
     return {};
   }
