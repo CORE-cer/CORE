@@ -48,7 +48,7 @@ from_clause
 cel_formula
  : LEFT_PARENTHESIS cel_formula RIGHT_PARENTHESIS     # par_cel_formula
  | s_event_name                                       # event_type_cel_formula
- | K_NOT cel_formula                                  # negation_cel_formula                  
+ | not_s_event_name                                   # not_event_type_cel_formula                  
  | cel_formula K_AS event_name                        # as_cel_formula
  | cel_formula PLUS                                   # non_contiguous_iteration_cel_formula
  | cel_formula COLON_PLUS                             # contiguous_iteration_cel_formula
@@ -169,6 +169,10 @@ named_event
 s_event_name
  : ( stream_name '>' ) ? event_name
  ;
+
+not_s_event_name
+  : K_NOT s_event_name
+  ;
 
 event_name
  : any_name
