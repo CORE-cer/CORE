@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,6 +25,7 @@ struct Event {
    * to the Schema
    */
   UniqueEventTypeId event_type_id;
+  std::optional<uint64_t> primary_time;
   /**
    * Shared pointers are used because it can be exploited in serialization,
    * officially from cereal (our current serialization provider):
@@ -41,6 +44,13 @@ struct Event {
   Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
+
+  Event(UniqueEventTypeId event_type_id,
+        std::vector<std::shared_ptr<Types::Value>> attributes,
+        uint64_t primary_time) noexcept
+      : Event(event_type_id, attributes) {
+    primary_time = primary_time;
+  }
 
   std::string to_string() const {
     std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";

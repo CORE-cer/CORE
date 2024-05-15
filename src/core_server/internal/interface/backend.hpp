@@ -11,7 +11,6 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -25,20 +24,15 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/interface/queries/partition_by_query.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "queries/simple_query.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
-#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
-#include "shared/datatypes/value.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -163,5 +157,26 @@ class Backend {
       }
     }
   }
+
+  void send_tuple_to_query(RingTupleQueue::Tuple tuple, std::size_t query_idx) {
+    ZoneScopedN("Backend::send_event_to_queries");
+    uint64_t ns = tuple.nanoseconds();
+    if (!previous_event_sent) {
+      previous_event_sent = ns;
+    }
+    maximum_historic_time_between_events = std::max(maximum_historic_time_between_events,
+                                                    ns - previous_event_sent.value());
+    previous_event_sent = ns;
+    ZMQMessageSender& sender = inner_thread_event_senders[query_idx];
+    QueryCatalog& query_catalog = query_catalogs[query_idx];
+    if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
+      last_sent_tuple[query_idx] = tuple.get_data();
+      sender.send(tuple.serialize_data());
+    }
+  }
+
+  std::size_t get_number_of_queries() { return queries.size(); }
+
+  
 };
 }  // namespace CORE::Internal::Interface

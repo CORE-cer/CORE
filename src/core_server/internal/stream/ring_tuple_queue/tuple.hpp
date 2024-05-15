@@ -7,10 +7,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
-#include <iostream>
-#include <numeric>
 #include <stdexcept>
-#include <string_view>
 #include <vector>
 
 namespace RingTupleQueue {

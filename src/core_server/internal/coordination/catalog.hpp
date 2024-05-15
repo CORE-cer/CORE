@@ -45,7 +45,7 @@ class Catalog {
   [[nodiscard]] Types::StreamInfo
   add_stream_type(Types::StreamInfoParsed&& parsed_stream_info);
 
-  Types::StreamInfo
+  [[nodiscard]] Types::StreamInfo
   get_stream_info(const Types::StreamTypeId stream_type_id) const noexcept;
 
   const std::vector<Types::StreamInfo>& get_all_streams_info() const noexcept;

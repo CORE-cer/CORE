@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <set>
 #include <type_traits>
 
 #include "core_server/internal/coordination/catalog.hpp"
@@ -8,11 +9,13 @@
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/library/components/event_handler.hpp"
+#include "core_server/library/components/quarantine/quarantiner.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
 #include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/stream.hpp"
 
 namespace CORE::Library {
@@ -42,6 +45,7 @@ class OfflineServer {
 
   ResultHandlerFactoryT result_handler_factory{};
   Components::EventHandler event_handler;
+  Components::Quarantine::Quarantiner<HandlerType> quarantiner;
   Components::Router<ResultHandlerFactoryT> router;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
@@ -51,8 +55,9 @@ class OfflineServer {
         queue(100'000, &catalog.tuple_schemas),
         event_handler(catalog, queue),
         backend(catalog, queue),
+        quarantiner(backend, catalog),
         router{backend, next_available_port++, result_handler_factory},
-        stream_listener{event_handler, backend, next_available_port++} {}
+        stream_listener{event_handler, quarantiner, next_available_port++} {}
 
   OfflineServer(const OfflineServer&) = delete;
   OfflineServer& operator=(const OfflineServer&) = delete;
@@ -60,6 +65,8 @@ class OfflineServer {
   void receive_stream(const Types::Stream& stream) {
     stream_listener.receive_stream(stream);
   }
+
+  void declare_quarantine(const std::set<CORE::Types::StreamTypeId> streams) {}
 
   Internal::Interface::Backend<HandlerType>& get_backend_reference() { return backend; }
 };
