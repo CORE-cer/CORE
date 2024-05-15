@@ -25,9 +25,8 @@ namespace CORE::Library {
  *
  *  Stream Listener = starting_port + 1
  **/
+template <typename ResultHandlerFactoryT = Components::OfflineResultHandlerFactory>
 class OfflineServer {
-  using ResultHandlerFactoryT = Components::OfflineResultHandlerFactory;
-
   std::atomic<Types::PortNumber> next_available_port;
 
   using HandlerType = typename std::invoke_result_t<
@@ -45,6 +44,9 @@ class OfflineServer {
       : next_available_port(starting_port),
         router{backend, next_available_port++, result_handler_factory},
         stream_listener{backend, next_available_port++} {}
+
+  OfflineServer(const OfflineServer&) = delete;
+  OfflineServer& operator=(const OfflineServer&) = delete;
 
   void receive_stream(const Types::Stream& stream) {
     stream_listener.receive_stream(stream);

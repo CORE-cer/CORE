@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "core_client/client.hpp"
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/server.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -69,7 +70,9 @@ void create_queries(Client& client) {
   std::cout << "Created queries" << std::endl;
 }
 
-void send_a_stream(Library::OfflineServer& server, StocksData::Data data) {
+void send_a_stream(
+  Library::OfflineServer<Library::Components::OfflineResultHandlerFactory>& server,
+  StocksData::Data data) {
   // clang-format off
   Types::Event event_to_send{
     data.event_type,
