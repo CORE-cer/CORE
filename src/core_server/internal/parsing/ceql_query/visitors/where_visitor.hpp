@@ -103,18 +103,17 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     visit(ctx->cel_formula());
 
     // Dupe code from visitEvent_type_cel_formula
-    std::unique_ptr<CEQL::EventTypeFormula> unless_event;
+    std::unique_ptr<CEQL::EventTypeFormula> unless;
     if (ctx->s_event_name()->stream_name() == nullptr) {
-      unless_event = std::make_unique<CEQL::EventTypeFormula>(
+      unless = std::make_unique<CEQL::EventTypeFormula>(
         ctx->s_event_name()->event_name()->getText());
     } else {
-      unless_event = std::make_unique<CEQL::EventTypeFormula>(
+      unless = std::make_unique<CEQL::EventTypeFormula>(
         ctx->s_event_name()->stream_name()->getText(),
         ctx->s_event_name()->event_name()->getText());
     }
 
-    formula = std::make_unique<CEQL::UnlessFormula>(std::move(formula),
-                                                    std::move(unless_event));
+    formula = std::make_unique<CEQL::UnlessFormula>(std::move(formula), std::move(unless));
 
     return {};
   }
