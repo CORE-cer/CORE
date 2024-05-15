@@ -7,3 +7,4 @@
 #include "non_contiguous_sequencing_formula.hpp"
 #include "or_formula.hpp"
 #include "projection_formula.hpp"
+#include "unless_formula.hpp"

@@ -99,6 +99,10 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     current_cea = CEA::Union()(left_cea, right_cea);
   }
 
+  void visit(UnlessFormula& formula) override {
+    // TODO
+  }
+
   void visit(NonContiguousSequencingFormula& formula) override {
     formula.left->accept_visitor(*this);
     CEA::LogicalCEA left_cea = std::move(current_cea);
