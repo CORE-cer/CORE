@@ -1,5 +1,5 @@
 SELECT * FROM S
 WHERE (SELL as msft; BUY as oracle; BUY as csco; SELL as amat)
-FILTER msft[name = 'MSFT'] AND oracle[name = 'ORCL'] AND csco[name = 'CSCO'] AND amat[name = 'AMAT']
+FILTER msft[names = 'MSFT'] AND oracle[name = 'ORCL'] AND csco[name = 'CSCO'] AND amat[name = 'AMAT']
 WITHIN 10000 [stock_time]
 CONSUME BY ANY

@@ -5,6 +5,7 @@
 
 #include "core_server/internal/coordination/catalog.hpp"
 #include "shared/exceptions/stream_not_found_exception.hpp"
+#include "shared/exceptions/warning_exception.hpp"
 
 namespace CORE::Internal::Parsing {
 std::map<std::string, std::vector<Types::EventInfo>>
@@ -114,33 +115,48 @@ Types::EventInfo get_event_info_from_stream(
   return Types::EventInfo();
 }
 
-// TODO: Refactor this
-bool attributes_exist_in_streams(const std::vector<std::string>& attributes,
-                                 const std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
-    for (const auto& par : streams_events) {
-        const std::vector<Types::EventInfo>& events_info = par.second;
-        for (const Types::EventInfo& event_info : events_info) {
-            bool all_attributes_found = true;
-            for (const std::string& attribute : attributes) {
-                bool found = false;
-                for (const Types::AttributeInfo& event_attribute : event_info.attributes_info) {
-                    if (attribute == event_attribute.name) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    std::cout << attribute << std::endl;
-                    all_attributes_found = false;
-                    break;
-                }
-            }
-            if (all_attributes_found) {
-                return true;
-            }
-        }
+void check_if_attributes_is_defined(
+  std::vector<std::string>& attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
+  std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info) {
+  std::string attributes_names;
+  if (!attributes_exist_in_streams(attributes, streams_events)
+      || !attributes_exist_in_streams(attributes, as_events_map_info)) {
+    for (const std::string& attribute : attributes) {
+      attributes_names += attribute;
     }
-    return false;
+    throw WarningException("Warning: One or more of these attributes [" + attributes_names
+                           + "] is not defined ");
+  }
+}
+
+// TODO: Refactor this
+bool attributes_exist_in_streams(
+  const std::vector<std::string>& attributes,
+  const std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  for (const auto& par : streams_events) {
+    const std::vector<Types::EventInfo>& events_info = par.second;
+    for (const Types::EventInfo& event_info : events_info) {
+      bool all_attributes_found = true;
+      for (const std::string& attribute : attributes) {
+        bool found = false;
+        for (const Types::AttributeInfo& event_attribute : event_info.attributes_info) {
+          if (attribute == event_attribute.name) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          all_attributes_found = false;
+          break;
+        }
+      }
+      if (all_attributes_found) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 }  // namespace CORE::Internal::Parsing

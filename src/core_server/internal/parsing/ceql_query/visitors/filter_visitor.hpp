@@ -54,9 +54,7 @@ class FilterVisitorCatalog : public CEQLQueryParserBaseVisitor {
                                                     event_name,
                                                     std::move(filter_from_predicate));
     } else {
-      if (!attributes_exist_in_streams(attributes, streams_events) || !attributes_exist_in_streams (attributes, as_events_map_info)){
-        std::cout << "error" << std::endl;
-      }
+      check_if_attributes_is_defined(attributes, streams_events, as_events_map_info);
       filter = std::make_unique<CEQL::AtomicFilter>(event_name,
                                                     std::move(filter_from_predicate));
     }
