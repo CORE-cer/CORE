@@ -9,6 +9,9 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -17,7 +20,10 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 

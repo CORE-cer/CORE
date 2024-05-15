@@ -51,6 +51,8 @@ class OfflineServer {
   void receive_stream(const Types::Stream& stream) {
     stream_listener.receive_stream(stream);
   }
+
+  Internal::Interface::Backend<HandlerType>& get_backend_reference() { return backend; }
 };
 
 /**

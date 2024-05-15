@@ -7,6 +7,7 @@
 #include <string>
 
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
@@ -44,6 +45,18 @@ bool is_the_same_as(Types::Event event,
 }
 
 Types::StreamInfo basic_stock_declaration(Interface::Backend<TestResultHandler>& backend) {
+  Types::StreamInfo stream_info = backend.add_stream_type(
+    {"Stock",
+     {{"SELL",
+       {{"name", Types::ValueTypes::STRING_VIEW}, {"price", Types::ValueTypes::INT64}}},
+      {"BUY",
+       {{"name", Types::ValueTypes::STRING_VIEW}, {"price", Types::ValueTypes::INT64}}}}});
+
+  return stream_info;
+}
+
+Types::StreamInfo basic_stock_declaration(
+  Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>& backend) {
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
      {{"SELL",
