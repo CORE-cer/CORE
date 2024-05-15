@@ -9,6 +9,9 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -18,7 +21,10 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -47,7 +53,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -58,7 +64,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -69,7 +75,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -80,7 +86,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -91,7 +97,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -116,7 +122,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(81)}};
   INFO("SELL INTL 81");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -127,7 +133,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
             std::make_shared<Types::IntValue>(1920)}};
   INFO("SELL AMZN 1920");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -138,7 +144,10 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -167,7 +176,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -178,7 +187,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -189,7 +198,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -200,7 +209,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -211,7 +220,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -266,7 +275,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(105)}};
   INFO("SELL MSFT 105");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -277,7 +286,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(85)}};
   INFO("SELL INTL 85");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -290,7 +299,7 @@ TEST_CASE(
 
   // NOTE: If fails, should chck if correct. Made assuming correctness
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -307,7 +316,10 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -336,7 +348,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(101)}};
   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -347,7 +359,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(102)}};
   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -358,7 +370,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(80)}};
   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -369,7 +381,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(80)}};
   INFO("SELL INTL 80");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -380,7 +392,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1900)}};
   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -405,7 +417,10 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -445,7 +460,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL MSFT 101 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -457,7 +472,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL MSFT 101 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -469,7 +484,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL MSFT 102 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -481,7 +496,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL MSFT 102 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -493,7 +508,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL INTL 80 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -505,7 +520,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL INTL 80 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -517,7 +532,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("BUY INTL 80 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -529,7 +544,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("BUY INTL 80 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -541,7 +556,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL AMZN 1900 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -567,7 +582,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL AMZN 1900 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -580,7 +595,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL INTL 81 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -592,7 +607,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL INTL 81 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -604,7 +619,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL AMZN 1920 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -616,7 +631,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL AMZN 1920 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -626,7 +641,10 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by partition") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>&
+    backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -666,7 +684,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL MSFT 101 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -678,7 +696,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL MSFT 101 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -690,7 +708,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL MSFT 102 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -702,7 +720,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL MSFT 102 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -714,7 +732,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL INTL 80 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -726,7 +744,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL INTL 80 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -738,7 +756,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("BUY INTL 80 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -750,7 +768,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("BUY INTL 80 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -762,7 +780,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL AMZN 1900 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -788,7 +806,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL AMZN 1900 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -815,7 +833,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL INTL 81 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -827,7 +845,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL INTL 81 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -839,7 +857,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(0)}};
   INFO("SELL AMZN 1920 - part 0");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -852,7 +870,7 @@ TEST_CASE(
             std::make_shared<Types::IntValue>(1)}};
   INFO("SELL AMZN 1920 - part 1");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 

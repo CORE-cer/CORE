@@ -46,8 +46,8 @@ namespace CORE::Internal::Interface {
 
 template <typename ResultHandlerT>
 class Backend {
-  Internal::Catalog catalog = {};
-  RingTupleQueue::Queue queue;
+  Internal::Catalog& catalog;
+  RingTupleQueue::Queue& queue;
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
   std::vector<std::reference_wrapper<std::atomic<uint64_t*>>> last_received_tuple = {};
@@ -68,7 +68,8 @@ class Backend {
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
-  Backend() : queue(100'000, &catalog.tuple_schemas) {}
+  Backend(Catalog& catalog, RingTupleQueue::Queue& queue)
+      : catalog(catalog), queue(queue) {}
 
   ~Backend() {
     for (int i = 0; i < last_received_tuple.size(); i++) {
@@ -144,9 +145,8 @@ class Backend {
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 
-  void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
+  void send_event_to_queries(RingTupleQueue::Tuple tuple) {
     ZoneScopedN("Backend::send_event_to_queries");
-    RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
       previous_event_sent = ns;
@@ -162,130 +162,6 @@ class Backend {
         sender.send(tuple.serialize_data());
       }
     }
-
-    // TODO: Don't do this always.
-    update_space_of_ring_tuple_queue();
-  }
-
- private:
-  void update_space_of_ring_tuple_queue() {
-    if (query_events_expiration_time.size() != 0) {
-      assert(query_events_expiration_time.size() == query_events_time_window_mode.size());
-      uint64_t consensus = UINT64_MAX;
-      for (size_t i = 0; i < query_events_time_window_mode.size(); i++) {
-        switch (query_events_time_window_mode[i]) {
-          case CEQL::Within::TimeWindowMode::EVENTS:
-            consensus = std::min(query_events_expiration_time[i].get()
-                                   * maximum_historic_time_between_events,
-                                 consensus);
-          case CEQL::Within::TimeWindowMode::ATTRIBUTE:
-            consensus = 0;
-            break;
-          case CEQL::Within::TimeWindowMode::NONE:
-          case CEQL::Within::TimeWindowMode::NANOSECONDS:
-            consensus = std::min(query_events_expiration_time[i].get().load(), consensus);
-            break;
-          default:
-            assert(false
-                   && "Unknown time_window mode in update_space_of_ring_tuple_queue.");
-            break;
-        }
-      }
-      queue.update_overwrite_timepoint(consensus);
-    }
-  }
-
-  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event) {
-    ZoneScopedN("Backend::event_to_tuple");
-    if (event.event_type_id > catalog.number_of_events()) {
-      throw std::runtime_error("Provided event type id is not valid.");
-    }
-    Types::EventInfo event_info = catalog.get_event_info(event.event_type_id);
-    std::vector<Types::AttributeInfo> attr_infos = event_info.attributes_info;
-    if (attr_infos.size() != event.attributes.size()) {
-      throw std::runtime_error("Event had an incorrect number of attributes");
-    }
-
-    uint64_t* data = queue.start_tuple(event.event_type_id);
-
-    for (size_t i = 0; i < attr_infos.size(); i++) {
-      auto& attr_info = attr_infos[i];
-      // TODO: Why is this a shared_ptr?
-      std::shared_ptr<Types::Value> attr = event.attributes[i];
-      switch (attr_info.value_type) {
-        case Types::INT64:
-          write_int(attr);
-          break;
-        case Types::DOUBLE:
-          write_double(attr);
-          break;
-        case Types::BOOL:
-          write_bool(attr);
-          break;
-        case Types::STRING_VIEW:
-          write_string_view(attr);
-          break;
-        case Types::DATE:
-          write_date(attr);
-          break;
-        default:
-          assert(
-            false
-            && "A value type was added but not updated in the switch in event_to_tuple");
-      }
-    }
-    return queue.get_tuple(data);
-  }
-
-  void write_int(std::shared_ptr<Types::Value>& attr) {
-    Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(attr.get());
-    if (val_ptr == nullptr)
-      throw std::runtime_error(
-        "An attribute type that is not an IntValue was provided where it "
-        "should have been an IntValue!");
-    int64_t* integer_ptr = queue.writer<int64_t>();
-    *integer_ptr = val_ptr->val;
-  }
-
-  void write_double(std::shared_ptr<Types::Value>& attr) {
-    Types::DoubleValue* val_ptr = dynamic_cast<Types::DoubleValue*>(attr.get());
-    if (val_ptr == nullptr)
-      throw std::runtime_error(
-        "An attribute type that is not an DoubleValue was provided where "
-        "it "
-        "should have been an DoubleValue!");
-    double* double_ptr = queue.writer<double>();
-    *double_ptr = val_ptr->val;
-  }
-
-  void write_bool(std::shared_ptr<Types::Value>& attr) {
-    Types::BoolValue* val_ptr = dynamic_cast<Types::BoolValue*>(attr.get());
-    if (val_ptr == nullptr)
-      throw std::runtime_error(
-        "An attribute type that is not an BoolValue was provided where it "
-        "should have been an BoolValue!");
-    bool* bool_ptr = queue.writer<bool>();
-    *bool_ptr = val_ptr->val;
-  }
-
-  void write_string_view(std::shared_ptr<Types::Value>& attr) {
-    Types::StringValue* val_ptr = dynamic_cast<Types::StringValue*>(attr.get());
-    if (val_ptr == nullptr)
-      throw std::runtime_error(
-        "An attribute type that is not a StringValue was provided where it "
-        "should have been a StringValue!");
-    char* chars = queue.writer<std::string>(val_ptr->val.size());
-    memcpy(chars, &val_ptr->val[0], val_ptr->val.size());
-  }
-
-  void write_date(std::shared_ptr<Types::Value>& attr) {
-    Types::DateValue* val_ptr = dynamic_cast<Types::DateValue*>(attr.get());
-    if (val_ptr == nullptr)
-      throw std::runtime_error(
-        "An attribute type that is not a DateValue was provided where it "
-        "should have been a DateValue!");
-    std::time_t* time_ptr = queue.writer<std::time_t>();
-    *time_ptr = val_ptr->val;
   }
 };
 }  // namespace CORE::Internal::Interface

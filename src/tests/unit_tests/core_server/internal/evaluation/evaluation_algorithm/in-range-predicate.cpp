@@ -9,6 +9,9 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/server.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -18,7 +21,9 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of in-range predicate") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Types::PortNumber starting_port{5000};
+  Library::OfflineServer<TestResultHandlerFactory> server{starting_port};
+  Internal::Interface::Backend<Library::Components::ResultHandler<TestResultHandler>>& backend = server.get_backend_reference();
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -56,7 +61,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(200)}};
   INFO("SELL MSFT 150 200");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -68,7 +73,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(350)}};
   INFO("SELL MSFT 292 350");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -80,7 +85,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(100)}};
   INFO("SELL INTL 80 100");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -92,7 +97,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(120)}};
   INFO("BUY AMZN 100 120");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -104,7 +109,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(75)}};
   INFO("SELL AMZN 50 75");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -123,7 +128,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(140)}};
   INFO("SELL INTL 80 140");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 
@@ -135,7 +140,7 @@ TEST_CASE("Evaluation of in-range predicate") {
             std::make_shared<Types::IntValue>(2000)}};
   INFO("SELL AMZN 1920 2000");
 
-  backend.send_event_to_queries(0, event);
+  server.receive_stream({0, {event}});
 
   output = result_handler.get_enumerator();
 

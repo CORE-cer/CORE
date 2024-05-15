@@ -3,8 +3,11 @@
 #include <atomic>
 #include <type_traits>
 
+#include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/library/components/event_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
@@ -28,6 +31,8 @@ namespace CORE::Library {
 template <typename ResultHandlerFactoryT = Components::OfflineResultHandlerFactory>
 class OfflineServer {
   std::atomic<Types::PortNumber> next_available_port;
+  Internal::Catalog catalog = {};
+  RingTupleQueue::Queue queue;
 
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
@@ -36,14 +41,18 @@ class OfflineServer {
   Internal::Interface::Backend<HandlerType> backend;
 
   ResultHandlerFactoryT result_handler_factory{};
+  Components::EventHandler event_handler;
   Components::Router<ResultHandlerFactoryT> router;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
  public:
   OfflineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
+        queue(100'000, &catalog.tuple_schemas),
+        event_handler(catalog, queue),
+        backend(catalog, queue),
         router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {}
+        stream_listener{event_handler, backend, next_available_port++} {}
 
   OfflineServer(const OfflineServer&) = delete;
   OfflineServer& operator=(const OfflineServer&) = delete;
@@ -71,6 +80,8 @@ class OnlineServer {
   using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
 
   std::atomic<Types::PortNumber> next_available_port;
+  Internal::Catalog catalog = {};
+  RingTupleQueue::Queue queue;
 
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
@@ -79,15 +90,19 @@ class OnlineServer {
   Internal::Interface::Backend<HandlerType> backend;
 
   ResultHandlerFactoryT result_handler_factory;
+  Components::EventHandler event_handler;
   Components::Router<ResultHandlerFactoryT> router;
   Components::OnlineStreamsListener<HandlerType> stream_listener;
 
  public:
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
+        queue(100'000, &catalog.tuple_schemas),
+        event_handler(catalog, queue),
         result_handler_factory{next_available_port},
+        backend(catalog, queue),
         router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {}
+        stream_listener{event_handler, backend, next_available_port++} {}
 
   void receive_stream(const Types::Stream& stream) {
     static_assert("in memory receive_stream not supported on online server");

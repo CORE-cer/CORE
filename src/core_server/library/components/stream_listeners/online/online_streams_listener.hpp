@@ -8,6 +8,8 @@
 #include <thread>
 
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "core_server/library/components/event_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
@@ -21,6 +23,7 @@ class OnlineStreamsListener {
   using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT>;
 
  private:
+  EventHandler& event_handler;
   Backend& backend;
   Types::PortNumber receiver_port;
   Internal::ZMQMessageReceiver receiver;
@@ -28,8 +31,11 @@ class OnlineStreamsListener {
   std::atomic<bool> stop_condition;
 
  public:
-  OnlineStreamsListener(Backend& backend, Types::PortNumber port_number)
-      : backend(backend),
+  OnlineStreamsListener(EventHandler& event_handler,
+                        Backend& backend,
+                        Types::PortNumber port_number)
+      : event_handler(event_handler),
+        backend(backend),
         receiver_port(port_number),
         receiver("tcp://*:" + std::to_string(port_number)) {
     start();
@@ -50,7 +56,8 @@ class OnlineStreamsListener {
         Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
           s_message);
         for (auto& event : stream.events) {
-          backend.send_event_to_queries(stream.id, event);
+          RingTupleQueue::Tuple tuple = event_handler.event_to_tuple(event);
+          backend.send_event_to_queries(tuple);
         }
       }
     });
