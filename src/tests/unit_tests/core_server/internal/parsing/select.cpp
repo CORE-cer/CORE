@@ -37,8 +37,12 @@ std::string create_select_query(std::string strategy, std::string variable_names
 
 Select parse_select(std::string query) {
   Catalog catalog;
+  Types::AttributeInfo id("id", Types::ValueTypes::INT64);
+  Types::AttributeInfo income("income", Types::ValueTypes::INT64);
+  Types::AttributeInfo temp("temp", Types::ValueTypes::INT64);
+  Types::AttributeInfo cost("cost", Types::ValueTypes::INT64);
   Types::StreamInfo stream_info = catalog.add_stream_type(
-    {"S", {{"H", {}}, {"T", {}}, {"A", {}}, {"B", {}}}});
+    {"S", {{"H", {id, income, cost}}, {"T", {temp}}, {"A", {}}, {"B", {}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}, {"C", {}}}});
 
   antlr4::ANTLRInputStream input(query);

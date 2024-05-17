@@ -30,8 +30,8 @@ namespace CORE::Internal::CEQL::UnitTests::FilterTests {
 std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
-         "FROM S, S2\n"
-         "WHERE S>T \n"
+         "FROM S, S1 ,S2\n"
+         "WHERE S>T as t2 \n"
          "--WHERE H+ OR H+\n"
          "FILTER\n"
          + filter_clause + "\n"
@@ -41,7 +41,9 @@ std::string create_query(std::string filter_clause) {
 
 Where parse_where(std::string query) {
   Catalog catalog;
-  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {}}}});
+  Types::AttributeInfo temp("temp", Types::ValueTypes::INT64);
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {temp}}}});
+  stream_info = catalog.add_stream_type({"S1", {{"H", {}}, {"t2", {temp}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
 
   antlr4::ANTLRInputStream input(query);

@@ -90,7 +90,7 @@ std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
          "FROM S, S2\n"
-         "WHERE S>T \n"
+         "WHERE S>T as X\n"
          "--WHERE H+ OR H+\n"
          "FILTER\n"
          + filter_clause + "\n"
@@ -100,7 +100,11 @@ std::string create_query(std::string filter_clause) {
 
 CEQL::Query parse_query(std::string query) {  // Only parses where and from correctly
   Catalog catalog;
-  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {}}}});
+  Types::AttributeInfo Integer1("Integer1", Types::ValueTypes::INT64);
+  Types::AttributeInfo Integer2("Integer2", Types::ValueTypes::INT64);
+  Types::AttributeInfo Double1("Double1", Types::ValueTypes::DOUBLE);
+  Types::AttributeInfo String("String", Types::ValueTypes::STRING_VIEW);
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {Integer1, Integer2, Double1, String}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
 
   antlr4::ANTLRInputStream input(query);
