@@ -117,13 +117,17 @@ class ClientMessageHandler {
   stream_declaration_from_string(std::string s_parsed_stream_declaration) {
     auto stream_declaration = CerealSerializer<std::string>::deserialize(
       s_parsed_stream_declaration);
-    Types::StreamInfoParsed parsed_stream_info = Parsing::StreamParser::parse_stream(
-      stream_declaration);
+    try {
+      Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(stream_declaration);
 
-    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
-    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
-                                   stream_info),
-                                 Types::ServerResponseType::StreamInfo);
+      Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
+      return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                    stream_info),
+                                  Types::ServerResponseType::StreamInfo);
+    } catch (std::exception& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Error);
+    }
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_declaration) {

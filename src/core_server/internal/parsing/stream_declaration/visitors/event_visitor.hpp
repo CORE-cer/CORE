@@ -12,6 +12,7 @@
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "core_server/internal/parsing/stream_declaration/error_handling_utils.hpp"
 
 namespace CORE::Internal::Parsing::Declaration {
 class EventVisitor : public StreamDeclarationParserBaseVisitor {
@@ -52,7 +53,9 @@ class EventVisitor : public StreamDeclarationParserBaseVisitor {
     std::string attribute_name = ctx->attribute_name()->getText();
     std::string datatype_string = ctx->datatype()->getText();
     Types::ValueTypes value_type = types_map[datatype_string];
-    attributes_info.push_back(Types::AttributeInfo(attribute_name, value_type));
+    Types::AttributeInfo attribute(attribute_name, value_type);
+    check_if_attribute_already_exists(attributes_info, attribute);
+    attributes_info.push_back(attribute);
     return {};
   }
 };
