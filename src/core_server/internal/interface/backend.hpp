@@ -104,7 +104,7 @@ class Backend {
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
-    return Parsing::StreamParser::parse_stream_catalog(stream_info, catalog);
+    return Parsing::StreamParser::parse_stream(stream_info, catalog);
   }
 
   Internal::CEQL::Query parse_sent_query(std::string query_info) {

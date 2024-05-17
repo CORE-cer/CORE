@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
+#include "shared/exceptions/attribute_not_defined_exception.hpp"
 #include "shared/exceptions/stream_not_found_exception.hpp"
 #include "shared/exceptions/warning_exception.hpp"
-#include "shared/exceptions/attribute_not_defined_exception.hpp"
 
 namespace CORE::Internal::Parsing {
 std::map<std::string, std::vector<Types::EventInfo>>
@@ -128,7 +128,7 @@ void check_if_attributes_is_defined(
       attributes_names += attribute + " ";
     }
     throw AttributeNotDefinedException("Warning: One or more of these attributes [ "
-                           + attributes_names + "] is not defined ");
+                                       + attributes_names + "] is not defined ");
   }
 }
 
