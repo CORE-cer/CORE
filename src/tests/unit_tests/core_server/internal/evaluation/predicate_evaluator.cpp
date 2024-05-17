@@ -104,7 +104,8 @@ CEQL::Query parse_query(std::string query) {  // Only parses where and from corr
   Types::AttributeInfo Integer2("Integer2", Types::ValueTypes::INT64);
   Types::AttributeInfo Double1("Double1", Types::ValueTypes::DOUBLE);
   Types::AttributeInfo String("String", Types::ValueTypes::STRING_VIEW);
-  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {Integer1, Integer2, Double1, String}}}});
+  Types::StreamInfo stream_info = catalog.add_stream_type(
+    {"S", {{"H", {}}, {"T", {Integer1, Integer2, Double1, String}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
 
   antlr4::ANTLRInputStream input(query);

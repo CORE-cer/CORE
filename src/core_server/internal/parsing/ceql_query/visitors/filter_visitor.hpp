@@ -16,7 +16,7 @@
 #include "predicate_visitor.hpp"
 
 namespace CORE::Internal::Parsing {
-class FilterVisitorCatalog : public CEQLQueryParserBaseVisitor {
+class FilterVisitor : public CEQLQueryParserBaseVisitor {
  private:
   // this filter is the corresponding parsed filter after the
   // visitation to the ctx is finished.
@@ -31,8 +31,8 @@ class FilterVisitorCatalog : public CEQLQueryParserBaseVisitor {
  public:
   std::unique_ptr<CEQL::Filter> get_parsed_filter() { return std::move(filter); }
 
-  FilterVisitorCatalog(Catalog& catalog,
-                       std::map<std::string, std::vector<Types::EventInfo>>& streams_events)
+  FilterVisitor(Catalog& catalog,
+                std::map<std::string, std::vector<Types::EventInfo>>& streams_events)
       : catalog(catalog), streams_events(streams_events) {}
 
   void
@@ -57,50 +57,6 @@ class FilterVisitorCatalog : public CEQLQueryParserBaseVisitor {
       check_if_attributes_is_defined(attributes, streams_events, as_events_map_info);
       filter = std::make_unique<CEQL::AtomicFilter>(event_name,
                                                     std::move(filter_from_predicate));
-    }
-    return {};
-  }
-
-  virtual std::any visitAnd_filter(CEQLQueryParser::And_filterContext* ctx) override {
-    visit(ctx->filter()[0]);
-    auto left = std::move(filter);
-    visit(ctx->filter()[1]);
-    filter = std::make_unique<CEQL::AndFilter>(std::move(left), std::move(filter));
-    return {};
-  }
-
-  virtual std::any visitOr_filter(CEQLQueryParser::Or_filterContext* ctx) override {
-    visit(ctx->filter()[0]);
-    auto left = std::move(filter);
-    visit(ctx->filter()[1]);
-    filter = std::make_unique<CEQL::OrFilter>(std::move(left), std::move(filter));
-    return {};
-  }
-};
-
-class FilterVisitor : public CEQLQueryParserBaseVisitor {
- private:
-  // this filter is the corresponding parsed filter after the
-  // visitation to the ctx is finished.
-  std::unique_ptr<CEQL::Filter> filter;
-
-  PredicateVisitor predicate_visitor;
-
- public:
-  std::unique_ptr<CEQL::Filter> get_parsed_filter() { return std::move(filter); }
-
-  virtual std::any
-  visitAtomic_filter(CEQLQueryParser::Atomic_filterContext* ctx) override {
-    predicate_visitor.visit(ctx->predicate());
-    if (ctx->s_event_name()->stream_name()) {
-      filter = std::make_unique<CEQL::AtomicFilter>(
-        ctx->s_event_name()->stream_name()->getText(),
-        ctx->s_event_name()->event_name()->getText(),
-        predicate_visitor.get_parsed_predicate());
-    } else {
-      filter = std::make_unique<CEQL::AtomicFilter>(
-        ctx->s_event_name()->event_name()->getText(),
-        predicate_visitor.get_parsed_predicate());
     }
     return {};
   }

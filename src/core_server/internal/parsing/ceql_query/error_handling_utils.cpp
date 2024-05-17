@@ -126,8 +126,8 @@ void check_if_attributes_is_defined(
     for (const std::string& attribute : attributes) {
       attributes_names += attribute + " ";
     }
-    throw WarningException("Warning: One or more of these attributes [ " + attributes_names
-                           + "] is not defined ");
+    throw WarningException("Warning: One or more of these attributes [ "
+                           + attributes_names + "] is not defined ");
   }
 }
 

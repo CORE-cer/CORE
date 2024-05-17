@@ -53,8 +53,7 @@ TEST_CASE("Basic Event Type", "[CEQL To LogicalCEA]") {
 TEST_CASE("Basic Event Type Filtered", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::AttributeInfo Int("Int", Types::ValueTypes::INT64);
-  Types::StreamInfo stream_info = catalog.add_stream_type(
-    {"S", {{"H", {Int}}}});
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
   auto query = Parsing::QueryParser::parse_query(create_query("H FILTER H[Int > 2]"),
                                                  catalog);
   QueryCatalog query_catalog(catalog);

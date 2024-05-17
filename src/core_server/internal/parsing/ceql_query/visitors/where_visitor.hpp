@@ -34,8 +34,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   std::vector<std::string> as_events_names;
   std::vector<Types::EventInfo> as_events_info;
 
-  // FilterVisitor filter_visitor;
-  FilterVisitorCatalog filter_visitor;
+  FilterVisitor filter_visitor;
 
  public:
   WhereVisitor(Catalog& catalog,
