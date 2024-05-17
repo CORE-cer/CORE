@@ -12,13 +12,13 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   // this formula is the corresponding parsed filter after parsing the
   // visitation to the ctx is finished.
   std::unique_ptr<CEQL::Value> value;
-  std::vector<std::string> attributes;
+  std::set<std::string> attributes;
 
  public:
   std::unique_ptr<CEQL::Value> get_parsed_value() { return std::move(value); }
 
-  virtual std::vector<std::string> get_attributes() {
-    std::vector<std::string> attributes_copy = attributes;
+  std::set<std::string> get_attributes() {
+    std::set<std::string> attributes_copy = attributes;
     attributes.clear();
     return attributes_copy;
   }
@@ -38,7 +38,7 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any
   visitAttribute_math_expr(CEQLQueryParser::Attribute_math_exprContext* ctx) override {
     value = std::make_unique<CEQL::Attribute>(ctx->getText());
-    attributes.push_back(ctx->getText());
+    attributes.insert(ctx->getText());
     return {};
   }
 
@@ -93,7 +93,7 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   virtual std::any
   visitAttribute_name(CEQLQueryParser::Attribute_nameContext* ctx) override {
     value = std::make_unique<CEQL::Attribute>(ctx->getText());
-    attributes.push_back(ctx->getText());
+    attributes.insert(ctx->getText());
     return {};
   }
 

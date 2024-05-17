@@ -26,7 +26,6 @@ class PartitionByVisitor;
 class QueryParser {
  public:
   static CEQL::Query parse_query(std::string query, Catalog& catalog) {
-    // TODO finish this.
     // Convert the input string to a stream
     antlr4::ANTLRInputStream input(query);
 

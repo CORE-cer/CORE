@@ -45,7 +45,7 @@ class FilterVisitor : public CEQLQueryParserBaseVisitor {
     predicate_visitor.visit(ctx->predicate());
     std::unique_ptr<CEQL::Predicate> filter_from_predicate = predicate_visitor
                                                                .get_parsed_predicate();
-    std::vector<std::string> attributes = predicate_visitor.get_attributes();
+    std::set<std::string> attributes = predicate_visitor.get_attributes();
     std::string event_name = ctx->s_event_name()->event_name()->getText();
     if (ctx->s_event_name()->stream_name()) {
       std::string stream_name = ctx->s_event_name()->stream_name()->getText();

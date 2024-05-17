@@ -117,7 +117,7 @@ Types::EventInfo get_event_info_from_stream(
 }
 
 void check_if_attributes_is_defined(
-  std::vector<std::string>& attributes,
+  std::set<std::string>& attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
   std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info) {
   std::string attributes_names;
@@ -134,7 +134,7 @@ void check_if_attributes_is_defined(
 
 // TODO: Refactor this
 bool attributes_exist_in_streams(
-  const std::vector<std::string>& attributes,
+  const std::set<std::string>& attributes,
   const std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
   for (const auto& par : streams_events) {
     const std::vector<Types::EventInfo>& events_info = par.second;
