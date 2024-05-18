@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
-#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
 #include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
 #include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
 
