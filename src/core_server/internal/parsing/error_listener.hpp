@@ -1,7 +1,7 @@
 #pragma once
 
 #include "antlr4-runtime.h"
-#include "shared/exceptions/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
 
 namespace antlr4 {
 class ParseErrorListener : public BaseErrorListener {

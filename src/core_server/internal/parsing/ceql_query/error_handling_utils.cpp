@@ -1,12 +1,12 @@
 #include "error_handling_utils.hpp"
 
-#include <shared/exceptions/event_not_in_stream_exception.hpp>
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
-#include "shared/exceptions/attribute_not_defined_exception.hpp"
-#include "shared/exceptions/stream_not_found_exception.hpp"
-#include "shared/exceptions/warning_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 
 namespace CORE::Internal::Parsing {
 std::map<std::string, std::vector<Types::EventInfo>>
@@ -39,11 +39,10 @@ void check_if_event_is_defined(
   std::string event_name,
   std::map<std::string, std::vector<Types::EventInfo>> streams_events,
   std::map<std::string, std::vector<Types::EventInfo>> as_events_map_info) {
-  if (!event_exists_in_streams(event_name, streams_events) && !string_in_map(event_name, as_events_map_info)) {
-    throw CORE::EventNotInStreamException("The event: " + event_name
-                                          + " is not defined");
+  if (!event_exists_in_streams(event_name, streams_events)
+      && !string_in_map(event_name, as_events_map_info)) {
+    throw CORE::EventNotInStreamException("The event: " + event_name + " is not defined");
   }
-
 }
 
 bool event_exists_in_streams(
@@ -59,10 +58,11 @@ bool event_exists_in_streams(
   return false;
 }
 
-bool string_in_map(std::string element, std::map<std::string, std::vector<Types::EventInfo>> map_info){
+bool string_in_map(std::string element,
+                   std::map<std::string, std::vector<Types::EventInfo>> map_info) {
   auto it = map_info.find(element);
   if (it != map_info.end()) {
-      return true;
+    return true;
   }
   return false;
 }

@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
-#include "shared/exceptions/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 
 namespace CORE::Internal::Parsing {
 std::map<std::string, std::vector<Types::EventInfo>>
@@ -49,7 +49,8 @@ void check_if_event_is_defined(
   std::map<std::string, std::vector<Types::EventInfo>> streams_events,
   std::map<std::string, std::vector<Types::EventInfo>> as_events_map_info);
 
-bool string_in_map(std::string element, std::map<std::string, std::vector<Types::EventInfo>> map_info);
+bool string_in_map(std::string element,
+                   std::map<std::string, std::vector<Types::EventInfo>> map_info);
 
 bool attributes_exist_in_streams(
   const std::set<std::string>& attributes,

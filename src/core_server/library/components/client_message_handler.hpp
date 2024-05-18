@@ -23,7 +23,7 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
-#include "shared/exceptions/warning_exception.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
