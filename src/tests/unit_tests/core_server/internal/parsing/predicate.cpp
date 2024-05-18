@@ -15,7 +15,7 @@ std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
          "FROM S, S2\n"
-         "WHERE   S>T as t2 \n"
+         "WHERE S>T as t1; S>T as t2; S>T as t3 \n"
          "--WHERE H+ OR H+\n"
          "FILTER\n"
          + filter_clause + "\n"

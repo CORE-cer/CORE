@@ -35,6 +35,17 @@ void check_if_event_exists_in_streams(
   }
 }
 
+void check_if_event_is_defined(
+  std::string event_name,
+  std::map<std::string, std::vector<Types::EventInfo>> streams_events,
+  std::map<std::string, std::vector<Types::EventInfo>> as_events_map_info) {
+  if (!event_exists_in_streams(event_name, streams_events) && !string_in_map(event_name, as_events_map_info)) {
+    throw CORE::EventNotInStreamException("The event: " + event_name
+                                          + " is not defined");
+  }
+
+}
+
 bool event_exists_in_streams(
   std::string event_name,
   std::map<std::string, std::vector<Types::EventInfo>> streams_events) {
@@ -44,6 +55,14 @@ bool event_exists_in_streams(
         return true;
       }
     }
+  }
+  return false;
+}
+
+bool string_in_map(std::string element, std::map<std::string, std::vector<Types::EventInfo>> map_info){
+  auto it = map_info.find(element);
+  if (it != map_info.end()) {
+      return true;
   }
   return false;
 }
@@ -116,7 +135,7 @@ Types::EventInfo get_event_info_from_stream(
   return Types::EventInfo();
 }
 
-void check_if_attributes_is_defined(
+void check_if_attributes_are_defined(
   std::set<std::string>& attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
   std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info) {
@@ -133,6 +152,8 @@ void check_if_attributes_is_defined(
 }
 
 // TODO: Refactor this
+// Checks all the events info in all the elements in the map to check if the attributes we are
+// passing where previously defined
 bool attributes_exist_in_streams(
   const std::set<std::string>& attributes,
   const std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {

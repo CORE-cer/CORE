@@ -47,6 +47,7 @@ class FilterVisitor : public CEQLQueryParserBaseVisitor {
                                                                .get_parsed_predicate();
     std::set<std::string> attributes = predicate_visitor.get_attributes();
     std::string event_name = ctx->s_event_name()->event_name()->getText();
+    check_if_event_is_defined(event_name, streams_events, as_events_map_info);
     if (ctx->s_event_name()->stream_name()) {
       std::string stream_name = ctx->s_event_name()->stream_name()->getText();
       check_event_in_specific_stream(stream_name, event_name, streams_events);
@@ -54,7 +55,9 @@ class FilterVisitor : public CEQLQueryParserBaseVisitor {
                                                     event_name,
                                                     std::move(filter_from_predicate));
     } else {
-      check_if_attributes_is_defined(attributes, streams_events, as_events_map_info);
+      // Since events name can be repeated between different events, the parser only
+      // verifies if the attribute is defined in any of the events
+      check_if_attributes_are_defined(attributes, streams_events, as_events_map_info);
       filter = std::make_unique<CEQL::AtomicFilter>(event_name,
                                                     std::move(filter_from_predicate));
     }
