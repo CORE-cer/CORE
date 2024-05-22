@@ -105,7 +105,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     CEA::LogicalCEA left_cea = std::move(current_cea);
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
-    current_cea = CEA::Interleaved_Conjuntion()(left_cea, right_cea);
+    current_cea = CEA::Interleaved_Conjunction()(left_cea, right_cea);
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {

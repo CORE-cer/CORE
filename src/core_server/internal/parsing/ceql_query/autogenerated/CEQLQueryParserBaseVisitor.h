@@ -87,6 +87,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitAll_cel_formula(CEQLQueryParser::All_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitOr_cel_formula(CEQLQueryParser::Or_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }

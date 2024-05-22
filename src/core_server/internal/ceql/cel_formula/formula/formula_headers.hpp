@@ -7,4 +7,4 @@
 #include "non_contiguous_sequencing_formula.hpp"
 #include "or_formula.hpp"
 #include "projection_formula.hpp"
-#include "interleaved_conjunction"
+#include "all_formula.hpp"
