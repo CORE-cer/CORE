@@ -1,4 +1,6 @@
-
+#pragma once
+#include <memory>
+#include <string>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_visitor.hpp"
 #include "formula.hpp"
@@ -6,33 +8,29 @@
 namespace CORE::Internal::CEQL {
 
 struct NotEventTypeFormula : public Formula {
-  std::optional<std::string> stream_name;
-  std::string event_name;
+  std::string s_event_name;
 
-  EventTypeFormula(std::string event_name) : event_name(event_name) {}
+  NotEventTypeFormula(std::string s_event_name) : s_event_name(s_event_name) {}
 
-  EventTypeFormula(std::optional<std::string> stream_name, std::string event_name)
-      : stream_name(stream_name), event_name(event_name) {}
-
-  ~EventTypeFormula() override = default;
+  ~NotEventTypeFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<EventTypeFormula>(stream_name, event_name);
+    return std::make_unique<NotEventTypeFormula>(s_event_name);
   }
 
-  bool operator==(const EventTypeFormula& other) const {
-    return stream_name == other.stream_name && event_name == other.event_name;
+  bool operator==(const NotEventTypeFormula& other) const {
+    return s_event_name == other.s_event_name;
   }
 
   bool equals(Formula* other) const override {
-    if (auto other_formula = dynamic_cast<EventTypeFormula*>(other)) {
+    if (auto other_formula = dynamic_cast<NotEventTypeFormula*>(other)) {
       return *this == *other_formula;
     } else
       return false;
   }
 
   std::string to_string() const override {
-    return (stream_name.has_value() ? stream_name.value() + ">" : "") + event_name;
+    return "NOT" + s_event_name;
   }
 
   void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }

@@ -115,16 +115,11 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNot_event_type_cel_formula(
-    CEQLQueryParser::Event_type_cel_formulaContext* ctx) override {
-    // if (ctx->s_event_name()->stream_name() == nullptr) {
-    //   formula = std::make_unique<CEQL::EventTypeFormula>(
-    //     ctx->s_event_name()->event_name()->getText());
-    // } else {
-    //   formula = std::make_unique<CEQL::EventTypeFormula>(
-    //     ctx->s_event_name()->stream_name()->getText(),
-    //     ctx->s_event_name()->event_name()->getText());
-    // }
-    // return {};
+    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override {
+      formula = std::make_unique<CEQL::NotEventTypeFormula>(
+        ctx->s_event_name()->s_event_name()->getText());
+    }
+    return {};
   }
 };
 }  // namespace CORE::Internal::Parsing
