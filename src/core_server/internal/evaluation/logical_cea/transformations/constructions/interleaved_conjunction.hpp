@@ -119,18 +119,16 @@ class Interleaved_Conjunction : public LogicalCEATransformer<Interleaved_Conjunc
     // {((q1, q2), P1, L1, (p1, q2)) | q2 ∈ Iψ2, (q1, P1, L1, p1) ∈ Δψ1}
     // Get the initial states from the right automaton
     std::vector<uint64_t> initial_states_right = right.get_initial_states();
-
-    // Iterate over initial states of the right automaton
-    for (size_t i = 0; i < left.amount_of_states; ++i) {
-        for (uint64_t state_right : initial_states_right) {
-            for (const auto& transition1 : left.transitions[i]) {
+    for (uint64_t state_right : initial_states_right) {
+        for (size_t j = 0; j < left.amount_of_states; ++j) {
+            for (const auto& transition2 : left.transitions[j]) {
                 // Compute the source state
-                EndNodeId source = i * right.amount_of_states + state_right;
+                EndNodeId source = state_right + right.amount_of_states * j;
                 // Compute the target state
-                EndNodeId target = std::get<2>(transition1) * right.amount_of_states + state_right;
+                EndNodeId target = state_right + right.amount_of_states * std::get<2>(transition2);
 
                 // Add the new transition to the resulting automaton
-                out.transitions[source].push_back(std::make_tuple(std::get<0>(transition1), std::get<1>(transition1), target));
+                out.transitions[source].push_back(std::make_tuple(std::get<0>(transition2), std::get<1>(transition2), target));
             }
         }
     }
@@ -157,19 +155,47 @@ class Interleaved_Conjunction : public LogicalCEATransformer<Interleaved_Conjunc
     // {((q1, q2), P1, L1, (p1, q2)) | q2 ∈ Fψ2, (q1, P1, L1, p1) ∈ Δψ1}.
     // Get the final states from the right automaton
     std::vector<uint64_t> final_states_right = right.get_final_states();
-
-    // Iterate over final states of the right automaton
-    for (size_t i = 0; i < left.amount_of_states; ++i) {
-        for (uint64_t state_right : final_states_right) {
-            for (const auto& transition1 : left.transitions[i]) {
+    for (uint64_t state_right : final_states_right) {
+        for (size_t j = 0; j < left.amount_of_states; ++j) {
+            for (const auto& transition2 : left.transitions[j]) {
                 // Compute the source state
-                EndNodeId source = i * right.amount_of_states + state_right;
+                EndNodeId source = state_right + right.amount_of_states * j;
                 // Compute the target state
-                EndNodeId target = std::get<2>(transition1) * right.amount_of_states + state_right;
+                EndNodeId target = state_right + right.amount_of_states * std::get<2>(transition2);
 
                 // Add the new transition to the resulting automaton
-                out.transitions[source].push_back(std::make_tuple(std::get<0>(transition1), std::get<1>(transition1), target));
+                out.transitions[source].push_back(std::make_tuple(std::get<0>(transition2), std::get<1>(transition2), target));
             }
+        }
+    }
+
+    // Add transitions for final states of left automaton and initial states of right automaton
+    for (uint64_t state_left : final_states_left) {
+        for (uint64_t state_right : initial_states_right) {
+            // Compute the state in the product automaton
+            EndNodeId state = state_left * right.amount_of_states + state_right;
+
+            // PredicateSet that reads everything (Tautology) and marks nothing
+            PredicateSet read_everything(PredicateSet::Tautology);
+            VariablesToMark mark_nothing = 0;
+
+            // Add the self-loop transition to the resulting automaton
+            out.transitions[state].push_back(std::make_tuple(read_everything, mark_nothing, state));
+        }
+    }
+
+    // Add transitions for initial states of left automaton and final states of right automaton
+    for (uint64_t state_right : final_states_right) {
+        for (uint64_t state_left : initial_states_left) {
+            // Compute the state in the product automaton
+            EndNodeId state = state_left * right.amount_of_states + state_right;
+
+            // PredicateSet that reads everything (Tautology) and marks nothing
+            PredicateSet read_everything(PredicateSet::Tautology);
+            VariablesToMark mark_nothing = 0;
+
+            // Add the self-loop transition to the resulting automaton
+            out.transitions[state].push_back(std::make_tuple(read_everything, mark_nothing, state));
         }
     }
 
@@ -194,8 +220,6 @@ class Interleaved_Conjunction : public LogicalCEATransformer<Interleaved_Conjunc
             }
         }
     }
-
-
 
     std::cout << "Out LogicalCEA: "  << std::endl;
     std::cout << " " << out.to_string() << std::endl;
