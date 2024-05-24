@@ -100,7 +100,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(UnlessFormula& formula) override {
-    // TODO
+    // TODO(unless)
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {

@@ -100,7 +100,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
 
   virtual std::any
   visitUnless_cel_formula(CEQLQueryParser::Unless_cel_formulaContext* ctx) override {
-    // TODO: accept any formula here
+    // TODO(unless): accept any formula here
     // Dupe code from visitEvent_type_cel_formula
     std::unique_ptr<CEQL::EventTypeFormula> unless;
     if (ctx->s_event_name()->stream_name() == nullptr) {
