@@ -115,7 +115,7 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNot_event_type_cel_formula(
-    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override {
+    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override { //esto me falta pillar
       formula = std::make_unique<CEQL::NotEventTypeFormula>(
         ctx->s_event_name()->s_event_name()->getText());
     }
