@@ -62,7 +62,7 @@ class QueryParser {
     select_visitor.visit(tree);
     CEQL::Select select = select_visitor.get_parsed_select();
 
-    PartitionByVisitor partition_by_visitor;
+    PartitionByVisitor partition_by_visitor(streams_events);
     partition_by_visitor.visit(tree);
     CEQL::PartitionBy partition_by = partition_by_visitor.get_parsed_partition_by();
 

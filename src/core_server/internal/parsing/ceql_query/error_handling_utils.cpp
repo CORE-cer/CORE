@@ -142,7 +142,20 @@ void check_if_attributes_are_defined(
   std::string attributes_names;
   if (!attributes_exist_in_streams(attributes, streams_events)
       && !attributes_exist_in_streams(attributes, as_events_map_info)) {
-    //TODO: Check not to print doubles (change atrributes to set)
+    for (const std::string& attribute : attributes) {
+      attributes_names += attribute + " ";
+    }
+    throw AttributeNotDefinedException("Warning: One or more of these attributes [ "
+                                       + attributes_names + "] is not defined ");
+  }
+}
+
+void check_if_attribute_is_defined(
+  std::string attribute,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  std::set<std::string> attributes = {attribute};
+  if (!attributes_exist_in_streams(attributes, streams_events)) {
+    std::string attributes_names;
     for (const std::string& attribute : attributes) {
       attributes_names += attribute + " ";
     }

@@ -44,6 +44,10 @@ void check_if_attributes_are_defined(
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
   std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info);
 
+void check_if_attribute_is_defined(
+  std::string attribute,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
+
 void check_if_event_is_defined(
   std::string event_name,
   std::map<std::string, std::vector<Types::EventInfo>> streams_events,

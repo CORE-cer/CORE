@@ -69,9 +69,11 @@ const std::vector<Types::EventInfo>& Catalog::get_all_events_info() const noexce
            (_/ */
 [[nodiscard]] Types::StreamInfo
 Catalog::add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) {
-  if (stream_names.contains(parsed_stream_info.name)) {
-    throw std::runtime_error("Stream with same name already declared");
-  }
+  assert(!stream_names.contains(parsed_stream_info.name)
+         && "Stream with same name already declared");
+  // if (stream_names.contains(parsed_stream_info.name)) {
+  //   throw std::runtime_error("Stream with same name already declared");
+  // }
   stream_names.insert(parsed_stream_info.name);
   Types::StreamTypeId stream_type_id = streams_info.size();
 
