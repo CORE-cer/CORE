@@ -43,16 +43,16 @@ public:
     RuleString_literal_or_regexp = 14, RuleMath_expr = 15, RuleValue_seq = 16, 
     RuleNumber_seq = 17, RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, 
     RuleTime_span = 21, RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, 
-    RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name = 27, RuleEvent_name = 28, 
-    RuleStream_name = 29, RuleAttribute_name = 30, RuleInteger = 31, RuleDouble = 32, 
-    RuleNumber = 33, RuleString = 34, RuleAny_name = 35, RuleKeyword = 36, 
-    RuleRegexp = 37, RuleRegexp_alternation = 38, RuleRegexp_exp = 39, RuleRegexp_element = 40, 
-    RuleRegexp_group = 41, RuleParenthesis = 42, RuleQuantifier = 43, RuleQuantity = 44, 
-    RuleQuantExact = 45, RuleQuantRange = 46, RuleQuantMin = 47, RuleQuantMax = 48, 
-    RuleAtom = 49, RuleCharacterClass = 50, RuleCcAtom = 51, RuleCcRange = 52, 
-    RuleCcSingle = 53, RuleCcLiteral = 54, RuleCcEscapes = 55, RuleCcOther = 56, 
-    RuleLiteral = 57, RuleEscapes = 58, RuleOther = 59, RuleSharedAtom = 60, 
-    RuleRegexp_number = 61
+    RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name = 27, RuleNot_s_event_name = 28, 
+    RuleEvent_name = 29, RuleStream_name = 30, RuleAttribute_name = 31, 
+    RuleInteger = 32, RuleDouble = 33, RuleNumber = 34, RuleString = 35, 
+    RuleAny_name = 36, RuleKeyword = 37, RuleRegexp = 38, RuleRegexp_alternation = 39, 
+    RuleRegexp_exp = 40, RuleRegexp_element = 41, RuleRegexp_group = 42, 
+    RuleParenthesis = 43, RuleQuantifier = 44, RuleQuantity = 45, RuleQuantExact = 46, 
+    RuleQuantRange = 47, RuleQuantMin = 48, RuleQuantMax = 49, RuleAtom = 50, 
+    RuleCharacterClass = 51, RuleCcAtom = 52, RuleCcRange = 53, RuleCcSingle = 54, 
+    RuleCcLiteral = 55, RuleCcEscapes = 56, RuleCcOther = 57, RuleLiteral = 58, 
+    RuleEscapes = 59, RuleOther = 60, RuleSharedAtom = 61, RuleRegexp_number = 62
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -100,6 +100,7 @@ public:
   class Custom_spanContext;
   class Named_eventContext;
   class S_event_nameContext;
+  class Not_s_event_nameContext;
   class Event_nameContext;
   class Stream_nameContext;
   class Attribute_nameContext;
@@ -397,6 +398,15 @@ public:
     std::vector<Cel_formulaContext *> cel_formula();
     Cel_formulaContext* cel_formula(size_t i);
     antlr4::tree::TerminalNode *K_OR();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Not_event_type_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Not_event_type_cel_formulaContext(Cel_formulaContext *ctx);
+
+    Not_s_event_nameContext *not_s_event_name();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -1061,6 +1071,20 @@ public:
   };
 
   S_event_nameContext* s_event_name();
+
+  class  Not_s_event_nameContext : public antlr4::ParserRuleContext {
+  public:
+    Not_s_event_nameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_NOT();
+    S_event_nameContext *s_event_name();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Not_s_event_nameContext* not_s_event_name();
 
   class  Event_nameContext : public antlr4::ParserRuleContext {
   public:
