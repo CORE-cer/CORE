@@ -157,7 +157,7 @@ class Tuple {
       std::chrono::system_clock::duration(data[1]));
   }
 
-  uint64_t nanoseconds() {
+  uint64_t nanoseconds() const {
     auto compile_time_point = get_compile_time_point();
     auto duration_since_compile = timestamp() - compile_time_point;
 

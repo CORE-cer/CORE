@@ -13,12 +13,12 @@
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/interface/evaluators/single_evaluator.hpp"
-#include "core_server/internal/interface/queries/generic_query.hpp"
+#include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
+#include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
-namespace CORE::Internal::Interface {
+namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
 class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT> {
   friend GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;

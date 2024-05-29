@@ -23,7 +23,7 @@
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
-namespace CORE::Internal::Interface {
+namespace CORE::Internal::Interface::Module::Query {
 template <typename Derived, typename ResultHandlerT>
 class GenericQuery {
  protected:

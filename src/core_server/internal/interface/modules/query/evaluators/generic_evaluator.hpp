@@ -14,7 +14,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 
-namespace CORE::Internal::Interface {
+namespace CORE::Internal::Interface::Module::Query {
 
 class GenericEvaluator {
   uint64_t current_stream_position = 0;

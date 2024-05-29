@@ -14,11 +14,11 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/interface/evaluators/generic_evaluator.hpp"
+#include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 
-namespace CORE::Internal::Interface {
+namespace CORE::Internal::Interface::Module::Query {
 class SingleEvaluator : public GenericEvaluator {
   // Underlying evaluator for tuples
   Evaluation::Evaluator evaluator;

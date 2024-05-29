@@ -21,14 +21,14 @@
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
-#include "core_server/internal/interface/evaluators/dynamic_evaluator.hpp"
-#include "core_server/internal/interface/queries/generic_query.hpp"
+#include "core_server/internal/interface/modules/query/evaluators/dynamic_evaluator.hpp"
+#include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 
-namespace CORE::Internal::Interface {
+namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
 class PartitionByQuery
     : public GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT> {
