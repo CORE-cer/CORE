@@ -115,4 +115,4 @@ class GenericQuery {
     return tuple;
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query

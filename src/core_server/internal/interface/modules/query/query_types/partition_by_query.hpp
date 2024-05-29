@@ -170,4 +170,4 @@ class PartitionByQuery
     }
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query

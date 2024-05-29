@@ -47,4 +47,4 @@ class SingleEvaluator : public GenericEvaluator {
     return evaluator.next(tuple, time);
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query

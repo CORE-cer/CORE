@@ -84,4 +84,4 @@ class DynamicEvaluator : public GenericEvaluator {
     return enumerator;
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query

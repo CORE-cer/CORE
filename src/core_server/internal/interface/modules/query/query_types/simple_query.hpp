@@ -71,4 +71,4 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
     return evaluator->process_event(tuple);
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query

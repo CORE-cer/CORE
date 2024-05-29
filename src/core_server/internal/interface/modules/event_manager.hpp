@@ -152,4 +152,4 @@ class EventManager {
     *time_ptr = val_ptr->val;
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module

@@ -70,4 +70,4 @@ class GenericEvaluator {
     return time;
   }
 };
-}  // namespace CORE::Internal::Interface
+}  // namespace CORE::Internal::Interface::Module::Query
