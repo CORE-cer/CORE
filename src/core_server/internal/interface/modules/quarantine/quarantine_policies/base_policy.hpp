@@ -41,6 +41,7 @@ class BasePolicy {
   std::vector<QueryVariant> queries;
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
+  // TODO: Optimize
   std::mutex queries_lock;
 
  protected:
@@ -49,6 +50,7 @@ class BasePolicy {
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
 
+  // TODO: Optimize
   std::mutex tuples_lock;
   std::vector<RingTupleQueue::Tuple> tuples;
 

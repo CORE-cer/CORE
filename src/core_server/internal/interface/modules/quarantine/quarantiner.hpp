@@ -6,7 +6,6 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -18,7 +17,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
-#include "shared/datatypes/event.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
