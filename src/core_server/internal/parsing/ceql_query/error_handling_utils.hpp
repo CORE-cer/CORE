@@ -39,10 +39,26 @@ Types::EventInfo get_event_info_from_stream(
   std::string event_name,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
 
+bool check_if_attribute_exist_in_as_events(
+  std::string event_name,
+  std::set<std::string> attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info);
+
+bool attribute_exist_in_as_events(std::vector<Types::EventInfo>& events,
+                                  std::set<std::string>& attributes);
+
+bool check_if_attribute_exist_in_stream_event(std::string event_name,
+  std::set<std::string> attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
+
 void check_if_attributes_are_defined(
   std::set<std::string>& attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
   std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info);
+
+bool check_if_attributes_are_defined(
+  std::set<std::string>& attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
 
 void check_if_attribute_is_defined(
   std::string attribute,

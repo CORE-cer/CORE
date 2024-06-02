@@ -135,6 +135,36 @@ Types::EventInfo get_event_info_from_stream(
   return Types::EventInfo();
 }
 
+bool check_if_attribute_exist_in_as_events(
+  std::string event_name,
+  std::set<std::string> attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& as_events_map_info) {
+  auto it = as_events_map_info.find(event_name);
+  if (it != as_events_map_info.end()) {
+    std::vector<Types::EventInfo> events_info = it->second;
+    return attribute_exist_in_as_events(events_info, attributes);
+  }
+  return false;
+}
+
+bool attribute_exist_in_as_events(std::vector<Types::EventInfo>& events,
+                                  std::set<std::string>& attributes) {
+  for (const auto& event : events) {
+    for (const auto& attribute : event.attributes_info) {
+      if (attributes.find(attribute.name) != attributes.end()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool check_if_attribute_exist_in_stream_event(std::string event_name,
+  std::set<std::string> attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  return check_if_attributes_are_defined(attributes, streams_events);
+  }
+
 void check_if_attributes_are_defined(
   std::set<std::string>& attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events,
@@ -148,6 +178,16 @@ void check_if_attributes_are_defined(
     throw AttributeNotDefinedException("Warning: One or more of these attributes [ "
                                        + attributes_names + "] is not defined ");
   }
+}
+
+bool check_if_attributes_are_defined(
+  std::set<std::string>& attributes,
+  std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
+  std::string attributes_names;
+  if (!attributes_exist_in_streams(attributes, streams_events)) {
+    return false;
+  }
+  return true;
 }
 
 void check_if_attribute_is_defined(
