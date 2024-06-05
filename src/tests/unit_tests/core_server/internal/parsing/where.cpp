@@ -115,7 +115,7 @@ TEST_CASE("event or event", "[Where]") {
 TEST_CASE("event and event", "[Where]") {
   auto query = create_where_query("H AND T");
   auto expected_formula = make_unique<AndFormula>(make_unique<EventTypeFormula>("H"),
-                                                 make_unique<EventTypeFormula>("T"));
+                                                  make_unique<EventTypeFormula>("T"));
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());

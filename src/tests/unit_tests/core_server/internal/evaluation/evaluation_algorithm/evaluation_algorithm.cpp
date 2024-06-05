@@ -1565,8 +1565,7 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
 
-TEST_CASE(
-  "Evaluation of a query with AND") {
+TEST_CASE("Evaluation of a query with AND") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
@@ -1652,8 +1651,7 @@ TEST_CASE(
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "AMZN", 1900));
 }
 
-TEST_CASE(
-  "Evaluation of a query with OR and AND combined") {
+TEST_CASE("Evaluation of a query with OR and AND combined") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
@@ -1791,7 +1789,7 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND")
 
   output = result_handler.get_enumerator();
 
-  // Check if sell+ works correctly in combination with AND 
+  // Check if sell+ works correctly in combination with AND
   // There should be only 1 complex event of size 1 here
   REQUIRE(output.complex_events.size() == 1);
   REQUIRE(output.complex_events[0].start == 2);
@@ -1801,7 +1799,9 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND")
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
 }
 
-TEST_CASE("Evaluation of a query with combination of non contiguous iteration and non contiguous sequencing") {
+TEST_CASE(
+  "Evaluation of a query with combination of non contiguous iteration and non contiguous "
+  "sequencing") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
@@ -1921,6 +1921,5 @@ TEST_CASE("Evaluation of a query with combination of filtering and AND") {
 
   REQUIRE(output.complex_events.size() == 0);
 }
-
 
 }  // namespace CORE::Internal::Evaluation::UnitTests

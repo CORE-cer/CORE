@@ -377,4 +377,73 @@ TEST_CASE(
   REQUIRE(output.complex_events[0].events.size() == 1);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 3, "INTL"));
 }
+
+TEST_CASE(
+  "Evaluation on two streams using stream specifiers and AND with projection on only one "
+  "event") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo s1_stream_info = backend.add_stream_type(
+    {"S1",
+     {{"SELL",
+       {
+         {"name", Types::ValueTypes::STRING_VIEW},
+       }},
+      {"BUY",
+       {
+         {"name", Types::ValueTypes::STRING_VIEW},
+       }}}});
+
+  Types::StreamInfo s2_stream_info = backend.add_stream_type(
+    {"S2",
+     {{"SELL",
+       {
+         {"name", Types::ValueTypes::STRING_VIEW},
+       }},
+      {"BUY",
+       {
+         {"name", Types::ValueTypes::STRING_VIEW},
+       }}}});
+
+  std::string string_query =
+    "SELECT S1>BUY FROM S1, S2\n"
+    "WHERE (S1>BUY AND S2>BUY) \n";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {1,
+           {
+             std::make_shared<Types::StringValue>("MSFT"),
+           }};
+  INFO("BUY MSFT - S1");
+
+  backend.send_event_to_queries(s1_stream_info.id, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {3,
+           {
+             std::make_shared<Types::StringValue>("INTL"),
+           }};
+  INFO("BUY INTL - S2");
+
+  backend.send_event_to_queries(s2_stream_info.id, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests
