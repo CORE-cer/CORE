@@ -1,3 +1,4 @@
+#include "and_formula.hpp"
 #include "as_formula.hpp"
 #include "contiguous_iteration_formula.hpp"
 #include "contiguous_sequencing_formula.hpp"
