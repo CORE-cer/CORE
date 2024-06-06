@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "core_server/internal/ceql/cel_formula/formula/all_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -84,6 +85,16 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     visit(ctx->cel_formula()[1]);
     formula = std::make_unique<CEQL::ContiguousSequencingFormula>(std::move(first_formula),
                                                                   std::move(formula));
+    return {};
+  }
+
+  virtual std::any
+  visitAll_cel_formula(CEQLQueryParser::All_cel_formulaContext* ctx) override {
+    visit(ctx->cel_formula()[0]);
+    auto first_formula = std::move(formula);
+    visit(ctx->cel_formula()[1]);
+    formula = std::make_unique<CEQL::AllFormula>(std::move(first_formula),
+                                                 std::move(formula));
     return {};
   }
 
