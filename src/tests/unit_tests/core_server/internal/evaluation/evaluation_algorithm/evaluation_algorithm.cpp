@@ -1565,130 +1565,268 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
 
-// TEST_CASE(
-//   "Evaluation of a query with combination of non contiguous iteration and non contiguous sequencing using ALL") {
-//   Internal::Interface::Backend<TestResultHandler> backend;
+TEST_CASE(
+  "Evaluation of a query with combination of non contiguous iteration and non contiguous "
+  "sequencing using ALL") {
+  Internal::Interface::Backend<TestResultHandler> backend;
 
-//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
-//   std::string string_query =
-//     "SELECT * FROM Stock\n"
-//     "WHERE (SELL+ ALL (SELL;SELL))";
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL+ ALL (SELL;SELL))";
 
-//   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
-//   std::unique_ptr<TestResultHandler>
-//     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
-//   TestResultHandler& result_handler = *result_handler_ptr;
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
 
-//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-//   Types::Event event;
-//   Types::Enumerator output;
+  Types::Event event;
+  Types::Enumerator output;
 
-//   // Event 0 = SELL
-//   // Event 1 = BUY
-//   // Create a new event of type <SELL, NAME, AMOUNT>
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MSFT"),
-//             std::make_shared<Types::IntValue>(101)}};
-//   INFO("SELL MSFT 101");
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
 
-//   // Send the current event to query at stream 0
-//   backend.send_event_to_queries(0, event);
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
 
-//   // Get result from the query from backend
-//   output = result_handler.get_enumerator();
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
 
-//   // Test if query result matches expected results
-//   REQUIRE(output.complex_events.size() == 0);
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("INTL"),
-//             std::make_shared<Types::IntValue>(80)}};
-//   INFO("SELL INTL 80");
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
 
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   output = result_handler.get_enumerator();
+  output = result_handler.get_enumerator();
 
-//   REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events.size() == 1);
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MFST"),
-//             std::make_shared<Types::IntValue>(50)}};
-//   INFO("SELL MFST 50");
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
 
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   output = result_handler.get_enumerator();
-//   REQUIRE(output.complex_events.size() == 3);
-// }
-
-// TEST_CASE(
-//   "Evaluation of a query with combination of non contiguous iteration and non contiguous sequencing using ALL but the two queries are disjunct") {
-//   Internal::Interface::Backend<TestResultHandler> backend;
-
-//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
-
-//   std::string string_query =
-//     "SELECT * FROM Stock\n"
-//     "WHERE (BUY+ ALL (SELL;SELL))";
-
-//   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
-
-//   std::unique_ptr<TestResultHandler>
-//     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
-//   TestResultHandler& result_handler = *result_handler_ptr;
-
-//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
-
-//   Types::Event event;
-//   Types::Enumerator output;
-
-//   // Event 0 = SELL
-//   // Event 1 = BUY
-//   // Create a new event of type <SELL, NAME, AMOUNT>
-//   event = {1,
-//            {std::make_shared<Types::StringValue>("MSFT"),
-//             std::make_shared<Types::IntValue>(101)}};
-//   INFO("BUY MSFT 101");
-
-//   // Send the current event to query at stream 0
-//   backend.send_event_to_queries(0, event);
-
-//   // Get result from the query from backend
-//   output = result_handler.get_enumerator();
-
-//   // Test if query result matches expected results
-//   REQUIRE(output.complex_events.size() == 0);
-
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("INTL"),
-//             std::make_shared<Types::IntValue>(80)}};
-//   INFO("SELL INTL 80");
-
-//   backend.send_event_to_queries(0, event);
-
-//   output = result_handler.get_enumerator();
-
-//   REQUIRE(output.complex_events.size() == 0);
-
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MFST"),
-//             std::make_shared<Types::IntValue>(50)}};
-//   INFO("SELL MFST 50");
-
-//   backend.send_event_to_queries(0, event);
-
-//   output = result_handler.get_enumerator();
-//   REQUIRE(output.complex_events.size() == 1);
-// }
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 3);
+}
 
 TEST_CASE(
-  "Evaluation of a query with combination of non contiguous SELL iteration and a BUY event using ALL") {
+  "Evaluation of a query with combination of non contiguous iteration and contiguous "
+  "sequencing using ALL") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL+ ALL (SELL:SELL))";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
+
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
+
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 2);
+}
+
+TEST_CASE(
+  "Evaluation of a query with combination of contiguous iteration and non contiguous "
+  "sequencing using ALL") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE ((SELL):+ ALL (SELL;SELL))";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
+
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
+
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 2);
+}
+
+TEST_CASE(
+  "Evaluation of a query with combination of non contiguous iteration and non contiguous "
+  "sequencing using ALL but the two queries are disjunct") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (BUY+ ALL (SELL;SELL))";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("BUY MSFT 101");
+
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
+
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
+
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("BUY MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+}
+
+TEST_CASE(
+  "Evaluation of a query with combination of non contiguous SELL iteration and a BUY "
+  "event using ALL") {
   Internal::Interface::Backend<TestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
@@ -1745,7 +1883,78 @@ TEST_CASE(
   backend.send_event_to_queries(0, event);
 
   output = result_handler.get_enumerator();
-  // This test should return size 1 since it should find complex event [BUY, SELL], but it returns 0
+
+  REQUIRE(output.complex_events.size() == 2);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 3);
+}
+
+TEST_CASE("Evaluation of a query with ANY, combining 2 disjunct CEA's") {
+  Internal::Interface::Backend<TestResultHandler> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL ALL BUY)";
+
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
+
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
+
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
   REQUIRE(output.complex_events.size() == 1);
 
   event = {1,
@@ -1760,145 +1969,238 @@ TEST_CASE(
   REQUIRE(output.complex_events.size() == 2);
 }
 
-// TEST_CASE(
-//   "Evaluation of a query with ANY, combining 2 disjunct CEA's") {
-//   Internal::Interface::Backend<TestResultHandler> backend;
+TEST_CASE("Evaluation of a query with combination of filtering and ALL") {
+  Internal::Interface::Backend<TestResultHandler> backend;
 
-//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
-//   std::string string_query =
-//     "SELECT * FROM Stock\n"
-//     "WHERE (SELL ALL BUY)";
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE ((SELL as S FILTER S[name='MSFT']) ALL (SELL as S FILTER S[price > 100]))\n";
 
-//   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
-//   std::unique_ptr<TestResultHandler>
-//     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
-//   TestResultHandler& result_handler = *result_handler_ptr;
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
 
-//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-//   Types::Event event;
-//   Types::Enumerator output;
+  Types::Event event;
+  Types::Enumerator output;
 
-//   // Event 0 = SELL
-//   // Event 1 = BUY
-//   // Create a new event of type <SELL, NAME, AMOUNT>
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MSFT"),
-//             std::make_shared<Types::IntValue>(101)}};
-//   INFO("SELL MSFT 101");
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(90)}};
+  INFO("SELL MSFT 90");
 
-//   // Send the current event to query at stream 0
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   // Get result from the query from backend
-//   output = result_handler.get_enumerator();
+  output = result_handler.get_enumerator();
 
-//   // Test if query result matches expected results
-//   REQUIRE(output.complex_events.size() == 0);
+  REQUIRE(output.complex_events.size() == 0);
 
-//   event = {1,
-//            {std::make_shared<Types::StringValue>("INTL"),
-//             std::make_shared<Types::IntValue>(80)}};
-//   INFO("BUY INTL 80");
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL INTL 102");
 
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   output = result_handler.get_enumerator();
+  output = result_handler.get_enumerator();
 
-//   REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events.size() == 1);
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MFST"),
-//             std::make_shared<Types::IntValue>(50)}};
-//   INFO("SELL MFST 50");
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(200)}};
+  INFO("SELL MSFT 200");
 
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   output = result_handler.get_enumerator();
-//   REQUIRE(output.complex_events.size() == 1);
+  output = result_handler.get_enumerator();
 
-//   event = {1,
-//            {std::make_shared<Types::StringValue>("INTL"),
-//             std::make_shared<Types::IntValue>(80)}};
-//   INFO("BUY INTL 80");
+  REQUIRE(output.complex_events.size() == 3);
 
-//   backend.send_event_to_queries(0, event);
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(10)}};
+  INFO("BUY AMZN 10");
 
-//   output = result_handler.get_enumerator();
+  backend.send_event_to_queries(0, event);
 
-//   REQUIRE(output.complex_events.size() == 1);
-// }
+  output = result_handler.get_enumerator();
 
-// TEST_CASE("Evaluation of a query with combination of filtering and ALL") {
-//   Internal::Interface::Backend<TestResultHandler> backend;
+  REQUIRE(output.complex_events.size() == 0);
+}
 
-//   Types::StreamInfo stream_info = basic_stock_declaration(backend);
+TEST_CASE(
+  "Evaluation of a query with ANY, combining 2 disjunct CEA's and combining multiple "
+  "ANY") {
+  Internal::Interface::Backend<TestResultHandler> backend;
 
-//   std::string string_query =
-//     "SELECT * FROM Stock\n"
-//     "WHERE ((SELL as S FILTER S[name='MSFT']) ALL (SELL as S FILTER S[price > 100]))\n";
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
-//   CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL ALL BUY ALL SELL ALL BUY)";
 
-//   std::unique_ptr<TestResultHandler>
-//     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
-//   TestResultHandler& result_handler = *result_handler_ptr;
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
 
-//   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
 
-//   Types::Event event;
-//   Types::Enumerator output;
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MSFT"),
-//             std::make_shared<Types::IntValue>(90)}};
-//   INFO("SELL MSFT 90");
+  Types::Event event;
+  Types::Enumerator output;
 
-//   backend.send_event_to_queries(0, event);
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
 
-//   output = result_handler.get_enumerator();
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
 
-//   REQUIRE(output.complex_events.size() == 0);
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("INTL"),
-//             std::make_shared<Types::IntValue>(102)}};
-//   INFO("SELL INTL 102");
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
 
-//   backend.send_event_to_queries(0, event);
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
 
-//   output = result_handler.get_enumerator();
+  backend.send_event_to_queries(0, event);
 
-//   REQUIRE(output.complex_events.size() == 1);
+  output = result_handler.get_enumerator();
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("MSFT"),
-//             std::make_shared<Types::IntValue>(200)}};
-//   INFO("SELL MSFT 200");
+  REQUIRE(output.complex_events.size() == 1);
 
-//   backend.send_event_to_queries(0, event);
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
 
-//   output = result_handler.get_enumerator();
+  backend.send_event_to_queries(0, event);
 
-//   REQUIRE(output.complex_events.size() == 2);
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 2);
 
-//   event = {0,
-//            {std::make_shared<Types::StringValue>("AMZN"),
-//             std::make_shared<Types::IntValue>(10)}};
-//   INFO("BUY AMZN 10");
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
 
-//   backend.send_event_to_queries(0, event);
+  backend.send_event_to_queries(0, event);
 
-//   output = result_handler.get_enumerator();
+  output = result_handler.get_enumerator();
+  // S B S B  ->  SB_B  S_SB  S__B SBSB BSB SB
+  REQUIRE(output.complex_events.size() == 6);
+}
 
-//   REQUIRE(output.complex_events.size() == 0);
-// }
+TEST_CASE(
+  "Evaluation of a query with combination of contiguous iteration and contiguous "
+  "sequencing using ALL but the two queries are disjunct") {
+  Internal::Interface::Backend<TestResultHandler> backend;
 
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE ((BUY):+ ALL (SELL:SELL))";
 
+  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+
+  std::unique_ptr<TestResultHandler>
+    result_handler_ptr = std::make_unique<TestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  TestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  // Event 0 = SELL
+  // Event 1 = BUY
+  // Create a new event of type <SELL, NAME, AMOUNT>
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("BUY MSFT 101");
+
+  // Send the current event to query at stream 0
+  backend.send_event_to_queries(0, event);
+
+  // Get result from the query from backend
+  output = result_handler.get_enumerator();
+
+  // Test if query result matches expected results
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MFST"),
+            std::make_shared<Types::IntValue>(50)}};
+  INFO("SELL MFST 50");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("BUY MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 2);
+}
 
 }  // namespace CORE::Internal::Evaluation::UnitTests
