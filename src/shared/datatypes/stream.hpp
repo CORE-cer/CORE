@@ -1,5 +1,7 @@
 #pragma once
 
+#include <initializer_list>
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/aliases/stream_type_id.hpp"

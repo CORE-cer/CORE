@@ -1,5 +1,3 @@
-#include <string>
-
 namespace CORE::Internal {
 class MessageRouter {
   /**

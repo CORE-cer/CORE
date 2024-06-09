@@ -50,20 +50,6 @@ struct Event {
     return out + "])";
   }
 
-  std::string to_string_java() const {
-    std::string out = "";
-    if (event_type_id == 0) {
-      out += "BUY(";
-    } else {
-      out += "SELL(";
-    }
-    out += "id=";
-    out += attributes[0]->to_string();
-    out += ".0";
-    out += ")";
-    return out;
-  }
-
   template <class Archive>
   void serialize(Archive& archive) {
     archive(event_type_id, attributes);

@@ -1,6 +1,9 @@
 #pragma once
 
+#define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
 
 #include <cassert>
 #include <cstdint>
@@ -11,6 +14,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
+#include "shared/logging/setup.hpp"
 #include "state.hpp"
 
 namespace CORE::Internal::CEA::Det {
@@ -94,6 +98,11 @@ class StateManager {
  private:
   template <class... Args>
   State* alloc(Args&&... args) {
+    LOG_L3_BACKTRACE(
+      "Adding state to state_manager, currently at {} states used with {} states "
+      "allocated",
+      amount_of_used_states,
+      amount_of_allowed_states);
     State* new_state;
     new_state = allocate_state(std::forward<Args>(args)...);
     if (new_state == nullptr) {
@@ -104,6 +113,7 @@ class StateManager {
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
+        LOG_DEBUG("Not enough memory to allocate DetCEA state");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);
@@ -137,6 +147,7 @@ class StateManager {
    * @return The new size of the memory pool.
    */
   size_t increase_mempool_size() {
+    LOG_DEBUG("Increasing size of memory pool");
     size_t new_size = minipool_head->size() * 2;
     StatePool* new_minipool = new StatePool(new_size);
     minipool_head->set_next(new_minipool);

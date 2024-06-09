@@ -2,7 +2,8 @@
 #define VALUE_HPP
 
 #include <cstdint>
-#include <iostream>
+#include <string>
+#include <string_view>
 #include <type_traits>
 
 namespace RingTupleQueue {

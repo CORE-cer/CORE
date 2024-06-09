@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <memory>
+#include <string>
 
 #include "shared/serializer/cereal_serializer.hpp"
 #include "tests/third_party_tests/serialization/cereal_test_classes.hpp"

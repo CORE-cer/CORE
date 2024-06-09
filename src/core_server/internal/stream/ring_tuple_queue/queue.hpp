@@ -1,13 +1,15 @@
 #ifndef RINGTUPLEQUEUE_HPP
 #define RINGTUPLEQUEUE_HPP
 
-#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <queue>
+#include <limits>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
 

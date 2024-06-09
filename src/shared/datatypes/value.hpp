@@ -1,6 +1,7 @@
 #pragma once
 
-#include <chrono>
+#include <cstdint>
+#include <ctime>
 #include <string>
 
 namespace CORE::Types {
@@ -78,7 +79,7 @@ struct BoolValue final : public Value {
 };
 
 struct DateValue final : public Value {
-  std::time_t val{0};
+  time_t val{0};
 
   DateValue() {}
 

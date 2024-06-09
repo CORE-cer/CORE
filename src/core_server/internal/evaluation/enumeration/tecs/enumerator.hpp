@@ -96,7 +96,7 @@ class Enumerator {
   // Allow move assignment
   Enumerator& operator=(Enumerator&& other) noexcept {
     if (this != &other) {
-      cleanup();
+      // cleanup();
       stack = std::move(other.stack);
       original_pos = other.original_pos;
       last_time_to_consider = other.last_time_to_consider;
