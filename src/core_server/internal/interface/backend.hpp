@@ -29,6 +29,8 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/interface/queries/partition_by_query.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "queries/simple_query.hpp"
@@ -108,6 +110,14 @@ class Backend {
 
   std::vector<Types::StreamInfo> get_all_streams_info() {
     return catalog.get_all_streams_info();
+  }
+
+  CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
+    return Parsing::StreamParser::parse_stream(stream_info, catalog);
+  }
+
+  Internal::CEQL::Query parse_sent_query(std::string query_info) {
+    return Parsing::QueryParser::parse_query(query_info, catalog);
   }
 
   // TODO: Propogate parse error to ClientMessageHandler

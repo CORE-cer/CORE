@@ -38,7 +38,7 @@ TEST_CASE("Evaluation of in-range predicate") {
     "   AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(

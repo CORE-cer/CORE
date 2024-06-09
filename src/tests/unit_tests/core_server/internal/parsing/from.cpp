@@ -43,12 +43,15 @@ std::string query_without_from() {
 }
 
 From parse_from(std::string query) {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"A1", {{"H", {}}, {"S", {}}}});
+  stream_info = catalog.add_stream_type({"A2", {{"H", {}}, {"S", {}}}});
   antlr4::ANTLRInputStream input(query);
   CEQLQueryLexer lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
   CEQLQueryParser parser(&tokens);
   antlr4::tree::ParseTree* tree = parser.parse();
-  Parsing::FromVisitor from_visitor;
+  Parsing::FromVisitor from_visitor(catalog);
   from_visitor.visit(tree);
   return from_visitor.get_parsed_from();
 }

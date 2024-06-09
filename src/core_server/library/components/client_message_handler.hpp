@@ -27,6 +27,7 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -124,17 +125,23 @@ class ClientMessageHandler {
   stream_declaration_from_string(std::string s_parsed_stream_declaration) {
     auto stream_declaration = CerealSerializer<std::string>::deserialize(
       s_parsed_stream_declaration);
-    Types::StreamInfoParsed parsed_stream_info = Parsing::StreamParser::parse_stream(
-      stream_declaration);
-    LOG_INFO(
-      "Received request for declaring stream {} in "
-      "ClientMessageHandler::stream_declaration_from_string",
-      parsed_stream_info.name);
+    try {
+      Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
+        stream_declaration);
+      LOG_INFO(
+        "Received request for declaring stream {} in "
+        "ClientMessageHandler::stream_declaration_from_string",
+        parsed_stream_info.name);
 
-    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
-    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
-                                   stream_info),
-                                 Types::ServerResponseType::StreamInfo);
+      Types::StreamInfo stream_info = backend.add_stream_type(
+        std::move(parsed_stream_info));
+      return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                     stream_info),
+                                   Types::ServerResponseType::StreamInfo);
+    } catch (std::exception& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Error);
+    }
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_declaration) {
@@ -181,17 +188,24 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
-    Internal::CEQL::Query parsed_query = Parsing::QueryParser::parse_query(s_query_info);
-
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
-      backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
-    backend.declare_query(std::move(parsed_query), std::move(result_handler));
-    return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
-                                   possible_port.value_or(0)),
-                                 Types::ServerResponseType::PortNumber);
-  }
+    try {
+      LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
+      Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
+      std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+        backend.get_catalog_reference());
+      std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+      backend.declare_query(std::move(parsed_query), std::move(result_handler));
+      return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
+                                     possible_port.value_or(0)),
+                                   Types::ServerResponseType::PortNumber);
+    } catch (WarningException& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Warning);
+    } catch (std::exception& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Error);
+    }
+  };
 
   // TODO: all queries and port numbers
 };
