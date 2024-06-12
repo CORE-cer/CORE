@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -42,7 +43,11 @@ class EventManager {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }
 
-    uint64_t* data = queue.start_tuple(event.event_type_id);
+    Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(
+      event.attributes.back().get());
+    std::chrono::system_clock::time_point tp{std::chrono::milliseconds(val_ptr->val)};
+
+    uint64_t* data = queue.start_tuple(event.event_type_id, tp);
 
     for (size_t i = 0; i < attr_infos.size(); i++) {
       auto& attr_info = attr_infos[i];

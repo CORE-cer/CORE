@@ -69,7 +69,7 @@ class QuarantineManager {
  private:
   void create_query_policy(std::set<Types::StreamTypeId>&& stream_ids) {
     std::unique_ptr<BasePolicy<ResultHandlerT>> query_policy_ptr = std::make_unique<
-      DirectPolicy<ResultHandlerT>>(catalog, queue, next_available_inproc_port);
+      WaitFixedTimePolicy<ResultHandlerT>>(catalog, queue, next_available_inproc_port);
 
     auto iter = query_policies.insert({stream_ids, std::move(query_policy_ptr)});
 
