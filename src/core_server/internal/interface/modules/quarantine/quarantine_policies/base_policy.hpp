@@ -49,10 +49,8 @@ class BasePolicy {
   std::vector<uint64_t*> last_sent_tuple = {};
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
-
-  // TODO: Optimize
-  std::mutex tuples_lock;
-  std::vector<RingTupleQueue::Tuple> tuples;
+  // Stores the tuples that are ready to be sent
+  std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
 
  public:
   BasePolicy(Catalog& catalog,
@@ -91,14 +89,24 @@ class BasePolicy {
     }
   }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple) {
-    std::lock_guard<std::mutex> lock(tuples_lock);
-    tuples.push_back(tuple);
-  }
+  virtual void receive_tuple(RingTupleQueue::Tuple& tuple) = 0;
 
  protected:
+  virtual void try_add_tuples_to_send_queue() = 0;
+
+  virtual void force_add_tuples_to_send_queue() = 0;
+
+  void send_tuples_to_queries() {
+    ZoneScopedN("BasePolicy::send_tuples_to_queries");
+    // std::cout << tuple_send_queue.size() << std::endl;
+    for (const RingTupleQueue::Tuple& tuple : tuple_send_queue) {
+      send_tuple_to_queries(tuple);
+    }
+    tuple_send_queue.clear();
+  }
+
   void send_tuple_to_queries(const RingTupleQueue::Tuple& tuple) {
-    ZoneScopedN("BasePolicy::send_event_to_queries");
+    ZoneScopedN("BasePolicy::send_tuple_to_queries");
     std::lock_guard<std::mutex> lock(queries_lock);
     uint64_t ns = tuple.nanoseconds();
     for (int i = 0; i < inner_thread_event_senders.size(); i++) {
@@ -111,7 +119,16 @@ class BasePolicy {
     }
   }
 
-  virtual void try_to_send_tuples() = 0;
+  void handle_destruction() {
+    stop_condition = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(60));
+    for (int i = 0; i < this->last_received_tuple.size(); i++) {
+      while (this->last_sent_tuple[i] != this->last_received_tuple[i].get().load()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+      }
+    }
+    worker_thread.join();
+  }
 
  private:
   void start() {
@@ -119,8 +136,11 @@ class BasePolicy {
       ZoneScopedN("BasePolicy::start::worker_thread");  //NOLINT
       while (!stop_condition) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        try_to_send_tuples();
+        try_add_tuples_to_send_queue();
+        send_tuples_to_queries();
       }
+      force_add_tuples_to_send_queue();
+      send_tuples_to_queries();
     });
   }
 
