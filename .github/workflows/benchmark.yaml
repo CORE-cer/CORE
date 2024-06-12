@@ -69,6 +69,28 @@ jobs:
             Stocks:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
 
+      - name: benchmark unordered stock query
+        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh && ./scripts/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh -b Release
+
+      - name: Read CSV
+        id: csv_2
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/unordered_stocks/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output_2
+        with:
+          csvinput: ${{ steps.csv_2.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 2
+          message: |
+            Unordered Stocks:
+            ${{steps.csv-table-output_2.outputs.markdown-table}}
+
       - name: benchmark smart home query
         run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
 
