@@ -17,8 +17,8 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 
 template <typename ResultHandlerT>
 class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
-  constexpr static const std::chrono::duration time_to_wait = std::chrono::milliseconds(50);
-  // TODO: Optimize
+  constexpr static const std::chrono::duration time_to_wait = std::chrono::milliseconds(
+    20);
   std::mutex tuples_lock;
   std::list<RingTupleQueue::Tuple> tuples;
 
@@ -45,7 +45,9 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
    */
   void try_add_tuples_to_send_queue() override {
     auto now = std::chrono::system_clock::now();
+
     std::lock_guard<std::mutex> lock(tuples_lock);
+
     for (auto iter = tuples.begin(); iter != tuples.end();) {
       const RingTupleQueue::Tuple& tuple = *iter;
       auto duration = now - tuple.system_timestamp();
@@ -59,7 +61,15 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     }
   }
 
-  void force_add_tuples_to_send_queue() override { try_add_tuples_to_send_queue(); }
+  void force_add_tuples_to_send_queue() override {
+    std::lock_guard<std::mutex> lock(tuples_lock);
+
+    for (auto iter = tuples.begin(); iter != tuples.end();) {
+      const RingTupleQueue::Tuple& tuple = *iter;
+      this->tuple_send_queue.push_back(tuple);
+      iter = tuples.erase(iter);
+    }
+  }
 
  private:
   bool static is_tuple_before_nanoseconds(const RingTupleQueue::Tuple& tuple,

@@ -43,7 +43,7 @@ bool is_the_same_as(Types::Event event,
           && std::stoll(event.attributes[2]->to_string()) == value2);
 }
 
-Types::StreamInfo basic_stock_declaration(Interface::Backend<TestResultHandler>& backend) {
+Types::StreamInfo basic_stock_declaration(Interface::Backend<DirectOutputTestResultHandler>& backend) {
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
      {{"SELL",

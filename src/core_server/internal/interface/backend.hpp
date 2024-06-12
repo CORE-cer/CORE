@@ -68,8 +68,8 @@ class Backend {
     quarantine_manager.declare_query(std::move(parsed_query), std::move(result_handler));
   }
 
-  void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
-    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(event);
+  void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event, bool time = true) {
+    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(event, time);
     quarantine_manager.send_tuple_to_queries(stream_id, tuple);
   }
 };

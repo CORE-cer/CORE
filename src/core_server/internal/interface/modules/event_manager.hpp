@@ -32,7 +32,7 @@ class EventManager {
   EventManager(Catalog& catalog, RingTupleQueue::Queue& queue)
       : catalog(catalog), queue(queue) {}
 
-  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event) {
+  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event, bool time) {
     ZoneScopedN("Backend::event_to_tuple");
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
@@ -43,11 +43,16 @@ class EventManager {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }
 
-    Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(
-      event.attributes.back().get());
-    std::chrono::system_clock::time_point tp{std::chrono::milliseconds(val_ptr->val)};
+    uint64_t* data;
+    if (time) {
+      Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(
+        event.attributes.back().get());
+      std::chrono::system_clock::time_point tp{std::chrono::milliseconds(val_ptr->val)};
 
-    uint64_t* data = queue.start_tuple(event.event_type_id, tp);
+      data = queue.start_tuple(event.event_type_id, tp);
+    } else {
+      data = queue.start_tuple(event.event_type_id);
+    }
 
     for (size_t i = 0; i < attr_infos.size(); i++) {
       auto& attr_info = attr_infos[i];
