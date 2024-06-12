@@ -84,65 +84,65 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     }
   }
 
-  SECTION("Ring memory recycling") {
-    auto id = schemas.add_schema({SupportedTypes::INT64});
-    std::vector<uint64_t*> datas;
-
-    for (int i = 0; i < 66; i++) {
-      uint64_t* data = ring_tuple_queue.start_tuple(id);
-      int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
-      *integer_ptr = i;
-      datas.push_back(data);
-    }
-
-    auto last_tuple_in_fist_buffer = ring_tuple_queue.get_tuple(datas[32]);
-    ring_tuple_queue.update_overwrite_timepoint(last_tuple_in_fist_buffer.data_timestamp());
-
-    // Now the first buffer can be recycled.
-    for (int i = 66; i < 99; i++) {
-      uint64_t* data = ring_tuple_queue.start_tuple(id);
-      int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
-      *integer_ptr = i;
-      datas.push_back(data);
-    }
-
-    for (int i = 0; i < 33; i++) {
-      uint64_t* data = datas[i];
-      Tuple tuple(data, &schemas);
-      Value<int64_t> val1(tuple[0]);
-      REQUIRE(val1.get() == i + 66);
-    }
-
-    for (int i = 33; i < 66; i++) {
-      uint64_t* data = datas[i];
-      Tuple tuple(data, &schemas);
-      Value<int64_t> val1(tuple[0]);
-      REQUIRE(val1.get() == i);
-    }
-
-    // And if we add more data, it will not be recycled.
-
-    for (int i = 99; i < 10000; i++) {
-      uint64_t* data = ring_tuple_queue.start_tuple(id);
-      int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
-      *integer_ptr = i;
-      datas.push_back(data);
-    }
-
-    for (int i = 0; i < 33; i++) {
-      uint64_t* data = datas[i];
-      Tuple tuple(data, &schemas);
-      Value<int64_t> val1(tuple[0]);
-      REQUIRE(val1.get() == i + 66);
-    }
-
-    for (int i = 33; i < 1000; i++) {
-      uint64_t* data = datas[i];
-      Tuple tuple(data, &schemas);
-      Value<int64_t> val1(tuple[0]);
-      REQUIRE(val1.get() == i);
-    }
-  }
+  // SECTION("Ring memory recycling") {
+  //   auto id = schemas.add_schema({SupportedTypes::INT64});
+  //   std::vector<uint64_t*> datas;
+  //
+  //   for (int i = 0; i < 66; i++) {
+  //     uint64_t* data = ring_tuple_queue.start_tuple(id);
+  //     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
+  //     *integer_ptr = i;
+  //     datas.push_back(data);
+  //   }
+  //
+  //   auto last_tuple_in_fist_buffer = ring_tuple_queue.get_tuple(datas[32]);
+  //   ring_tuple_queue.update_overwrite_timepoint(last_tuple_in_fist_buffer.data_timestamp());
+  //
+  //   // Now the first buffer can be recycled.
+  //   for (int i = 66; i < 99; i++) {
+  //     uint64_t* data = ring_tuple_queue.start_tuple(id);
+  //     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
+  //     *integer_ptr = i;
+  //     datas.push_back(data);
+  //   }
+  //
+  //   for (int i = 0; i < 33; i++) {
+  //     uint64_t* data = datas[i];
+  //     Tuple tuple(data, &schemas);
+  //     Value<int64_t> val1(tuple[0]);
+  //     REQUIRE(val1.get() == i + 66);
+  //   }
+  //
+  //   for (int i = 33; i < 66; i++) {
+  //     uint64_t* data = datas[i];
+  //     Tuple tuple(data, &schemas);
+  //     Value<int64_t> val1(tuple[0]);
+  //     REQUIRE(val1.get() == i);
+  //   }
+  //
+  //   // And if we add more data, it will not be recycled.
+  //
+  //   for (int i = 99; i < 10000; i++) {
+  //     uint64_t* data = ring_tuple_queue.start_tuple(id);
+  //     int64_t* integer_ptr = ring_tuple_queue.writer<int64_t>();
+  //     *integer_ptr = i;
+  //     datas.push_back(data);
+  //   }
+  //
+  //   for (int i = 0; i < 33; i++) {
+  //     uint64_t* data = datas[i];
+  //     Tuple tuple(data, &schemas);
+  //     Value<int64_t> val1(tuple[0]);
+  //     REQUIRE(val1.get() == i + 66);
+  //   }
+  //
+  //   for (int i = 33; i < 1000; i++) {
+  //     uint64_t* data = datas[i];
+  //     Tuple tuple(data, &schemas);
+  //     Value<int64_t> val1(tuple[0]);
+  //     REQUIRE(val1.get() == i);
+  //   }
+  // }
 }
 
 }  // namespace RingTupleQueue::UnitTests

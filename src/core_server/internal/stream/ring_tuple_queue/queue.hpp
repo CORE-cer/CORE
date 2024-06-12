@@ -79,13 +79,13 @@ class Queue {
     memcpy(&current_buffer[constant_section_index++],
            &now,
            sizeof(std::chrono::system_clock::time_point));
-    // memcpy(&current_buffer[constant_section_index++],
-    //        &now,
-    //        sizeof(std::chrono::system_clock::time_point));
+    memcpy(&current_buffer[constant_section_index++],
+           &now,
+           sizeof(std::chrono::system_clock::time_point));
     static_assert(sizeof(std::chrono::system_clock::time_point) <= sizeof(uint64_t));
     last_updated[constant_section_buffer_index] = now;
 
-    return &current_buffer[constant_section_index - 2];
+    return &current_buffer[constant_section_index - 3];
   }
 
   // Note that Substitution is not a failure is used in these functions.

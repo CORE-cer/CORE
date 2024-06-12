@@ -123,9 +123,9 @@ class TupleSchemas {
 
     std::vector<uint64_t> positions;
     positions.reserve(sizes.size());
-    positions.push_back(2);  // Offset from id and time
+    positions.push_back(3);  // Offset from id, system_time and date_time
     for (int i = 1; i < sizes.size(); i++) {
-      positions.push_back(2 + sizes[i - 1]);  // Offset from previous sizes.
+      positions.push_back(3 + sizes[i - 1]);  // Offset from previous sizes.
     }
     return positions;
   }
@@ -160,7 +160,7 @@ class Tuple {
   std::chrono::system_clock::time_point data_timestamp() const {
     // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
-      std::chrono::system_clock::duration(data[1]));
+      std::chrono::system_clock::duration(data[2]));
   }
 
   uint64_t system_nanoseconds() const {

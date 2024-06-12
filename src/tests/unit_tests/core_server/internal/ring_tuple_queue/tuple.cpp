@@ -20,9 +20,9 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
   // Create a data vector and insert the double and boolean values
   std::vector<uint64_t> data(10);
   data[0] = 0;
-  memcpy(&data[2], &int_var, sizeof(int64_t));
-  memcpy(&data[3], &double_var, sizeof(double));
-  memcpy(&data[4], &bool_var, sizeof(bool));
+  memcpy(&data[3], &int_var, sizeof(int64_t));
+  memcpy(&data[4], &double_var, sizeof(double));
+  memcpy(&data[5], &bool_var, sizeof(bool));
 
   SECTION("Schema creation and retrieval") {
     auto id = schema.add_schema({SupportedTypes::INT64, SupportedTypes::DOUBLE});
