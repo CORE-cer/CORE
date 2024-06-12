@@ -151,15 +151,29 @@ class Tuple {
 
   uint64_t hash() const { return reinterpret_cast<uint64_t>(data); }
 
-  std::chrono::system_clock::time_point timestamp() const {
+  std::chrono::system_clock::time_point system_timestamp() const {
     // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
       std::chrono::system_clock::duration(data[1]));
   }
 
-  uint64_t nanoseconds() const {
+  std::chrono::system_clock::time_point data_timestamp() const {
+    // Note: Assuming timestamp is stored as the second element of the data span.
+    return std::chrono::system_clock::time_point(
+      std::chrono::system_clock::duration(data[1]));
+  }
+
+  uint64_t system_nanoseconds() const {
     auto compile_time_point = get_compile_time_point();
-    auto duration_since_compile = timestamp() - compile_time_point;
+    auto duration_since_compile = system_timestamp() - compile_time_point;
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_compile)
+      .count();
+  }
+
+  uint64_t data_nanoseconds() const {
+    auto compile_time_point = get_compile_time_point();
+    auto duration_since_compile = data_timestamp() - compile_time_point;
 
     return std::chrono::duration_cast<std::chrono::nanoseconds>(duration_since_compile)
       .count();

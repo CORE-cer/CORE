@@ -29,7 +29,7 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     *bool_ptr = true;
 
     Tuple tuple(data, &schemas);
-    tuple.timestamp();
+    tuple.data_timestamp();
     Value<int64_t> val1(tuple[0]);
     REQUIRE(val1.get() == -10);
     Value<double> val2(tuple[1]);
@@ -96,7 +96,7 @@ TEST_CASE("Tuple and TupleSchemas operations", "[Queue]") {
     }
 
     auto last_tuple_in_fist_buffer = ring_tuple_queue.get_tuple(datas[32]);
-    ring_tuple_queue.update_overwrite_timepoint(last_tuple_in_fist_buffer.timestamp());
+    ring_tuple_queue.update_overwrite_timepoint(last_tuple_in_fist_buffer.data_timestamp());
 
     // Now the first buffer can be recycled.
     for (int i = 66; i < 99; i++) {

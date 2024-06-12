@@ -79,6 +79,9 @@ class Queue {
     memcpy(&current_buffer[constant_section_index++],
            &now,
            sizeof(std::chrono::system_clock::time_point));
+    // memcpy(&current_buffer[constant_section_index++],
+    //        &now,
+    //        sizeof(std::chrono::system_clock::time_point));
     static_assert(sizeof(std::chrono::system_clock::time_point) <= sizeof(uint64_t));
     last_updated[constant_section_buffer_index] = now;
 

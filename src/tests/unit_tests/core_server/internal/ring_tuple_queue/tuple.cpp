@@ -50,7 +50,7 @@ TEST_CASE("Tuple and TupleSchemas operation", "[Tuple]") {
       {SupportedTypes::INT64, SupportedTypes::DOUBLE, SupportedTypes::BOOL});
     Tuple tuple(&data[0], &schema);
 
-    tuple.timestamp();
+    tuple.data_timestamp();
     Value<int64_t> val1(tuple[0]);
     REQUIRE(val1.get() == -10);
 

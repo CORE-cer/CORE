@@ -108,7 +108,6 @@ class BasePolicy {
   void send_tuple_to_queries(const RingTupleQueue::Tuple& tuple) {
     ZoneScopedN("BasePolicy::send_tuple_to_queries");
     std::lock_guard<std::mutex> lock(queries_lock);
-    uint64_t ns = tuple.nanoseconds();
     for (int i = 0; i < inner_thread_event_senders.size(); i++) {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];

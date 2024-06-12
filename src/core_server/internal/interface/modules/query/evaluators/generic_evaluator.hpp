@@ -48,7 +48,7 @@ class GenericEvaluator {
         time = current_stream_position++;
         break;
       case CEQL::Within::TimeWindowMode::NANOSECONDS:
-        time = tuple.nanoseconds();
+        time = tuple.data_nanoseconds();
         break;
       case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
         Types::UniqueEventTypeId event_type_id = tuple.id();
