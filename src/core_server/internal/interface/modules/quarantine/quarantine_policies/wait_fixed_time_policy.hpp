@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
+#include <list>
 #include <mutex>
-#include <vector>
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
@@ -15,10 +17,10 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 
 template <typename ResultHandlerT>
 class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
-  constexpr static const std::chrono::duration time_to_wait = std::chrono::seconds(5);
+  constexpr static const std::chrono::duration time_to_wait = std::chrono::milliseconds(50);
   // TODO: Optimize
   std::mutex tuples_lock;
-  std::vector<RingTupleQueue::Tuple> tuples;
+  std::list<RingTupleQueue::Tuple> tuples;
 
  public:
   WaitFixedTimePolicy(Catalog& catalog,
@@ -30,18 +32,39 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   void receive_tuple(RingTupleQueue::Tuple& tuple) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
-    tuples.push_back(tuple);
+    tuples.insert(std::lower_bound(tuples.begin(),
+                                   tuples.end(),
+                                   tuple.data_nanoseconds(),
+                                   is_tuple_before_nanoseconds),
+                  tuple);
   }
 
  protected:
+  /**
+   * Tries to add received tuples to send queue according to specific policy
+   */
   void try_add_tuples_to_send_queue() override {
+    auto now = std::chrono::system_clock::now();
     std::lock_guard<std::mutex> lock(tuples_lock);
-    for (const RingTupleQueue::Tuple& tuple : tuples) {
-      this->send_tuple_to_queries(tuple);
+    for (auto iter = tuples.begin(); iter != tuples.end();) {
+      const RingTupleQueue::Tuple& tuple = *iter;
+      auto duration = now - tuple.system_timestamp();
+      if (duration > time_to_wait) {
+        this->tuple_send_queue.push_back(tuple);
+        iter = tuples.erase(iter);
+      } else {
+        // If we couldn't remove the first tuple, stop trying
+        return;
+      }
     }
-    this->tuples.clear();
   }
 
   void force_add_tuples_to_send_queue() override { try_add_tuples_to_send_queue(); }
+
+ private:
+  bool static is_tuple_before_nanoseconds(const RingTupleQueue::Tuple& tuple,
+                                          uint64_t nanoseconds) {
+    return tuple.data_nanoseconds() <= nanoseconds;
+  }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine
