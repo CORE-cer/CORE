@@ -1,6 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <optional>
+#include <utility>
+
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+
 #define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
 #include <quill/Quill.h>
@@ -10,18 +16,14 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <optional>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
 #include "core_server/internal/ceql/query/limit.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "det_cea/det_cea.hpp"
 #include "det_cea/state.hpp"
-#include "enumeration/tecs/enumerator.hpp"
 #include "enumeration/tecs/tecs.hpp"
 #include "predicate_evaluator.hpp"
 #include "shared/logging/setup.hpp"
@@ -83,10 +85,9 @@ class Evaluator {
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
+        tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
-        enumeration_limit(enumeration_limit) {
-    tecs = std::make_shared<tECS::tECS>(event_time_of_expiration);
-  }
+        enumeration_limit(enumeration_limit) {}
 
   Evaluator(CEA::DetCEA& cea,
             const PredicateEvaluator& tuple_evaluator,
@@ -98,10 +99,9 @@ class Evaluator {
         tuple_evaluator(tuple_evaluator),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
+        tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
-        enumeration_limit(enumeration_limit) {
-    tecs = std::make_shared<tECS::tECS>(event_time_of_expiration);
-  }
+        enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
   next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
