@@ -1,9 +1,16 @@
 #pragma once
 #include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <memory>
 #include <stack>
+#include <tracy/Tracy.hpp>
+#include <utility>
 #include <vector>
 
 #include "complex_event.hpp"
+#include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "node.hpp"
 #include "tecs.hpp"
 
@@ -42,7 +49,7 @@ class Enumerator {
   uint64_t last_time_to_consider;
   std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next_value;
   Node* original_node{nullptr};
-  tECS* tecs{nullptr};
+  std::shared_ptr<tECS> tecs{nullptr};
   TimeReservator* time_reservator{nullptr};
   TimeReservator::Node* time_reserved_node{nullptr};
   int64_t enumeration_limit;
@@ -51,14 +58,14 @@ class Enumerator {
   Enumerator(Node* node,
              uint64_t original_pos,
              uint64_t time_window,
-             tECS& tecs,
+             std::shared_ptr<tECS> tecs,
              TimeReservator* time_reservator,
              int64_t enumeration_limit)
       : original_pos(original_pos),
         last_time_to_consider((original_pos < time_window) ? 0
                                                            : original_pos - time_window),
         original_node(node),
-        tecs(&tecs),
+        tecs(tecs),
         time_reservator(time_reservator),
         enumeration_limit(enumeration_limit) {
     assert(time_reservator != nullptr);
