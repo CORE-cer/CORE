@@ -62,6 +62,7 @@ class Evaluator {
 
   // Other auxiliary objects
 
+  // Use shared_ptr since enumerator may outlive the evaluator.
   std::shared_ptr<tECS::tECS> tecs{nullptr};
 
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
