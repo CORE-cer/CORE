@@ -1,6 +1,13 @@
 #pragma once
 
-#include "antlr4-runtime.h"
+#include <BaseErrorListener.h>
+#include <Recognizer.h>
+#include <Token.h>
+
+#include <cstddef>
+#include <exception>
+#include <string>
+
 #include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
 
 namespace antlr4 {
