@@ -12,5 +12,6 @@ enum struct ServerResponseType {
   StreamInfoVector,
   StreamTypeId,
   Error,
+  Warning,
 };
 }  // namespace CORE::Types

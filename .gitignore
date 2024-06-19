@@ -33,3 +33,4 @@ src/targets/experiments/taxis/taxi_data.csv
 src/targets/experiments/smart_homes/benchmark.csv
 src/targets/experiments/stocks/benchmark.csv
 src/targets/experiments/taxis/benchmark.csv
+logfile.log

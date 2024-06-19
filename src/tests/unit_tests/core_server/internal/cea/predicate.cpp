@@ -1,12 +1,26 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "core_server/internal/ceql/value/all_value_headers.hpp"
-#include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_math_exprs.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_with_constant.hpp"
+#include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/attribute.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/division.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/literal.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/multiplication.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/subtraction.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests {
 

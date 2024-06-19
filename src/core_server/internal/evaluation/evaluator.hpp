@@ -1,23 +1,32 @@
 #pragma once
+
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+
+#define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
+#include <quill/detail/misc/Common.h>
 
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <optional>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
 #include "core_server/internal/ceql/query/limit.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/node.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "det_cea/det_cea.hpp"
 #include "det_cea/state.hpp"
-#include "enumeration/tecs/enumerator.hpp"
 #include "enumeration/tecs/tecs.hpp"
 #include "predicate_evaluator.hpp"
+#include "shared/logging/setup.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Evaluation {
@@ -53,7 +62,8 @@ class Evaluator {
 
   // Other auxiliary objects
 
-  tECS::tECS tecs;
+  // Use shared_ptr since enumerator may outlive the evaluator.
+  std::shared_ptr<tECS::tECS> tecs{nullptr};
 
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
   CEQL::Limit enumeration_limit;
@@ -76,7 +86,7 @@ class Evaluator {
         tuple_evaluator(std::move(tuple_evaluator)),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
-        tecs(event_time_of_expiration),
+        tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
         enumeration_limit(enumeration_limit) {}
 
@@ -90,13 +100,18 @@ class Evaluator {
         tuple_evaluator(tuple_evaluator),
         time_window(time_bound),
         event_time_of_expiration(event_time_of_expiration),
-        tecs(event_time_of_expiration),
+        tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
         enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
   next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
+    LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
+                     tuple.timestamp());
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+    auto start_time = std::chrono::steady_clock::now();
+#endif
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
     assert(current_time >= last_tuple_time);
@@ -115,7 +130,7 @@ class Evaluator {
     current_ordered_keys = {};
     final_states.clear();
     actual_time = current_time;
-    UnionList ul = tecs.new_ulist(tecs.new_bottom(tuple, current_time));
+    UnionList ul = tecs->new_ulist(tecs->new_bottom(tuple, current_time));
     State* q0 = get_initial_state();
     exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
 
@@ -123,7 +138,7 @@ class Evaluator {
       assert(historic_union_list_map.contains(p));
       UnionList& actual_ul = historic_union_list_map[p];
       if (is_ul_out_time_window(actual_ul)) {
-        tecs.unpin(actual_ul);
+        tecs->unpin(actual_ul);
       } else {
         remove_out_of_time_nodes_ul(actual_ul);
         exec_trans(tuple,
@@ -142,15 +157,32 @@ class Evaluator {
     bool has_output = !final_states.empty();
 
     if (has_output) {
+      LOG_L3_BACKTRACE("Outputting in Evaluator");
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
       if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
           || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
+        LOG_L3_BACKTRACE(
+          "Setting should_reset to true due to consumption policy in Evaluator");
         should_reset.store(true);
       }
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+      auto end_time = std::chrono::steady_clock::now();
+#endif
+      LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
+                   std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
+                                                                        - start_time),
+                   tuple.timestamp());
       return std::move(enumerator);
     }
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+    auto end_time = std::chrono::steady_clock::now();
+#endif
+    LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
+                                                                      - start_time),
+                 tuple.timestamp());
     return {};
   }
 
@@ -158,10 +190,11 @@ class Evaluator {
   State* get_initial_state() { return cea.initial_state; }
 
   void reset() {
+    LOG_L3_BACKTRACE("Resetting historic states in Evaluator");
     cea.state_manager.unpin_states(historic_ordered_keys);
     historic_ordered_keys.clear();
     for (auto& [state, ul] : historic_union_list_map) {
-      tecs.unpin(ul);
+      tecs->unpin(ul);
     }
   }
 
@@ -176,7 +209,7 @@ class Evaluator {
       Node* ul_node = *it;
       if (ul_node->maximum_start < event_time_of_expiration) {
         it = ul.erase(it);
-        tecs.unpin(ul_node);
+        tecs->unpin(ul_node);
       } else {
         ++it;
       }
@@ -190,6 +223,8 @@ class Evaluator {
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
+    LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
+                     tuple.timestamp());
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;
@@ -197,12 +232,12 @@ class Evaluator {
     assert(marked_state != nullptr && unmarked_state != nullptr);
     bool recycle_ulist = false;
     if (!marked_state->is_empty) {
-      Node* new_node = tecs.new_extend(tecs.merge(ul), tuple, current_time);
+      Node* new_node = tecs->new_extend(tecs->merge(ul), tuple, current_time);
       if (current_union_list_map.contains(marked_state)) {
-        current_union_list_map[marked_state] = tecs.insert(
+        current_union_list_map[marked_state] = tecs->insert(
           std::move(current_union_list_map[marked_state]), new_node);
       } else {
-        UnionList new_ulist = tecs.new_ulist(new_node);
+        UnionList new_ulist = tecs->new_ulist(new_node);
         current_ordered_keys.push_back(marked_state);
         cea.state_manager.pin_state(marked_state);
         current_union_list_map[marked_state] = new_ulist;
@@ -213,8 +248,8 @@ class Evaluator {
     }
     if (!unmarked_state->is_empty) {
       if (current_union_list_map.contains(unmarked_state)) {
-        Node* new_node = tecs.merge(ul);
-        current_union_list_map[unmarked_state] = tecs.insert(
+        Node* new_node = tecs->merge(ul);
+        current_union_list_map[unmarked_state] = tecs->insert(
           std::move(current_union_list_map[unmarked_state]), new_node);
       } else {
         current_ordered_keys.push_back(unmarked_state);
@@ -227,7 +262,7 @@ class Evaluator {
       }
     }
     if (!recycle_ulist) {
-      tecs.unpin(ul);
+      tecs->unpin(ul);
     }
   }
 
@@ -239,24 +274,24 @@ class Evaluator {
       State* p = *it;
       // If using ANY consumption policy, this assert will always fail due resetting state
       assert(historic_union_list_map.contains(p));
-      Node* n = tecs.merge(historic_union_list_map[p]);
+      Node* n = tecs->merge(historic_union_list_map[p]);
       // Aca hacer el union del nodo antiguo (si hay) con el nuevo nodo.
       if (out == nullptr) {
         out = n;
       } else {
-        out = tecs.new_direct_union(n, out);
+        out = tecs->new_direct_union(n, out);
       }
     }
     // TODO: Take off the if statement when fixing online_query_evaluator empty enumerator problem
     if (out == nullptr) {
       return {};
     } else {
-      tecs.pin(out);
+      tecs->pin(out);
       return {out,
               actual_time,
               time_window,
               tecs,
-              tecs.time_reservator,
+              tecs->time_reservator,
               enumeration_limit.result_limit};
     }
   }

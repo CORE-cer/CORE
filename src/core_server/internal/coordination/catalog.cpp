@@ -69,9 +69,12 @@ const std::vector<Types::EventInfo>& Catalog::get_all_events_info() const noexce
            (_/ */
 [[nodiscard]] Types::StreamInfo
 Catalog::add_stream_type(Types::StreamInfoParsed&& parsed_stream_info) {
-  if (stream_names.contains(parsed_stream_info.name)) {
-    throw std::runtime_error("Stream with same name already declared");
-  }
+  assert(!stream_names.contains(parsed_stream_info.name)
+         && "Stream with same name already declared");
+  // if (stream_names.contains(parsed_stream_info.name)) {
+  //   throw std::runtime_error("Stream with same name already declared");
+  // }
+  stream_names.insert(parsed_stream_info.name);
   Types::StreamTypeId stream_type_id = streams_info.size();
 
   std::vector<Types::EventInfo> events_info;
@@ -132,6 +135,14 @@ Types::QueryInfo Catalog::get_query_info(Types::QueryInfoId query_info_id) const
     // maybe in the future, we will want to raise an exception.
     return {};
   }
+}
+
+const std::set<std::string>& Catalog::get_stream_names() const noexcept {
+  return stream_names;
+}
+
+const std::vector<Types::StreamInfo>& Catalog::get_stream_info_vector() const noexcept {
+  return streams_info;
 }
 
 const std::vector<Types::QueryInfo>& Catalog::get_all_query_infos() const noexcept {

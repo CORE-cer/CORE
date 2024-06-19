@@ -19,8 +19,9 @@ std::string create_stream() {
 }
 
 TEST_CASE("Correct stream declaration parsing") {
+  Catalog catalog;
   Parsing::StreamParser parser;
-  Types::StreamInfoParsed stream = parser.parse_stream(create_stream());
+  Types::StreamInfoParsed stream = parser.parse_stream(create_stream(), catalog);
   REQUIRE(stream.name == "MySensor");
 
   Types::EventInfoParsed first_event = stream.events_info[0];

@@ -65,11 +65,13 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   ~FormulaToLogicalCEA() override = default;
 
   void visit(EventTypeFormula& formula) override {
-    if (query_catalog.get_unique_events_from_event_name(formula.event_name).size() == 0) {
-      throw std::runtime_error("The event_name: " + formula.event_name +
-                               " is not in the catalog, and base cases "
-                               "that are variables are not allowed.");
-    }
+    assert(query_catalog.get_unique_events_from_event_name(formula.event_name).size() != 0
+           && "There event_name is not in the catalog");
+    // if (query_catalog.get_unique_events_from_event_name(formula.event_name).size() == 0) {
+    //   throw std::runtime_error("The event_name: " + formula.event_name +
+    //                            " is not in the catalog, and base cases "
+    //                            "that are variables are not allowed.");
+    // }
     if (formula.stream_name.has_value()) {
       current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
                                                 stream_event_to_id,

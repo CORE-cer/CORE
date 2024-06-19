@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -32,9 +33,11 @@ struct StreamInfo {
     DataReader(std::string csv_path, std::vector<EventInfo>& events_info)
         : csv_path(csv_path), events_info(events_info) {
       for (const EventInfo& event_info : events_info) {
-        if (event_names_to_index.contains(event_info.name)) {
-          throw std::runtime_error("Stream has two events info with same name");
-        }
+        assert(!event_names_to_index.contains(event_info.name)
+               && "Stream has two events info with same name");
+        // if (event_names_to_index.contains(event_info.name)) {
+        //   throw std::runtime_error("Stream has two events info with same name");
+        // }
         event_names_to_index[event_info.name] = event_info.id;
       }
     }

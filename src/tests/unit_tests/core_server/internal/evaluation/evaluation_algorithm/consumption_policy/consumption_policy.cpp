@@ -30,7 +30,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -150,7 +150,7 @@ TEST_CASE(
     "    AND amzn[name='AMZN']"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -319,7 +319,7 @@ TEST_CASE(
     "    AND amzn[name='AMZN']"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -427,7 +427,7 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(
@@ -648,7 +648,7 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY PARTITION";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<TestResultHandler>
     result_handler_ptr = std::make_unique<TestResultHandler>(

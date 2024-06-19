@@ -21,7 +21,7 @@ namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA {
 std::string create_query(std::string clause) {
   // clang-format off
   return "SELECT ALL * \n"
-         "FROM S, S2\n"
+         "FROM S\n"
          "WHERE " + clause + " WITHIN 4 EVENTS\n";
   // clang-format on
 }
@@ -30,7 +30,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"), catalog);
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -61,7 +61,7 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("H+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H+"), catalog);
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);

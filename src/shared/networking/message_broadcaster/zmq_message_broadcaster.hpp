@@ -1,7 +1,8 @@
-#include <iostream>
+#include <string>
 #include <zmq.hpp>
 
-#include "shared/networking/message_broadcaster/message_broadcaster.hpp"
+// TODO: Actually use interface
+// #include "shared/networking/message_broadcaster/message_broadcaster.hpp"
 
 namespace CORE::Internal {
 class ZMQMessageBroadcaster {

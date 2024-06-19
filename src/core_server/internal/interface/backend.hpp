@@ -1,5 +1,9 @@
 #pragma once
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -26,6 +30,7 @@
 #include "core_server/internal/interface/queries/generic_query.hpp"
 #include "core_server/internal/interface/queries/partition_by_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "queries/simple_query.hpp"
@@ -39,12 +44,13 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/value.hpp"
+#include "shared/logging/setup.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Interface {
 
-template <typename ResultHandlerT>
+template <typename ResultHandlerT, bool NoLogging = true>
 class Backend {
   Internal::Catalog catalog = {};
   RingTupleQueue::Queue queue;
@@ -68,7 +74,11 @@ class Backend {
   std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
  public:
-  Backend() : queue(100'000, &catalog.tuple_schemas) {}
+  Backend() : queue(100'000, &catalog.tuple_schemas) {
+    if constexpr (NoLogging) {
+      Logging::enable_logging_stdout_critical();
+    }
+  }
 
   ~Backend() {
     for (int i = 0; i < last_received_tuple.size(); i++) {
@@ -102,6 +112,14 @@ class Backend {
     return catalog.get_all_streams_info();
   }
 
+  CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
+    return Parsing::StreamParser::parse_stream(stream_info, catalog);
+  }
+
+  Internal::CEQL::Query parse_sent_query(std::string query_info) {
+    return Parsing::QueryParser::parse_query(query_info, catalog);
+  }
+
   // TODO: Propogate parse error to ClientMessageHandler
   void declare_query(Internal::CEQL::Query&& parsed_query,
                      std::unique_ptr<ResultHandlerT>&& result_handler) {
@@ -123,6 +141,9 @@ class Backend {
   template <typename QueryDirectType, typename QueryBaseType>
   void initialize_query(Internal::CEQL::Query&& parsed_query,
                         std::unique_ptr<ResultHandlerT>&& result_handler) {
+    LOG_INFO("Received query \n '{}' in Backend::initialize_query and assigning id {}",
+             parsed_query.to_string(),
+             inner_thread_event_senders.size());
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
@@ -146,6 +167,11 @@ class Backend {
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
     ZoneScopedN("Backend::send_event_to_queries");
+    LOG_L3_BACKTRACE(
+      "Received event with id {} from stream with id {} in "
+      "Backend::send_event_to_queries",
+      event.event_type_id,
+      stream_id);
     RingTupleQueue::Tuple tuple = event_to_tuple(event);
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
@@ -158,6 +184,13 @@ class Backend {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
+        LOG_L3_BACKTRACE(
+          "Sending event with id {} and timestamp {} from stream with id {} in "
+          "Backend::send_event_to_queries to query {}",
+          event.event_type_id,
+          tuple.timestamp(),
+          stream_id,
+          i);
         last_sent_tuple[i] = tuple.get_data();
         sender.send(tuple.serialize_data());
       }

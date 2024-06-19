@@ -2,9 +2,10 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "core_server/internal/ceql/value/attribute.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/visitors/predicate_visitor.hpp"
+#include "core_server/internal/ceql/value/value.hpp"
 #include "not_predicate.hpp"
 #include "predicate.hpp"
 
