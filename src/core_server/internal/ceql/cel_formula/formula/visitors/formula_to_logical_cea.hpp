@@ -162,5 +162,9 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     uint64_t variable_id = variables_to_id[formula.variable_name];
     current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
   }
+
+  void visit(NotEventTypeFormula& formula) override {
+    // Me falta esto
+  }
 };
 }  // namespace CORE::Internal::CEQL

@@ -8,18 +8,18 @@
 namespace CORE::Internal::CEQL {
 
 struct NotEventTypeFormula : public Formula {
-  std::string s_event_name;
+  std::string event_name;
 
-  NotEventTypeFormula(std::string s_event_name) : s_event_name(s_event_name) {}
+  NotEventTypeFormula(std::string event_name) : event_name(event_name) {}
 
   ~NotEventTypeFormula() override = default;
 
   std::unique_ptr<Formula> clone() const override {
-    return std::make_unique<NotEventTypeFormula>(s_event_name);
+    return std::make_unique<NotEventTypeFormula>(event_name);
   }
 
   bool operator==(const NotEventTypeFormula& other) const {
-    return s_event_name == other.s_event_name;
+    return event_name == other.event_name;
   }
 
   bool equals(Formula* other) const override {
@@ -30,7 +30,7 @@ struct NotEventTypeFormula : public Formula {
   }
 
   std::string to_string() const override {
-    return "NOT" + s_event_name;
+    return "NOT " + event_name;
   }
 
   void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }

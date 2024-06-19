@@ -125,4 +125,4 @@ class CORE(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.configure()
-        cmake.build()
+        cmake.build(build_tool_args=["-j4"])
