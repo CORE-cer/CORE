@@ -1,5 +1,9 @@
 #pragma once
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
+
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -23,6 +27,7 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -38,7 +43,7 @@ class ClientMessageHandler {
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
 
-  using Backend = CORE::Internal::Interface::Backend<HandlerType>;
+  using Backend = CORE::Internal::Interface::Backend<HandlerType, false>;
 
  private:
   Backend& backend;
@@ -93,6 +98,10 @@ class ClientMessageHandler {
 
   Types::ServerResponse event_info_from_id(std::string s_event_id) {
     auto event_id = CerealSerializer<Types::UniqueEventTypeId>::deserialize(s_event_id);
+    LOG_INFO(
+      "Received request for event info with id {} in "
+      "ClientMessageHandler::event_info_from_id",
+      event_id);
     Types::EventInfo info = backend.get_event_info(event_id);
     return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(info),
                                  Types::ServerResponseType::EventInfo);
@@ -116,19 +125,33 @@ class ClientMessageHandler {
   stream_declaration_from_string(std::string s_parsed_stream_declaration) {
     auto stream_declaration = CerealSerializer<std::string>::deserialize(
       s_parsed_stream_declaration);
-    Types::StreamInfoParsed parsed_stream_info = Parsing::StreamParser::parse_stream(
-      stream_declaration);
+    try {
+      Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
+        stream_declaration);
+      LOG_INFO(
+        "Received request for declaring stream {} in "
+        "ClientMessageHandler::stream_declaration_from_string",
+        parsed_stream_info.name);
 
-    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
-    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
-                                   stream_info),
-                                 Types::ServerResponseType::StreamInfo);
+      Types::StreamInfo stream_info = backend.add_stream_type(
+        std::move(parsed_stream_info));
+      return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                     stream_info),
+                                   Types::ServerResponseType::StreamInfo);
+    } catch (std::exception& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Error);
+    }
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_declaration) {
     Types::StreamInfoParsed
       parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
         s_parsed_stream_declaration);
+    LOG_INFO(
+      "Received request for declaring stream {} in "
+      "ClientMessageHandler::stream_declaration",
+      parsed_stream_info.name);
 
     Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
     return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
@@ -138,6 +161,9 @@ class ClientMessageHandler {
 
   Types::ServerResponse stream_info_from_id(std::string s_stream_id) {
     auto stream_id = CerealSerializer<Types::StreamTypeId>::deserialize(s_stream_id);
+    LOG_INFO(
+      "Received request for stream id {} in ClientMessageHandler::stream_info_from_id",
+      stream_id);
     Types::StreamInfo info = backend.get_stream_info(stream_id);
     return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(info),
                                  Types::ServerResponseType::StreamInfo);
@@ -151,6 +177,7 @@ class ClientMessageHandler {
   // }
 
   Types::ServerResponse list_all_streams() {
+    LOG_INFO("Received request in ClientMessageHandler::list_all_streams");
     std::vector<Types::StreamInfo> info = backend.get_all_streams_info();
     return Types::ServerResponse(
       CerealSerializer<std::vector<Types::StreamInfo>>::serialize(info),
@@ -161,17 +188,24 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    Internal::CEQL::Query parsed_query = Parsing::QueryParser::parse_query(s_query_info);
-
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
-      backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
-    backend.declare_query(std::move(parsed_query), std::move(result_handler));
-
-    return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
-                                   possible_port.value_or(0)),
-                                 Types::ServerResponseType::PortNumber);
-  }
+    try {
+      LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
+      Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
+      std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+        backend.get_catalog_reference());
+      std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+      backend.declare_query(std::move(parsed_query), std::move(result_handler));
+      return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
+                                     possible_port.value_or(0)),
+                                   Types::ServerResponseType::PortNumber);
+    } catch (WarningException& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Warning);
+    } catch (std::exception& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
+                                   Types::ServerResponseType::Error);
+    }
+  };
 
   // TODO: all queries and port numbers
 };

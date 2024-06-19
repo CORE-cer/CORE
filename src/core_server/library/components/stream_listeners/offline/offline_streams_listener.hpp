@@ -1,14 +1,18 @@
 #pragma once
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/detail/LogMacros.h>
+
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
+#include "shared/logging/setup.hpp"
 
 namespace CORE::Library::Components {
 
 template <typename ResultHandlerFactoryT>
 class OfflineStreamsListener {
-  using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT>;
+  using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT, false>;
 
  private:
   Backend& backend;
@@ -22,7 +26,13 @@ class OfflineStreamsListener {
   OfflineStreamsListener& operator=(const OfflineStreamsListener&) = delete;
 
   void receive_stream(const Types::Stream& stream) {
+    LOG_L3_BACKTRACE("Received stream with id {} and {} events in OfflineStreamsListener",
+                     stream.id,
+                     stream.events.size());
     for (const auto& event : stream.events) {
+      LOG_L3_BACKTRACE("Stream with id {} and event {} in OfflineStreamsListener",
+                       stream.id,
+                       event.to_string());
       backend.send_event_to_queries(stream.id, event);
     }
   }

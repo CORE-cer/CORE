@@ -47,7 +47,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers") {
     "WHERE BUY \n"
     "FILTER S1>BUY[name='MSFT'] AND S2>BUY[name='INTL']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
@@ -113,7 +113,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
     "SELECT * FROM S1, S2\n"
     "WHERE (S1>BUY OR S2>BUY) \n";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
@@ -180,7 +180,7 @@ TEST_CASE(
     "SELECT * FROM S1, S2\n"
     "WHERE S2>BUY \n";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
@@ -248,7 +248,7 @@ TEST_CASE(
     "SELECT S1>BUY FROM S1, S2\n"
     "WHERE (S1>BUY OR S2>BUY) \n";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
@@ -328,7 +328,7 @@ TEST_CASE(
     "SELECT BUY FROM S1, S2\n"
     "WHERE (S1>BUY OR S2>BUY) \n";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(

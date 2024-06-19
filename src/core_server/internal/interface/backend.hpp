@@ -1,5 +1,14 @@
 #pragma once
 
+#include <string>
+
+#include "core_server/internal/evaluation/evaluator.hpp"
+#include "shared/logging/setup.hpp"
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>
+#include <quill/detail/LogMacros.h>
+
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <ctime>
@@ -12,6 +21,9 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/event_manager.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
+#include "core_server/internal/interface/queries/partition_by_query.hpp"
+#include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -23,7 +35,7 @@
 
 namespace CORE::Internal::Interface {
 
-template <typename ResultHandlerT>
+template <typename ResultHandlerT, bool NoLogging = true>
 class Backend {
   Internal::Catalog catalog = {};
   RingTupleQueue::Queue queue;
@@ -36,7 +48,11 @@ class Backend {
   Backend()
       : queue(100'000, &catalog.tuple_schemas),
         event_manager(catalog, queue),
-        quarantine_manager(catalog, queue) {}
+        quarantine_manager(catalog, queue) {
+    if constexpr (NoLogging) {
+      Logging::enable_logging_stdout_critical();
+    }
+  }
 
   const Catalog& get_catalog_reference() const { return catalog; }
 
@@ -60,6 +76,14 @@ class Backend {
 
   std::vector<Types::StreamInfo> get_all_streams_info() {
     return catalog.get_all_streams_info();
+  }
+
+  CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
+    return Parsing::StreamParser::parse_stream(stream_info, catalog);
+  }
+
+  Internal::CEQL::Query parse_sent_query(std::string query_info) {
+    return Parsing::QueryParser::parse_query(query_info, catalog);
   }
 
   // TODO: Propogate parse error to ClientMessageHandler

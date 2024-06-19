@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <type_traits>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -11,6 +12,7 @@
 #include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
+#include "shared/logging/setup.hpp"
 
 namespace CORE::Library {
 
@@ -34,7 +36,7 @@ class OfflineServer {
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
-  Internal::Interface::Backend<HandlerType> backend;
+  Internal::Interface::Backend<HandlerType, false> backend;
 
   ResultHandlerFactoryT result_handler_factory{};
   Components::Router<ResultHandlerFactoryT> router;
@@ -44,7 +46,9 @@ class OfflineServer {
   OfflineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
         router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {}
+        stream_listener{backend, next_available_port++} {
+    Internal::Logging::enable_logging_rotating();
+  }
 
   void receive_stream(const Types::Stream& stream) {
     stream_listener.receive_stream(stream);
@@ -72,7 +76,7 @@ class OnlineServer {
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
-  Internal::Interface::Backend<HandlerType> backend;
+  Internal::Interface::Backend<HandlerType, false> backend;
 
   ResultHandlerFactoryT result_handler_factory;
   Components::Router<ResultHandlerFactoryT> router;
@@ -83,7 +87,9 @@ class OnlineServer {
       : next_available_port(starting_port),
         result_handler_factory{next_available_port},
         router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {}
+        stream_listener{backend, next_available_port++} {
+    Internal::Logging::enable_logging_rotating();
+  }
 
   void receive_stream(const Types::Stream& stream) {
     static_assert("in memory receive_stream not supported on online server");

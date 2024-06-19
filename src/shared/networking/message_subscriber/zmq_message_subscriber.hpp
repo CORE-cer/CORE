@@ -1,8 +1,11 @@
 #pragma once
-#include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <string>
 #include <zmq.hpp>
 
-#include "shared/networking/message_subscriber/message_subscriber.hpp"
+// TODO: Actually use interface
+// #include "shared/networking/message_subscriber/message_subscriber.hpp"
 
 namespace CORE::Internal {
 

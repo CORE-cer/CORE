@@ -1,7 +1,7 @@
+#include <cereal/types/polymorphic.hpp>
+#include <initializer_list>
 #include <memory>
 #include <vector>
-
-#include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Internal::ThirdPartyTests::Cereal {
 struct SimpleStruct {

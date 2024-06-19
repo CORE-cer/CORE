@@ -41,7 +41,7 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY NONE";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
@@ -196,7 +196,7 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY NONE";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
