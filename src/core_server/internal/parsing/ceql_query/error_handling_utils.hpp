@@ -47,7 +47,8 @@ bool check_if_attribute_exist_in_as_events(
 bool attribute_exist_in_as_events(std::vector<Types::EventInfo>& events,
                                   std::set<std::string>& attributes);
 
-bool check_if_attribute_exist_in_stream_event(std::string event_name,
+bool check_if_attribute_exist_in_stream_event(
+  std::string event_name,
   std::set<std::string> attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events);
 

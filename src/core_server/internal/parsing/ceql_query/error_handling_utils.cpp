@@ -159,11 +159,12 @@ bool attribute_exist_in_as_events(std::vector<Types::EventInfo>& events,
   return false;
 }
 
-bool check_if_attribute_exist_in_stream_event(std::string event_name,
+bool check_if_attribute_exist_in_stream_event(
+  std::string event_name,
   std::set<std::string> attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
   return check_if_attributes_are_defined(attributes, streams_events);
-  }
+}
 
 void check_if_attributes_are_defined(
   std::set<std::string>& attributes,

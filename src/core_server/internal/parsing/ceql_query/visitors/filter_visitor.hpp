@@ -58,7 +58,8 @@ class FilterVisitor : public CEQLQueryParserBaseVisitor {
     } else {
       // Since events name can be repeated between different events, the parser only
       // verifies if the attribute is defined in any of the events
-      if (!check_if_attribute_exist_in_as_events(event_name, attributes, as_events_map_info) && !check_if_attributes_are_defined(attributes, streams_events)){
+      if (!check_if_attribute_exist_in_as_events(event_name, attributes, as_events_map_info)
+          && !check_if_attributes_are_defined(attributes, streams_events)) {
         throw AttributeNotDefinedException("Warning: One or more of these attributes [");
       }
       // check_if_attributes_are_defined(attributes, streams_events, as_events_map_info);
