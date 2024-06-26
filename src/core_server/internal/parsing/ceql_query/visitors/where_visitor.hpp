@@ -117,27 +117,16 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitNot_event_type_cel_formula(
-    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override { //esto me falta pillar
-      cout<< "Debugging \n";
-      cout<<ctx->not_s_event_name()->s_event_name()->event_name()->getText();
-      formula = std::make_unique<CEQL::NotEventTypeFormula>(
-        ctx->not_s_event_name()->s_event_name()->event_name()->getText());
+    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override { 
+      // visit(ctx->cel_formula());
+      // formula = std::make_unique<CEQL::NotEventTypeFormula>(
+      //   ctx->not_s_event_name()->s_event_name()->event_name()->getText());
+      visit(ctx->cel_formula());
+      visit(ctx->not_s_event_name()->s_event_name());
+      formula = std::make_unique<CEQL::NotEventTypeFormula>(std::move(formula));
       return {};
     }
 
-    // std::unique_ptr<CEQL::EventTypeFormula> unless;
-    // if (ctx->s_event_name()->stream_name() == nullptr) {
-    //   unless = std::make_unique<CEQL::EventTypeFormula>(
-    //     ctx->s_event_name()->event_name()->getText());
-    // } else {
-    //   unless = std::make_unique<CEQL::EventTypeFormula>(
-    //     ctx->s_event_name()->stream_name()->getText(),
-    //     ctx->s_event_name()->event_name()->getText());
-    // }
-    // visit(ctx->cel_formula());
-
-    // formula = std::make_unique<CEQL::UnlessFormula>(std::move(formula), std::move(unless));
-
-
+  // probar sino NOT(....)
 };
 }  // namespace CORE::Internal::Parsing

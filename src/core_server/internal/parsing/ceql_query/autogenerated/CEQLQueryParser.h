@@ -406,7 +406,8 @@ public:
   public:
     Not_event_type_cel_formulaContext(Cel_formulaContext *ctx);
 
-    Not_s_event_nameContext *not_s_event_name();
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *K_NOT();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };

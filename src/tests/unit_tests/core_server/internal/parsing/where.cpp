@@ -114,7 +114,9 @@ TEST_CASE("event or event", "[Where]") {
 
 TEST_CASE("not event", "[NOT]") {
   auto query = create_where_query("NOT T");
-  auto expected_formula = make_unique<NotEventTypeFormula>("T");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<EventTypeFormula>("T")
+  );
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
