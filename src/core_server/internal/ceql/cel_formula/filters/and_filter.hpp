@@ -22,6 +22,8 @@ struct AndFilter : public Filter {
     return std::make_unique<AndFilter>(left->clone(), right->clone());
   }
 
+  std::unique_ptr<Filter> negate() const override;
+
   bool operator==(const AndFilter& other) const {
     return left->equals(other.left.get()) && right->equals(other.right.get());
   }

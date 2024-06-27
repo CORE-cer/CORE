@@ -34,6 +34,10 @@ struct AtomicFilter : public Filter {
     return std::make_unique<AtomicFilter>(stream_name, variable_name, predicate->clone());
   }
 
+  std::unique_ptr<Filter> negate() const override {
+    return std::make_unique<AtomicFilter>(stream_name, variable_name, predicate->negate());
+  }
+
   bool operator==(const AtomicFilter& other) const {
     return stream_name == other.stream_name && variable_name == other.variable_name
            && predicate->equals(other.predicate.get());

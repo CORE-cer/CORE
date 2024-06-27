@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "filter.hpp"
 
@@ -18,6 +19,8 @@ struct OrFilter : public Filter {
   std::unique_ptr<Filter> clone() const override {
     return std::make_unique<OrFilter>(left->clone(), right->clone());
   }
+
+  std::unique_ptr<Filter> negate() const override;
 
   bool operator==(const OrFilter& other) const {
     return left->equals(other.left.get()) && right->equals(other.right.get());
