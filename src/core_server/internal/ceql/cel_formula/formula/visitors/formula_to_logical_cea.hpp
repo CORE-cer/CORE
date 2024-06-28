@@ -100,7 +100,79 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(UnlessFormula& formula) override {
-    // TODO(unless)
+    formula.left->accept_visitor(*this);
+
+    // TODO(unless): implementar .negate a nivel de formula
+    // de esa manera no hay que añadir este if, solo negar y llamar a accept_visitor
+
+    auto right = formula.right.get();
+    EventTypeFormula* event_type_formula = dynamic_cast<EventTypeFormula*>(right);
+    if (event_type_formula != nullptr) {
+      // Obtener el índice del evento
+      if (query_catalog.get_unique_events_from_event_name(event_type_formula->event_name)
+            .size()
+          == 0) {
+        throw std::runtime_error("The event_name: " + event_type_formula->event_name +
+                               " is not in the catalog, and base cases "
+                               "that are variables are not allowed.");
+      }
+      // TODO: no se revisa que la combinación de Stream/Event sea correcta
+
+      std::size_t number_of_streams = query_catalog.number_of_streams();
+      Types::StreamTypeId query_stream_id = query_catalog
+                                              .get_query_stream_id_from_stream_name(
+                                                event_type_formula->stream_name.value());
+      Types::EventNameTypeId
+        query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
+          event_type_formula->stream_name.value());
+
+      mpz_class stream_predicate_position = mpz_class(1) << query_stream_id;
+      mpz_class event_name_predicate_position = mpz_class(1) << (number_of_streams
+                                                                 + query_event_name_id);
+
+      mpz_class expected_eval = stream_predicate_position | event_name_predicate_position;
+
+      // Modificar las transiciones para que no acepten el evento
+      for (int i = 0; i < current_cea.amount_of_states; i++) {
+        auto transition = current_cea.transitions[i].begin();
+        while (transition != current_cea.transitions[i].end()) {
+          CEA::PredicateSet transition_predicate_set = std::get<0>(*transition);
+          mpz_class transition_expected_eval = transition_predicate_set.mask;
+          mpz_class transition_predicate_mask = transition_predicate_set.predicates;
+          if (expected_eval == transition_expected_eval) {
+            // (X or Y) UNLESS X y estamos en la transición X del or
+            transition = current_cea.transitions[i].erase(transition);
+
+          } else {
+            // Esperar que el evento sea 0
+            auto eval = transition_expected_eval & ~expected_eval;
+            // Considerar 1 en la posición del evento
+            auto mask = transition_predicate_mask | expected_eval;
+            // Modificar la transición (overload)
+            *transition = std::make_tuple(CEA::PredicateSet(eval, mask),
+                                          std::get<1>(*transition),
+                                          std::get<2>(*transition));
+            // Pasar al siguiente (overload)
+            ++transition;
+          }
+        }
+      }
+
+      return;
+    }
+
+    FilterFormula* filterFormula = dynamic_cast<FilterFormula*>(right);
+    if (filterFormula != nullptr) {
+      ApplyFiltersToLogicalCEA visitor(current_cea,
+                                       stream_event_to_id,
+                                       variables_to_id,
+                                       query_catalog);
+      filterFormula->filter->negate()->accept_visitor(visitor);
+      return;
+    }
+
+    throw std::runtime_error("UNLESS [" + formula.right->to_string()
+                             + "] not implemented");
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {
