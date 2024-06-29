@@ -113,7 +113,17 @@ TEST_CASE("event or event", "[Where]") {
 }
 
 TEST_CASE("event unless event", "[UNLESS]") {
-  auto query = create_where_query("H UNLESS T");
+  auto query = create_where_query("X UNLESS X");
+  auto expected_formula = make_unique<UnlessFormula>(make_unique<EventTypeFormula>("H"),
+                                                     make_unique<EventTypeFormula>("T"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: + formula -> " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("event unless filter", "[UNLESS]") {
+  auto query = create_where_query("X UNLESS X[a == 1]");
   auto expected_formula = make_unique<UnlessFormula>(make_unique<EventTypeFormula>("H"),
                                                      make_unique<EventTypeFormula>("T"));
   auto formula = parse_formula(query);

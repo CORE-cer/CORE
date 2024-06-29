@@ -64,5 +64,14 @@ TEST_CASE("Evaluation of UNLESS") {
   backend.send_event_to_queries(s1_stream_info.id, event);
   output = result_handler.get_enumerator();
   REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,  // Sell
+           {
+             std::make_shared<Types::StringValue>("AMZN"),
+           }};
+  INFO("SELL AMZN - S - should create a complex event");
+  backend.send_event_to_queries(s1_stream_info.id, event);
+  output = result_handler.get_enumerator();
+  REQUIRE(output.complex_events.size() == 1);
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests
