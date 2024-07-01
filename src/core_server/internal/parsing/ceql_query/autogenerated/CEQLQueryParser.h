@@ -401,6 +401,16 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  Not_event_type_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Not_event_type_cel_formulaContext(Cel_formulaContext *ctx);
+
+    antlr4::tree::TerminalNode *K_NOT();
+    Cel_formulaContext *cel_formula();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  As_cel_formulaContext : public Cel_formulaContext {
   public:
     As_cel_formulaContext(Cel_formulaContext *ctx);

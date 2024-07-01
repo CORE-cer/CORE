@@ -91,6 +91,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitNot_event_type_cel_formula(CEQLQueryParser::Not_event_type_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAs_cel_formula(CEQLQueryParser::As_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
