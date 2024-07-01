@@ -8,6 +8,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
@@ -112,5 +113,12 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     formula = std::make_unique<CEQL::ContiguousIterationFormula>(std::move(formula));
     return {};
   }
+
+  virtual std::any visitNot_event_type_cel_formula(
+    CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override { 
+      visit(ctx->cel_formula());
+      formula = std::make_unique<CEQL::NotEventTypeFormula>(std::move(formula));
+      return {};
+    }
 };
 }  // namespace CORE::Internal::Parsing
