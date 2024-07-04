@@ -1,0 +1,7 @@
+[settings]
+arch=armv8
+compiler=gcc
+compiler.cppstd=gnu20
+compiler.libcxx=libstdc++11
+compiler.version=12.2
+os=Macos
