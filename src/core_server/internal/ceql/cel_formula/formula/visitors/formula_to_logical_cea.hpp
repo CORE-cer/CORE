@@ -102,12 +102,15 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   void visit(UnlessFormula& formula) override {
     formula.left->accept_visitor(*this);
 
-    // TODO(unless): implementar .negate a nivel de formula
     // de esa manera no hay que añadir este if, solo negar y llamar a accept_visitor
 
     auto right = formula.right.get();
     EventTypeFormula* event_type_formula = dynamic_cast<EventTypeFormula*>(right);
     if (event_type_formula != nullptr) {
+      // TODO(unless): create from event
+      // CEA::UnlessEventTransform transform(query_catalog, *event_type_formula);
+      // current_cea = transform(std::move(current_cea));
+
       // Obtener el índice del evento
       if (query_catalog.get_unique_events_from_event_name(event_type_formula->event_name)
             .size()
@@ -163,11 +166,9 @@ class FormulaToLogicalCEA : public FormulaVisitor {
 
     FilterFormula* filterFormula = dynamic_cast<FilterFormula*>(right);
     if (filterFormula != nullptr) {
-      ApplyFiltersToLogicalCEA visitor(current_cea,
-                                       stream_event_to_id,
-                                       variables_to_id,
-                                       query_catalog);
-      filterFormula->filter->negate()->accept_visitor(visitor);
+      // TODO(unless): create from filter
+      // CEA::UnlessEventTransform transform(query_catalog, *event_type_formula);
+      // current_cea = transform(std::move(current_cea));
       return;
     }
 
