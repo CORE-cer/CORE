@@ -17,6 +17,36 @@
 
 namespace CORE::Internal::CEA {
 
+// TODO(unless): donde se deja esta función?
+mpz_class event_to_mask(const QueryCatalog& query_catalog,
+                        std::string event_name,
+                        std::optional<std::string> stream_name) {
+  if (query_catalog.get_unique_events_from_event_name(event_name).size() == 0) {
+    throw std::runtime_error("The event_name: " + event_name +
+                               " is not in the catalog, and base cases "
+                               "that are variables are not allowed.");
+  }
+
+  std::size_t number_of_streams = query_catalog.number_of_streams();
+  Types::EventNameTypeId query_event_name_id = query_catalog
+                                                 .get_query_event_name_id_from_event_name(
+                                                   event_name);
+
+  mpz_class event_name_predicate_position = mpz_class(1)
+                                            << (number_of_streams + query_event_name_id);
+
+  mpz_class mask = event_name_predicate_position;
+
+  if (stream_name.has_value()) {
+    Types::StreamTypeId query_stream_id = query_catalog.get_query_stream_id_from_stream_name(
+      stream_name.value());
+    mpz_class stream_predicate_position = mpz_class(1) << query_stream_id;
+    mask = stream_predicate_position | event_name_predicate_position;
+  }
+
+  return mask;
+}
+
 class UnlessEventTransform : public LogicalCEATransformer<UnlessEventTransform> {
  private:
   const std::vector<CEA::PredicateSet> unless_predicates;
@@ -24,12 +54,17 @@ class UnlessEventTransform : public LogicalCEATransformer<UnlessEventTransform> 
  public:
   UnlessEventTransform(const QueryCatalog& query_catalog,
                        const EventTypeFormula& event_type_formula) {
-    // TODO(unless): create from event
+    mpz_class event_mask = event_to_mask(query_catalog,
+                                         event_type_formula.event_name,
+                                         event_type_formula.stream_name);
+    unless_predicates.push_back(CEA::PredicateSet(event_mask, ~event_mask));
   }
 
   UnlessEventTransform(const QueryCatalog& query_catalog,
                        const FilterFormula& filter_formula) {
-    // TODO(unless): create from filter
+    // TODO(unless): como obtener el arreglo del visitor?
+    CollectUnlessPredicatesVisitor visitor();
+    filter_formula.accept(visitor);
   }
 
   LogicalCEA eval(LogicalCEA&& cea) {
