@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
@@ -388,6 +389,7 @@ class QueryCatalog {
       std::shared_ptr<Types::Value> val;
       switch (att_info.value_type) {
         case Types::ValueTypes::INT64:
+        case Types::ValueTypes::PRIMARY_TIME:
           val = std::make_shared<Types::IntValue>(
             RingTupleQueue::Value<int64_t>(tuple[i]).get());
           break;
@@ -412,7 +414,13 @@ class QueryCatalog {
       }
       values.push_back(std::move(val));
     }
-    return {event_info.id, std::move(values)};
+    std::chrono::system_clock::time_point primary_time_tp = tuple.data_timestamp();
+    std::shared_ptr<Types::IntValue> primary_time = std::make_shared<Types::IntValue>(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        primary_time_tp.time_since_epoch())
+        .count());
+
+    return {event_info.id, std::move(values), primary_time};
   }
 };
 

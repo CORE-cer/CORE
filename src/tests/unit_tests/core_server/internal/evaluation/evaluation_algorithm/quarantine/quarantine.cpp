@@ -22,11 +22,11 @@ TEST_CASE("Evaluation on the example stream of the papers unordered") {
                            {{"SELL",
                              {{"name", Types::ValueTypes::STRING_VIEW},
                               {"price", Types::ValueTypes::INT64},
-                              {"time", Types::ValueTypes::INT64}}},
+                              {"time", Types::ValueTypes::PRIMARY_TIME}}},
                             {"BUY",
                              {{"name", Types::ValueTypes::STRING_VIEW},
                               {"price", Types::ValueTypes::INT64},
-                              {"time", Types::ValueTypes::INT64}}}}});
+                              {"time", Types::ValueTypes::PRIMARY_TIME}}}}});
 
   std::string string_query =
     "SELECT * FROM Stock\n"
@@ -51,58 +51,65 @@ TEST_CASE("Evaluation on the example stream of the papers unordered") {
   event = {0,
            {std::make_shared<Types::StringValue>("AMZN"),
             std::make_shared<Types::IntValue>(1920),
-            std::make_shared<Types::IntValue>(6)}};
+            std::make_shared<Types::IntValue>(6)},
+           std::make_shared<Types::IntValue>(6)};
   INFO("SELL AMZN 1920");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
             std::make_shared<Types::IntValue>(102),
-            std::make_shared<Types::IntValue>(1)}};
+            std::make_shared<Types::IntValue>(1)},
+           std::make_shared<Types::IntValue>(1)};
   INFO("SELL MSFT 102");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
             std::make_shared<Types::IntValue>(80),
-            std::make_shared<Types::IntValue>(2)}};
+            std::make_shared<Types::IntValue>(2)},
+           std::make_shared<Types::IntValue>(2)};
   INFO("SELL INTL 80");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {1,
            {std::make_shared<Types::StringValue>("INTL"),
             std::make_shared<Types::IntValue>(80),
-            std::make_shared<Types::IntValue>(3)}};
+            std::make_shared<Types::IntValue>(3)},
+           std::make_shared<Types::IntValue>(3)};
   INFO("BUY INTL 80");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {0,
            {std::make_shared<Types::StringValue>("MSFT"),
             std::make_shared<Types::IntValue>(101),
-            std::make_shared<Types::IntValue>(0)}};
+            std::make_shared<Types::IntValue>(0)},
+           std::make_shared<Types::IntValue>(0)};
   INFO("SELL MSFT 101");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {0,
            {std::make_shared<Types::StringValue>("AMZN"),
             std::make_shared<Types::IntValue>(1900),
-            std::make_shared<Types::IntValue>(4)}};
+            std::make_shared<Types::IntValue>(4)},
+           std::make_shared<Types::IntValue>(4)};
   INFO("SELL AMZN 1900");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
             std::make_shared<Types::IntValue>(81),
-            std::make_shared<Types::IntValue>(5)}};
+            std::make_shared<Types::IntValue>(5)},
+           std::make_shared<Types::IntValue>(5)};
   INFO("SELL INTL 81");
 
-  backend.send_event_to_queries(0, event, true);
+  backend.send_event_to_queries(0, event);
 
   output = result_handler.get_enumerator();
 

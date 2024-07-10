@@ -168,6 +168,9 @@ uint64_t Catalog::add_type_to_schema(std::vector<Types::AttributeInfo>& event_at
       case Types::DATE:
         converted_types.push_back(RingTupleQueue::SupportedTypes::DATE);
         break;
+      case Types::PRIMARY_TIME:
+        converted_types.push_back(RingTupleQueue::SupportedTypes::INT64);
+        break;
       default:
         assert(false && "A value_type is missing in add_type_to_schema");
     }

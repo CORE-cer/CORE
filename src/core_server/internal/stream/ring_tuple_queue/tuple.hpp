@@ -153,14 +153,14 @@ class Tuple {
 
   uint64_t hash() const { return reinterpret_cast<uint64_t>(data); }
 
+  // Received Time
   std::chrono::system_clock::time_point system_timestamp() const {
-    // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
       std::chrono::system_clock::duration(data[1]));
   }
 
+  // Primary Time
   std::chrono::system_clock::time_point data_timestamp() const {
-    // Note: Assuming timestamp is stored as the second element of the data span.
     return std::chrono::system_clock::time_point(
       std::chrono::system_clock::duration(data[2]));
   }

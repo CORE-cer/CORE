@@ -32,7 +32,7 @@ class EventManager {
   EventManager(Catalog& catalog, RingTupleQueue::Queue& queue)
       : catalog(catalog), queue(queue) {}
 
-  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event, bool time) {
+  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event) {
     ZoneScopedN("Backend::event_to_tuple");
     if (event.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
@@ -44,12 +44,12 @@ class EventManager {
     }
 
     uint64_t* data;
-    if (time) {
-      Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(
-        event.attributes.back().get());
-      std::chrono::system_clock::time_point tp{std::chrono::milliseconds(val_ptr->val)};
 
-      data = queue.start_tuple(event.event_type_id, tp);
+    if (event.primary_time.has_value()) {
+      int64_t primary_time = event.primary_time.value()->val;
+      std::chrono::system_clock::time_point primary_time_tp{
+        std::chrono::nanoseconds(primary_time)};
+      data = queue.start_tuple(event.event_type_id, primary_time_tp);
     } else {
       data = queue.start_tuple(event.event_type_id);
     }
@@ -60,6 +60,7 @@ class EventManager {
       std::shared_ptr<Types::Value> attr = event.attributes[i];
       switch (attr_info.value_type) {
         case Types::INT64:
+        case Types::PRIMARY_TIME:
           write_int(attr);
           break;
         case Types::DOUBLE:

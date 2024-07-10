@@ -49,6 +49,7 @@ datatype
  | 'string'
  | 'double'
  | 'boolean'
+ | PRIMARY_TIME
  | IDENTIFIER
  ;
 

@@ -23,7 +23,8 @@ class EventVisitor : public StreamDeclarationParserBaseVisitor {
     {{"int", Types::ValueTypes::INT64},
      {"string", Types::ValueTypes::STRING_VIEW},
      {"double", Types::ValueTypes::DOUBLE},
-     {"boolean", Types::ValueTypes::BOOL}};
+     {"boolean", Types::ValueTypes::BOOL},
+     {"boolean", Types::ValueTypes::PRIMARY_TIME}};
 
  public:
   Types::EventInfoParsed get_parsed_event() {
