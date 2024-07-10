@@ -2,7 +2,6 @@
 
 #include <string>
 
-#include "core_server/internal/evaluation/evaluator.hpp"
 #include "shared/logging/setup.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>
@@ -21,7 +20,6 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/event_manager.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
-#include "core_server/internal/interface/queries/partition_by_query.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
@@ -94,7 +92,7 @@ class Backend {
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::Event& event,
-                             bool time = true) {
+                             bool time = false) {
     RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(event, time);
     quarantine_manager.send_tuple_to_queries(stream_id, tuple);
   }

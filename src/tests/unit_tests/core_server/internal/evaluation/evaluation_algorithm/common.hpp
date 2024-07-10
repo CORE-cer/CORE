@@ -55,7 +55,7 @@ class DirectOutputTestResultHandler
     std::unique_lock lk(output_mutex);
 
     Types::Enumerator enumerator;
-    cv.wait_for(lk, std::chrono::milliseconds(100), [this] { return ready; });
+    cv.wait_for(lk, std::chrono::milliseconds(500), [this] { return ready; });
 
     if (ready) {
       enumerator = output;
@@ -106,7 +106,7 @@ class IndirectOutputTestResultHandler
     std::unique_lock lk(output_mutex);
 
     Types::Enumerator enumerator;
-    cv.wait_for(lk, std::chrono::milliseconds(200), [this] { return ready; });
+    cv.wait_for(lk, std::chrono::milliseconds(500), [this] { return ready; });
 
     if (ready) {
       enumerator = output;

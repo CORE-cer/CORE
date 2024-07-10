@@ -12,7 +12,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
-#include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
