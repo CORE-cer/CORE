@@ -81,7 +81,7 @@ struct LogicalCEA {
     uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
                                  ? stream_event_id_iter->second
                                  : throw std::logic_error(
-                                     "Stream/Event name combination not found");
+                                   "Stream/Event name combination not found");
 
     VariablesToMark stream_event_mark = mpz_class(1) << stream_event_id;
     VariablesToMark event_mark = mpz_class(1)
