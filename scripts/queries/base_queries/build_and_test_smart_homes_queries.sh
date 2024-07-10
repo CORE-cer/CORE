@@ -3,7 +3,7 @@
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
-cd ..
+cd ../../..
 
 source scripts/common.sh
 _setArgs "$@"
@@ -12,9 +12,9 @@ _setArgs "$@"
 build
 
 run_and_compare_script="scripts/run_and_compare.sh"
-base_dir="src/targets/experiments/stocks"
+base_dir="src/targets/experiments/smart_homes"
 executable="build/${BUILD_TYPE}/offline"
-csv="stock_data.csv"
+csv="smart_homes_data.csv"
 declaration="declaration.core"
 
 queries=$(find "$base_dir/queries" -type f) 
@@ -29,10 +29,16 @@ if ! test -d $base_dir/expected_results; then
 fi
 
 for query in $queries; do
-    echo -e "Running ${query}"
     query_file=$(basename "$query")
+
+    if printf '%s\n' "${EXCLUDED_QUERIES[@]}" | grep -qx "$query_file"; then
+        echo -e "${PURPLE}Skipping excluded query: $query_file${NORMAL_OUTPUT}"
+        continue # Skip this iteration, moving to the next query
+    fi
+
+    echo -e "Running ${query}"
     # if ! test -f "$base_dir/expected_results/$query_file"; then
-    #     ./build/${BUILD_TYPE}/offline_experiment_stocks src/targets/experiments/stocks/queries/$query_file src/targets/experiments/stocks/stock_data.csv > src/targets/experiments/stocks/expected_results/$query_file
+    #     { time $executable $base_dir/queries/$query_file $base_dir/$csv > $base_dir/expected_results/$query_file ; } 2> $base_dir/expected_results/"${query_file}_time.txt"
     # fi
     $run_and_compare_script $executable "$query $base_dir/$declaration $base_dir/$csv" "$base_dir/expected_results/$query_file"
     if [ $? -ne 0 ]; then

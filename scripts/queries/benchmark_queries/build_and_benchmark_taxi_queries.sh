@@ -3,7 +3,7 @@
 # Work at the root directory
 # Should have conanfile.py present there.
 cd "$(dirname "$0")"
-cd ../..
+cd ../../..
 
 source scripts/common.sh
 _setArgs "$@"
