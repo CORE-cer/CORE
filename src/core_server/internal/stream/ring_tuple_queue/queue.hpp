@@ -154,8 +154,9 @@ class Queue {
   }
 
   void update_overwrite_timepoint(uint64_t ns_from_compile_time) {
-    auto timepoint = start_timepoint + std::chrono::nanoseconds(ns_from_compile_time);
-    overwrite_timepoint = timepoint;
+    overwrite_timepoint = start_timepoint
+                          + std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                            std::chrono::nanoseconds(ns_from_compile_time));
   }
 
  private:
