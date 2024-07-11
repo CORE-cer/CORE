@@ -368,6 +368,18 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  Unless_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Unless_cel_formulaContext(Cel_formulaContext *ctx);
+
+    Cel_formulaContext *cel_formula();
+    antlr4::tree::TerminalNode *K_UNLESS();
+    S_event_nameContext *s_event_name();
+    FilterContext *filter();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  Par_cel_formulaContext : public Cel_formulaContext {
   public:
     Par_cel_formulaContext(Cel_formulaContext *ctx);
