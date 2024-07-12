@@ -124,9 +124,12 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
   visitUnless_cel_formula(CEQLQueryParser::Unless_cel_formulaContext* ctx) override {
     std::unique_ptr<CEQL::Formula> unless;
 
+    visit(ctx->cel_formula());
+    auto first_formula = std::move(formula);
+
     // TODO(unless): accept any formula here
     if (ctx->s_event_name() != nullptr) {
-      // s_event_name
+      // s_event_name;
       std::unique_ptr<CEQL::EventTypeFormula> unless;
       if (ctx->s_event_name()->stream_name() == nullptr) {
         unless = std::make_unique<CEQL::EventTypeFormula>(
@@ -136,18 +139,16 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
           ctx->s_event_name()->stream_name()->getText(),
           ctx->s_event_name()->event_name()->getText());
       }
+      formula = std::make_unique<CEQL::UnlessFormula>(std::move(first_formula),
+                                                      std::move(unless));
     } else if (ctx->filter() != nullptr) {
-      // filter
-      unless = std::make_unique<CEQL::FilterFormula>(std::move(formula),
-                                                     filter_visitor.get_parsed_filter());
+      visit(ctx->cel_formula());
+      filter_visitor.visit(ctx->filter());
+      formula = std::make_unique<CEQL::UnlessFilterFormula>(
+        std::move(first_formula), filter_visitor.get_parsed_filter());
     } else {
       throw std::runtime_error("NOT IMPLEMENTED: Invalid unless clause");
     }
-
-    visit(ctx->cel_formula());
-
-    formula = std::make_unique<CEQL::UnlessFormula>(std::move(formula), std::move(unless));
-
     return {};
   }
 
