@@ -27,11 +27,14 @@ class UnlessTransform : public LogicalCEATransformer<UnlessTransform> {
  public:
   UnlessTransform(const QueryCatalog& query_catalog,
                   CEQL::EventTypeFormula& event_type_formula) {
-    // TODO(unless)
+    mpz_class event_mask = CEA::LogicalCEA::event_to_mask(query_catalog,
+                                                          event_type_formula.event_name,
+                                                          event_type_formula.stream_name);
+    unless_predicates.push_back(CEA::PredicateSet(event_mask, ~event_mask));
   }
 
   UnlessTransform(const QueryCatalog& query_catalog, CEQL::Filter& filter) {
-    CEQL::UnlessPredicatesVisitor visitor;
+    CEQL::UnlessPredicatesVisitor visitor(query_catalog);
     filter.accept_visitor(visitor);
     unless_predicates = std::move(visitor.unless_predicates);
   }
