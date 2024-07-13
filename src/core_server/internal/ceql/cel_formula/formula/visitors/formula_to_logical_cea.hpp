@@ -108,7 +108,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     auto right = formula.right.get();
     EventTypeFormula* event_type_formula = dynamic_cast<EventTypeFormula*>(right);
     if (event_type_formula != nullptr) {
-      current_cea = CEA::UnlessTransform(query_catalog, *event_type_formula)(current_cea);
+      current_cea = CEA::UnlessTransform(query_catalog,
+                                         *event_type_formula)(std::move(current_cea));
       return;
     }
 
@@ -118,7 +119,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
 
   void visit(UnlessFilterFormula& formula) override {
     formula.left->accept_visitor(*this);
-    current_cea = CEA::UnlessTransform(query_catalog, *formula.right)(current_cea);
+    current_cea = CEA::UnlessTransform(query_catalog,
+                                       *formula.right)(std::move(current_cea));
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {

@@ -22,15 +22,15 @@ namespace CORE::Internal::CEA {
 
 class UnlessTransform : public LogicalCEATransformer<UnlessTransform> {
  private:
-  const std::vector<CEA::PredicateSet> unless_predicates;
+  std::vector<CEA::PredicateSet> unless_predicates;
 
  public:
   UnlessTransform(const QueryCatalog& query_catalog,
-                  const CEQL::EventTypeFormula& event_type_formula) {
+                  CEQL::EventTypeFormula& event_type_formula) {
     // TODO(unless)
   }
 
-  UnlessTransform(const QueryCatalog& query_catalog, const CEQL::Filter& filter) {
+  UnlessTransform(const QueryCatalog& query_catalog, CEQL::Filter& filter) {
     CEQL::UnlessPredicatesVisitor visitor;
     filter.accept_visitor(visitor);
     unless_predicates = std::move(visitor.unless_predicates);
