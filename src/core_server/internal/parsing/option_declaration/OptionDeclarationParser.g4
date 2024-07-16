@@ -1,0 +1,67 @@
+parser grammar OptionDeclarationParser;
+
+options {
+  tokenVocab = OptionDeclarationLexer;
+}
+
+parse
+ : (option_declaration | error )* EOF
+ ;
+
+error
+ : UNEXPECTED_CHAR
+   {
+     throw new RuntimeException("UNEXPECTED_CHAR=" + $UNEXPECTED_CHAR.text);
+   }
+ ;
+
+
+option_declaration
+ : K_DECLARE K_QUARANTINE LEFT_CURLY_BRACKET quarantine_policy* RIGHT_CURLY_BRACKET
+ ;
+
+
+quarantine_policy
+ : fixed_time_policy
+ ;
+
+fixed_time_policy
+ : K_FIXED_TIME time_span LEFT_CURLY_BRACKET stream_name RIGHT_CURLY_BRACKET
+ ;
+
+time_span
+ : hour_span? minute_span? second_span?
+ ;
+
+hour_span
+ : number K_HOURS
+ ;
+
+minute_span
+ : number K_MINUTES
+ ;
+
+second_span
+ : number K_SECONDS
+ ;
+
+stream_name
+ : any_name
+ ;
+
+any_name
+ : IDENTIFIER
+ ;
+
+number
+ : integer
+ | double
+ ;
+
+integer
+ : INTEGER_LITERAL
+ ;
+
+double
+ : DOUBLE_LITERAL
+ ;

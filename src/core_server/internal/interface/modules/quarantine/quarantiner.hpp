@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,6 +13,8 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -51,7 +54,8 @@ class QuarantineManager {
       BasePolicy<ResultHandlerT>& query_policy = *(iter->second);
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
-      create_query_policy(std::move(stream_type_ids));
+      set_query_policy(std::move(stream_type_ids),
+                       QuarantinePolicyType::WaitFixedTimePolicy);
       declare_query(std::move(parsed_query), std::move(result_handler));
     }
   }
@@ -65,10 +69,10 @@ class QuarantineManager {
     }
   }
 
- private:
-  void create_query_policy(std::set<Types::StreamTypeId>&& stream_ids) {
-    std::unique_ptr<BasePolicy<ResultHandlerT>> query_policy_ptr = std::make_unique<
-      WaitFixedTimePolicy<ResultHandlerT>>(catalog, queue, next_available_inproc_port);
+  void set_query_policy(std::set<Types::StreamTypeId>&& stream_ids,
+                        QuarantinePolicyType policy_type) {
+    std::unique_ptr<BasePolicy<ResultHandlerT>> query_policy_ptr = std::move(
+      create_policy(policy_type));
 
     auto iter = query_policies.insert({stream_ids, std::move(query_policy_ptr)});
 
@@ -78,6 +82,22 @@ class QuarantineManager {
         relevant_policies = stream_type_id_to_relevant_policies[stream_type_id];
 
       relevant_policies.emplace_back(query_policy);
+    }
+  }
+
+ private:
+  std::unique_ptr<BasePolicy<ResultHandlerT>>
+  create_policy(QuarantinePolicyType policy_type) {
+    switch (policy_type) {
+      case QuarantinePolicyType::DirectPolicy:
+        return std::make_unique<DirectPolicy<ResultHandlerT>>(catalog,
+                                                              queue,
+                                                              next_available_inproc_port);
+      case QuarantinePolicyType::WaitFixedTimePolicy:
+        return std::make_unique<WaitFixedTimePolicy<ResultHandlerT>>(
+          catalog, queue, next_available_inproc_port);
+      default:
+        throw std::runtime_error("Invalid policy type");
     }
   }
 
