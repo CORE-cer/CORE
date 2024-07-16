@@ -1,5 +1,8 @@
 #pragma once
 
+#include <exception>
+
+#include "core_server/internal/parsing/option_declaration/parser.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>
 #include <quill/detail/LogMacros.h>
@@ -89,6 +92,8 @@ class ClientMessageHandler {
         return list_all_streams();
       case Types::ClientRequestType::AddQuery:
         return add_query(request.serialized_request_data);
+      case Types::ClientRequestType::SetOption:
+        return set_option(request.serialized_request_data);
       default:
         throw std::runtime_error("Not Implemented!");
     }
@@ -206,6 +211,12 @@ class ClientMessageHandler {
   };
 
   // TODO: all queries and port numbers
+
+  Types::ServerResponse set_option(std::string s_option) {
+    LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option", s_option);
+    Parsing::Option::OptionsParser<ResultHandlerFactoryT>::parse_option(s_option, backend);
+    return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
+  }
 };
 
 }  // namespace CORE::Library::Components

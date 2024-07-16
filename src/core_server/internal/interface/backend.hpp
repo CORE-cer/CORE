@@ -1,7 +1,9 @@
 #pragma once
 
+#include <set>
 #include <string>
 
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "shared/logging/setup.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>
@@ -93,6 +95,11 @@ class Backend {
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
     RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(event);
     quarantine_manager.send_tuple_to_queries(stream_id, tuple);
+  }
+
+  void set_quarantine_policy(std::set<std::string>&& stream_names,
+                             Module::Quarantine::QuarantinePolicyType policy_type) {
+    quarantine_manager.set_query_policy(stream_names, policy_type);
   }
 };
 }  // namespace CORE::Internal::Interface

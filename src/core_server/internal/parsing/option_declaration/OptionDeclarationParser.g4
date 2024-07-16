@@ -22,11 +22,12 @@ option_declaration
 
 
 quarantine_policy
- : fixed_time_policy
+ : K_FIXED_TIME time_span LEFT_CURLY_BRACKET stream_names RIGHT_CURLY_BRACKET # fixed_time_policy
+ | K_DIRECT LEFT_CURLY_BRACKET stream_names RIGHT_CURLY_BRACKET # direct_policy
  ;
 
-fixed_time_policy
- : K_FIXED_TIME time_span LEFT_CURLY_BRACKET stream_name RIGHT_CURLY_BRACKET
+ stream_names
+ : stream_name ( COMMA stream_name )*
  ;
 
 time_span

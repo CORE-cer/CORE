@@ -3,12 +3,14 @@ lexer grammar OptionDeclarationLexer;
 K_DECLARE   : D E C L A R E;
 K_QUARANTINE   : Q U A R A N T I N E;
 K_FIXED_TIME : F I X E D '_' T I M E;
+K_DIRECT : D I R E C T;
 K_HOURS   : H O U R S?;
 K_MINUTES   : M I N U T E S?;
 K_SECONDS   : S E C O N D S?;
 
 LEFT_CURLY_BRACKET : '{' ;
 RIGHT_CURLY_BRACKET : '}' ;
+COMMA : ',' ;
 
 DOUBLE_LITERAL
  : INTEGER_LITERAL '.' NUMERICAL_EXPONENT

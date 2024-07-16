@@ -12,14 +12,15 @@
 class  OptionDeclarationParser : public antlr4::Parser {
 public:
   enum {
-    K_DECLARE = 1, K_QUARANTINE = 2, K_FIXED_TIME = 3, K_HOURS = 4, K_MINUTES = 5, 
-    K_SECONDS = 6, LEFT_CURLY_BRACKET = 7, RIGHT_CURLY_BRACKET = 8, DOUBLE_LITERAL = 9, 
-    INTEGER_LITERAL = 10, NUMERICAL_EXPONENT = 11, IDENTIFIER = 12, UNEXPECTED_CHAR = 13
+    K_DECLARE = 1, K_QUARANTINE = 2, K_FIXED_TIME = 3, K_DIRECT = 4, K_HOURS = 5, 
+    K_MINUTES = 6, K_SECONDS = 7, LEFT_CURLY_BRACKET = 8, RIGHT_CURLY_BRACKET = 9, 
+    COMMA = 10, DOUBLE_LITERAL = 11, INTEGER_LITERAL = 12, NUMERICAL_EXPONENT = 13, 
+    IDENTIFIER = 14, UNEXPECTED_CHAR = 15
   };
 
   enum {
     RuleParse = 0, RuleError = 1, RuleOption_declaration = 2, RuleQuarantine_policy = 3, 
-    RuleFixed_time_policy = 4, RuleTime_span = 5, RuleHour_span = 6, RuleMinute_span = 7, 
+    RuleStream_names = 4, RuleTime_span = 5, RuleHour_span = 6, RuleMinute_span = 7, 
     RuleSecond_span = 8, RuleStream_name = 9, RuleAny_name = 10, RuleNumber = 11, 
     RuleInteger = 12, RuleDouble = 13
   };
@@ -45,7 +46,7 @@ public:
   class ErrorContext;
   class Option_declarationContext;
   class Quarantine_policyContext;
-  class Fixed_time_policyContext;
+  class Stream_namesContext;
   class Time_spanContext;
   class Hour_spanContext;
   class Minute_spanContext;
@@ -108,32 +109,58 @@ public:
   class  Quarantine_policyContext : public antlr4::ParserRuleContext {
   public:
     Quarantine_policyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    Fixed_time_policyContext *fixed_time_policy();
+   
+    Quarantine_policyContext() = default;
+    void copyFrom(Quarantine_policyContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
 
+    virtual size_t getRuleIndex() const override;
+
+   
+  };
+
+  class  Direct_policyContext : public Quarantine_policyContext {
+  public:
+    Direct_policyContext(Quarantine_policyContext *ctx);
+
+    antlr4::tree::TerminalNode *K_DIRECT();
+    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
+    Stream_namesContext *stream_names();
+    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
+  };
+
+  class  Fixed_time_policyContext : public Quarantine_policyContext {
+  public:
+    Fixed_time_policyContext(Quarantine_policyContext *ctx);
+
+    antlr4::tree::TerminalNode *K_FIXED_TIME();
+    Time_spanContext *time_span();
+    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
+    Stream_namesContext *stream_names();
+    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
   Quarantine_policyContext* quarantine_policy();
 
-  class  Fixed_time_policyContext : public antlr4::ParserRuleContext {
+  class  Stream_namesContext : public antlr4::ParserRuleContext {
   public:
-    Fixed_time_policyContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    Stream_namesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *K_FIXED_TIME();
-    Time_spanContext *time_span();
-    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
-    Stream_nameContext *stream_name();
-    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
+    std::vector<Stream_nameContext *> stream_name();
+    Stream_nameContext* stream_name(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
    
   };
 
-  Fixed_time_policyContext* fixed_time_policy();
+  Stream_namesContext* stream_names();
 
   class  Time_spanContext : public antlr4::ParserRuleContext {
   public:

@@ -27,11 +27,15 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitQuarantine_policy(OptionDeclarationParser::Quarantine_policyContext *ctx) override {
+  virtual std::any visitFixed_time_policy(OptionDeclarationParser::Fixed_time_policyContext *ctx) override {
     return visitChildren(ctx);
   }
 
-  virtual std::any visitFixed_time_policy(OptionDeclarationParser::Fixed_time_policyContext *ctx) override {
+  virtual std::any visitDirect_policy(OptionDeclarationParser::Direct_policyContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitStream_names(OptionDeclarationParser::Stream_namesContext *ctx) override {
     return visitChildren(ctx);
   }
 

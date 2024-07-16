@@ -54,7 +54,7 @@ class QuarantineManager {
       BasePolicy<ResultHandlerT>& query_policy = *(iter->second);
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
-      set_query_policy(std::move(stream_type_ids),
+      set_query_policy(parsed_query.from.streams,
                        QuarantinePolicyType::WaitFixedTimePolicy);
       declare_query(std::move(parsed_query), std::move(result_handler));
     }
@@ -69,15 +69,17 @@ class QuarantineManager {
     }
   }
 
-  void set_query_policy(std::set<Types::StreamTypeId>&& stream_ids,
+  void set_query_policy(std::set<std::string>& stream_names,
                         QuarantinePolicyType policy_type) {
     std::unique_ptr<BasePolicy<ResultHandlerT>> query_policy_ptr = std::move(
       create_policy(policy_type));
+    std::set<Types::StreamTypeId> stream_type_ids = get_stream_ids_from_names(
+      stream_names);
 
-    auto iter = query_policies.insert({stream_ids, std::move(query_policy_ptr)});
+    auto iter = query_policies.insert({stream_type_ids, std::move(query_policy_ptr)});
 
     BasePolicy<ResultHandlerT>& query_policy = *(iter.first->second);
-    for (const Types::StreamTypeId stream_type_id : stream_ids) {
+    for (const Types::StreamTypeId stream_type_id : stream_type_ids) {
       std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>&
         relevant_policies = stream_type_id_to_relevant_policies[stream_type_id];
 
