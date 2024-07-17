@@ -15,8 +15,9 @@
 using namespace CORE;
 
 int main(int argc, char** argv) {
-  if (argc != 4) {
-    std::cout << "There must be 3 arguments: The query path and the data path."
+  if (argc >= 4) {
+    std::cout << "There must be at least 4 arguments: The query path, data path, and any "
+                 "options."
               << std::endl;
     return 1;
   }
@@ -33,6 +34,11 @@ int main(int argc, char** argv) {
 
     std::string query_string = client.read_file(query_path);
     std::string declaration_string = client.read_file(declaration_path);
+
+    for (int i = 4; i < argc; i++) {
+      std::string option_declaration_string = client.read_file(argv[i]);
+      client.declare_option(option_declaration_string);
+    }
 
     Types::StreamInfo stream_info = client.declare_stream(declaration_string);
 

@@ -8,6 +8,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -27,6 +28,9 @@ TEST_CASE("Evaluation on the example stream of the papers unordered") {
                              {{"name", Types::ValueTypes::STRING_VIEW},
                               {"price", Types::ValueTypes::INT64},
                               {"time", Types::ValueTypes::PRIMARY_TIME}}}}});
+
+  backend.set_quarantine_policy(
+    {"Stock"}, Interface::Module::Quarantine::QuarantinePolicyType::WaitFixedTimePolicy);
 
   std::string string_query =
     "SELECT * FROM Stock\n"
