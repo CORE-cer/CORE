@@ -50,7 +50,7 @@ jobs:
         run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
       - name: login artifactory
-        run: conan remove login artifactory admin -p ${{ secrets.CONAN_PASSWORD }}
+        run: conan remote login artifactory admin -p ${{ secrets.CONAN_PASSWORD }}
 
       - name: upload artifactory
         run: conan upload "*" -r=artifactory -c --force
