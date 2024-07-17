@@ -1,0 +1,47 @@
+name: Upload Conan
+
+on: workflow_call
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-conan:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          overprovision-lvm: true
+          remove-dotnet: true
+          remove-android: true
+
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install python and pip
+        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+
+      - name: setup env
+        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: login artifactory
+        run: conan remove login artifactory admin -p ${{ secrets.CONAN_PASSWORD }}
+
+      - name: upload artifactory
+        run: conan upload "*" -r=artifactory -c --force
