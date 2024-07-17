@@ -54,8 +54,7 @@ class QuarantineManager {
       BasePolicy<ResultHandlerT>& query_policy = *(iter->second);
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
-      set_query_policy(parsed_query.from.streams,
-                       QuarantinePolicyType::DirectPolicy);
+      set_query_policy(parsed_query.from.streams, QuarantinePolicyType::DirectPolicy);
       declare_query(std::move(parsed_query), std::move(result_handler));
     }
   }

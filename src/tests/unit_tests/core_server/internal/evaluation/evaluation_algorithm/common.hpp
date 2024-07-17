@@ -31,7 +31,7 @@ class DirectOutputTestResultHandler
  public:
   DirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler<DirectOutputTestResultHandler>(
-        query_catalog) {}
+          query_catalog) {}
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
@@ -82,7 +82,7 @@ class IndirectOutputTestResultHandler
  public:
   IndirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler<DirectOutputTestResultHandler>(
-        query_catalog) {}
+          query_catalog) {}
 
   void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
