@@ -1,6 +1,10 @@
 name: Upload Conan
 
-on: workflow_call
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
