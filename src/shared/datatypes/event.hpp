@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,12 +36,14 @@ struct Event {
    *   https://uscilab.github.io/cereal/pointers.html
    */
   std::vector<std::shared_ptr<Types::Value>> attributes;
+  std::optional<std::shared_ptr<Types::IntValue>> primary_time;
 
   Event() noexcept {}
 
   Event(UniqueEventTypeId event_type_id,
-        std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
-      : event_type_id(event_type_id), attributes(attributes) {}
+        std::vector<std::shared_ptr<Types::Value>> attributes,
+        std::optional<std::shared_ptr<Types::IntValue>> primary_time = {}) noexcept
+      : event_type_id(event_type_id), attributes(attributes), primary_time(primary_time) {}
 
   std::string to_string() const {
     std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";

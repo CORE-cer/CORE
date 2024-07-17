@@ -55,6 +55,9 @@ def create_antlr_autogeneration_scripts(antlr4_version):
     with open(path.join(parsing_dir, "stream_declaration", "autogenerate_script.sh"),
               "w", encoding="utf-8") as f:
         f.write(create_script("StreamDeclaration", antlr4_version))
+    with open(path.join(parsing_dir, "option_declaration", "autogenerate_script.sh"),
+              "w", encoding="utf-8") as f:
+        f.write(create_script("OptionDeclaration", antlr4_version))
 
 class CORE(ConanFile):
     name = "core"

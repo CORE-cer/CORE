@@ -13,5 +13,6 @@ enum struct ServerResponseType {
   StreamTypeId,
   Error,
   Warning,
+  SuccessEmpty,
 };
 }  // namespace CORE::Types

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -54,7 +55,9 @@ class Queue {
         overwrite_timepoint(std::chrono::system_clock::now()),
         start_timepoint(std::chrono::system_clock::now()) {}
 
-  uint64_t* start_tuple(uint64_t tuple_type_id) {
+  uint64_t*
+  start_tuple(uint64_t tuple_type_id,
+              std::optional<std::chrono::system_clock::time_point> data_time = {}) {
     uint64_t minimum_size = schemas->get_constant_section_size(tuple_type_id);
     assert(minimum_size < buffer_size);
 
@@ -81,10 +84,20 @@ class Queue {
     memcpy(&current_buffer[constant_section_index++],
            &now,
            sizeof(std::chrono::system_clock::time_point));
+
+    if (data_time.has_value()) {  // If data_time is set, use that for data time
+      memcpy(&current_buffer[constant_section_index++],
+             &data_time,
+             sizeof(std::chrono::system_clock::time_point));
+    } else {  // Assume data_time is equal to received time if not specified
+      memcpy(&current_buffer[constant_section_index++],
+             &now,
+             sizeof(std::chrono::system_clock::time_point));
+    }
     static_assert(sizeof(std::chrono::system_clock::time_point) <= sizeof(uint64_t));
     last_updated[constant_section_buffer_index] = now;
 
-    return &current_buffer[constant_section_index - 2];
+    return &current_buffer[constant_section_index - 3];
   }
 
   // Note that Substitution is not a failure is used in these functions.

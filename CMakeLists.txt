@@ -52,6 +52,7 @@ add_custom_target(
   grammar
   COMMAND ${CMAKE_SOURCE_DIR}/src/core_server/internal/parsing/ceql_query/autogenerate_script.sh
   COMMAND ${CMAKE_SOURCE_DIR}/src/core_server/internal/parsing/stream_declaration/autogenerate_script.sh
+  COMMAND ${CMAKE_SOURCE_DIR}/src/core_server/internal/parsing/option_declaration/autogenerate_script.sh
 )
 
 file(GLOB_RECURSE SHARED_FILES
