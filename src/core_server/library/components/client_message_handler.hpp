@@ -213,8 +213,11 @@ class ClientMessageHandler {
   // TODO: all queries and port numbers
 
   Types::ServerResponse set_option(std::string s_option) {
-    LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option", s_option);
-    Parsing::Option::OptionsParser<ResultHandlerFactoryT>::parse_option(s_option, backend);
+    std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);
+    LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option",
+             option_declaration);
+    Parsing::Option::OptionsParser<ResultHandlerFactoryT>::parse_option(option_declaration,
+                                                                        backend);
     return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
   }
 };

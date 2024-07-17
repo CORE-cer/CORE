@@ -14,20 +14,21 @@ class QuarantineOptionVisitor : public OptionDeclarationParserBaseVisitor {
   Interface::Module::Quarantine::QuarantinePolicyType policy_type;
   std::set<std::string> streams;
 
-  virtual std::any
+  std::any
   visitFixed_time_policy(OptionDeclarationParser::Fixed_time_policyContext* ctx) override {
     policy_type = Interface::Module::Quarantine::QuarantinePolicyType::WaitFixedTimePolicy;
+    visitChildren(ctx);
     return {};
   }
 
-  virtual std::any
+  std::any
   visitDirect_policy(OptionDeclarationParser::Direct_policyContext* ctx) override {
     policy_type = Interface::Module::Quarantine::QuarantinePolicyType::DirectPolicy;
+    visitChildren(ctx);
     return {};
   }
 
-  virtual std::any
-  visitStream_name(OptionDeclarationParser::Stream_nameContext* ctx) override {
+  std::any visitStream_name(OptionDeclarationParser::Stream_nameContext* ctx) override {
     streams.insert(ctx->getText());
     return {};
   }

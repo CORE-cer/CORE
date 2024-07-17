@@ -1,3 +1,3 @@
 DECLARE QUARANTINE {
-FIXED_TIME 2s {S}
+FIXED_TIME 2 seconds {S}
 }
