@@ -18,6 +18,12 @@ class GetAllAtomicFilters : public FormulaVisitor {
     formula.filter->accept_visitor(visitor);
   }
 
+  void visit(UnlessFilterFormula& formula) override {
+    formula.left->accept_visitor(*this);
+    auto visitor = AppendAllAtomicFilters(atomic_filters);
+    formula.right->accept_visitor(visitor);
+  }
+
   // clang-format off
   void visit(EventTypeFormula&)          override {return;}
   void visit(NonContiguousSequencingFormula& formula) override {formula.left->accept_visitor(*this);
@@ -28,6 +34,8 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(ProjectionFormula& formula) override {return;}
   void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
   void visit(OrFormula& formula)         override {formula.left->accept_visitor(*this);
+                                                   formula.right->accept_visitor(*this);}
+  void visit(UnlessFormula& formula)     override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
   void visit(ContiguousIterationFormula& formula) override {formula.formula->accept_visitor(*this);}
 

@@ -57,6 +57,36 @@ struct LogicalCEA {
         initial_states(other.initial_states),
         final_states(other.final_states) {}
 
+  static mpz_class event_to_mask(const QueryCatalog& query_catalog,
+                                 std::string event_name,
+                                 std::optional<std::string> stream_name) {
+    if (query_catalog.get_unique_events_from_event_name(event_name).size() == 0) {
+      throw std::runtime_error("The event_name: " + event_name +
+                               " is not in the catalog, and base cases "
+                               "that are variables are not allowed.");
+    }
+
+    std::size_t number_of_streams = query_catalog.number_of_streams();
+    Types::EventNameTypeId
+      query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
+        event_name);
+
+    mpz_class event_name_predicate_position = mpz_class(1)
+                                              << (number_of_streams + query_event_name_id);
+
+    mpz_class mask = event_name_predicate_position;
+
+    if (stream_name.has_value()) {
+      Types::StreamTypeId query_stream_id = query_catalog
+                                              .get_query_stream_id_from_stream_name(
+                                                stream_name.value());
+      mpz_class stream_predicate_position = mpz_class(1) << query_stream_id;
+      mask = stream_predicate_position | event_name_predicate_position;
+    }
+
+    return mask;
+  }
+
   static LogicalCEA
   atomic_cea(const QueryCatalog& query_catalog,
              const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
@@ -81,7 +111,7 @@ struct LogicalCEA {
     uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
                                  ? stream_event_id_iter->second
                                  : throw std::logic_error(
-                                   "Stream/Event name combination not found");
+                                     "Stream/Event name combination not found");
 
     VariablesToMark stream_event_mark = mpz_class(1) << stream_event_id;
     VariablesToMark event_mark = mpz_class(1)
