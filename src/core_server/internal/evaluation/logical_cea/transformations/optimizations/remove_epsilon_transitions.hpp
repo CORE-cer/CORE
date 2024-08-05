@@ -24,6 +24,11 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
       epsilon_jump_sources[source_node] = source_node;
       for (NodeId target : cea.epsilon_transitions[source_node]) {
         epsilon_reachable_nodes.push(target);
+        mpz_class target_binary = 1 << target;
+        if ((target_binary &= cea.final_states) != 0) {
+          mpz_class binary_source_node = 1 << source_node;
+          cea.final_states |= binary_source_node;
+        }
         epsilon_jump_sources[target] = source_node;
       }
 
@@ -39,6 +44,11 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
           if (epsilon_jump_sources[node] != source_node) {
             epsilon_jump_sources[node] = source_node;
             epsilon_reachable_nodes.push(node);
+            mpz_class target_binary = 1 << node;
+            if ((target_binary &= cea.final_states) != 0) {
+              mpz_class binary_source_node = 1 << source_node;
+              cea.final_states |= binary_source_node;
+            }
           }
         }
       }
