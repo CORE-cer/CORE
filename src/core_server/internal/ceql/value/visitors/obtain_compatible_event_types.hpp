@@ -74,6 +74,7 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
                                            val.right->accept_visitor(*this);}
 
   // clang-format on
+
   void visit(Sequence& sequence) override {
     for (auto& val : sequence.values) {
       val->accept_visitor(*this);

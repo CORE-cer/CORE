@@ -1,4 +1,5 @@
 #include "time_list_manager.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>

@@ -34,3 +34,4 @@ src/targets/experiments/smart_homes/benchmark.csv
 src/targets/experiments/stocks/benchmark.csv
 src/targets/experiments/taxis/benchmark.csv
 logfile.log
+.direnv
