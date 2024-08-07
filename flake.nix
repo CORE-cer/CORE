@@ -10,9 +10,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = [
-            pkgs.bashInteractive
-            pkgs.zsh
+          packages = with pkgs; [
+            bashInteractive
+            zsh
+            clang-tools
           ];
         };
       });

@@ -1,9 +1,12 @@
 #pragma once
 
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
-#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 
 namespace CORE::Internal::Parsing {
 std::map<std::string, std::vector<Types::EventInfo>>

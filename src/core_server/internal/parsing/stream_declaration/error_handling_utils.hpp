@@ -6,9 +6,6 @@
 
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
-#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
-#include "shared/exceptions/parsing/event_name_already_declared.hpp"
-#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 
 namespace CORE::Internal::Parsing {
 

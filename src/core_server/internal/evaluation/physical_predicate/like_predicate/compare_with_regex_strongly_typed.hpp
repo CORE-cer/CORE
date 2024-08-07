@@ -3,9 +3,12 @@
 #include <re2/re2.h>
 
 #include <cstddef>
+#include <cstdint>
+#include <string>
 #include <string_view>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 
 namespace CORE::Internal::CEA {

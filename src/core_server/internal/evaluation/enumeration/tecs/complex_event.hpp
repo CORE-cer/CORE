@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
