@@ -1,7 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <memory>
 #include <string>
 
+#include "core_server/internal/ceql/value/visitors/value_visitor.hpp"
 #include "value.hpp"
 
 namespace CORE::Internal::CEQL {

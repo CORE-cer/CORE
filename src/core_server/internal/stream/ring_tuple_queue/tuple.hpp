@@ -9,8 +9,6 @@
 #include <ctime>
 #include <functional>
 #include <iomanip>
-#include <iostream>
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>

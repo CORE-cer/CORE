@@ -1,10 +1,12 @@
 #pragma once
 
-#include <iostream>
-#include <memory>
-#include <string>
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "node.hpp"
 #include "node_manager.hpp"
 #include "time_reservator.hpp"

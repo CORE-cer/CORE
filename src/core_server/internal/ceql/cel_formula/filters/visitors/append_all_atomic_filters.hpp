@@ -1,10 +1,9 @@
 #pragma once
 
-#include <stdexcept>
 #include <vector>
 
-#include "core_server/internal/ceql/cel_formula/filters/filter_headers.hpp"
-#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/filters/and_filter.hpp"
+#include "core_server/internal/ceql/cel_formula/filters/or_filter.hpp"
 #include "filter_visitor.hpp"
 
 namespace CORE::Internal::CEQL {

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <gmpxx.h>
 
-#include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <map>

@@ -1,4 +1,6 @@
 #pragma once
+#include <stdexcept>
+#include <utility>
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 
 namespace CORE::Internal::CEA {

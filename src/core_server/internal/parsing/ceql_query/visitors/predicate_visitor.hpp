@@ -3,6 +3,8 @@
 #include <any>
 #include <cassert>
 #include <memory>
+#include <set>
+#include <string>
 #include <utility>
 #include <vector>
 

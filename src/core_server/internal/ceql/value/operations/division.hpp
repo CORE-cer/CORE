@@ -1,7 +1,10 @@
 #pragma once
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "core_server/internal/ceql/value/value.hpp"
+#include "core_server/internal/ceql/value/visitors/value_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 struct Division final : public Value {

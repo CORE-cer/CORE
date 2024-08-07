@@ -1,4 +1,6 @@
 #pragma once
+#include <stdexcept>
+#include <utility>
 #include "core_server/internal/ceql/query/query.hpp"
 
 namespace CORE::Internal::CEQL {
