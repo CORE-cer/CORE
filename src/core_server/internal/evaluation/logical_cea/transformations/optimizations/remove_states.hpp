@@ -1,5 +1,6 @@
 #pragma once
 #include <gmpxx.h>
+
 #include <cassert>
 #include <cstdint>
 #include <set>

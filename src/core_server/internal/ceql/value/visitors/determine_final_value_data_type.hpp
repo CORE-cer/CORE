@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+
 #include "core_server/internal/ceql/value/attribute.hpp"
 #include "core_server/internal/ceql/value/boolean_literal.hpp"
 #include "core_server/internal/ceql/value/double_literal.hpp"

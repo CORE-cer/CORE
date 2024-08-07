@@ -67,10 +67,10 @@ class PartitionByQuery
                    std::string inproc_receiver_address,
                    std::unique_ptr<ResultHandlerT>&& result_handler)
       : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
-        query_catalog,
-        queue,
-        inproc_receiver_address,
-        std::move(result_handler)) {}
+          query_catalog,
+          queue,
+          inproc_receiver_address,
+          std::move(result_handler)) {}
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
