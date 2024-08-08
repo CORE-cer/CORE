@@ -18,6 +18,9 @@
             clang-tools
             parallel
             conan
+            cmake
+            ninja
+            clang_18
           ];
         };
       }
