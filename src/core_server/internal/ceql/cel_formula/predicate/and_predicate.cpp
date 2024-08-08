@@ -1,7 +1,10 @@
 #include "and_predicate.hpp"
 
 #include <memory>
+#include <utility>
+#include <vector>
 
+#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 #include "or_predicate.hpp"
 
 namespace CORE::Internal::CEQL {

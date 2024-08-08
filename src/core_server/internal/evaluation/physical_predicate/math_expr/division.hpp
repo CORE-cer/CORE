@@ -2,8 +2,10 @@
 #include <cassert>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
 
 namespace CORE::Internal::CEA {

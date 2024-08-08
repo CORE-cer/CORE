@@ -1,7 +1,12 @@
 #pragma once
 
-#include "comparison_type.hpp"
+#include <cstdint>
+#include <memory>
+#include <set>
+#include <string>
+
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
 
 namespace CORE::Internal::CEA {

@@ -1,8 +1,11 @@
 #pragma once
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/cel_formula/predicate/visitors/predicate_visitor.hpp"
 #include "predicate.hpp"
 
 namespace CORE::Internal::CEQL {

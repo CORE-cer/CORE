@@ -24,7 +24,7 @@ struct Within {
     uint64_t duration = DEFAULT_TIME_WINDOW_SIZE;
     std::string attribute_name;
 
-    TimeWindow() : mode(TimeWindowMode::NONE){};
+    TimeWindow() : mode(TimeWindowMode::NONE) {};
 
     TimeWindow(uint64_t time_interval, TimeWindowMode mode)
         : mode(mode), duration(time_interval) {

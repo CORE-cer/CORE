@@ -1,10 +1,11 @@
 #pragma once
 
 #include <cassert>
-#include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "core_server/internal/ceql/cel_formula/predicate/visitors/predicate_visitor.hpp"
 #include "core_server/internal/ceql/value/value.hpp"
 #include "predicate.hpp"
 

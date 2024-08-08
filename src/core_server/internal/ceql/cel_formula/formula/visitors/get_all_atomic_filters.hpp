@@ -1,8 +1,16 @@
 #pragma once
 
+#include <vector>
+
+#include "core_server/internal/ceql/cel_formula/filters/atomic_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_atomic_filters.hpp"
-#include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
-#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
 #include "formula_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
