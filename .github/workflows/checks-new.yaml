@@ -1,4 +1,4 @@
-name: Common Checks
+name: Common Checks V2
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-ceql-query-grammar-up-to-date:
+  check-ceql-query-grammar-up-to-date-v2:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     steps:
