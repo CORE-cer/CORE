@@ -13,6 +13,7 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
+            bashInteractive
             zsh
             clang-tools
             parallel

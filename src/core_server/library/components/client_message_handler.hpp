@@ -2,7 +2,6 @@
 
 #include <exception>
 
-#include "core_server/internal/evaluation/evaluator.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>
 #include <quill/detail/LogMacros.h>
