@@ -13,7 +13,6 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            bashInteractive
             zsh
             clang-tools
             parallel
@@ -21,6 +20,7 @@
             cmake
             ninja
             clang_18
+            valgrind
           ];
         };
       }
