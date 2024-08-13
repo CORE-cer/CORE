@@ -11,7 +11,6 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
-#include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"

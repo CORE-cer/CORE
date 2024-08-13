@@ -4,6 +4,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <string>
 
+#include "core_server/internal/coordination/catalog.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"

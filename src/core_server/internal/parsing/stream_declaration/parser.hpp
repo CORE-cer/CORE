@@ -2,7 +2,6 @@
 
 #include <ANTLRInputStream.h>
 #include <CommonTokenStream.h>
-#include <antlr4-runtime.h>
 #include <tree/ParseTree.h>
 
 #include <set>

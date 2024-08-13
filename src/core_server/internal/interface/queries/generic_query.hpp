@@ -110,7 +110,7 @@ class GenericQuery {
     assert(serialized_message.size() == sizeof(uint64_t*));
 
     uint64_t* data;
-    memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
+    memcpy(&data, &serialized_message[0], sizeof(uint64_t*)); // NOLINT
     RingTupleQueue::Tuple tuple = queue.get_tuple(data);
     return tuple;
   }

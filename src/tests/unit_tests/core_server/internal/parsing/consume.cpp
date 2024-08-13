@@ -44,9 +44,9 @@ ConsumeBy parse_consume(std::string query) {
 
 TEST_CASE("Consume captures consumption policy correctly", "[Consume, Policy]") {
   // clang-format off
-  REQUIRE(parse_consume(create_consume_query("NONE")).policy == ConsumeBy::ConsumptionPolicy::NONE);
-  REQUIRE(parse_consume(create_consume_query("ANY")).policy == ConsumeBy::ConsumptionPolicy::ANY);
-  REQUIRE(parse_consume(create_consume_query("")).policy == ConsumeBy::ConsumptionPolicy::NONE);
+  REQUIRE(parse_consume(create_consume_query("NONE")).policy == ConsumeBy::ConsumptionPolicy::NONE); // NOLINT
+  REQUIRE(parse_consume(create_consume_query("ANY")).policy == ConsumeBy::ConsumptionPolicy::ANY); // NOLINT
+  REQUIRE(parse_consume(create_consume_query("")).policy == ConsumeBy::ConsumptionPolicy::NONE); // NOLINT
   // clang-format on
 }
 

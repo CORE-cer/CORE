@@ -6,7 +6,6 @@
 #include <iostream>
 #include <set>
 #include <string>
-#include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
 

@@ -22,6 +22,7 @@
             ninja
             clang_18
             valgrind
+            gcc14
           ];
         };
       }

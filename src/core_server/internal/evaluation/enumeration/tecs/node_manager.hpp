@@ -1,8 +1,7 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <gmpxx.h>
-#include <quill/Quill.h>
+#include <quill/Quill.h> // NOLINT
 #include <quill/detail/LogMacros.h>
 
 #include <atomic>

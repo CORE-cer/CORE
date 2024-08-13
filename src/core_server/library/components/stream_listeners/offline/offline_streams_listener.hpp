@@ -1,7 +1,7 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <quill/detail/LogMacros.h>
+#include <quill/detail/LogMacros.h> // NOLINT
 
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"

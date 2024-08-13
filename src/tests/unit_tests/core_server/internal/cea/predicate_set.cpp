@@ -37,18 +37,18 @@ TEST_CASE("PredicateSet correctly combines compatible sets.", "PredicateSet") {
     auto predicate_set_1 = PredicateSet(0b11000001, 0b11000001);
     auto predicate_set_2 = PredicateSet(0b00110000, 0b01000001);
     auto expected_predicate_set = PredicateSet(0b11110001, 0b11000001);
-    REQUIRE(expected_predicate_set == (predicate_set_1 & predicate_set_2));
+    REQUIRE(expected_predicate_set == (predicate_set_1 & predicate_set_2)); // NOLINT
   }
   SECTION("Overlapping valid combination 2") {
     auto predicate_set_1 = PredicateSet(0b11000001, 0b11000001);
     auto predicate_set_2 = PredicateSet(0b01110000, 0b01000001);
     auto expected_predicate_set = PredicateSet(0b11110001, 0b11000001);
-    REQUIRE(expected_predicate_set == (predicate_set_1 & predicate_set_2));
+    REQUIRE(expected_predicate_set == (predicate_set_1 & predicate_set_2)); // NOLINT
   }
   SECTION("Invalid combination") {
     auto predicate_set_1 = PredicateSet(0b11000001, 0b11000001);
     auto predicate_set_2 = PredicateSet(0b01110000, 0b00000001);
-    REQUIRE((predicate_set_1 & predicate_set_2).type == PredicateSet::Contradiction);
+    REQUIRE((predicate_set_1 & predicate_set_2).type == PredicateSet::Contradiction); // NOLINT
   }
 }
 
