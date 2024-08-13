@@ -21,20 +21,14 @@ jobs:
           remove-dotnet: true
           remove-android: true
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: "3.29.x"
-
-      # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Install python and pip
-        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
 
-      - name: setup env
-        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+      - name: "Setup conan"
+        run: conan profile detect
 
       - name: add artifactory
         run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
