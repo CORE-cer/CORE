@@ -98,9 +98,9 @@ std::unique_ptr<T> cast_to(std::unique_ptr<Filter> unknown) {
 std::unique_ptr<Filter> parse_filter(std::string query) {
   auto where = std::move(parse_where(query));
   auto formula = std::move(where.formula);
-  REQUIRE(formula != nullptr); // NOLINT
+  REQUIRE(formula != nullptr);  // NOLINT
   auto filter_formula = cast_to<FilterFormula>(std::move(formula));
-  REQUIRE(filter_formula != nullptr); // NOLINT
+  REQUIRE(filter_formula != nullptr);  // NOLINT
   auto filter = std::move(filter_formula->filter);
   return std::move(filter);
 }

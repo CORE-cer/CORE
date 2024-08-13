@@ -105,7 +105,7 @@ TEST_CASE("get_all_ceql_predicates gets all predicates", "[ValueToMathExpr]") {
                                           InequalityPredicate::LogicalOperation::LESS,
                                           std::make_unique<IntegerLiteral>(3)));
   INFO("Original Formula: " + formula->to_string());
-  REQUIRE(visitor.atomic_filters.size() == 3); // NOLINT
+  REQUIRE(visitor.atomic_filters.size() == 3);  // NOLINT
   INFO(
     "Note that if this test fails due to order, then the test case "
     "should be fixed (any order should be admissible)");
