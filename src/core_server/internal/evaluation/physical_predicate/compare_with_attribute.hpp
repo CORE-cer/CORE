@@ -1,6 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <cwchar>
+#include <set>
+#include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
 
 #include "cassert"

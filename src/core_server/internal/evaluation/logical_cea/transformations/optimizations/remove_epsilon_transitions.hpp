@@ -1,6 +1,11 @@
 #pragma once
+#include <gmpxx.h>
+
 #include <cassert>
+#include <cstdint>
 #include <stack>
+#include <utility>
+#include <vector>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
@@ -25,7 +30,7 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
       for (NodeId target : cea.epsilon_transitions[source_node]) {
         epsilon_reachable_nodes.push(target);
         mpz_class target_binary = 1 << target;
-        if ((target_binary &= cea.final_states) != 0) {
+        if ((target_binary &= cea.final_states) != 0) {  // NOLINT
           mpz_class binary_source_node = 1 << source_node;
           cea.final_states |= binary_source_node;
         }
@@ -45,7 +50,7 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
             epsilon_jump_sources[node] = source_node;
             epsilon_reachable_nodes.push(node);
             mpz_class target_binary = 1 << node;
-            if ((target_binary &= cea.final_states) != 0) {
+            if ((target_binary &= cea.final_states) != 0) {  // NOLINT
               mpz_class binary_source_node = 1 << source_node;
               cea.final_states |= binary_source_node;
             }

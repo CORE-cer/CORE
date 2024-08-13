@@ -26,6 +26,7 @@
     trap on_error ERR
 
     echo -e "${GREEN}Installing antlr-4.12.0" if it is not installed already.$NORMAL_OUTPUT
+    mkdir -p ~/.local/bin
     cd ~/.local/bin && [ ! -f "antlr-4.12.0-complete.jar" ] && wget https://www.antlr.org/download/antlr-4.12.0-complete.jar
     cd -
 

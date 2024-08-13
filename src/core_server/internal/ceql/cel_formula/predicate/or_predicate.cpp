@@ -1,8 +1,11 @@
 #include "or_predicate.hpp"
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "and_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/predicate.hpp"
 
 namespace CORE::Internal::CEQL {
 std::unique_ptr<Predicate> OrPredicate::negate() const {

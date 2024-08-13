@@ -32,6 +32,7 @@ def create_script(grammar_name, antlr4_version):
     trap on_error ERR
 
     echo -e "${{GREEN}}Installing antlr-{antlr4_version}" if it is not installed already.$NORMAL_OUTPUT
+    mkdir -p ~/.local/bin
     cd ~/.local/bin && [ ! -f "antlr-{antlr4_version}-complete.jar" ] && wget https://www.antlr.org/download/antlr-{antlr4_version}-complete.jar
     cd -
 

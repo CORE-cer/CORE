@@ -1,8 +1,7 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <gmpxx.h>
-#include <quill/Quill.h>
+#include <quill/Quill.h>  // NOLINT
 #include <quill/detail/LogMacros.h>
 
 #include <atomic>
@@ -118,8 +117,7 @@ class NodeManager {
     }
     if (recyclable_node_head == nullptr) {
       if (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load())) {
-        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()))
-          ;
+        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()));
         if (recyclable_node_head != nullptr) {
           return get_node_to_recycle();
         }

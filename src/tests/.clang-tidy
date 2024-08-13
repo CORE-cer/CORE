@@ -21,7 +21,8 @@ Checks: >
   bugprone-*,
   bugprone-assert-side-effect,
   -bugprone-easily-swappable-parameters,
-  -clang-analyzer-deadcode.DeadStores
+  -clang-analyzer-deadcode.DeadStores,
+  -bugprone-chained-comparison
 # google-*,
 # misc-*,
 # modernize-*,

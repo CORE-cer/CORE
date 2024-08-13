@@ -8,13 +8,13 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/value.hpp"
 #include "tests/unit_tests/core_server/internal/evaluation/evaluation_algorithm/common.hpp"
 
+// NOLINTBEGIN(bugprone-chained-comparison)
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers") {
   Internal::Interface::Backend<TestResultHandler> backend;
@@ -1566,3 +1566,5 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
 }
 
 }  // namespace CORE::Internal::Evaluation::UnitTests
+
+// NOLINTEND(bugprone-chained-comparison)
