@@ -50,8 +50,8 @@ class OfflineServer {
     Internal::Logging::enable_logging_rotating();
   }
 
-  void receive_stream(const Types::Stream& stream) {
-    stream_listener.receive_stream(stream);
+  void receive_stream(Types::Stream&& stream) {
+    stream_listener.receive_stream(std::move(stream));
   }
 };
 

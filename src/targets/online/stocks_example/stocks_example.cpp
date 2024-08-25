@@ -89,16 +89,18 @@ void subscribe_to_queries(Client& client,
 
 void send_a_stream(Streamer& streamer, StocksData::Data data) {
   // clang-format off
-  Types::Event event_to_send{
+  auto event_to_send = std::make_shared<Types::Event>(
     data.event_type,
-      {std::make_shared<Types::IntValue>(data.id),
-       std::make_shared<Types::StringValue>(data.name),
-       std::make_shared<Types::IntValue>(data.volume),
-       std::make_shared<Types::DoubleValue>(data.price),
-       std::make_shared<Types::IntValue>(data.stock_time)}
-  };
+    std::vector<std::shared_ptr<Types::Value>>{
+      std::make_shared<Types::IntValue>(data.id),
+      std::make_shared<Types::StringValue>(data.name),
+      std::make_shared<Types::IntValue>(data.volume),
+      std::make_shared<Types::DoubleValue>(data.price),
+      std::make_shared<Types::IntValue>(data.stock_time)
+    }
+  );
   // clang-format on
-  streamer.send_stream(0, event_to_send);
+  streamer.send_stream(0, std::move(event_to_send));
 }
 
 int main(int argc, char** argv) {

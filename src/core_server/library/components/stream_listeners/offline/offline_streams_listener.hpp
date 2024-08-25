@@ -26,7 +26,7 @@ class OfflineStreamsListener {
   OfflineStreamsListener(const OfflineStreamsListener&) = delete;
   OfflineStreamsListener& operator=(const OfflineStreamsListener&) = delete;
 
-  void receive_stream(const Types::Stream& stream) {
+  void receive_stream(Types::Stream&& stream) {
     LOG_L3_BACKTRACE("Received stream with id {} and {} events in OfflineStreamsListener",
                      stream.id,
                      stream.events.size());

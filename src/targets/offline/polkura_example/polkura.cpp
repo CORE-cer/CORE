@@ -83,12 +83,14 @@ void send_a_stream(PolkuraData::Data data) {
   // clang-format off
   auto event_to_send = std::make_shared<Types::Event>(
     data.event_type,
-    {std::make_shared<Types::IntValue>(data.id),
-     std::make_shared<Types::StringValue>(data.sitio),
-     std::make_shared<Types::DoubleValue>(data.value)}
+    std::vector<std::shared_ptr<Types::Value>>{
+      std::make_shared<Types::IntValue>(data.id),
+      std::make_shared<Types::StringValue>(data.sitio),
+      std::make_shared<Types::DoubleValue>(data.value)
+    }
   );
-
   // clang-format on
+
   streamer.send_stream(0, std::move(event_to_send));
 }
 
