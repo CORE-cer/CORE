@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,6 +41,10 @@ struct Event {
 
   Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes) noexcept
+      : event_type_id(event_type_id), attributes(attributes) {}
+
+  Event(UniqueEventTypeId event_type_id,
+        std::initializer_list<std::shared_ptr<Types::Value>> attributes) noexcept
       : event_type_id(event_type_id), attributes(attributes) {}
 
   std::string to_string() const {

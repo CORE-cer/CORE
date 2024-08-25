@@ -166,13 +166,18 @@ class Backend {
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
+    send_event_to_queries(stream_id, std::make_shared<Types::Event>(event));
+  }
+
+  void send_event_to_queries(Types::StreamTypeId stream_id,
+                             std::shared_ptr<const Types::Event>&& event) {
     ZoneScopedN("Backend::send_event_to_queries");
     LOG_L3_BACKTRACE(
       "Received event with id {} from stream with id {} in "
       "Backend::send_event_to_queries",
-      event.event_type_id,
+      event->event_type_id,
       stream_id);
-    RingTupleQueue::Tuple tuple = event_to_tuple(event);
+    RingTupleQueue::Tuple tuple = event_to_tuple(*event.get());
     uint64_t ns = tuple.nanoseconds();
     if (!previous_event_sent) {
       previous_event_sent = ns;
@@ -187,7 +192,7 @@ class Backend {
         LOG_L3_BACKTRACE(
           "Sending event with id {} and timestamp {} from stream with id {} in "
           "Backend::send_event_to_queries to query {}",
-          event.event_type_id,
+          event->event_type_id,
           tuple.timestamp(),
           stream_id,
           i);
