@@ -1,9 +1,11 @@
 #pragma once
 #include <cassert>
-#include <stack>
+#include <tuple>
+#include <utility>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "core_server/internal/evaluation/predicate_set.hpp"
 
 namespace CORE::Internal::CEA {
 

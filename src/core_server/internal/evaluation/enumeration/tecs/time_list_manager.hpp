@@ -1,7 +1,6 @@
 #pragma once
 
-#include <unistd.h>
-
+#include <cstdint>
 #include <cstdlib>
 #include <memory>
 

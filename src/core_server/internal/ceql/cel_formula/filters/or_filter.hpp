@@ -1,7 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <utility>
 
+#include "core_server/internal/ceql/cel_formula/filters/visitors/filter_visitor.hpp"
 #include "filter.hpp"
 
 namespace CORE::Internal::CEQL {

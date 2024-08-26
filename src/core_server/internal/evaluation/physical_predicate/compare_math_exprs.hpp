@@ -1,13 +1,15 @@
 #pragma once
+#include <cstdint>
 #include <cwchar>
 #include <memory>
+#include <set>
+#include <string>
 #include <tracy/Tracy.hpp>
 
 #include "cassert"
 #include "comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
-#include "math_expr/math_expr_headers.hpp"
 #include "physical_predicate.hpp"
 
 namespace CORE::Internal::CEA {

@@ -9,8 +9,6 @@
 #include <ctime>
 #include <functional>
 #include <iomanip>
-#include <iostream>
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -175,7 +173,7 @@ class Tuple {
     std::atomic<uint64_t*> atomic_data;
     atomic_data.store(data, std::memory_order_release);
     std::string out(sizeof(uint64_t*), '\0');
-    std::memcpy(&out[0], &data, sizeof(uint64_t*));
+    std::memcpy(&out[0], &data, sizeof(uint64_t*));  // NOLINT
     return out;
   }
 

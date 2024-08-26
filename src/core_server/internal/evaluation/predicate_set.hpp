@@ -2,7 +2,7 @@
 #include <gmpxx.h>
 
 #include <cstdint>
-#include <iostream>
+#include <string>
 
 namespace CORE::Internal::CEA {
 

@@ -191,7 +191,6 @@ void check_if_attributes_are_defined(
 bool check_if_attributes_are_defined(
   std::set<std::string>& attributes,
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events) {
-  std::string attributes_names;
   if (!attributes_exist_in_streams(attributes, streams_events)) {
     return false;
   }

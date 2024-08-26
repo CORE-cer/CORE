@@ -12,7 +12,15 @@
 #include <utility>
 
 #include "core_server/internal/ceql/cel_formula/filters/visitors/apply_filters_to_logical_cea.hpp"
-#include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/projection_formula.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
