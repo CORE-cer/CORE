@@ -199,5 +199,36 @@ struct LogicalCEA {
 
     return out;
   }
+
+  std::string to_string_visualization() const {
+    std::string out = "";
+    std::string initial_states_string = initial_states.get_str(2);
+    std::string final_states_string = final_states.get_str(2);
+
+    for (int i = 0; i < initial_states_string.length(); ++i) {
+      if (initial_states_string[initial_states_string.length() - i - 1] == '1') {
+        out += "i " + std::to_string(i) + "\n";
+      }
+    }
+    for (int i = 0; i < final_states_string.length(); ++i) {
+      if (final_states_string[final_states_string.length() - i - 1] == '1') {
+        out += "f " + std::to_string(i) + "\n";
+      }
+    }
+    for (size_t i = 0; i < transitions.size(); i++) {
+      for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
+           transitions[i]) {
+        out += "t " + std::to_string(i) + " " + std::get<0>(transition).to_string() + " "
+               + std::to_string(std::get<2>(transition)) + "\n";
+      }
+    }
+    for (size_t i = 0; i < epsilon_transitions.size(); i++) {
+      for (const NodeId& end_node : epsilon_transitions[i]) {
+        out += "t " + std::to_string(i) + " ε " + std::to_string(end_node) + "\n";
+      }
+    }
+
+    return out;
+  }
 };
 }  // namespace CORE::Internal::CEA

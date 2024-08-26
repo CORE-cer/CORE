@@ -23,46 +23,51 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
   // Duplicate transitions will be removed from LogicalCEA
   // to CEA.
   LogicalCEA eval(LogicalCEA&& cea) {
-    std::vector<int64_t> epsilon_jump_sources(cea.amount_of_states, -1);
+    LogicalCEA cea_copy = LogicalCEA(cea);
     for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
+      cea_copy.transitions[source_node].clear();
+      cea_copy.epsilon_transitions[source_node].clear();
+    }
+
+    for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
+      bool visited[cea.amount_of_states] = {false};
       std::stack<NodeId> epsilon_reachable_nodes;
-      epsilon_jump_sources[source_node] = source_node;
-      for (NodeId target : cea.epsilon_transitions[source_node]) {
-        epsilon_reachable_nodes.push(target);
-        mpz_class target_binary = 1 << target;
-        if ((target_binary &= cea.final_states) != 0) {  // NOLINT
-          mpz_class binary_source_node = 1 << source_node;
-          cea.final_states |= binary_source_node;
-        }
-        epsilon_jump_sources[target] = source_node;
-      }
+      epsilon_reachable_nodes.push(source_node);
 
       while (!epsilon_reachable_nodes.empty()) {
-        NodeId reached_node_id = epsilon_reachable_nodes.top();
+        NodeId reached_node = epsilon_reachable_nodes.top();
         epsilon_reachable_nodes.pop();
 
-        for (auto& transition : cea.transitions[reached_node_id]) {
-          cea.transitions[source_node].push_back(transition);
-        }
+        if (!visited[reached_node]) {
+          visited[reached_node] = true;
 
-        for (NodeId node : cea.epsilon_transitions[reached_node_id]) {
-          if (epsilon_jump_sources[node] != source_node) {
-            epsilon_jump_sources[node] = source_node;
-            epsilon_reachable_nodes.push(node);
-            mpz_class target_binary = 1 << node;
-            if ((target_binary &= cea.final_states) != 0) {  // NOLINT
-              mpz_class binary_source_node = 1 << source_node;
-              cea.final_states |= binary_source_node;
+          for (auto& transition : cea.transitions[reached_node]) {
+            cea_copy.transitions[source_node].push_back(transition);
+          }
+
+          check_if_reached_node_is_accepting(reached_node, source_node, cea_copy);
+
+          for (NodeId neighbor : cea.epsilon_transitions[reached_node]) {
+            if (!visited[neighbor]) {
+              epsilon_reachable_nodes.push(neighbor);
             }
           }
         }
       }
-      cea.epsilon_transitions[source_node].clear();
     }
-    for (int i = 0; i < cea.amount_of_states; i++)
-      assert(cea.epsilon_transitions[i].empty());
 
-    return std::move(cea);
+    return std::move(cea_copy);
+  }
+
+  // If the reached node is accepting, then the source node should be accepting too
+  void check_if_reached_node_is_accepting(NodeId reached_node,
+                                          NodeId source_node,
+                                          LogicalCEA& cea) {
+    mpz_class reached_binary = mpz_class(1) << reached_node;
+    if ((reached_binary &= cea.final_states) != 0) {
+      mpz_class binary_source_node = mpz_class(1) << source_node;
+      cea.final_states |= binary_source_node;
+    }
   }
 };
 
