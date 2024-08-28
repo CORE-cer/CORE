@@ -58,8 +58,6 @@ class ZMQMessageRouter : MessageRouter {
         if (!got_request) {
           return;
         }
-        std::string identityString = std::string(static_cast<char*>(identity.data()),
-                                                 identity.size());
         std::string requestString = std::string(static_cast<char*>(request.data()),
                                                 request.size());
 

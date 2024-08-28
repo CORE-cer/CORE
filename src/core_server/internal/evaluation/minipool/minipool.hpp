@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include <fstream>
-#include <iostream>
+#include <cstddef>
 #include <vector>
 
 namespace CORE::Internal::MiniPool {

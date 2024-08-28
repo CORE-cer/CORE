@@ -4,8 +4,8 @@
 
 #include "core_server/internal/parsing/option_declaration/parser.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>
-#include <quill/detail/LogMacros.h>
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <memory>
 #include <optional>

@@ -45,9 +45,9 @@ Limit parse_limit(std::string query) {
 
 TEST_CASE("Limit captures limit correctly", "[Limit]") {
   // clang-format off
-  REQUIRE(parse_limit(create_limit_query("")).result_limit == -1);
-  REQUIRE(parse_limit(create_limit_query("1")).result_limit == 1);
-  REQUIRE(parse_limit(create_limit_query("1000")).result_limit == 1000);
+  REQUIRE(parse_limit(create_limit_query("")).result_limit == -1); // NOLINT
+  REQUIRE(parse_limit(create_limit_query("1")).result_limit == 1); // NOLINT
+  REQUIRE(parse_limit(create_limit_query("1000")).result_limit == 1000); // NOLINT
   // clang-format on
 }
 

@@ -65,29 +65,29 @@ TEST_CASE("Single functionality testing of Value to MathExpr", "[ValueToMathExpr
     Attribute value("Integer1");
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == -1);
+    REQUIRE(math_expr->eval(tuple) == -1);  // NOLINT
     Attribute value2("Integer2");
     value2.accept_visitor(value_to_int_math_expr);
     math_expr = std::move(value_to_int_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == 1);
+    REQUIRE(math_expr->eval(tuple) == 1);  // NOLINT
   }
 
   SECTION("double attributes", "ValueToMathExpr") {
     Attribute value("Double1");
     value.accept_visitor(value_to_double_math_expr);
     auto math_expr = std::move(value_to_double_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == -1.0);
+    REQUIRE(math_expr->eval(tuple) == -1.0);  // NOLINT
     Attribute value2("Double2");
     value2.accept_visitor(value_to_double_math_expr);
     math_expr = std::move(value_to_double_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == 1.0);
+    REQUIRE(math_expr->eval(tuple) == 1.0);  // NOLINT
   }
 
   SECTION("literal", "ValueToMathExpr") {
     IntegerLiteral value(2);
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == 2);
+    REQUIRE(math_expr->eval(tuple) == 2);  // NOLINT
   }
 
   SECTION("addition", "ValueToMathExpr") {
@@ -95,7 +95,7 @@ TEST_CASE("Single functionality testing of Value to MathExpr", "[ValueToMathExpr
                    std::make_unique<Attribute>("Integer1"));
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);
-    REQUIRE(math_expr->eval(tuple) == 1);
+    REQUIRE(math_expr->eval(tuple) == 1);  // NOLINT
   }
 
   SECTION("Combination of exprs", "ValueToMathExpr") {
@@ -111,7 +111,7 @@ TEST_CASE("Single functionality testing of Value to MathExpr", "[ValueToMathExpr
     value.accept_visitor(value_to_int_math_expr);
     auto math_expr = std::move(value_to_int_math_expr.math_expr);
     INFO("Math_expr: " + math_expr->to_string());
-    REQUIRE(math_expr->eval(tuple) == 6);
+    REQUIRE(math_expr->eval(tuple) == 6);  // NOLINT
   }
 }
 }  // namespace CORE::Internal::CEQL::UnitTests

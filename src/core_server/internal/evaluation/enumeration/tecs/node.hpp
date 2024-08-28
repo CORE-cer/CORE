@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cwchar>
+#include <string>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 

@@ -6,7 +6,7 @@
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "shared/logging/setup.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>
+#include <quill/Quill.h>  // NOLINT
 #include <quill/detail/LogMacros.h>
 
 #include <algorithm>
