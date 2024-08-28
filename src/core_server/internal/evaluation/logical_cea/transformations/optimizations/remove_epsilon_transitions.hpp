@@ -2,7 +2,6 @@
 #include <gmpxx.h>
 
 #include <cassert>
-#include <cstdint>
 #include <stack>
 #include <utility>
 #include <vector>
@@ -30,7 +29,7 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
     }
 
     for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
-      bool visited[cea.amount_of_states] = {false};
+      std::vector<bool> visited(cea.amount_of_states, false);
       std::stack<NodeId> epsilon_reachable_nodes;
       epsilon_reachable_nodes.push(source_node);
 
@@ -64,7 +63,7 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
                                           NodeId source_node,
                                           LogicalCEA& cea) {
     mpz_class reached_binary = mpz_class(1) << reached_node;
-    if ((reached_binary &= cea.final_states) != 0) {
+    if ((reached_binary & cea.final_states) != 0) {
       mpz_class binary_source_node = mpz_class(1) << source_node;
       cea.final_states |= binary_source_node;
     }
