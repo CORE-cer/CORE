@@ -22,6 +22,7 @@ Checks: >
   bugprone-assert-side-effect,
   -bugprone-easily-swappable-parameters,
   misc-include-cleaner,
+  -bugprone-multi-level-implicit-pointer-conversion,
 # google-*,
 # misc-*,
 # modernize-*,

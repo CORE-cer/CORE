@@ -2,7 +2,6 @@
 
 #include <exception>
 
-#include "core_server/internal/parsing/option_declaration/parser.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
@@ -18,6 +17,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/parsing/option_declaration/parser.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"

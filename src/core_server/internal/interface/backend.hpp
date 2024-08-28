@@ -7,7 +7,7 @@
 #include "shared/logging/setup.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>  // NOLINT
-#include <quill/detail/LogMacros.h>
+#include <quill/detail/LogMacros.h> // NOLINT
 
 #include <algorithm>
 #include <cassert>
@@ -16,7 +16,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include <zmq.hpp>
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
