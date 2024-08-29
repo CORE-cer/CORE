@@ -112,6 +112,45 @@ TEST_CASE("event+", "[Where]") {
   REQUIRE(formula->equals(expected_formula.get()));
 }
 
+TEST_CASE("not event", "[Where]") {
+  auto query = create_where_query("NOT T");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<EventTypeFormula>("T"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("not event as", "[Where]") {
+  auto query = create_where_query("NOT T AS t2");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+// TEST_CASE("AS", "[Where]") {
+//   auto query = create_where_query("T as t2");
+//   auto expected_formula = make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2");
+//   auto formula = parse_formula(query);
+//   INFO("Expected: " + expected_formula->to_string());
+//   INFO("Got: " + formula->to_string());
+//   REQUIRE(formula->equals(expected_formula.get()));
+// }
+
+// TEST_CASE("not event filter", "[Where]") {
+//   auto query = create_where_query("NOT T as t2");
+//   auto expected_formula = make_unique<NotEventTypeFormula>(
+//     make_unique<AsFormula>(make_unique<EventTypeFormula>("T"), "t2"));
+//   auto formula = parse_formula(query);
+//   INFO("Expected: " + expected_formula->to_string());
+//   INFO("Got: " + formula->to_string());
+//   REQUIRE(formula->equals(expected_formula.get()));
+// }
+
 TEST_CASE("event;event", "[Where]") {
   auto query = create_where_query("H;T");
   auto expected_formula = make_unique<NonContiguousSequencingFormula>(

@@ -57,6 +57,8 @@ public:
 
     virtual std::any visitOr_cel_formula(CEQLQueryParser::Or_cel_formulaContext *context) = 0;
 
+    virtual std::any visitNot_event_type_cel_formula(CEQLQueryParser::Not_event_type_cel_formulaContext *context) = 0;
+
     virtual std::any visitAs_cel_formula(CEQLQueryParser::As_cel_formulaContext *context) = 0;
 
     virtual std::any visitNon_contiguous_sequencing_cel_formula(CEQLQueryParser::Non_contiguous_sequencing_cel_formulaContext *context) = 0;
@@ -150,6 +152,12 @@ public:
     virtual std::any visitS_event_name(CEQLQueryParser::S_event_nameContext *context) = 0;
 
     virtual std::any visitEvent_name(CEQLQueryParser::Event_nameContext *context) = 0;
+
+    virtual std::any visitNot_event_r(CEQLQueryParser::Not_event_rContext *context) = 0;
+
+    virtual std::any visitNot_event_filter(CEQLQueryParser::Not_event_filterContext *context) = 0;
+
+    virtual std::any visitNot_event_as(CEQLQueryParser::Not_event_asContext *context) = 0;
 
     virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext *context) = 0;
 

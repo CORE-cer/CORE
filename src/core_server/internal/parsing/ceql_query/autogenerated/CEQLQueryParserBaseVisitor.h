@@ -91,6 +91,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitNot_event_type_cel_formula(CEQLQueryParser::Not_event_type_cel_formulaContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAs_cel_formula(CEQLQueryParser::As_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -276,6 +280,18 @@ public:
   }
 
   virtual std::any visitEvent_name(CEQLQueryParser::Event_nameContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNot_event_r(CEQLQueryParser::Not_event_rContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNot_event_filter(CEQLQueryParser::Not_event_filterContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNot_event_as(CEQLQueryParser::Not_event_asContext *ctx) override {
     return visitChildren(ctx);
   }
 
