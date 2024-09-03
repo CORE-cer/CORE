@@ -33,30 +33,31 @@ class EventManager {
 
   RingTupleQueue::Tuple event_to_tuple(std::shared_ptr<const Types::Event>&& event) {
     ZoneScopedN("Backend::event_to_tuple");
-    if (event->event_type_id > catalog.number_of_events()) {
+    const Types::Event& event_ref = *event;
+    if (event_ref.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
-    Types::EventInfo event_info = catalog.get_event_info(event->event_type_id);
+    Types::EventInfo event_info = catalog.get_event_info(event_ref.event_type_id);
     std::vector<Types::AttributeInfo> attr_infos = event_info.attributes_info;
-    if (attr_infos.size() != event->attributes.size()) {
+    if (attr_infos.size() != event_ref.attributes.size()) {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }
 
     uint64_t* data;
 
-    if (event->primary_time.has_value()) {
-      int64_t primary_time = event->primary_time.value()->val;
+    if (event_ref.primary_time.has_value()) {
+      int64_t primary_time = event_ref.primary_time.value()->val;
       std::chrono::system_clock::time_point primary_time_tp{
         std::chrono::nanoseconds(primary_time)};
-      data = queue.start_tuple(event->event_type_id, primary_time_tp);
+      data = queue.start_tuple(event_ref.event_type_id, primary_time_tp);
     } else {
-      data = queue.start_tuple(event->event_type_id);
+      data = queue.start_tuple(event_ref.event_type_id);
     }
 
     for (size_t i = 0; i < attr_infos.size(); i++) {
       auto& attr_info = attr_infos[i];
       // TODO: Why is this a shared_ptr?
-      std::shared_ptr<Types::Value> attr = event->attributes[i];
+      std::shared_ptr<Types::Value> attr = event_ref.attributes[i];
       switch (attr_info.value_type) {
         case Types::INT64:
         case Types::PRIMARY_TIME:

@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
