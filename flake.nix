@@ -1,6 +1,6 @@
 {
   description = "A basic flake with a shell";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs =
@@ -13,7 +13,6 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        is_dev = builtins.pathExists ./is-dev;
       in
       {
         devShells.default = pkgs.mkShell {
@@ -27,9 +26,6 @@
               conan
               cmake
               ninja
-            ]
-            ++ nixpkgs.lib.optionals (!is_dev) [
-
               clang_18
               valgrind
               gcc14
