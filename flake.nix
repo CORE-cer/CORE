@@ -1,14 +1,19 @@
 {
   description = "A basic flake with a shell";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    {
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        is_dev = builtins.pathExists ./is-dev;
       in
       {
         devShells.default = pkgs.mkShell {
@@ -22,10 +27,14 @@
               conan
               cmake
               ninja
-              clang_18
-              gcc14
             ]
-            ++ (if pkgs.stdenv.isDarwin then [ ] else [ valgrind ]);
+            ++ nixpkgs.lib.optionals (!is_dev) [
+
+              clang_18
+              valgrind
+              gcc14
+            ];
+          LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
         };
       }
     );
