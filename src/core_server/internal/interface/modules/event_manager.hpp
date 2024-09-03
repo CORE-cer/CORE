@@ -46,7 +46,7 @@ class EventManager {
     uint64_t* data;
 
     if (event_ref.primary_time.has_value()) {
-      int64_t primary_time = event_ref.primary_time.value()->val;
+      int64_t primary_time = event_ref.primary_time.value().val;
       std::chrono::system_clock::time_point primary_time_tp{
         std::chrono::nanoseconds(primary_time)};
       data = queue.start_tuple(event_ref.event_type_id, primary_time_tp);

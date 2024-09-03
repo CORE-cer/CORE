@@ -45,7 +45,7 @@ struct StreamInfo {
 
     void to_events(std::vector<std::string> csv_data) {
       std::vector<std::shared_ptr<Types::Value>> attributes;
-      std::optional<std::shared_ptr<Types::IntValue>> primary_time = {};
+      std::optional<Types::IntValue> primary_time = {};
       std::size_t id = event_names_to_index[csv_data[0]];
       Types::EventInfo event_info = events_info[id];
       for (int i = 0; i < event_info.attributes_info.size(); i++) {
@@ -70,7 +70,7 @@ struct StreamInfo {
             std::shared_ptr<Types::IntValue> time = std::make_shared<Types::IntValue>(
               std::stoll(csv_data[i + 1]));
             attributes.emplace_back(time);
-            primary_time = time;
+            primary_time = *time;
             break;
           }
           case Types::ValueTypes::DATE:
