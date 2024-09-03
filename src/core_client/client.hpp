@@ -53,6 +53,14 @@ class Client {
   Client(std::string address, Types::PortNumber dealer_port)
       : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
 
+  void declare_option(std::string option_declaration) {
+    Types::ClientRequest option_declaration_req(
+      Internal::CerealSerializer<std::string>::serialize(option_declaration),
+      Types::ClientRequestType::SetOption);
+    Types::ServerResponse res = send_request(option_declaration_req);
+    assert(res.response_type == Types::ServerResponseType::SuccessEmpty);
+  }
+
   Types::StreamInfo declare_stream(std::string stream_declaration) {
     Types::ClientRequest stream_declaration_req(
       Internal::CerealSerializer<std::string>::serialize(stream_declaration),

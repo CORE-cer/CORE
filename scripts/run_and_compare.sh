@@ -26,6 +26,7 @@ $executable $arguments > $temp_output_file
 # Compare the actual output with the expected output
 if diff $temp_output_file $expected_output_file > /dev/null; then
     echo -e "${GREEN}Output matches expected of ${expected_output_file}${NORMAL_OUTPUT}"
+    rm -f -- "$temp_output_file"
 else
     echo -e "${RED}Output does not match expected of ${expected_output_file}${NORMAL_OUTPUT}"
     exit 1

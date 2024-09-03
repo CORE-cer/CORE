@@ -17,6 +17,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/parsing/option_declaration/parser.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -91,6 +92,8 @@ class ClientMessageHandler {
         return list_all_streams();
       case Types::ClientRequestType::AddQuery:
         return add_query(request.serialized_request_data);
+      case Types::ClientRequestType::SetOption:
+        return set_option(request.serialized_request_data);
       default:
         throw std::runtime_error("Not Implemented!");
     }
@@ -208,6 +211,15 @@ class ClientMessageHandler {
   };
 
   // TODO: all queries and port numbers
+
+  Types::ServerResponse set_option(std::string s_option) {
+    std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);
+    LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option",
+             option_declaration);
+    Parsing::Option::OptionsParser<ResultHandlerFactoryT>::parse_option(option_declaration,
+                                                                        backend);
+    return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
+  }
 };
 
 }  // namespace CORE::Library::Components
