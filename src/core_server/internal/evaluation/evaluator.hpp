@@ -108,7 +108,7 @@ class Evaluator {
   next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
-                     tuple.timestamp());
+                     tuple.data_timestamp());
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto start_time = std::chrono::steady_clock::now();
 #endif
@@ -173,7 +173,7 @@ class Evaluator {
       LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                    std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                         - start_time),
-                   tuple.timestamp());
+                   tuple.data_timestamp());
       return std::move(enumerator);
     }
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
@@ -182,7 +182,7 @@ class Evaluator {
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                  std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                       - start_time),
-                 tuple.timestamp());
+                 tuple.data_timestamp());
     return {};
   }
 
@@ -224,7 +224,7 @@ class Evaluator {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
-                     tuple.timestamp());
+                     tuple.data_timestamp());
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;

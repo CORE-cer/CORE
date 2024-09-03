@@ -47,7 +47,7 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
 
       - name: benchmark stock query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
 
       - name: Read CSV
         id: csv_2
@@ -68,8 +68,30 @@ jobs:
             Stocks:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
 
+      - name: benchmark unordered stock query
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh -b Release
+
+      - name: Read CSV
+        id: csv_2
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/unordered_stocks/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output_2
+        with:
+          csvinput: ${{ steps.csv_2.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 2
+          message: |
+            Unordered Stocks:
+            ${{steps.csv-table-output_2.outputs.markdown-table}}
+
       - name: benchmark smart home query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
 
       - name: Read CSV
         id: csv_3
@@ -91,7 +113,7 @@ jobs:
             ${{steps.csv-table-output_3.outputs.markdown-table}}
 
       - name: benchmark taxi query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
 
       - name: Read CSV
         id: csv_4
