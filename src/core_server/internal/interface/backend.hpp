@@ -4,6 +4,8 @@
 #include <string>
 #include <tracy/Tracy.hpp>
 
+#include "shared/datatypes/eventWrapper.hpp"
+
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
@@ -93,16 +95,16 @@ class Backend {
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
-    send_event_to_queries(stream_id, std::make_shared<Types::Event>(event));
+    send_event_to_queries(stream_id, {std::make_shared<Types::Event>(event)});
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
-                             std::shared_ptr<const Types::Event>&& event) {
+                             const Types::EventWrapper&& event) {
     ZoneScopedN("Backend::send_event_to_queries");
     LOG_L3_BACKTRACE(
       "Received event with id {} from stream with id {} in "
       "Backend::send_event_to_queries",
-      event->event_type_id,
+      event.get_unique_event_type_id(),
       stream_id);
     RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(std::move(event));
     quarantine_manager.send_tuple_to_queries(stream_id, tuple);

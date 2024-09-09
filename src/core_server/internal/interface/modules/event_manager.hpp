@@ -18,6 +18,7 @@
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -31,9 +32,9 @@ class EventManager {
   EventManager(Catalog& catalog, RingTupleQueue::Queue& queue)
       : catalog(catalog), queue(queue) {}
 
-  RingTupleQueue::Tuple event_to_tuple(std::shared_ptr<const Types::Event>&& event) {
+  RingTupleQueue::Tuple event_to_tuple(const Types::EventWrapper&& event) {
     ZoneScopedN("Backend::event_to_tuple");
-    const Types::Event& event_ref = *event;
+    const Types::Event& event_ref = *(event.event);
     if (event_ref.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
