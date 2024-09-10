@@ -57,6 +57,7 @@ class BasePolicy {
   std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
 
   // Events
+  std::mutex events_lock;
   std::queue<Types::EventWrapper> event_send_queue = {};
 
  public:
@@ -161,7 +162,9 @@ class BasePolicy {
     queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,
                                                            queue,
                                                            inproc_receiver_address,
-                                                           std::move(result_handler)));
+                                                           std::move(result_handler),
+                                                           events_lock,
+                                                           event_send_queue));
     QueryBaseType* query = static_cast<QueryBaseType*>(
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
