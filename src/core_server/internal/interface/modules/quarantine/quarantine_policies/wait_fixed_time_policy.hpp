@@ -6,12 +6,15 @@
 #include <cstdint>
 #include <list>
 #include <mutex>
+#include <stdexcept>
+#include <utility>
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -21,6 +24,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     20);
   std::mutex tuples_lock;
   std::list<RingTupleQueue::Tuple> tuples;
+  std::list<Types::EventWrapper> events;
 
  public:
   WaitFixedTimePolicy(Catalog& catalog,
@@ -30,13 +34,21 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple) override {
+  void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     tuples.insert(std::lower_bound(tuples.begin(),
                                    tuples.end(),
                                    tuple.data_nanoseconds(),
                                    is_tuple_before_nanoseconds),
                   tuple);
+    if (!event.get_primary_time().has_value()) {
+      throw std::runtime_error("Event does not have a primary time");
+    }
+    events.insert(std::lower_bound(events.begin(),
+                                   events.end(),
+                                   event.get_primary_time().value().val,
+                                   is_event_before_nanoseconds),
+                  std::move(event));
   }
 
  protected:
@@ -59,6 +71,18 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
         return;
       }
     }
+
+    for (auto iter = events.begin(); iter != events.end();) {
+      Types::EventWrapper event = std::move(*iter);
+      auto duration = now - event.get_received_time();
+      if (duration > time_to_wait) {
+        this->event_send_queue.push(std::move(event));
+        iter = events.erase(iter);
+      } else {
+        // If we couldn't remove the first event, stop trying
+        return;
+      }
+    }
   }
 
   void force_add_tuples_to_send_queue() override {
@@ -75,6 +99,14 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   bool static is_tuple_before_nanoseconds(const RingTupleQueue::Tuple& tuple,
                                           uint64_t nanoseconds) {
     return tuple.data_nanoseconds() <= nanoseconds;
+  }
+
+  bool static is_event_before_nanoseconds(const Types::EventWrapper& event,
+                                          uint64_t nanoseconds) {
+    if (!event.get_primary_time().has_value()) {
+      throw std::runtime_error("Event does not have a primary time");
+    }
+    return event.get_primary_time().value().val <= nanoseconds;
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

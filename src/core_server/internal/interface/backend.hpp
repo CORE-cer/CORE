@@ -106,8 +106,8 @@ class Backend {
       "Backend::send_event_to_queries",
       event.get_unique_event_type_id(),
       stream_id);
-    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(std::move(event));
-    quarantine_manager.send_tuple_to_queries(stream_id, tuple);
+    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(std::move(event.clone()));
+    quarantine_manager.send_tuple_to_queries(stream_id, tuple, std::move(event));
   }
 
   void set_quarantine_policy(std::set<std::string>&& stream_names,

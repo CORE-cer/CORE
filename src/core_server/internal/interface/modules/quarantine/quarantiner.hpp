@@ -21,6 +21,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -59,12 +60,14 @@ class QuarantineManager {
     }
   }
 
-  void send_tuple_to_queries(Types::StreamTypeId stream_id, RingTupleQueue::Tuple& tuple) {
+  void send_tuple_to_queries(Types::StreamTypeId stream_id,
+                             RingTupleQueue::Tuple& tuple,
+                             const Types::EventWrapper&& event) {
     std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>&
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 
     for (BasePolicy<ResultHandlerT>& relevant_policy : relevant_policies) {
-      relevant_policy.receive_tuple(tuple);
+      relevant_policy.receive_tuple(tuple, std::move(event.clone()));
     }
   }
 

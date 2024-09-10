@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <utility>
 #include <vector>
 
 #include "base_policy.hpp"
@@ -9,6 +10,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -17,6 +19,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
   // TODO: Optimize
   std::mutex tuples_lock;
   std::vector<RingTupleQueue::Tuple> tuples;
+  std::vector<Types::EventWrapper> events;
 
  public:
   DirectPolicy(Catalog& catalog,
@@ -26,9 +29,11 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
 
   ~DirectPolicy() { this->handle_destruction(); }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple) override {
+  void receive_tuple(RingTupleQueue::Tuple& tuple,
+                     Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     tuples.push_back(tuple);
+    events.push_back(std::move(event));
   }
 
  protected:
@@ -37,7 +42,11 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
     for (const RingTupleQueue::Tuple& tuple : tuples) {
       this->tuple_send_queue.push_back(tuple);
     }
+    for (auto&& event : events) {
+      this->event_send_queue.push(std::move(event));
+    }
     this->tuples.clear();
+    this->events.clear();
   }
 
   void force_add_tuples_to_send_queue() override { try_add_tuples_to_send_queue(); }

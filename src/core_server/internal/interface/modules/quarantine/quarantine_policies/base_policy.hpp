@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -26,6 +27,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
@@ -53,6 +55,9 @@ class BasePolicy {
   std::atomic<bool> stop_condition = false;
   // Stores the tuples that are ready to be sent
   std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
+
+  // Events
+  std::queue<Types::EventWrapper> event_send_queue = {};
 
  public:
   BasePolicy(Catalog& catalog,
@@ -91,7 +96,8 @@ class BasePolicy {
     }
   }
 
-  virtual void receive_tuple(RingTupleQueue::Tuple& tuple) = 0;
+  virtual void
+  receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) = 0;
 
  protected:
   virtual void try_add_tuples_to_send_queue() = 0;
