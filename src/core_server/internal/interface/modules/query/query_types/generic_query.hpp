@@ -23,7 +23,6 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
@@ -95,7 +94,7 @@ class GenericQuery {
         }
         Types::EventWrapper event = get_event();
         last_received_tuple.store(tuple->get_data());
-        std::optional<tECS::Enumerator> output = process_event(tuple.value());
+        std::optional<tECS::Enumerator> output = process_event(tuple.value(), std::move(event));
         (*result_handler)(std::move(output));
       }
     });
@@ -122,8 +121,8 @@ class GenericQuery {
     }
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    return static_cast<Derived*>(this)->process_event(tuple);
+  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+    return static_cast<Derived*>(this)->process_event(tuple, std::move(event));
   }
 
   std::optional<RingTupleQueue::Tuple>

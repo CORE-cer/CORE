@@ -73,8 +73,9 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   this->queue);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    return evaluator->process_event(tuple);
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+    return evaluator->process_event(tuple, std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

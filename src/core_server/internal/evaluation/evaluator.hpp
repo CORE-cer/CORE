@@ -6,6 +6,7 @@
 
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
@@ -105,7 +106,7 @@ class Evaluator {
         enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
-  next(RingTupleQueue::Tuple tuple, uint64_t current_time) {
+  next(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
                      tuple.data_timestamp());
