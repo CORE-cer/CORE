@@ -11,6 +11,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Evaluation {
 
@@ -25,7 +26,7 @@ struct PredicateEvaluator {
     }
   }
 
-  mpz_class operator()(RingTupleQueue::Tuple& tuple) {
+  mpz_class operator()(RingTupleQueue::Tuple& tuple, Types::EventWrapper* event = nullptr) {
     ZoneScopedN("PredicateEvaluator::operator()");
     mpz_class out = 0;
     mpz_class one = 1;
