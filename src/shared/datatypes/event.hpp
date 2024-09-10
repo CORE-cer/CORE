@@ -36,8 +36,6 @@ struct Event {
    *   https://uscilab.github.io/cereal/pointers.html
    */
   std::vector<std::shared_ptr<Types::Value>> attributes;
-  std::optional<Types::IntValue> received_time;
-
   /**
    * Primary is usually shared with one of the attributes
    * however we do not use a shared pointer here to remove
@@ -51,10 +49,6 @@ struct Event {
         std::vector<std::shared_ptr<Types::Value>> attributes,
         std::optional<Types::IntValue> primary_time = {}) noexcept
       : event_type_id(event_type_id), attributes(attributes), primary_time(primary_time) {}
-
-  void set_received_time(Types::IntValue received_time) {
-    this->received_time = received_time;
-  }
 
   std::string to_string() const {
     std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";

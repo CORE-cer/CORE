@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <list>
 #include <mutex>
-#include <stdexcept>
 #include <utility>
 
 #include "base_policy.hpp"
@@ -41,12 +40,9 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
                                    tuple.data_nanoseconds(),
                                    is_tuple_before_nanoseconds),
                   tuple);
-    if (!event.get_primary_time().has_value()) {
-      throw std::runtime_error("Event does not have a primary time");
-    }
     events.insert(std::lower_bound(events.begin(),
                                    events.end(),
-                                   event.get_primary_time().value().val,
+                                   event.get_primary_time().val,
                                    is_event_before_nanoseconds),
                   std::move(event));
   }
@@ -103,10 +99,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   bool static is_event_before_nanoseconds(const Types::EventWrapper& event,
                                           uint64_t nanoseconds) {
-    if (!event.get_primary_time().has_value()) {
-      throw std::runtime_error("Event does not have a primary time");
-    }
-    return event.get_primary_time().value().val <= nanoseconds;
+    return event.get_primary_time().val <= nanoseconds;
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

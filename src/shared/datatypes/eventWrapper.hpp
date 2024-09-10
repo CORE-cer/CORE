@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <ctime>
 #include <memory>
 #include <optional>
@@ -17,15 +16,18 @@ class EventManager;
 }
 
 namespace CORE::Types {
+using ClockType = std::chrono::system_clock;
 
 class EventWrapper {
   friend class Internal::Interface::Module::EventManager;
   std::shared_ptr<const Event> event;
+  Types::IntValue primary_time;
+  std::chrono::time_point<ClockType> received_time;
 
  public:
-  EventWrapper(std::shared_ptr<const Event>& event) : event(event) {}
+  EventWrapper(std::shared_ptr<const Event>& event) : event(event) { set_times(); }
 
-  EventWrapper(std::shared_ptr<const Event>&& event) : event(std::move(event)) {}
+  EventWrapper(std::shared_ptr<const Event>&& event) : event(std::move(event)) { set_times(); }
 
   // Add move
   EventWrapper(EventWrapper&& other) : event(std::move(other.event)) {}
@@ -45,16 +47,24 @@ class EventWrapper {
     return (event->attributes)[attribute_index];
   }
 
-  std::chrono::time_point<std::chrono::system_clock> get_received_time() const {
-    // assume nano seconds
-    int64_t received_time = event->received_time.value().val;
-    std::chrono::nanoseconds ns = std::chrono::nanoseconds(received_time);
-    return std::chrono::time_point<std::chrono::system_clock>(ns);
-  }
+  std::chrono::time_point<ClockType> get_received_time() const { return received_time; }
 
-  std::optional<Types::IntValue> get_primary_time() const { return event->primary_time; }
+  Types::IntValue get_primary_time() const { return primary_time; }
 
   EventWrapper clone() const { return EventWrapper(std::make_shared<Event>(*event)); }
+
+ private:
+  void set_times() {
+    std::chrono::time_point<ClockType> system_time = ClockType::now();
+    received_time = system_time;
+    if (event->primary_time.has_value()) {
+      primary_time = event->primary_time.value();
+    } else {
+      primary_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       system_time.time_since_epoch())
+                       .count();
+    }
+  }
 };
 
 }  // namespace CORE::Types
