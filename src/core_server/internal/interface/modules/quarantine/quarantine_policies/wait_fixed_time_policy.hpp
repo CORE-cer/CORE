@@ -55,6 +55,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     auto now = std::chrono::system_clock::now();
 
     std::lock_guard<std::mutex> lock(tuples_lock);
+    std::lock_guard<std::mutex> lock2(this->events_lock);
 
     for (auto iter = tuples.begin(); iter != tuples.end();) {
       const RingTupleQueue::Tuple& tuple = *iter;
@@ -83,6 +84,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(tuples_lock);
+    std::lock_guard<std::mutex> lock2(this->events_lock);
 
     for (auto iter = tuples.begin(); iter != tuples.end();) {
       const RingTupleQueue::Tuple& tuple = *iter;

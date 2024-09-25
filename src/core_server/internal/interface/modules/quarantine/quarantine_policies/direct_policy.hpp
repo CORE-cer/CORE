@@ -29,8 +29,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
 
   ~DirectPolicy() { this->handle_destruction(); }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple,
-                     Types::EventWrapper&& event) override {
+  void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     tuples.push_back(tuple);
     events.push_back(std::move(event));
@@ -39,6 +38,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
  protected:
   void try_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(tuples_lock);
+    std::lock_guard<std::mutex> lock2(this->events_lock);
     for (const RingTupleQueue::Tuple& tuple : tuples) {
       this->tuple_send_queue.push_back(tuple);
     }
