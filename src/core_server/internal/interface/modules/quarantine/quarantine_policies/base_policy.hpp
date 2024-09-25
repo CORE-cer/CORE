@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -50,7 +51,7 @@ class BasePolicy {
 
  protected:
   std::vector<std::reference_wrapper<std::atomic<uint64_t*>>> last_received_tuple = {};
-  std::vector<uint64_t*> last_sent_tuple = {};
+  std::deque<std::atomic<uint64_t*>> last_sent_tuple = {};
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
   // Stores the tuples that are ready to be sent
@@ -121,7 +122,7 @@ class BasePolicy {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
-        last_sent_tuple[i] = tuple.get_data();
+        last_sent_tuple[i].store(tuple.get_data());
         sender.send(tuple.serialize_data());
       }
     }
@@ -131,7 +132,7 @@ class BasePolicy {
     stop_condition = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
     for (int i = 0; i < this->last_received_tuple.size(); i++) {
-      while (this->last_sent_tuple[i] != this->last_received_tuple[i].get().load()) {
+      while (this->last_sent_tuple[i].load() != this->last_received_tuple[i].get().load()) {
         std::this_thread::sleep_for(std::chrono::microseconds(50));
       }
     }
@@ -170,7 +171,7 @@ class BasePolicy {
 
     query->init(std::move(parsed_query));
     last_received_tuple.emplace_back(query->last_received_tuple);
-    last_sent_tuple.push_back(nullptr);
+    last_sent_tuple.emplace_back(nullptr);
 
     zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
