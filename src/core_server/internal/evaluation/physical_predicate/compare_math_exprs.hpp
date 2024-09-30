@@ -11,6 +11,7 @@
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -50,6 +51,25 @@ class CompareMathExprs : public PhysicalPredicate {
       return left->eval(tuple) < right->eval(tuple);
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
       return left->eval(tuple) != right->eval(tuple);
+    else
+      assert(false && "Operator() not implemented for some ComparisonType");
+  }
+
+  bool eval(Types::EventWrapper& event) override {
+    ZoneScopedN("CompareMathExprs::eval()");
+    // std::cout << to_string() << std::endl;
+    if constexpr (Comp == ComparisonType::EQUALS) {
+      return left->eval(event) == right->eval(event);
+    } else if constexpr (Comp == ComparisonType::GREATER)
+      return left->eval(event) > right->eval(event);
+    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+      return left->eval(event) >= right->eval(event);
+    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+      return left->eval(event) <= right->eval(event);
+    else if constexpr (Comp == ComparisonType::LESS)
+      return left->eval(event) < right->eval(event);
+    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+      return left->eval(event) != right->eval(event);
     else
       assert(false && "Operator() not implemented for some ComparisonType");
   }

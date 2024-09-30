@@ -7,6 +7,7 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -31,6 +32,14 @@ class Multiplication : public MathExpr<Type> {
       throw std::logic_error("Minus is only valid for arithmetic vals");
     } else
       return left->eval(tuple) * right->eval(tuple);
+  }
+
+  Type eval(Types::EventWrapper& event) override {
+    if constexpr (!std::is_arithmetic<Type>::value) {
+      assert(false && "Multiplication is only valid for arithmetic vals");
+      throw std::logic_error("Minus is only valid for arithmetic vals");
+    } else
+      return left->eval(event) * right->eval(event);
   }
 
   std::string to_string() const override {

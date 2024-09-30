@@ -7,9 +7,11 @@
 #include <tracy/Tracy.hpp>
 #include <type_traits>
 
+#include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -33,7 +35,7 @@ class Attribute : public MathExpr<GlobalType> {
   ~Attribute() override = default;
 
   GlobalType eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("Attribute::eval()");
+    ZoneScopedN("Attribute::eval(tuple)");
     RingTupleQueue::Value<LocalType> val(tuple[pos]);
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.get();
@@ -42,6 +44,20 @@ class Attribute : public MathExpr<GlobalType> {
       return stored_string;
     } else {
       return static_cast<GlobalType>(val.get());
+    }
+  }
+
+  GlobalType eval(Types::EventWrapper& event) override {
+    ZoneScopedN("Attribute::eval(event)");
+    typename ToCoreType<LocalType>::type
+      val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
+    if constexpr (std::is_same_v<GlobalType, LocalType>) {
+      return val.val;
+    } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
+      stored_string = std::to_string(val.val);  // It is not a string already.
+      return stored_string;
+    } else {
+      return static_cast<GlobalType>(val.val);
     }
   }
 

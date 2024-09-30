@@ -60,27 +60,27 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate", "[ValueToMathExpr
     // clang-format off
     CEA::CompareWithConstant<CEA::ComparisonType::EQUALS, int64_t>
     predicate_equals(id, 1, -1);
-    REQUIRE(predicate_equals(tuple));
+    REQUIRE(predicate_equals.eval(tuple));
 
     CEA::CompareWithConstant<CEA::ComparisonType::GREATER, int64_t>
     predicate_greater(id, 1, -2);
-    REQUIRE(predicate_greater(tuple));
+    REQUIRE(predicate_greater.eval(tuple));
 
     CEA::CompareWithConstant<CEA::ComparisonType::GREATER_EQUALS, int64_t>
     predicate_greater_equals(id, 1, -1);
-    REQUIRE(predicate_greater_equals(tuple));
+    REQUIRE(predicate_greater_equals.eval(tuple));
 
     CEA::CompareWithConstant<CEA::ComparisonType::LESS_EQUALS, int64_t>
     predicate_less_equals(id, 1, -1);
-    REQUIRE(predicate_less_equals(tuple));
+    REQUIRE(predicate_less_equals.eval(tuple));
 
     CEA::CompareWithConstant<CEA::ComparisonType::LESS, int64_t>
     predicate_less(id, 1, 1);
-    REQUIRE(predicate_less(tuple));
+    REQUIRE(predicate_less.eval(tuple));
 
     CEA::CompareWithConstant<CEA::ComparisonType::NOT_EQUALS, int64_t>
     predicate_not_equals(id, 1, -3);
-    REQUIRE(predicate_not_equals(tuple));
+    REQUIRE(predicate_not_equals.eval(tuple));
     // clang-format on
   }
 
@@ -88,27 +88,27 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate", "[ValueToMathExpr
     // clang-format off
     CEA::CompareWithAttribute<CEA::ComparisonType::EQUALS, int64_t, int64_t>
     predicate_equals(id, 1, 2);
-    REQUIRE(!predicate_equals(tuple));
+    REQUIRE(!predicate_equals.eval(tuple));
 
     CEA::CompareWithAttribute<CEA::ComparisonType::GREATER, int64_t, int64_t>
     predicate_greater(id, 2, 1);
-    REQUIRE(predicate_greater(tuple));
+    REQUIRE(predicate_greater.eval(tuple));
 
     CEA::CompareWithAttribute<CEA::ComparisonType::GREATER_EQUALS, int64_t, int64_t>
     predicate_greater_equals(id, 1, 2);
-    REQUIRE(!predicate_greater_equals(tuple));
+    REQUIRE(!predicate_greater_equals.eval(tuple));
 
     CEA::CompareWithAttribute<CEA::ComparisonType::LESS_EQUALS, int64_t, int64_t>
     predicate_less_equals(id, 1, 2);
-    REQUIRE(predicate_less_equals(tuple));
+    REQUIRE(predicate_less_equals.eval(tuple));
 
     CEA::CompareWithAttribute<CEA::ComparisonType::LESS, int64_t, int64_t>
     predicate_less(id, 1, 2);
-    REQUIRE(predicate_less(tuple));
+    REQUIRE(predicate_less.eval(tuple));
 
     CEA::CompareWithAttribute<CEA::ComparisonType::NOT_EQUALS, int64_t, int64_t>
     predicate_not_equals(id, 1, 2);
-    REQUIRE(predicate_not_equals(tuple));
+    REQUIRE(predicate_not_equals.eval(tuple));
     // clang-format on
   }
 
@@ -135,31 +135,31 @@ TEST_CASE("CEQL physical_predicate to CEA physical_predicate", "[ValueToMathExpr
     CEA::CompareMathExprs<CEA::ComparisonType::EQUALS, int64_t>
     predicate_equals(id, second_math_expr_eval_2->clone(),
                      math_expr_eval_2->clone());
-    REQUIRE(predicate_equals(tuple));
+    REQUIRE(predicate_equals.eval(tuple));
 
     CEA::CompareMathExprs<CEA::ComparisonType::GREATER, int64_t>
     predicate_greater(id, math_expr_eval_4->clone(), math_expr_eval_1->clone());
-    REQUIRE(predicate_greater(tuple));
+    REQUIRE(predicate_greater.eval(tuple));
 
     CEA::CompareMathExprs<CEA::ComparisonType::GREATER_EQUALS, int64_t>
     predicate_greater_equals(id, second_math_expr_eval_2->clone(),
                              math_expr_eval_2->clone());
-    REQUIRE(predicate_greater_equals(tuple));
+    REQUIRE(predicate_greater_equals.eval(tuple));
 
     CEA::CompareMathExprs<CEA::ComparisonType::LESS_EQUALS, int64_t>
     predicate_less_equals(id, second_math_expr_eval_2->clone(),
                           math_expr_eval_2->clone());
-    REQUIRE(predicate_less_equals(tuple));
+    REQUIRE(predicate_less_equals.eval(tuple));
 
     CEA::CompareMathExprs<CEA::ComparisonType::LESS, int64_t>
     predicate_less(id, math_expr_eval_1->clone(),
                    math_expr_eval_2->clone());
-    REQUIRE(predicate_less(tuple));
+    REQUIRE(predicate_less.eval(tuple));
 
     CEA::CompareMathExprs<CEA::ComparisonType::NOT_EQUALS, int64_t>
     predicate_not_equals(id, math_expr_eval_1->clone(),
                          math_expr_eval_2->clone());
-    REQUIRE(predicate_not_equals(tuple));
+    REQUIRE(predicate_not_equals.eval(tuple));
     // clang-format on
   }
 }

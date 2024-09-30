@@ -17,6 +17,8 @@ class EventManager;
 
 namespace CORE::Types {
 using ClockType = std::chrono::system_clock;
+template <typename T>
+concept DerivedFromValue = std::is_base_of_v<Types::Value, T>;
 
 class EventWrapper {
   friend class Internal::Interface::Module::EventManager;
@@ -27,7 +29,9 @@ class EventWrapper {
  public:
   EventWrapper(std::shared_ptr<const Event>& event) : event(event) { set_times(); }
 
-  EventWrapper(std::shared_ptr<const Event>&& event) : event(std::move(event)) { set_times(); }
+  EventWrapper(std::shared_ptr<const Event>&& event) : event(std::move(event)) {
+    set_times();
+  }
 
   // Add move
   EventWrapper(EventWrapper&& other) : event(std::move(other.event)) {}
@@ -43,8 +47,9 @@ class EventWrapper {
 
   UniqueEventTypeId get_unique_event_type_id() const { return event->event_type_id; }
 
-  std::weak_ptr<Types::Value> const operator[](std::size_t attribute_index) {
-    return (event->attributes)[attribute_index];
+  template <DerivedFromValue T>
+  const T& get_attribute_at_index(std::size_t attribute_index) {
+    return static_cast<const T&>(*(event->attributes)[attribute_index]);
   }
 
   std::chrono::time_point<ClockType> get_received_time() const { return received_time; }

@@ -126,7 +126,7 @@ class Evaluator {
       should_reset.store(false);
     }
 
-    mpz_class predicates_satisfied = tuple_evaluator(tuple, &event);
+    mpz_class predicates_satisfied = tuple_evaluator(tuple, event);
     current_union_list_map = {};
     current_ordered_keys = {};
     final_states.clear();

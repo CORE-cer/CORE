@@ -10,6 +10,7 @@
 #include "cassert"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -35,6 +36,16 @@ class AndPredicate : public PhysicalPredicate {
     ZoneScopedN("AndPredicate::eval()");
     for (auto& predicate : predicates) {
       if (!(predicate->eval(tuple))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool eval(Types::EventWrapper& event) override {
+    ZoneScopedN("AndPredicate::eval()");
+    for (auto& predicate : predicates) {
+      if (!(predicate->eval(event))) {
         return false;
       }
     }

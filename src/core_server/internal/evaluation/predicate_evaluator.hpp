@@ -26,16 +26,21 @@ struct PredicateEvaluator {
     }
   }
 
-  mpz_class operator()(RingTupleQueue::Tuple& tuple, Types::EventWrapper* event = nullptr) {
+  mpz_class operator()(RingTupleQueue::Tuple& tuple, Types::EventWrapper& event) {
     ZoneScopedN("PredicateEvaluator::operator()");
-    mpz_class out = 0;
+    mpz_class out_tuple = 0;
     mpz_class one = 1;
     for (size_t i = 0; i < predicates.size(); i++) {
       if ((*predicates[i])(tuple)) {
-        out |= one << i;
+        out_tuple |= one << i;
       }
     }
-    return out;
+    for (size_t i = 0; i < predicates.size(); i++) {
+      if ((*predicates[i])(event)) {
+        out_tuple |= one << i;
+      }
+    }
+    return out_tuple;
   }
 
   std::string to_string() const {
