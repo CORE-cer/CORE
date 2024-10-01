@@ -9,6 +9,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <set>
@@ -101,7 +102,7 @@ std::vector<Types::AttributeInfo> attributes_of_event_type_2() {
 }
 
 Types::EventWrapper get_event_wrapper_event_type_2(int64_t val1, int64_t val2) {
-  auto event = std::make_shared<Types::Event>(0,
+  auto event = std::make_shared<Types::Event>(1,
                                               std::vector<std::shared_ptr<Types::Value>>{
                                                 std::make_shared<Types::IntValue>(val1),
                                                 std::make_shared<Types::IntValue>(val2),

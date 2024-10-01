@@ -91,9 +91,11 @@ class CompareWithAttribute : public PhysicalPredicate {
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithAttribute::eval()");
     typename ToCoreType<LeftValueType>::type
-      pos1 = event.get_attribute_at_index<typename ToCoreType<LeftValueType>::type>(first_pos);
+      pos1 = event.get_attribute_at_index<typename ToCoreType<LeftValueType>::type>(
+        first_pos);
     typename ToCoreType<RightValueType>::type
-      pos2 = event.get_attribute_at_index<typename ToCoreType<RightValueType>::type>(second_pos);
+      pos2 = event.get_attribute_at_index<typename ToCoreType<RightValueType>::type>(
+        second_pos);
     if constexpr (!std::is_same_v<LeftValueType, RightValueType>
                   && (std::is_same_v<LeftValueType, std::string_view>
                       || std::is_same_v<RightValueType, std::string_view>)) {

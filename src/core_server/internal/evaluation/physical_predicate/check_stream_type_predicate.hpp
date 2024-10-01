@@ -45,7 +45,7 @@ class CheckStreamTypePredicate : public PhysicalPredicate {
   }
 
   std::string to_string() const override {
-    std::string out = "IS ";
+    std::string out = "CheckStreamTypePredicate ";
     for (auto id : admissible_event_types) {
       out += std::to_string(id) + " ";
     }
