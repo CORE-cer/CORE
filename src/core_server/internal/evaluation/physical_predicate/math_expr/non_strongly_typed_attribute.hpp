@@ -116,7 +116,7 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
 
   template <typename LocalType>
   GlobalType eval(Types::EventWrapper& event, size_t pos) {
-    typename ToCoreType<LocalType>::type
+    const typename ToCoreType<LocalType>::type&
       val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.val;

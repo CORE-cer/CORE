@@ -49,7 +49,7 @@ class Attribute : public MathExpr<GlobalType> {
 
   GlobalType eval(Types::EventWrapper& event) override {
     ZoneScopedN("Attribute::eval(event)");
-    typename ToCoreType<LocalType>::type
+    const typename ToCoreType<LocalType>::type&
       val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
     if constexpr (std::is_same_v<GlobalType, LocalType>) {
       return val.val;

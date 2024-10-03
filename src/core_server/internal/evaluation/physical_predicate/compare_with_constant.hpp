@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <set>
 #include <string>
 #include <tracy/Tracy.hpp>
@@ -42,6 +43,8 @@ class CompareWithConstant : public PhysicalPredicate {
     ZoneScopedN("CompareWithConstant::eval()");
     uint64_t* pos = tuple[pos_to_compare];
     RingTupleQueue::Value<ValueType> attribute_val(pos);
+    std::cout << "Position to compare: " << pos_to_compare << std::endl;
+    std::cout << "Attribute value: " << attribute_val.get() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS)
       return attribute_val.get() == constant_val;
     else if constexpr (Comp == ComparisonType::GREATER)
@@ -60,7 +63,7 @@ class CompareWithConstant : public PhysicalPredicate {
 
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithConstant::eval()");
-    typename ToCoreType<ValueType>::type
+    const typename ToCoreType<ValueType>::type&
       attribute_val = event.get_attribute_at_index<typename ToCoreType<ValueType>::type>(
         pos_to_compare);
     if constexpr (Comp == ComparisonType::EQUALS)

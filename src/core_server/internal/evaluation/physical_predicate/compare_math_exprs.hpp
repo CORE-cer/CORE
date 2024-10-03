@@ -40,7 +40,9 @@ class CompareMathExprs : public PhysicalPredicate {
     ZoneScopedN("CompareMathExprs::eval()");
     // std::cout << to_string() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS) {
-      return left->eval(tuple) == right->eval(tuple);
+      auto xd1 = left->eval(tuple);
+      auto xd2 = right->eval(tuple);
+      return xd1 == xd2;
     } else if constexpr (Comp == ComparisonType::GREATER)
       return left->eval(tuple) > right->eval(tuple);
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
@@ -59,7 +61,9 @@ class CompareMathExprs : public PhysicalPredicate {
     ZoneScopedN("CompareMathExprs::eval()");
     // std::cout << to_string() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS) {
-      return left->eval(event) == right->eval(event);
+      auto xd1 = left->eval(event);
+      auto xd2 = right->eval(event);
+      return xd1 == xd2;
     } else if constexpr (Comp == ComparisonType::GREATER)
       return left->eval(event) > right->eval(event);
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
