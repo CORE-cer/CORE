@@ -41,7 +41,8 @@ class SingleEvaluator : public GenericEvaluator {
                   consumption_policy,
                   limit) {}
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
     ZoneScopedN("Interface::SingleEvaluator::process_event");
     uint64_t time = tuple_time(tuple);
 

@@ -94,7 +94,8 @@ class GenericQuery {
         }
         Types::EventWrapper event = get_event();
         last_received_tuple.store(tuple->get_data());
-        std::optional<tECS::Enumerator> output = process_event(tuple.value(), std::move(event));
+        std::optional<tECS::Enumerator> output = process_event(tuple.value(),
+                                                               std::move(event));
         (*result_handler)(std::move(output));
       }
     });
@@ -121,7 +122,8 @@ class GenericQuery {
     }
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
     return static_cast<Derived*>(this)->process_event(tuple, std::move(event));
   }
 

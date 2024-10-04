@@ -63,8 +63,9 @@ class EventWrapper {
   void set_times() {
     std::chrono::time_point<ClockType> system_time = ClockType::now();
     received_time = system_time;
-    if (event->primary_time.has_value()) {
-      primary_time = event->primary_time.value();
+    std::optional<Types::IntValue> event_primary_time = event->primary_time;
+    if (event_primary_time.has_value()) {
+      primary_time = event_primary_time.value();
     } else {
       primary_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                        system_time.time_since_epoch())

@@ -111,7 +111,8 @@ class PartitionByQuery
                                                    this->queue);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
     if (auto it = event_id_to_tuple_idx.find(tuple.id());
         it != event_id_to_tuple_idx.end()) [[likely]] {

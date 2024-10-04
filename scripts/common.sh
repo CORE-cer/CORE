@@ -43,6 +43,7 @@ function build() {
       echo -e "${RED}Build failed!${NORMAL_OUTPUT}"
       exit 1
   fi
+  # echo current path
 }
 
 # Default values
@@ -51,6 +52,7 @@ CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
 SANITIZER=none
 LOGGING=info
 J="all-1"
+export TSAN_OPTIONS="suppressions=tsan_suppressions.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
