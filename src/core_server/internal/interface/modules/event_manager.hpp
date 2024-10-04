@@ -57,8 +57,7 @@ class EventManager {
 
     for (size_t i = 0; i < attr_infos.size(); i++) {
       auto& attr_info = attr_infos[i];
-      // TODO: Why is this a shared_ptr?
-      std::shared_ptr<Types::Value> attr = event_ref.attributes[i];
+      const std::unique_ptr<Types::Value>& attr = event_ref.attributes[i];
       switch (attr_info.value_type) {
         case Types::INT64:
         case Types::PRIMARY_TIME:
@@ -113,7 +112,7 @@ class EventManager {
   //   }
   // }
 
-  void write_int(std::shared_ptr<Types::Value>& attr) {
+  void write_int(const std::unique_ptr<Types::Value>& attr) {
     Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -123,7 +122,7 @@ class EventManager {
     *integer_ptr = val_ptr->val;
   }
 
-  void write_double(std::shared_ptr<Types::Value>& attr) {
+  void write_double(const std::unique_ptr<Types::Value>& attr) {
     Types::DoubleValue* val_ptr = dynamic_cast<Types::DoubleValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -134,7 +133,7 @@ class EventManager {
     *double_ptr = val_ptr->val;
   }
 
-  void write_bool(std::shared_ptr<Types::Value>& attr) {
+  void write_bool(const std::unique_ptr<Types::Value>& attr) {
     Types::BoolValue* val_ptr = dynamic_cast<Types::BoolValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -144,7 +143,7 @@ class EventManager {
     *bool_ptr = val_ptr->val;
   }
 
-  void write_string_view(std::shared_ptr<Types::Value>& attr) {
+  void write_string_view(const std::unique_ptr<Types::Value>& attr) {
     Types::StringValue* val_ptr = dynamic_cast<Types::StringValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -154,7 +153,7 @@ class EventManager {
     memcpy(chars, &val_ptr->val[0], val_ptr->val.size());
   }
 
-  void write_date(std::shared_ptr<Types::Value>& attr) {
+  void write_date(const std::unique_ptr<Types::Value>& attr) {
     Types::DateValue* val_ptr = dynamic_cast<Types::DateValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(

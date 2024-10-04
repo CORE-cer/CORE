@@ -43,8 +43,6 @@ class CompareWithConstant : public PhysicalPredicate {
     ZoneScopedN("CompareWithConstant::eval()");
     uint64_t* pos = tuple[pos_to_compare];
     RingTupleQueue::Value<ValueType> attribute_val(pos);
-    std::cout << "Position to compare: " << pos_to_compare << std::endl;
-    std::cout << "Attribute value: " << attribute_val.get() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS)
       return attribute_val.get() == constant_val;
     else if constexpr (Comp == ComparisonType::GREATER)

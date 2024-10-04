@@ -66,10 +66,6 @@ class CompareWithAttribute : public PhysicalPredicate {
     uint64_t* pos2 = tuple[second_pos];
     RingTupleQueue::Value<LeftValueType> first_val(pos1);
     RingTupleQueue::Value<RightValueType> second_val(pos2);
-    std::cout << "Position to compare: " << first_pos << std::endl;
-    std::cout << "first Attribute value: " << first_val.get() << std::endl;
-    std::cout << "Position to compare: " << second_pos << std::endl;
-    std::cout << "second Attribute value: " << second_val.get() << std::endl;
     if constexpr (!std::is_same_v<LeftValueType, RightValueType>
                   && (std::is_same_v<LeftValueType, std::string_view>
                       || std::is_same_v<RightValueType, std::string_view>)) {

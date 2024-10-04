@@ -4,6 +4,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <iostream>
 #include <list>
 #include <mutex>
 #include <utility>
@@ -14,6 +15,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -35,6 +37,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
+    std::lock_guard<std::mutex> lock2(this->events_lock);
     tuples.insert(std::lower_bound(tuples.begin(),
                                    tuples.end(),
                                    tuple.data_nanoseconds(),
@@ -90,6 +93,12 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
       const RingTupleQueue::Tuple& tuple = *iter;
       this->tuple_send_queue.push_back(tuple);
       iter = tuples.erase(iter);
+    }
+
+    for (auto iter = events.begin(); iter != events.end();) {
+      Types::EventWrapper event = std::move(*iter);
+      this->event_send_queue.push(std::move(event));
+      iter = events.erase(iter);
     }
   }
 

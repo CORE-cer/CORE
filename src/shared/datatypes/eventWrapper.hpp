@@ -27,17 +27,18 @@ class EventWrapper {
   std::chrono::time_point<ClockType> received_time;
 
  public:
-  EventWrapper(std::shared_ptr<const Event>& event) : event(event) { set_times(); }
-
-  EventWrapper(std::shared_ptr<const Event>&& event) : event(std::move(event)) {
-    set_times();
-  }
+  EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
 
   // Add move
-  EventWrapper(EventWrapper&& other) : event(std::move(other.event)) {}
+  EventWrapper(EventWrapper&& other)
+      : event(std::move(other.event)),
+        primary_time(other.primary_time),
+        received_time(other.received_time) {}
 
   EventWrapper& operator=(EventWrapper&& other) {
     event = std::move(other.event);
+    primary_time = other.primary_time;
+    received_time = other.received_time;
     return *this;
   }
 
@@ -56,7 +57,7 @@ class EventWrapper {
 
   Types::IntValue get_primary_time() const { return primary_time; }
 
-  EventWrapper clone() const { return EventWrapper(std::make_shared<Event>(*event)); }
+  EventWrapper clone() const { return EventWrapper(event); }
 
  private:
   void set_times() {

@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <tracy/Tracy.hpp>
@@ -34,22 +33,16 @@ struct PredicateEvaluator {
     mpz_class out_tuple_event = 0;
     mpz_class one = 1;
     for (size_t i = 0; i < predicates.size(); i++) {
-      std::cout << "tuple " << i << std::endl;
-      std::cout << "Predicate: " << predicates[i]->to_string() << std::endl;
       if ((*predicates[i])(tuple)) {
         out_tuple_tuple |= one << i;
       }
     }
     for (size_t i = 0; i < predicates.size(); i++) {
-      std::cout << "event " << i << std::endl;
-      std::cout << "Predicate: " << predicates[i]->to_string() << std::endl;
       if ((*predicates[i])(event)) {
         out_tuple_event |= one << i;
       }
     }
     if (out_tuple_tuple != out_tuple_event) {
-      std::cout << "Tuple: " << out_tuple_tuple.get_str(2) << std::endl;
-      std::cout << "Event: " << out_tuple_event.get_str(2) << std::endl;
       assert(false && "Tuple and event do not agree on the predicates");
     }
     return out_tuple_event;
