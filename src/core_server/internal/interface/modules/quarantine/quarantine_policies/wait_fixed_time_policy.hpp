@@ -4,7 +4,6 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <utility>
