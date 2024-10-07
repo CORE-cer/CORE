@@ -66,8 +66,8 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64))}
-    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1"}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64)), "profiling": ["on", "off"]}
+    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1", "profiling": "off"}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
@@ -129,6 +129,8 @@ class CORE(ConanFile):
             tc.cache_variables["THREAD_SANITIZER"] = False
 
         tc.cache_variables["LOGGING"] = self.options.logging
+        tc.cache_variables["PROFILING"] = self.options.profiling == "on"
+        print(tc.cache_variables)
         tc.generate()
 
     def build(self):

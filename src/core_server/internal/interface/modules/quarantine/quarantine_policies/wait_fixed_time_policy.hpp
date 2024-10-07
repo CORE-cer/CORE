@@ -59,6 +59,18 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     std::lock_guard<std::mutex> lock(tuples_lock);
     std::lock_guard<std::mutex> lock2(this->events_lock);
 
+    for (auto iter = events.begin(); iter != events.end();) {
+      const Types::EventWrapper& event = *iter;
+      auto duration = now - event.get_received_time();
+      if (duration > time_to_wait) {
+        this->event_send_queue.push(std::move(*iter));
+        iter = events.erase(iter);
+      } else {
+        // If we couldn't remove the first event, stop trying
+        return;
+      }
+    }
+
     for (auto iter = tuples.begin(); iter != tuples.end();) {
       const RingTupleQueue::Tuple& tuple = *iter;
       auto duration = now - tuple.system_timestamp();
@@ -70,34 +82,21 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
         return;
       }
     }
-
-    for (auto iter = events.begin(); iter != events.end();) {
-      Types::EventWrapper event = std::move(*iter);
-      auto duration = now - event.get_received_time();
-      if (duration > time_to_wait) {
-        this->event_send_queue.push(std::move(event));
-        iter = events.erase(iter);
-      } else {
-        // If we couldn't remove the first event, stop trying
-        return;
-      }
-    }
   }
 
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     std::lock_guard<std::mutex> lock2(this->events_lock);
+    for (auto iter = events.begin(); iter != events.end();) {
+      Types::EventWrapper event = std::move(*iter);
+      this->event_send_queue.push(std::move(event));
+      iter = events.erase(iter);
+    }
 
     for (auto iter = tuples.begin(); iter != tuples.end();) {
       const RingTupleQueue::Tuple& tuple = *iter;
       this->tuple_send_queue.push_back(tuple);
       iter = tuples.erase(iter);
-    }
-
-    for (auto iter = events.begin(); iter != events.end();) {
-      Types::EventWrapper event = std::move(*iter);
-      this->event_send_queue.push(std::move(event));
-      iter = events.erase(iter);
     }
   }
 
