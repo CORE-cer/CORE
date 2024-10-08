@@ -79,6 +79,8 @@ class PartitionByQuery
           event_lock,
           event_queue) {}
 
+  ~PartitionByQuery() { this->stop(); }
+
  private:
   void create_query(Internal::CEQL::Query&& query) {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(

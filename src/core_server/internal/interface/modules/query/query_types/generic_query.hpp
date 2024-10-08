@@ -70,11 +70,23 @@ class GenericQuery {
     start();
   }
 
-  virtual ~GenericQuery() { stop(); };
+  virtual ~GenericQuery() {};
 
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
   ResultHandlerT& get_result_handler_reference() const { return *result_handler; }
+
+ protected:
+  void stop() {
+    try {
+      ZMQMessageSender sender(receiver_address, receiver.get_context());
+      stop_condition = true;
+      sender.send("STOP");
+      worker_thread.join();
+    } catch (std::exception& e) {
+      std::cout << "Exception: " << e.what() << std::endl;
+    }
+  }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -109,17 +121,6 @@ class GenericQuery {
     Types::EventWrapper event = std::move(event_send_queue.front());
     event_send_queue.pop();
     return event;
-  }
-
-  void stop() {
-    try {
-      ZMQMessageSender sender(receiver_address, receiver.get_context());
-      stop_condition = true;
-      sender.send("STOP");
-      worker_thread.join();
-    } catch (std::exception& e) {
-      std::cout << "Exception: " << e.what() << std::endl;
-    }
   }
 
   std::optional<tECS::Enumerator>

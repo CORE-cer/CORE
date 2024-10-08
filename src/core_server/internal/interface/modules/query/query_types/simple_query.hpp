@@ -42,6 +42,8 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                                   event_lock,
                                                                   event_queue) {}
 
+  ~SimpleQuery() { this->stop(); }
+
  private:
   void create_query(Internal::CEQL::Query&& query) {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
