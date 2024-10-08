@@ -2,9 +2,10 @@
 
 #include <set>
 #include <string>
+#include <tracy/Tracy.hpp>
 
-#include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
-#include "shared/logging/setup.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
+
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
@@ -20,6 +21,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/event_manager.hpp"
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
@@ -31,6 +33,7 @@
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
+#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Interface {
 
@@ -92,8 +95,19 @@ class Backend {
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {
-    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(event);
-    quarantine_manager.send_tuple_to_queries(stream_id, tuple);
+    send_event_to_queries(stream_id, {std::make_shared<Types::Event>(event)});
+  }
+
+  void send_event_to_queries(Types::StreamTypeId stream_id,
+                             const Types::EventWrapper&& event) {
+    ZoneScopedN("Backend::send_event_to_queries");
+    LOG_L3_BACKTRACE(
+      "Received event with id {} from stream with id {} in "
+      "Backend::send_event_to_queries",
+      event.get_unique_event_type_id(),
+      stream_id);
+    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(std::move(event.clone()));
+    quarantine_manager.send_tuple_to_queries(stream_id, tuple, std::move(event));
   }
 
   void set_quarantine_policy(std::set<std::string>&& stream_names,

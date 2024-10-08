@@ -7,6 +7,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -33,8 +34,18 @@ class CheckEventNamePredicate : public PhysicalPredicate {
     return tuple_event_name_type_id == event_name_type_id;
   }
 
+  bool eval(Types::EventWrapper& event) override {
+    Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
+
+    Types::EventNameTypeId
+      tuple_event_name_type_id = query_catalog.event_name_id_from_unique_event_id(
+        unique_event_id);
+
+    return tuple_event_name_type_id == event_name_type_id;
+  }
+
   std::string to_string() const override {
-    std::string out = "IS ";
+    std::string out = "CheckEventNamePredicate ";
     for (auto id : admissible_event_types) {
       out += std::to_string(id) + " ";
     }

@@ -18,6 +18,7 @@
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -31,32 +32,32 @@ class EventManager {
   EventManager(Catalog& catalog, RingTupleQueue::Queue& queue)
       : catalog(catalog), queue(queue) {}
 
-  RingTupleQueue::Tuple event_to_tuple(const Types::Event& event) {
+  RingTupleQueue::Tuple event_to_tuple(const Types::EventWrapper&& event) {
     ZoneScopedN("Backend::event_to_tuple");
-    if (event.event_type_id > catalog.number_of_events()) {
+    const Types::Event& event_ref = *(event.event);
+    if (event_ref.event_type_id > catalog.number_of_events()) {
       throw std::runtime_error("Provided event type id is not valid.");
     }
-    Types::EventInfo event_info = catalog.get_event_info(event.event_type_id);
+    Types::EventInfo event_info = catalog.get_event_info(event_ref.event_type_id);
     std::vector<Types::AttributeInfo> attr_infos = event_info.attributes_info;
-    if (attr_infos.size() != event.attributes.size()) {
+    if (attr_infos.size() != event_ref.attributes.size()) {
       throw std::runtime_error("Event had an incorrect number of attributes");
     }
 
     uint64_t* data;
 
-    if (event.primary_time.has_value()) {
-      int64_t primary_time = event.primary_time.value()->val;
+    if (event_ref.primary_time.has_value()) {
+      int64_t primary_time = event_ref.primary_time.value().val;
       std::chrono::system_clock::time_point primary_time_tp{
         std::chrono::nanoseconds(primary_time)};
-      data = queue.start_tuple(event.event_type_id, primary_time_tp);
+      data = queue.start_tuple(event_ref.event_type_id, primary_time_tp);
     } else {
-      data = queue.start_tuple(event.event_type_id);
+      data = queue.start_tuple(event_ref.event_type_id);
     }
 
     for (size_t i = 0; i < attr_infos.size(); i++) {
       auto& attr_info = attr_infos[i];
-      // TODO: Why is this a shared_ptr?
-      std::shared_ptr<Types::Value> attr = event.attributes[i];
+      const std::unique_ptr<Types::Value>& attr = event_ref.attributes[i];
       switch (attr_info.value_type) {
         case Types::INT64:
         case Types::PRIMARY_TIME:
@@ -111,7 +112,7 @@ class EventManager {
   //   }
   // }
 
-  void write_int(std::shared_ptr<Types::Value>& attr) {
+  void write_int(const std::unique_ptr<Types::Value>& attr) {
     Types::IntValue* val_ptr = dynamic_cast<Types::IntValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -121,7 +122,7 @@ class EventManager {
     *integer_ptr = val_ptr->val;
   }
 
-  void write_double(std::shared_ptr<Types::Value>& attr) {
+  void write_double(const std::unique_ptr<Types::Value>& attr) {
     Types::DoubleValue* val_ptr = dynamic_cast<Types::DoubleValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -132,7 +133,7 @@ class EventManager {
     *double_ptr = val_ptr->val;
   }
 
-  void write_bool(std::shared_ptr<Types::Value>& attr) {
+  void write_bool(const std::unique_ptr<Types::Value>& attr) {
     Types::BoolValue* val_ptr = dynamic_cast<Types::BoolValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -142,7 +143,7 @@ class EventManager {
     *bool_ptr = val_ptr->val;
   }
 
-  void write_string_view(std::shared_ptr<Types::Value>& attr) {
+  void write_string_view(const std::unique_ptr<Types::Value>& attr) {
     Types::StringValue* val_ptr = dynamic_cast<Types::StringValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(
@@ -152,7 +153,7 @@ class EventManager {
     memcpy(chars, &val_ptr->val[0], val_ptr->val.size());
   }
 
-  void write_date(std::shared_ptr<Types::Value>& attr) {
+  void write_date(const std::unique_ptr<Types::Value>& attr) {
     Types::DateValue* val_ptr = dynamic_cast<Types::DateValue*>(attr.get());
     if (val_ptr == nullptr)
       throw std::runtime_error(

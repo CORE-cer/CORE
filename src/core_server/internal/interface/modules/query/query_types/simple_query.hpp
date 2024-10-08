@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <queue>
 #include <string>
 #include <utility>
 
@@ -17,6 +19,7 @@
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
@@ -29,12 +32,17 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   SimpleQuery(Internal::QueryCatalog query_catalog,
               RingTupleQueue::Queue& queue,
               std::string inproc_receiver_address,
-              std::unique_ptr<ResultHandlerT>&& result_handler)
+              std::unique_ptr<ResultHandlerT>&& result_handler,
+              std::mutex& event_lock,
+              std::queue<Types::EventWrapper>& event_queue)
       : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
                                                                   queue,
                                                                   inproc_receiver_address,
-                                                                  std::move(
-                                                                    result_handler)) {}
+                                                                  std::move(result_handler),
+                                                                  event_lock,
+                                                                  event_queue) {}
+
+  ~SimpleQuery() { this->stop(); }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -67,8 +75,9 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   this->queue);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    return evaluator->process_event(tuple);
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+    return evaluator->process_event(tuple, std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

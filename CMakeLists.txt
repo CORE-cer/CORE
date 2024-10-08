@@ -30,14 +30,12 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-  GIT_TAG master
+  GIT_TAG 075395620a504c0cdcaf9bab3d196db16a043de7
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
 
-set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)
-
-if (ENABLE_PROFILING)
+if (PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
   set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
   set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
@@ -78,7 +76,8 @@ add_library(core STATIC
             ${STREAMER_FILES})
 
 target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 quill::quill TracyClient)
-if (ENABLE_PROFILING)
+if (PROFILING)
+  message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
 endif()
 

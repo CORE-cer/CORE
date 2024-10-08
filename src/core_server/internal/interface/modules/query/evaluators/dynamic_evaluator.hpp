@@ -20,6 +20,7 @@
 #include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 
@@ -57,8 +58,9 @@ class DynamicEvaluator : public GenericEvaluator {
                        consumption_policy,
                        limit) {}
 
-  std::optional<tECS::Enumerator>
-  process_event(RingTupleQueue::Tuple tuple, size_t evaluator_idx) {
+  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple,
+                                                Types::EventWrapper&& event,
+                                                size_t evaluator_idx) {
     ZoneScopedN("Interface::DynamicEvaluator::process_event");
     uint64_t time = tuple_time(tuple);
 
@@ -73,8 +75,8 @@ class DynamicEvaluator : public GenericEvaluator {
       evaluators.push_back(std::move(evaluator));
     }
 
-    std::optional<tECS::Enumerator> enumerator = evaluators[evaluator_idx]->next(tuple,
-                                                                                 time);
+    std::optional<tECS::Enumerator> enumerator = evaluators[evaluator_idx]
+                                                   ->next(tuple, std::move(event), time);
     if (enumerator.has_value()
         && evaluator_args.consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
       for (const auto& evaluator : evaluators) {

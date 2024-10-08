@@ -8,6 +8,7 @@
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -33,8 +34,18 @@ class CheckStreamTypePredicate : public PhysicalPredicate {
     return tuple_stream_type_id == stream_type_id;
   }
 
+  bool eval(Types::EventWrapper& event) override {
+    Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
+
+    // If errors out, probably sent a tuple that is not in the from for this query
+    Types::StreamTypeId tuple_stream_type_id = query_catalog.stream_id_from_unique_event_id(
+      unique_event_id);
+
+    return tuple_stream_type_id == stream_type_id;
+  }
+
   std::string to_string() const override {
-    std::string out = "IS ";
+    std::string out = "CheckStreamTypePredicate ";
     for (auto id : admissible_event_types) {
       out += std::to_string(id) + " ";
     }

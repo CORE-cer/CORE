@@ -5,10 +5,12 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -26,6 +28,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
@@ -48,11 +51,15 @@ class BasePolicy {
 
  protected:
   std::vector<std::reference_wrapper<std::atomic<uint64_t*>>> last_received_tuple = {};
-  std::vector<uint64_t*> last_sent_tuple = {};
+  std::deque<std::atomic<uint64_t*>> last_sent_tuple = {};
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
   // Stores the tuples that are ready to be sent
   std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
+
+  // Events
+  std::mutex events_lock;
+  std::queue<Types::EventWrapper> event_send_queue = {};
 
  public:
   BasePolicy(Catalog& catalog,
@@ -60,9 +67,7 @@ class BasePolicy {
              std::atomic<Types::PortNumber>& next_available_inproc_port)
       : catalog(catalog),
         queue(queue),
-        next_available_inproc_port(next_available_inproc_port) {
-    start();
-  }
+        next_available_inproc_port(next_available_inproc_port) {}
 
   BasePolicy(const BasePolicy&) = delete;
   BasePolicy& operator=(const BasePolicy&) = delete;
@@ -91,7 +96,8 @@ class BasePolicy {
     }
   }
 
-  virtual void receive_tuple(RingTupleQueue::Tuple& tuple) = 0;
+  virtual void
+  receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) = 0;
 
  protected:
   virtual void try_add_tuples_to_send_queue() = 0;
@@ -114,7 +120,7 @@ class BasePolicy {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
-        last_sent_tuple[i] = tuple.get_data();
+        last_sent_tuple[i].store(tuple.get_data());
         sender.send(tuple.serialize_data());
       }
     }
@@ -124,14 +130,13 @@ class BasePolicy {
     stop_condition = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
     for (int i = 0; i < this->last_received_tuple.size(); i++) {
-      while (this->last_sent_tuple[i] != this->last_received_tuple[i].get().load()) {
+      while (this->last_sent_tuple[i].load() != this->last_received_tuple[i].get().load()) {
         std::this_thread::sleep_for(std::chrono::microseconds(50));
       }
     }
     worker_thread.join();
   }
 
- private:
   void start() {
     worker_thread = std::thread([&]() {
       ZoneScopedN("BasePolicy::start::worker_thread");  //NOLINT
@@ -145,6 +150,7 @@ class BasePolicy {
     });
   }
 
+ private:
   template <typename QueryDirectType, typename QueryBaseType>
   void initialize_query(Internal::CEQL::Query&& parsed_query,
                         std::unique_ptr<ResultHandlerT>&& result_handler) {
@@ -155,13 +161,15 @@ class BasePolicy {
     queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,
                                                            queue,
                                                            inproc_receiver_address,
-                                                           std::move(result_handler)));
+                                                           std::move(result_handler),
+                                                           events_lock,
+                                                           event_send_queue));
     QueryBaseType* query = static_cast<QueryBaseType*>(
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
     last_received_tuple.emplace_back(query->last_received_tuple);
-    last_sent_tuple.push_back(nullptr);
+    last_sent_tuple.emplace_back(nullptr);
 
     zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);

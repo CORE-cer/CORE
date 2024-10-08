@@ -17,6 +17,7 @@
 #include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 class SingleEvaluator : public GenericEvaluator {
@@ -40,11 +41,12 @@ class SingleEvaluator : public GenericEvaluator {
                   consumption_policy,
                   limit) {}
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
     ZoneScopedN("Interface::SingleEvaluator::process_event");
     uint64_t time = tuple_time(tuple);
 
-    return evaluator.next(tuple, time);
+    return evaluator.next(tuple, std::move(event), time);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

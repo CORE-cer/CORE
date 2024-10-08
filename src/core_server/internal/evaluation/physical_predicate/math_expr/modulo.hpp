@@ -7,6 +7,7 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -32,6 +33,17 @@ class Modulo : public MathExpr<Type> {
       throw std::runtime_error("Cannot eval a modulo on double types");
     } else {
       return left->eval(tuple) % right->eval(tuple);
+    }
+  }
+
+  Type eval(Types::EventWrapper& event) override {
+    if constexpr (!std::is_arithmetic<Type>::value) {
+      assert(false && "Modulo is only valid for arithmetic vals");
+      throw std::logic_error("Modulo is only valid for arithmetic vals");
+    } else if constexpr (std::is_same_v<Type, double>) {
+      throw std::runtime_error("Cannot eval a modulo on double types");
+    } else {
+      return left->eval(event) % right->eval(event);
     }
   }
 

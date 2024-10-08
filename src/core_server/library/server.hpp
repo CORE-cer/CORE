@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
@@ -50,8 +51,8 @@ class OfflineServer {
     Internal::Logging::enable_logging_rotating();
   }
 
-  void receive_stream(const Types::Stream& stream) {
-    stream_listener.receive_stream(stream);
+  void receive_stream(Types::Stream&& stream) {
+    stream_listener.receive_stream(std::move(stream));
   }
 };
 

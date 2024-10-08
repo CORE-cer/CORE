@@ -6,7 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <queue>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -27,6 +29,7 @@
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
@@ -65,12 +68,18 @@ class PartitionByQuery
   PartitionByQuery(Internal::QueryCatalog query_catalog,
                    RingTupleQueue::Queue& queue,
                    std::string inproc_receiver_address,
-                   std::unique_ptr<ResultHandlerT>&& result_handler)
+                   std::unique_ptr<ResultHandlerT>&& result_handler,
+                   std::mutex& event_lock,
+                   std::queue<Types::EventWrapper>& event_queue)
       : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
           query_catalog,
           queue,
           inproc_receiver_address,
-          std::move(result_handler)) {}
+          std::move(result_handler),
+          event_lock,
+          event_queue) {}
+
+  ~PartitionByQuery() { this->stop(); }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -104,7 +113,8 @@ class PartitionByQuery
                                                    this->queue);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
     if (auto it = event_id_to_tuple_idx.find(tuple.id());
         it != event_id_to_tuple_idx.end()) [[likely]] {
@@ -119,7 +129,7 @@ class PartitionByQuery
 
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
       tuple, tuple_indexes->value());
-    return evaluator->process_event(tuple, evaluator_idx);
+    return evaluator->process_event(tuple, std::move(event), evaluator_idx);
   }
 
   std::optional<std::vector<uint64_t>>* find_tuple_indexes(RingTupleQueue::Tuple& tuple) {

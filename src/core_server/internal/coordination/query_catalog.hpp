@@ -415,7 +415,7 @@ class QueryCatalog {
       values.push_back(std::move(val));
     }
     std::chrono::system_clock::time_point primary_time_tp = tuple.data_timestamp();
-    std::shared_ptr<Types::IntValue> primary_time = std::make_shared<Types::IntValue>(
+    Types::IntValue primary_time = Types::IntValue(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         primary_time_tp.time_since_epoch())
         .count());

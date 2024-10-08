@@ -7,6 +7,7 @@
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -34,6 +35,11 @@ class Literal : public MathExpr<Type> {
   }
 
   Type eval(RingTupleQueue::Tuple& tuple) override {
+    ZoneScopedN("Literal::eval()");
+    return val;
+  }
+
+  Type eval(Types::EventWrapper& event) override {
     ZoneScopedN("Literal::eval()");
     return val;
   }

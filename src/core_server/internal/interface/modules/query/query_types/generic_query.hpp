@@ -7,7 +7,10 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <queue>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -20,6 +23,7 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
@@ -38,6 +42,10 @@ class GenericQuery {
   std::atomic<bool> stop_condition = false;
   std::thread worker_thread;
 
+  // Events
+  std::mutex& event_lock;
+  std::queue<Types::EventWrapper>& event_send_queue;
+
  public:
   std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
@@ -46,23 +54,39 @@ class GenericQuery {
   GenericQuery(Internal::QueryCatalog query_catalog,
                RingTupleQueue::Queue& queue,
                std::string inproc_receiver_address,
-               std::unique_ptr<ResultHandlerT>&& result_handler)
+               std::unique_ptr<ResultHandlerT>&& result_handler,
+               std::mutex& event_lock,
+               std::queue<Types::EventWrapper>& event_queue)
       : query_catalog(query_catalog),
         queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
-        result_handler(std::move(result_handler)) {}
+        result_handler(std::move(result_handler)),
+        event_lock(event_lock),
+        event_send_queue(event_queue) {}
 
   void init(Internal::CEQL::Query&& query) {
     create_query(std::move(query));
     start();
   }
 
-  virtual ~GenericQuery() { stop(); };
+  virtual ~GenericQuery() {};
 
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
   ResultHandlerT& get_result_handler_reference() const { return *result_handler; }
+
+ protected:
+  void stop() {
+    try {
+      ZMQMessageSender sender(receiver_address, receiver.get_context());
+      stop_condition = true;
+      sender.send("STOP");
+      worker_thread.join();
+    } catch (std::exception& e) {
+      std::cout << "Exception: " << e.what() << std::endl;
+    }
+  }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -80,26 +104,28 @@ class GenericQuery {
         if (!tuple.has_value()) {
           continue;
         }
+        Types::EventWrapper event = get_event();
         last_received_tuple.store(tuple->get_data());
-        std::optional<tECS::Enumerator> output = process_event(tuple.value());
+        std::optional<tECS::Enumerator> output = process_event(tuple.value(),
+                                                               std::move(event));
         (*result_handler)(std::move(output));
       }
     });
   }
 
-  void stop() {
-    try {
-      ZMQMessageSender sender(receiver_address, receiver.get_context());
-      stop_condition = true;
-      sender.send("STOP");
-      worker_thread.join();
-    } catch (std::exception& e) {
-      std::cout << "Exception: " << e.what() << std::endl;
+  Types::EventWrapper get_event() {
+    std::lock_guard<std::mutex> lock(event_lock);
+    if (event_send_queue.empty()) {
+      throw std::runtime_error("Event queue is empty when receiving tuple");
     }
+    Types::EventWrapper event = std::move(event_send_queue.front());
+    event_send_queue.pop();
+    return event;
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    return static_cast<Derived*>(this)->process_event(tuple);
+  std::optional<tECS::Enumerator>
+  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+    return static_cast<Derived*>(this)->process_event(tuple, std::move(event));
   }
 
   std::optional<RingTupleQueue::Tuple>

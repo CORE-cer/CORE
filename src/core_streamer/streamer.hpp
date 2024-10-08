@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -24,8 +26,8 @@ class Streamer {
     sender.send(StreamSerializer::serialize(stream));
   }
 
-  void send_stream(Types::StreamTypeId stream_id, Types::Event& event) {
-    send_stream({stream_id, {event}});
+  void send_stream(Types::StreamTypeId stream_id, std::shared_ptr<Types::Event>&& event) {
+    send_stream({stream_id, {std::move(event)}});
   }
 
   // TODO: Send a stream through a CSV file and an AttributesInfo vector.
