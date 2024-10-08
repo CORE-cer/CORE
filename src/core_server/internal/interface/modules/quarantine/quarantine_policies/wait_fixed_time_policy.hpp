@@ -30,7 +30,9 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   WaitFixedTimePolicy(Catalog& catalog,
                       RingTupleQueue::Queue& queue,
                       std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : BasePolicy<ResultHandlerT>(catalog, queue, next_available_inproc_port) {}
+      : BasePolicy<ResultHandlerT>(catalog, queue, next_available_inproc_port) {
+    this->start();
+  }
 
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 

@@ -67,9 +67,7 @@ class BasePolicy {
              std::atomic<Types::PortNumber>& next_available_inproc_port)
       : catalog(catalog),
         queue(queue),
-        next_available_inproc_port(next_available_inproc_port) {
-    start();
-  }
+        next_available_inproc_port(next_available_inproc_port) {}
 
   BasePolicy(const BasePolicy&) = delete;
   BasePolicy& operator=(const BasePolicy&) = delete;
@@ -139,7 +137,6 @@ class BasePolicy {
     worker_thread.join();
   }
 
- private:
   void start() {
     worker_thread = std::thread([&]() {
       ZoneScopedN("BasePolicy::start::worker_thread");  //NOLINT
@@ -153,6 +150,7 @@ class BasePolicy {
     });
   }
 
+ private:
   template <typename QueryDirectType, typename QueryBaseType>
   void initialize_query(Internal::CEQL::Query&& parsed_query,
                         std::unique_ptr<ResultHandlerT>&& result_handler) {
