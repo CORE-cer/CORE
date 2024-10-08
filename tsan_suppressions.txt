@@ -1,1 +1,2 @@
 race:zmq
+race:third_party_tests
