@@ -3,9 +3,11 @@
 
 #include <cassert>
 #include <cwchar>
-#include <string>
+#include <optional>
+#include <utility>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::tECS {
 class Node {
@@ -31,6 +33,8 @@ class Node {
     RingTupleQueue::Tuple tuple;
   };
 
+  std::optional<Types::EventWrapper> event;
+
   union {
     uint64_t ref_count{0};
     Node* next_free_node;
@@ -49,15 +53,17 @@ class Node {
    */
 
   /* BOTTOM Node */
-  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    reset(tuple, timestamp);  //Se llama a reset para evitar repetir codigo
+  Node(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event, uint64_t timestamp) {
+    reset(tuple, std::move(event), timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
   // TODO: Check if I really need a tuple.
 
-  void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  void
+  reset(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event, uint64_t timestamp) {
     left = nullptr;
     this->tuple = tuple;
+    this->event = std::move(event);
     this->timestamp = timestamp;
     this->node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
@@ -65,15 +71,24 @@ class Node {
   }
 
   /* OUTPUT Node */
-  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  Node(Node* node,
+       RingTupleQueue::Tuple tuple,
+       Types::EventWrapper&& event,
+       uint64_t timestamp) {
     assert(node != nullptr);
-    reset(node, tuple,
+    reset(node,
+          tuple,
+          std::move(event),
           timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
-  void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  void reset(Node* node,
+             RingTupleQueue::Tuple tuple,
+             Types::EventWrapper&& event,
+             uint64_t timestamp) {
     this->left = node;
     this->tuple = tuple;
+    this->event = std::move(event);
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);

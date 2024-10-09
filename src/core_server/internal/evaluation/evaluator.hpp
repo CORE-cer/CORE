@@ -131,9 +131,10 @@ class Evaluator {
     current_ordered_keys = {};
     final_states.clear();
     actual_time = current_time;
-    UnionList ul = tecs->new_ulist(tecs->new_bottom(tuple, current_time));
+    UnionList ul = tecs->new_ulist(
+      tecs->new_bottom(tuple, std::move(event.clone()), current_time));
     State* q0 = get_initial_state();
-    exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
+    exec_trans(tuple, event, q0, std::move(ul), predicates_satisfied, current_time);
 
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
@@ -143,6 +144,7 @@ class Evaluator {
       } else {
         remove_out_of_time_nodes_ul(actual_ul);
         exec_trans(tuple,
+                   event,
                    p,
                    std::move(actual_ul),
                    predicates_satisfied,
@@ -218,6 +220,7 @@ class Evaluator {
   }
 
   void exec_trans(RingTupleQueue::Tuple& tuple,
+                  Types::EventWrapper& event,
                   State* p,
                   UnionList&& ul,
                   mpz_class& t,
@@ -233,7 +236,7 @@ class Evaluator {
     assert(marked_state != nullptr && unmarked_state != nullptr);
     bool recycle_ulist = false;
     if (!marked_state->is_empty) {
-      Node* new_node = tecs->new_extend(tecs->merge(ul), tuple, current_time);
+      Node* new_node = tecs->new_extend(tecs->merge(ul), tuple, event, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs->insert(
           std::move(current_union_list_map[marked_state]), new_node);
