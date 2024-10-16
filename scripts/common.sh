@@ -51,7 +51,7 @@ function build() {
 
 # Default values
 BUILD_TYPE="Debug"
-CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
+CONAN_PROFILE="conan_profiles/x86_64-linux-clang"
 SANITIZER=none
 LOGGING=info
 J="all-1"
