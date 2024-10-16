@@ -33,6 +33,7 @@
 #include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal {
@@ -252,10 +253,8 @@ class QueryCatalog {
   Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator) const {
     ZoneScopedN("Catalog::convert_enumerator");
     std::vector<Types::ComplexEvent> out;
-    std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
     for (auto info : enumerator) {
-      out.push_back(
-        tuples_to_complex_event(info.start, info.end, info.event_tuples, event_memory));
+      out.push_back(event_wrappers_to_complex_event(info.start, info.end, info.eventss));
     }
     return {std::move(out)};
   }
@@ -358,6 +357,19 @@ class QueryCatalog {
                                  + " not found in catalog unique_event_names - " + out);
       }
     }
+  }
+
+  Types::ComplexEvent
+  event_wrappers_to_complex_event(uint64_t start,
+                                  uint64_t end,
+                                  std::vector<Types::EventWrapper>& events) const {
+    ZoneScopedN("Catalog::event_wrappers_to_complex_event");
+    std::vector<Types::Event> converted_events;
+    for (auto& event : events) {
+      assert(event.get_unique_event_type_id() < events_info.size());
+      converted_events.emplace_back(event.get_event_reference());
+    }
+    return {start, end, std::move(converted_events)};
   }
 
   Types::ComplexEvent tuples_to_complex_event(

@@ -10,8 +10,8 @@
 
 #include "complex_event.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "node.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "tecs.hpp"
 
 namespace CORE::Internal::tECS {
@@ -44,10 +44,10 @@ class Enumerator {
     }
   };
 
-  std::stack<std::pair<Node*, std::vector<RingTupleQueue::Tuple>>> stack;
+  std::stack<std::pair<Node*, std::vector<Types::EventWrapper>>> stack;
   uint64_t original_pos;
   uint64_t last_time_to_consider;
-  std::pair<std::pair<uint64_t, uint64_t>, std::vector<RingTupleQueue::Tuple>> next_value;
+  std::pair<std::pair<uint64_t, uint64_t>, std::vector<Types::EventWrapper>> next_value;
   Node* original_node{nullptr};
   std::shared_ptr<tECS> tecs{nullptr};
   TimeReservator* time_reservator{nullptr};
@@ -72,7 +72,7 @@ class Enumerator {
     time_reserved_node = time_reservator->reserve(last_time_to_consider);
     assert(node != nullptr);
     if (node->max() >= last_time_to_consider) {
-      stack.push({node, {}});
+      stack.emplace(node, std::vector<Types::EventWrapper>());
     }
   }
 
@@ -139,7 +139,7 @@ class Enumerator {
   void reset() {
     stack = {};
     if (original_node != nullptr && original_node->max() >= last_time_to_consider) {
-      stack.push({original_node, {}});
+      stack.emplace(original_node, std::vector<Types::EventWrapper>());
     }
   };
 
@@ -148,18 +148,19 @@ class Enumerator {
     ZoneScopedN("Internal::Enumerator::has_next");
     while (!stack.empty()) {
       Node* current_node = stack.top().first;
-      std::vector<RingTupleQueue::Tuple> tuples = stack.top().second;
+      std::vector<Types::EventWrapper> events = std::move(stack.top().second);
       stack.pop();
       while (true) {
         if (current_node->is_bottom()) {
-          next_value = {{current_node->pos(), original_pos}, tuples};
+          next_value = std::make_pair(std::make_pair(current_node->pos(), original_pos),
+                                      std::move(events));
           return true;
         } else if (current_node->is_output()) {
-          tuples.push_back(current_node->get_tuple());
+          events.push_back(current_node->get_event_clone());
           current_node = current_node->next();
         } else if (current_node->is_union()) {
           if (current_node->get_right()->max() >= last_time_to_consider) {
-            stack.push({current_node->get_right(), tuples});
+            stack.push({current_node->get_right(), std::move(events)});
           }
           current_node = current_node->get_left();
         }
@@ -172,7 +173,7 @@ class Enumerator {
   ComplexEvent next() {
     ZoneScopedN("Internal::Enumerator::next");
     std::reverse(next_value.second.begin(), next_value.second.end());
-    return ComplexEvent(next_value);
+    return ComplexEvent(std::move(next_value));
   }
 
   inline void cleanup() {

@@ -59,6 +59,8 @@ class EventWrapper {
 
   EventWrapper clone() const { return EventWrapper(event); }
 
+  const Event& get_event_reference() const { return *event; }
+
  private:
   void set_times() {
     std::chrono::time_point<ClockType> system_time = ClockType::now();

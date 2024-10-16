@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cwchar>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 #include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
@@ -140,6 +141,15 @@ class Node {
   RingTupleQueue::Tuple get_tuple() const {
     assert(!is_union());
     return tuple;
+  }
+
+  Types::EventWrapper get_event_clone() const {
+    assert(!is_union());
+    if (event.has_value()) {
+      return event.value().clone();
+    } else {
+      throw std::runtime_error("Event is not set");
+    }
   }
 
   Node* next() const {
