@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <stack>
 #include <tracy/Tracy.hpp>
@@ -160,7 +161,12 @@ class Enumerator {
           current_node = current_node->next();
         } else if (current_node->is_union()) {
           if (current_node->get_right()->max() >= last_time_to_consider) {
-            stack.push({current_node->get_right(), std::move(events)});
+            std::vector<Types::EventWrapper> events_copy = {};
+            std::transform(events.begin(),
+                           events.end(),
+                           std::back_inserter(events_copy),
+                           [](auto& event) { return event.clone(); });
+            stack.push({current_node->get_right(), std::move(events_copy)});
           }
           current_node = current_node->get_left();
         }
