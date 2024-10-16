@@ -12,7 +12,6 @@ namespace CORE::Internal::tECS {
 
 class EventEvent {
  public:
-
   std::string to_string(const Types::EventWrapper& event) const {
     ZoneScopedN("Internal::Event::to_string");
     std::string out = "(id: " + std::to_string(event.get_unique_event_type_id())
