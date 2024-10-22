@@ -155,6 +155,7 @@ endif()
 add_executable(online_polkura_example src/targets/online/polkura_example/polkura.cpp)
 add_executable(online_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
 add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
+add_executable(online_coinbase_example src/targets/online/coinbase_example/coinbase.cpp)
 # add_executable(online_client src/targets/online/client.cpp)
 # add_executable(online_server src/targets/online/server.cpp)
 
@@ -163,6 +164,7 @@ add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.
 target_link_libraries(online_polkura_example PRIVATE core)
 target_link_libraries(online_stocks_example PRIVATE core)
 target_link_libraries(online_taxi_example PRIVATE core)
+target_link_libraries(online_coinbase_example PRIVATE core)
 # target_link_libraries(online_client PRIVATE core)
 # target_link_libraries(online_server PRIVATE core)
 

@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/functional.h> 
 #include <iostream>
 
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
@@ -18,16 +19,17 @@ namespace CORE{
         std::cout << "Hello World" << std::endl;
     }
 
-    void subscribe_to_queries(Client& client,
+    std::vector<std::unique_ptr<PrinterPython>> subscribe_to_queries(Client& client,
                           Types::PortNumber initial_port,
                           Types::PortNumber final_port) {
-    std::vector<std::unique_ptr<Printer>> handlers;
+    std::vector<std::unique_ptr<PrinterPython>> handlers;
     for (size_t port = initial_port; port < final_port; port++) {
         std::cout << "Subscribing to port: " << port << std::endl;
-        handlers.emplace_back(std::make_unique<Printer>());  // Store one enumerator.
-        client.subscribe_to_complex_event<Printer>(handlers.back().get(), port);
+        handlers.emplace_back(std::make_unique<PrinterPython>());  // Store one enumerator.
+        client.subscribe_to_complex_event<PrinterPython>(handlers.back().get(), port);
     }
     std::cout << "Created handlers" << std::endl;
+    return handlers;
     }
 
     PYBIND11_MODULE(_pycore, m) {
@@ -76,6 +78,11 @@ namespace CORE{
             .def_readonly("name", &Types::EventInfoParsed::name)
             .def_readonly("attributes", &Types::EventInfoParsed::attributes_info);
 
+        py::class_<Types::EventInfo>(m, "PyEventInfo")
+            .def(py::init<uint64_t, std::string, std::vector<Types::AttributeInfo>>())
+            .def_readonly("id", &Types::EventInfo::id)
+            .def_readonly("name", &Types::EventInfo::name);
+
         py::class_<Types::Stream>(m, "PyStream")
             .def(py::init<uint64_t, std::vector<Types::Event>&&>())
             .def_readonly("id", &Types::Stream::id)
@@ -85,6 +92,10 @@ namespace CORE{
             .def(py::init<std::string, std::vector<Types::EventInfoParsed>>())
             .def_readonly("name", &Types::StreamInfoParsed::name)
             .def_readonly("events_info", &Types::StreamInfoParsed::events_info);
+
+        py::class_<Types::StreamInfo>(m, "PyStreamInfo")
+            .def(py::init<uint64_t, std::string, std::vector<Types::EventInfo>&&>())
+            .def_readonly("events_info", &Types::StreamInfo::events_info);
             
         py::class_<Streamer>(m, "PyStreamer")
             .def(py::init<std::string, uint16_t>())
@@ -96,6 +107,24 @@ namespace CORE{
             .def("declare_stream", py::overload_cast<Types::StreamInfoParsed>(&Client::declare_stream))
             .def("add_query", py::overload_cast<std::string>(&Client::add_query));
 
-        py::class_<Types::StreamInfo>(m, "PyStreamInfo");
+        py::class_<Types::ComplexEvent>(m, "PyComplexEvent")
+            .def("to_string", &Types::ComplexEvent::to_string)
+            .def_readonly("start", &Types::ComplexEvent::start)
+            .def_readonly("end", &Types::ComplexEvent::end)
+            .def_readonly("start", &Types::ComplexEvent::start)
+            .def_readonly("events", &Types::ComplexEvent::events);
+
+        py::class_<PrinterPython, std::unique_ptr<PrinterPython>>(m, "PyPrinter")
+            .def_static("set_event_handler", [](std::function<void(const Types::Enumerator&)> handler) {
+                PrinterPython::event_handler = handler;
+            });
+
+        py::class_<CORE::Types::Enumerator>(m, "PyEnumerator")
+            .def_readonly("complex_events", &CORE::Types::Enumerator::complex_events)
+            .def("__iter__", [](CORE::Types::Enumerator &self) {
+                return py::make_iterator(self.complex_events.begin(), self.complex_events.end());
+            }, py::keep_alive<0, 1>());
+
+        // py::class_<Types::StreamInfo>(m, "PyStreamInfo");
     }
 }
