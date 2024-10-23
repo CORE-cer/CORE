@@ -59,8 +59,7 @@ class Node {
 
   // TODO: Check if I really need a tuple.
 
-  void
-  reset(Types::EventWrapper&& event, uint64_t timestamp) {
+  void reset(Types::EventWrapper&& event, uint64_t timestamp) {
     left = nullptr;
     this->event = std::move(event);
     this->timestamp = timestamp;
@@ -70,18 +69,14 @@ class Node {
   }
 
   /* OUTPUT Node */
-  Node(Node* node,
-       Types::EventWrapper&& event,
-       uint64_t timestamp) {
+  Node(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
     assert(node != nullptr);
     reset(node,
           std::move(event),
           timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
-  void reset(Node* node,
-             Types::EventWrapper&& event,
-             uint64_t timestamp) {
+  void reset(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
     this->left = node;
     this->event = std::move(event);
     this->timestamp = timestamp;
