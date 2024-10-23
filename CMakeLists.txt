@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
 include(FetchContent)
 
@@ -24,6 +25,10 @@ find_package(quill REQUIRED)
 
 # Profiler
 message("Fetching Tracy")
+
+# Output what compiler we are using
+message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
 Set(FETCHCONTENT_QUIET FALSE)
 
@@ -89,7 +94,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Qunused-arguments)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
@@ -99,8 +104,14 @@ endif()
 
 if (THREAD_SANITIZER)
   message("Thread sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
-  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+endif()
+
+if (MEMORY_SANITIZER)
+  message("Memory sanitizer enabled")
+  target_compile_options(core PUBLIC -fsanitize=memory -fno-omit-frame-pointer -fsanitize=undefined)
+  target_link_options(core PUBLIC -fsanitize=memory -fno-omit-frame-pointer -fsanitize=undefined)
 endif()
 
 if (LOGGING MATCHES "critical")

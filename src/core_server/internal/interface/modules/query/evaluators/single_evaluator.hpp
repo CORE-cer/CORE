@@ -46,7 +46,7 @@ class SingleEvaluator : public GenericEvaluator {
     ZoneScopedN("Interface::SingleEvaluator::process_event");
     uint64_t time = tuple_time(tuple);
 
-    return evaluator.next(tuple, std::move(event), time);
+    return evaluator.next(std::move(event), time);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

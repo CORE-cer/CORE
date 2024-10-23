@@ -1,2 +1,5 @@
 race:zmq
 race:third_party_tests
+race:quill
+race:fopen64
+race:closedir
