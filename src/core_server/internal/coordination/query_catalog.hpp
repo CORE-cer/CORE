@@ -367,6 +367,7 @@ class QueryCatalog {
     std::vector<Types::Event> converted_events;
     for (auto& event : events) {
       assert(event.get_unique_event_type_id() < events_info.size());
+      // TODO: use shared pointer instead of copying the event
       converted_events.emplace_back(event.get_event_reference());
     }
     return {start, end, std::move(converted_events)};
