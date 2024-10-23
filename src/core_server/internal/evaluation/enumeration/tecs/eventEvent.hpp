@@ -19,9 +19,9 @@ class EventEvent {
     const Types::Event& internal_event = event.get_event_reference();
 
     for (const auto& attributes : internal_event.attributes) {
-      attributes->to_string();
+      out += attributes->to_string();
+      out += " ";
     }
-    out += " ";
     return out + "])";
   }
 };
