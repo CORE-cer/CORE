@@ -1,11 +1,8 @@
 #pragma once
 
-#include <sys/types.h>
-
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-// #include <cstdint>
 #include <ctime>
 #include <memory>
 #include <optional>

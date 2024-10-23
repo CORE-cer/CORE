@@ -94,7 +94,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Qunused-arguments)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
