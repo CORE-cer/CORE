@@ -76,7 +76,7 @@ class DynamicEvaluator : public GenericEvaluator {
     }
 
     std::optional<tECS::Enumerator> enumerator = evaluators[evaluator_idx]
-                                                   ->next(tuple, std::move(event), time);
+                                                   ->next(std::move(event), time);
     if (enumerator.has_value()
         && evaluator_args.consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
       for (const auto& evaluator : evaluators) {

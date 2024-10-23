@@ -6,7 +6,6 @@
 #include <utility>
 #include <vector>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "node.hpp"
 #include "node_manager.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -55,10 +54,10 @@ class tECS {
    * The bottom node, also known as the terminal node, has no children and
    * tells us that we reached the end of an output
    */
-  [[nodiscard]] Node* new_bottom(RingTupleQueue::Tuple& tuple,
+  [[nodiscard]] Node* new_bottom(
                                  Types::EventWrapper&& event,
                                  uint64_t timestamp) {
-    auto out = node_manager.alloc(tuple, std::move(event), timestamp);
+    auto out = node_manager.alloc(std::move(event), timestamp);
     assert(out != nullptr);
     return out;
   }
@@ -69,10 +68,9 @@ class tECS {
    * referring to.
    */
   [[nodiscard]] Node* new_extend(Node* node,
-                                 RingTupleQueue::Tuple& tuple,
                                  Types::EventWrapper& event,
                                  uint64_t timestamp) {
-    return node_manager.alloc(node, tuple, std::move(event.clone()), timestamp);
+    return node_manager.alloc(node, std::move(event.clone()), timestamp);
   }
 
   /**
