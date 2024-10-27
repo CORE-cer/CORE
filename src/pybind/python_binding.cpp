@@ -8,6 +8,15 @@
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/value.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared.hpp"
+#include "shared/exceptions/parsing/event_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 #include "core_streamer/streamer.hpp"
 #include "core_client/client.hpp"
 
@@ -19,14 +28,14 @@ namespace CORE{
         std::cout << "Hello World" << std::endl;
     }
 
-    std::vector<std::unique_ptr<PrinterPython>> subscribe_to_queries(Client& client,
+    std::vector<std::unique_ptr<CallbackHandler>> subscribe_to_queries(Client& client,
                           Types::PortNumber initial_port,
                           Types::PortNumber final_port) {
-    std::vector<std::unique_ptr<PrinterPython>> handlers;
+    std::vector<std::unique_ptr<CallbackHandler>> handlers;
     for (size_t port = initial_port; port < final_port; port++) {
         std::cout << "Subscribing to port: " << port << std::endl;
-        handlers.emplace_back(std::make_unique<PrinterPython>());  // Store one enumerator.
-        client.subscribe_to_complex_event<PrinterPython>(handlers.back().get(), port);
+        handlers.emplace_back(std::make_unique<CallbackHandler>());  // Store one enumerator.
+        client.subscribe_to_complex_event<CallbackHandler>(handlers.back().get(), port);
     }
     std::cout << "Created handlers" << std::endl;
     return handlers;
@@ -114,9 +123,9 @@ namespace CORE{
             .def_readonly("start", &Types::ComplexEvent::start)
             .def_readonly("events", &Types::ComplexEvent::events);
 
-        py::class_<PrinterPython, std::unique_ptr<PrinterPython>>(m, "PyPrinter")
+        py::class_<CallbackHandler, std::unique_ptr<CallbackHandler>>(m, "PyCallbckHandler")
             .def_static("set_event_handler", [](std::function<void(const Types::Enumerator&)> handler) {
-                PrinterPython::event_handler = handler;
+                CallbackHandler::event_handler = handler;
             });
 
         py::class_<CORE::Types::Enumerator>(m, "PyEnumerator")
@@ -125,6 +134,5 @@ namespace CORE{
                 return py::make_iterator(self.complex_events.begin(), self.complex_events.end());
             }, py::keep_alive<0, 1>());
 
-        // py::class_<Types::StreamInfo>(m, "PyStreamInfo");
     }
 }

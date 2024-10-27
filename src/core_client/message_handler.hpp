@@ -52,21 +52,18 @@ class Printer : public StaticMessageHandler<Printer> {
   }
 };
 
-class PrinterPython : public StaticMessageHandler<PrinterPython> {
+class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
  public:
   static std::function<void(const Types::Enumerator&)> event_handler;
 
   static void handle_complex_event(Types::Enumerator& enumerator) {
     if (event_handler){
       event_handler(enumerator);
-    } else {
-      for (auto& complex_event : enumerator)
-        std::cout << complex_event.to_string() << std::endl;
     }
   }
 };
 
-std::function<void(const Types::Enumerator&)> PrinterPython::event_handler = nullptr;
+std::function<void(const Types::Enumerator&)> CallbackHandler::event_handler = nullptr;
 
 class DummyHandler : public StaticMessageHandler<DummyHandler> {
  public:
