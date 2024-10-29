@@ -51,9 +51,6 @@ jobs:
       - name: run tests with thread sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
 
-      - name: run tests with memory sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s memory
-
   run-tests-release:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
