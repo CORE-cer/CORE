@@ -1,6 +1,6 @@
 from os import path
 from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
+fom conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import check_min_cppstd
 import multiprocessing
 def create_script(grammar_name, antlr4_version):
