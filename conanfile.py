@@ -66,7 +66,7 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", "memory", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64)), "profiling": ["on", "off"]}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64)), "profiling": ["on", "off"]}
     default_options = {"sanitizer": "none", "logging": "info", "j": "all-1", "profiling": "off"}
 
     exports_sources = "CMakeLists.txt", "src/*"
@@ -121,18 +121,11 @@ class CORE(ConanFile):
         if self.options.sanitizer == "address":
             tc.cache_variables["ADDRESS_SANITIZER"] = True
             tc.cache_variables["THREAD_SANITIZER"] = False
-            tc.cache_variables["MEMORY_SANITIZER"] = False
         elif self.options.sanitizer == "thread":
             tc.cache_variables["THREAD_SANITIZER"] = True
             tc.cache_variables["ADDRESS_SANITIZER"] = False
-            tc.cache_variables["MEMORY_SANITIZER"] = False
-        elif self.options.sanitizer == "memory":
-            tc.cache_variables["MEMORY_SANITIZER"] = True
-            tc.cache_variables["ADDRESS_SANITIZER"] = False
-            tc.cache_variables["THREAD_SANITIZER"] = False
         else:
             tc.cache_variables["ADDRESS_SANITIZER"] = False
-            tc.cache_variables["MEMORY_SANITIZER"] = False
             tc.cache_variables["THREAD_SANITIZER"] = False
 
         tc.cache_variables["LOGGING"] = self.options.logging
