@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -175,7 +176,7 @@ class Evaluator {
       LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                    std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                         - start_time),
-                   tuple.data_timestamp());
+                   event.get_primary_time().val);
       return std::move(enumerator);
     }
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
@@ -184,7 +185,7 @@ class Evaluator {
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                  std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                       - start_time),
-                 tuple.data_timestamp());
+                 event.get_primary_time().val);
     return {};
   }
 

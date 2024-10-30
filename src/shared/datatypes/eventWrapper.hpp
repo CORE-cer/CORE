@@ -1,8 +1,12 @@
 #pragma once
 
+#include <quill/detail/misc/Common.h>
+
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <memory>
 #include <optional>
@@ -21,7 +25,9 @@ class EventManager;
 }
 
 namespace CORE::Types {
-// static uint64_t id_counter = 1;
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
+static std::atomic<int> id_counter = 0;
+#endif
 using ClockType = std::chrono::system_clock;
 template <typename T>
 concept DerivedFromValue = std::is_base_of_v<Types::Value, T>;
@@ -32,7 +38,9 @@ class EventWrapper {
   Types::IntValue primary_time;
   std::chrono::time_point<ClockType> received_time;
   bool moved = false;
-  // uint64_t id = id_counter++;
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
+  uint64_t id = id_counter++;
+#endif
 
  public:
   EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
@@ -60,6 +68,8 @@ class EventWrapper {
   // Do not allow copying of EventWrapper
   EventWrapper(const EventWrapper&) = delete;
   EventWrapper& operator=(const EventWrapper&) = delete;
+
+  ~EventWrapper() { LOG_TRACE_L3("Destroying EventWrapper with id {}", id); }
 
   UniqueEventTypeId get_unique_event_type_id() const {
     LOG_TRACE_L3("Getting unique event type id from EventWrapper with id {}", id);

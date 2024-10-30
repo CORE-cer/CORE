@@ -29,6 +29,7 @@
               clang_18
               valgrind
               gcc14
+              curl # Tracy requirement
             ];
           LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
         };
