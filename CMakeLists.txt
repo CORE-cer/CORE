@@ -98,14 +98,14 @@ target_compile_options(core PUBLIC -Werror=old-style-cast -Qunused-arguments)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak -fsanitize-ignorelist=clang_ignore_list.txt)
-  target_link_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak -fsanitize-ignorelist=clang_ignore_list.txt)
+  target_compile_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak)
+  target_link_options(core PUBLIC -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize=undefined -fsanitize=leak)
 endif()
 
 if (THREAD_SANITIZER)
   message("Thread sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined -fsanitize-ignorelist=clang_ignore_list.txt)
-  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined -fsanitize-ignorelist=clang_ignore_list.txt)
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
 endif()
 
 if (LOGGING MATCHES "critical")
