@@ -41,7 +41,8 @@ struct StreamInfo {
         //   throw std::runtime_error("Stream has two events info with same name");
         // }
         event_names_to_index[event_info.name] = event_info.id;
-        events.reserve(number_of_lines() * 1.2);
+        double number_lines = static_cast<double>(number_of_lines());
+        events.reserve(static_cast<std::size_t>(number_lines * 1.2));
       }
     }
 
@@ -101,7 +102,7 @@ struct StreamInfo {
       return events;
     }
 
-    uint64_t number_of_lines() {
+    size_t number_of_lines() {
       ZoneScopedN("DataReader::number_of_lines");
       std::ifstream file(csv_path);
       uint64_t count = 0;
