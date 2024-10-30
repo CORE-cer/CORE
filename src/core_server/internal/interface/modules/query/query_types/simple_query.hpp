@@ -71,13 +71,12 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   query.consume_by.policy,
                                                   query.limit,
                                                   this->time_window,
-                                                  this->query_catalog,
-                                                  this->queue);
+                                                  this->query_catalog);
   }
 
   std::optional<tECS::Enumerator>
   process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
-    return evaluator->process_event(tuple, std::move(event));
+    return evaluator->process_event(std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

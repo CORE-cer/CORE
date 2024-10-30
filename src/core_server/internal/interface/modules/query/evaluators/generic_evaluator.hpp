@@ -10,16 +10,15 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 
 class GenericEvaluator {
   uint64_t current_stream_position = 0;
   Internal::QueryCatalog& query_catalog;
-  RingTupleQueue::Queue& queue;
   std::unordered_map<Types::UniqueEventTypeId, uint64_t> indexes{};
 
  protected:
@@ -31,15 +30,11 @@ class GenericEvaluator {
 
   GenericEvaluator(CEA::DetCEA&& cea,
                    CEQL::Within::TimeWindow time_window,
-                   Internal::QueryCatalog& query_catalog,
-                   RingTupleQueue::Queue& queue)
-      : cea(std::move(cea)),
-        time_window(time_window),
-        query_catalog(query_catalog),
-        queue(queue) {}
+                   Internal::QueryCatalog& query_catalog)
+      : cea(std::move(cea)), time_window(time_window), query_catalog(query_catalog) {}
 
  protected:
-  uint64_t tuple_time(RingTupleQueue::Tuple& tuple) {
+  uint64_t event_time(Types::EventWrapper& event) {
     ZoneScopedN("Interface::GenericEvaluator::tuple_time");
     uint64_t time;
     switch (time_window.mode) {
@@ -48,10 +43,10 @@ class GenericEvaluator {
         time = current_stream_position++;
         break;
       case CEQL::Within::TimeWindowMode::NANOSECONDS:
-        time = tuple.data_nanoseconds();
+        time = event.get_primary_time().val;
         break;
       case CEQL::Within::TimeWindowMode::ATTRIBUTE: {
-        Types::UniqueEventTypeId event_type_id = tuple.id();
+        Types::UniqueEventTypeId event_type_id = event.get_unique_event_type_id();
         auto index = indexes.find(event_type_id);
         if (index == indexes.end()) [[unlikely]] {
           indexes[event_type_id] = query_catalog
@@ -59,7 +54,7 @@ class GenericEvaluator {
                                                           time_window.attribute_name);
         }
         uint64_t attribute_index = indexes[event_type_id];
-        time = *tuple[attribute_index];
+        time = event.get_attribute_at_index<Types::IntValue>(attribute_index).val;
         break;
       }
       default:

@@ -109,8 +109,7 @@ class PartitionByQuery
                                                    this->query.value().consume_by.policy,
                                                    this->query.value().limit,
                                                    this->time_window,
-                                                   this->query_catalog,
-                                                   this->queue);
+                                                   this->query_catalog);
   }
 
   std::optional<tECS::Enumerator>
@@ -129,7 +128,7 @@ class PartitionByQuery
 
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
       tuple, tuple_indexes->value());
-    return evaluator->process_event(tuple, std::move(event), evaluator_idx);
+    return evaluator->process_event(std::move(event), evaluator_idx);
   }
 
   std::optional<std::vector<uint64_t>>* find_tuple_indexes(RingTupleQueue::Tuple& tuple) {

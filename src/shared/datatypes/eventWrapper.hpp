@@ -33,6 +33,7 @@ concept DerivedFromValue = std::is_base_of_v<Types::Value, T>;
 class EventWrapper {
   friend class Internal::Interface::Module::EventManager;
   std::shared_ptr<const Event> event;
+  // Primary time is nanoseconds. Either specified by event or the time the event was received
   Types::IntValue primary_time;
   std::chrono::time_point<ClockType> received_time;
   bool moved = false;
