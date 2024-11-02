@@ -7,7 +7,6 @@
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -28,7 +27,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
 
   ~DirectPolicy() { this->handle_destruction(); }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
+  void receive_event(Types::EventWrapper&& event) override {
     this->send_event_queue.enqueue(std::move(event));
   }
 

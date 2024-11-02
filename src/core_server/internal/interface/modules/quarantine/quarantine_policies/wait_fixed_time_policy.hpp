@@ -36,7 +36,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
-  void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
+  void receive_event(Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(events_lock);
     events.insert(std::lower_bound(events.begin(),
                                    events.end(),

@@ -67,7 +67,7 @@ class QuarantineManager {
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 
     for (BasePolicy<ResultHandlerT>& relevant_policy : relevant_policies) {
-      relevant_policy.receive_tuple(tuple, std::move(event.clone()));
+      relevant_policy.receive_event(std::move(event.clone()));
     }
   }
 
