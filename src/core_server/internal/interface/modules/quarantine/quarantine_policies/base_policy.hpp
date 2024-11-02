@@ -53,10 +53,8 @@ class BasePolicy {
   moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> send_event_queue;
 
  public:
-  BasePolicy(Catalog& catalog,
-             std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : catalog(catalog),
-        next_available_inproc_port(next_available_inproc_port) {}
+  BasePolicy(Catalog& catalog, std::atomic<Types::PortNumber>& next_available_inproc_port)
+      : catalog(catalog), next_available_inproc_port(next_available_inproc_port) {}
 
   BasePolicy(const BasePolicy&) = delete;
   BasePolicy& operator=(const BasePolicy&) = delete;
@@ -85,8 +83,7 @@ class BasePolicy {
     }
   }
 
-  virtual void
-  receive_event(Types::EventWrapper&& event) = 0;
+  virtual void receive_event(Types::EventWrapper&& event) = 0;
 
  protected:
   virtual void try_add_tuples_to_send_queue() = 0;

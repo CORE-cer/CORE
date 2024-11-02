@@ -69,8 +69,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator>
-  process_event(Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
     return evaluator->process_event(std::move(event));
   }
 };

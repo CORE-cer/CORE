@@ -30,9 +30,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
   }
 
  protected:
-  void try_add_tuples_to_send_queue() override {
-    this->events.clear();
-  }
+  void try_add_tuples_to_send_queue() override { this->events.clear(); }
 
   void force_add_tuples_to_send_queue() override { try_add_tuples_to_send_queue(); }
 };

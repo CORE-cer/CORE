@@ -37,8 +37,7 @@ class QuarantineManager {
     stream_type_id_to_relevant_policies;
 
  public:
-  QuarantineManager(Catalog& catalog)
-      : catalog(catalog) {}
+  QuarantineManager(Catalog& catalog) : catalog(catalog) {}
 
   void declare_query(Internal::CEQL::Query&& parsed_query,
                      std::unique_ptr<ResultHandlerT>&& result_handler) {
