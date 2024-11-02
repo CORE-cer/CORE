@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -95,11 +94,9 @@ Catalog::add_event_type(Types::EventInfoParsed&& parsed_event_info) noexcept {
     unique_event_names.push_back(parsed_event_info.name);
   }
 
-  uint64_t ring_tuple_schema_id = add_type_to_schema(parsed_event_info.attributes_info);
   events_info.push_back(Types::EventInfo(events_info.size(),
                                          std::move(parsed_event_info.name),
                                          std::move(parsed_event_info.attributes_info)));
-  assert(ring_tuple_schema_id == events_info.size() - 1);
   return events_info.back();
 }
 
@@ -144,35 +141,6 @@ const std::vector<Types::StreamInfo>& Catalog::get_stream_info_vector() const no
 
 const std::vector<Types::QueryInfo>& Catalog::get_all_query_infos() const noexcept {
   return queries_info;
-}
-
-uint64_t Catalog::add_type_to_schema(std::vector<Types::AttributeInfo>& event_attributes) {
-  std::vector<RingTupleQueue::SupportedTypes> converted_types;
-  for (auto type : event_attributes) {
-    switch (type.value_type) {
-      case Types::INT64:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::INT64);
-        break;
-      case Types::DOUBLE:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::DOUBLE);
-        break;
-      case Types::BOOL:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::BOOL);
-        break;
-      case Types::STRING_VIEW:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::STRING_VIEW);
-        break;
-      case Types::DATE:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::DATE);
-        break;
-      case Types::PRIMARY_TIME:
-        converted_types.push_back(RingTupleQueue::SupportedTypes::INT64);
-        break;
-      default:
-        assert(false && "A value_type is missing in add_type_to_schema");
-    }
-  }
-  return tuple_schemas.add_schema(std::move(converted_types));
 }
 
 }  // namespace CORE::Internal

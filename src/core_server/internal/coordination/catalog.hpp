@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -22,9 +21,6 @@ class QueryCatalog;
 
 class Catalog {
   friend QueryCatalog;
-
- public:
-  RingTupleQueue::TupleSchemas tuple_schemas;
 
  private:
   std::vector<Types::EventInfo> events_info;
