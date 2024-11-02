@@ -42,6 +42,7 @@ class GenericQuery {
   moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue;
 
  public:
+  std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
