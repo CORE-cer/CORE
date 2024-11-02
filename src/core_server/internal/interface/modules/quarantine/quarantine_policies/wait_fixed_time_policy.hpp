@@ -10,8 +10,6 @@
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
@@ -28,9 +26,8 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
  public:
   WaitFixedTimePolicy(Catalog& catalog,
-                      RingTupleQueue::Queue& queue,
                       std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : BasePolicy<ResultHandlerT>(catalog, queue, next_available_inproc_port) {
+      : BasePolicy<ResultHandlerT>(catalog, next_available_inproc_port) {
     this->start();
   }
 
@@ -76,11 +73,6 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   }
 
  private:
-  bool static is_tuple_before_nanoseconds(const RingTupleQueue::Tuple& tuple,
-                                          uint64_t nanoseconds) {
-    return tuple.data_nanoseconds() <= nanoseconds;
-  }
-
   bool static is_event_before_nanoseconds(const Types::EventWrapper& event,
                                           uint64_t nanoseconds) {
     return event.get_primary_time().val <= nanoseconds;

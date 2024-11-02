@@ -6,7 +6,6 @@
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -19,9 +18,8 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
 
  public:
   DirectPolicy(Catalog& catalog,
-               RingTupleQueue::Queue& queue,
                std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : BasePolicy<ResultHandlerT>(catalog, queue, next_available_inproc_port) {
+      : BasePolicy<ResultHandlerT>(catalog, next_available_inproc_port) {
     this->start();
   }
 

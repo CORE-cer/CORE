@@ -22,7 +22,6 @@
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/internal/interface/modules/query/query_types/partition_by_query.hpp"
 #include "core_server/internal/interface/modules/query/query_types/simple_query.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
@@ -32,7 +31,6 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 template <typename ResultHandlerT>
 class BasePolicy {
   Catalog& catalog;
-  RingTupleQueue::Queue& queue;
   std::atomic<Types::PortNumber>& next_available_inproc_port;
 
   using QueryVariant = std::variant<std::unique_ptr<Query::SimpleQuery<ResultHandlerT>>,
@@ -56,10 +54,8 @@ class BasePolicy {
 
  public:
   BasePolicy(Catalog& catalog,
-             RingTupleQueue::Queue& queue,
              std::atomic<Types::PortNumber>& next_available_inproc_port)
       : catalog(catalog),
-        queue(queue),
         next_available_inproc_port(next_available_inproc_port) {}
 
   BasePolicy(const BasePolicy&) = delete;
