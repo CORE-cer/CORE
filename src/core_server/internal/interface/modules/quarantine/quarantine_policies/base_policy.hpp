@@ -166,11 +166,11 @@ class BasePolicy {
       while (!stop_condition) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         try_add_tuples_to_send_queue();
-        // send_tuples_to_queries();
+        send_tuples_to_queries();
         send_events_to_queries();
       }
       force_add_tuples_to_send_queue();
-      // send_tuples_to_queries();
+      send_tuples_to_queries();
       send_events_to_queries();
     });
   }
