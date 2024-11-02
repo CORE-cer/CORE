@@ -7,9 +7,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <deque>
-#include <functional>
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -52,8 +49,6 @@ class BasePolicy {
   std::mutex queries_lock;
 
  protected:
-  std::vector<std::reference_wrapper<std::atomic<uint64_t*>>> last_received_tuple = {};
-  std::deque<std::atomic<uint64_t*>> last_sent_tuple = {};
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
   // Stores the tuples that are ready to be sent
@@ -107,28 +102,6 @@ class BasePolicy {
 
   virtual void force_add_tuples_to_send_queue() = 0;
 
-  void send_tuples_to_queries() {
-    ZoneScopedN("BasePolicy::send_tuples_to_queries");
-    // std::cout << tuple_send_queue.size() << std::endl;
-    for (const RingTupleQueue::Tuple& tuple : tuple_send_queue) {
-      send_tuple_to_queries(tuple);
-    }
-    tuple_send_queue.clear();
-  }
-
-  void send_tuple_to_queries(const RingTupleQueue::Tuple& tuple) {
-    ZoneScopedN("BasePolicy::send_tuple_to_queries");
-    std::lock_guard<std::mutex> lock(queries_lock);
-    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
-      ZMQMessageSender& sender = inner_thread_event_senders[i];
-      QueryCatalog& query_catalog = query_catalogs[i];
-      if (query_catalog.is_unique_event_id_relevant_to_query(tuple.id())) {
-        last_sent_tuple[i].store(tuple.get_data());
-        sender.send(tuple.serialize_data());
-      }
-    }
-  }
-
   void send_events_to_queries() {
     ZoneScopedN("BasePolicy::send_events_to_queries");
     Types::EventWrapper event;
@@ -140,10 +113,12 @@ class BasePolicy {
   void send_event_to_queries(Types::EventWrapper&& event) {
     ZoneScopedN("BasePolicy::send_event_to_queries");
     std::lock_guard<std::mutex> lock(queries_lock);
-    for (int i = 0; i < query_catalogs.size(); i++) {
+    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
+      ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(
             event.get_unique_event_type_id())) {
+        sender.send("");
         blocking_event_queues[i].enqueue(std::move(event.clone()));
       }
     }
@@ -152,7 +127,7 @@ class BasePolicy {
   void handle_destruction() {
     stop_condition = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
-    for (int i = 0; i < this->last_received_tuple.size(); i++) {
+    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
       while (blocking_event_queues[i].size_approx() != 0) {
         std::this_thread::sleep_for(std::chrono::microseconds(50));
       }
@@ -166,11 +141,9 @@ class BasePolicy {
       while (!stop_condition) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         try_add_tuples_to_send_queue();
-        send_tuples_to_queries();
         send_events_to_queries();
       }
       force_add_tuples_to_send_queue();
-      send_tuples_to_queries();
       send_events_to_queries();
     });
   }
@@ -193,8 +166,6 @@ class BasePolicy {
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
-    last_received_tuple.emplace_back(query->last_received_tuple);
-    last_sent_tuple.emplace_back(nullptr);
 
     zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);

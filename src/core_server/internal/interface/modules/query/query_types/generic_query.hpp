@@ -42,7 +42,6 @@ class GenericQuery {
   moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue;
 
  public:
-  std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
@@ -94,25 +93,17 @@ class GenericQuery {
         if (serialized_message == "STOP") {
           continue;
         }
-        std::optional<Types::EventWrapper> event = get_event();
-        if (!event.has_value()) {
-          continue;
-        }
-        std::optional<tECS::Enumerator> output = process_event(std::move(event.value()));
+        Types::EventWrapper event = get_event();
+        std::optional<tECS::Enumerator> output = process_event(std::move(event));
         (*result_handler)(std::move(output));
       }
     });
   }
 
-  std::optional<Types::EventWrapper> get_event() {
+  Types::EventWrapper get_event() {
     Types::EventWrapper event;
-    std::int64_t microseconds_to_wait = 10000;
-    bool got_event = blocking_event_queue.wait_dequeue_timed(event, microseconds_to_wait);
-    if (got_event) {
-      return std::move(event);
-    } else {
-      return {};
-    }
+    blocking_event_queue.wait_dequeue(event);
+    return std::move(event);
   }
 
   std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
