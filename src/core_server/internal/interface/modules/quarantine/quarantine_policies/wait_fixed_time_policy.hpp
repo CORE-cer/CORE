@@ -22,8 +22,6 @@ template <typename ResultHandlerT>
 class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   constexpr static const std::chrono::duration time_to_wait = std::chrono::milliseconds(
     20);
-  std::mutex tuples_lock;
-  std::list<RingTupleQueue::Tuple> tuples;
 
   std::mutex events_lock;
   std::list<Types::EventWrapper> events;
@@ -39,12 +37,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
-    std::lock_guard<std::mutex> lock(tuples_lock);
-    tuples.insert(std::lower_bound(tuples.begin(),
-                                   tuples.end(),
-                                   tuple.data_nanoseconds(),
-                                   is_tuple_before_nanoseconds),
-                  tuple);
+    std::lock_guard<std::mutex> lock(events_lock);
     events.insert(std::lower_bound(events.begin(),
                                    events.end(),
                                    event.get_primary_time().val,
@@ -59,8 +52,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   void try_add_tuples_to_send_queue() override {
     auto now = std::chrono::system_clock::now();
 
-    std::lock_guard<std::mutex> lock(tuples_lock);
-    std::lock_guard<std::mutex> lock2(events_lock);
+    std::lock_guard<std::mutex> lock(events_lock);
 
     for (auto iter = events.begin(); iter != events.end();) {
       const Types::EventWrapper& event = *iter;
@@ -73,32 +65,13 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
         return;
       }
     }
-
-    for (auto iter = tuples.begin(); iter != tuples.end();) {
-      const RingTupleQueue::Tuple& tuple = *iter;
-      auto duration = now - tuple.system_timestamp();
-      if (duration > time_to_wait) {
-        this->tuple_send_queue.push_back(tuple);
-        iter = tuples.erase(iter);
-      } else {
-        // If we couldn't remove the first tuple, stop trying
-        return;
-      }
-    }
   }
 
   void force_add_tuples_to_send_queue() override {
-    std::lock_guard<std::mutex> lock(tuples_lock);
     for (auto iter = events.begin(); iter != events.end();) {
       Types::EventWrapper event = std::move(*iter);
-        this->send_event_queue.enqueue(std::move(*iter));
+      this->send_event_queue.enqueue(std::move(*iter));
       iter = events.erase(iter);
-    }
-
-    for (auto iter = tuples.begin(); iter != tuples.end();) {
-      const RingTupleQueue::Tuple& tuple = *iter;
-      this->tuple_send_queue.push_back(tuple);
-      iter = tuples.erase(iter);
     }
   }
 

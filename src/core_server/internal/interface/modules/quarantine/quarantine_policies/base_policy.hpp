@@ -5,11 +5,9 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
-#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -51,8 +49,6 @@ class BasePolicy {
  protected:
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
-  // Stores the tuples that are ready to be sent
-  std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
 
   // Events
   std::vector<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>>
@@ -169,19 +165,6 @@ class BasePolicy {
 
     zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
-  }
-
-  std::optional<RingTupleQueue::Tuple>
-  serialized_message_to_tuple(std::string& serialized_message) {
-    if (serialized_message == "STOP") {
-      return {};
-    }
-    assert(serialized_message.size() == sizeof(uint64_t*));
-
-    uint64_t* data;
-    memcpy(&data, &serialized_message[0], sizeof(uint64_t*));
-    RingTupleQueue::Tuple tuple = queue.get_tuple(data);
-    return tuple;
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

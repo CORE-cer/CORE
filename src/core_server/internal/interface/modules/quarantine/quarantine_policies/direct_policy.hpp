@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -17,8 +16,6 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 template <typename ResultHandlerT>
 class DirectPolicy : public BasePolicy<ResultHandlerT> {
   // TODO: Optimize
-  std::mutex tuples_lock;
-  std::vector<RingTupleQueue::Tuple> tuples;
   std::vector<Types::EventWrapper> events;
 
  public:
@@ -32,18 +29,11 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
   ~DirectPolicy() { this->handle_destruction(); }
 
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
-    std::lock_guard<std::mutex> lock(tuples_lock);
-    tuples.push_back(tuple);
     this->send_event_queue.enqueue(std::move(event));
   }
 
  protected:
   void try_add_tuples_to_send_queue() override {
-    std::lock_guard<std::mutex> lock(tuples_lock);
-    for (const RingTupleQueue::Tuple& tuple : tuples) {
-      this->tuple_send_queue.push_back(tuple);
-    }
-    this->tuples.clear();
     this->events.clear();
   }
 
