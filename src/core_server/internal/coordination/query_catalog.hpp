@@ -372,69 +372,6 @@ class QueryCatalog {
     }
     return {start, end, std::move(converted_events)};
   }
-
-  Types::ComplexEvent tuples_to_complex_event(
-    uint64_t start,
-    uint64_t end,
-    std::vector<RingTupleQueue::Tuple>& tuples,
-    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const {
-    ZoneScopedN("Catalog::tuple_to_complex_event");
-    std::vector<Types::Event> converted_events;
-    for (auto& tuple : tuples) {
-      assert(tuple.id() < events_info.size());
-      if (event_memory.contains(tuple)) {
-        converted_events.push_back(event_memory[tuple]);
-      } else {
-        const Types::EventInfo& event_info = events_info[tuple.id()];
-        converted_events.push_back(tuple_to_event(event_info, tuple));
-      }
-    }
-    return {start, end, std::move(converted_events)};
-  }
-
-  Types::Event
-  tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const {
-    ZoneScopedN("Catalog::tuple_to_event");
-    assert(tuple.id() == event_info.id);
-    std::vector<std::shared_ptr<Types::Value>> values;
-    for (auto i = 0; i < event_info.attributes_info.size(); i++) {
-      const Types::AttributeInfo& att_info = event_info.attributes_info[i];
-      std::shared_ptr<Types::Value> val;
-      switch (att_info.value_type) {
-        case Types::ValueTypes::INT64:
-        case Types::ValueTypes::PRIMARY_TIME:
-          val = std::make_shared<Types::IntValue>(
-            RingTupleQueue::Value<int64_t>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::DOUBLE:
-          val = std::make_shared<Types::DoubleValue>(
-            RingTupleQueue::Value<double>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::BOOL:
-          val = std::make_shared<Types::BoolValue>(
-            RingTupleQueue::Value<bool>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::STRING_VIEW:
-          val = std::make_shared<Types::StringValue>(
-            std::string(RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
-          break;
-        case Types::ValueTypes::DATE:
-          val = std::make_shared<Types::DateValue>(
-            RingTupleQueue::Value<std::time_t>(tuple[i]).get());
-          break;
-        default:
-          assert(false && "Some Value Type was not implemented");
-      }
-      values.push_back(std::move(val));
-    }
-    std::chrono::system_clock::time_point primary_time_tp = tuple.data_timestamp();
-    Types::IntValue primary_time = Types::IntValue(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        primary_time_tp.time_since_epoch())
-        .count());
-
-    return {event_info.id, std::move(values), primary_time};
-  }
 };
 
 }  // namespace CORE::Internal
