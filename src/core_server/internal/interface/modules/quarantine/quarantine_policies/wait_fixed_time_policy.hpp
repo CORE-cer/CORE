@@ -24,6 +24,8 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     20);
   std::mutex tuples_lock;
   std::list<RingTupleQueue::Tuple> tuples;
+
+  std::mutex events_lock;
   std::list<Types::EventWrapper> events;
 
  public:
@@ -38,7 +40,6 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
-    std::lock_guard<std::mutex> lock2(this->events_lock);
     tuples.insert(std::lower_bound(tuples.begin(),
                                    tuples.end(),
                                    tuple.data_nanoseconds(),
@@ -59,13 +60,13 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     auto now = std::chrono::system_clock::now();
 
     std::lock_guard<std::mutex> lock(tuples_lock);
-    std::lock_guard<std::mutex> lock2(this->events_lock);
+    std::lock_guard<std::mutex> lock2(events_lock);
 
     for (auto iter = events.begin(); iter != events.end();) {
       const Types::EventWrapper& event = *iter;
       auto duration = now - event.get_received_time();
       if (duration > time_to_wait) {
-        this->event_send_queue.push(std::move(*iter));
+        this->blocking_event_queue.enqueue(std::move(*iter));
         iter = events.erase(iter);
       } else {
         // If we couldn't remove the first event, stop trying
@@ -88,10 +89,9 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
 
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(tuples_lock);
-    std::lock_guard<std::mutex> lock2(this->events_lock);
     for (auto iter = events.begin(); iter != events.end();) {
       Types::EventWrapper event = std::move(*iter);
-      this->event_send_queue.push(std::move(event));
+        this->blocking_event_queue.enqueue(std::move(*iter));
       iter = events.erase(iter);
     }
 

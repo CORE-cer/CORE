@@ -34,18 +34,14 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     tuples.push_back(tuple);
-    events.push_back(std::move(event));
+    this->blocking_event_queue.enqueue(std::move(event));
   }
 
  protected:
   void try_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(tuples_lock);
-    std::lock_guard<std::mutex> lock2(this->events_lock);
     for (const RingTupleQueue::Tuple& tuple : tuples) {
       this->tuple_send_queue.push_back(tuple);
-    }
-    for (auto&& event : events) {
-      this->event_send_queue.push(std::move(event));
     }
     this->tuples.clear();
     this->events.clear();

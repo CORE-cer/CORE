@@ -1,5 +1,7 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
+
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -10,7 +12,6 @@
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <queue>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -58,8 +59,7 @@ class BasePolicy {
   std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
 
   // Events
-  std::mutex events_lock;
-  std::queue<Types::EventWrapper> event_send_queue = {};
+  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> blocking_event_queue{1000};
 
  public:
   BasePolicy(Catalog& catalog,
@@ -162,8 +162,7 @@ class BasePolicy {
                                                            queue,
                                                            inproc_receiver_address,
                                                            std::move(result_handler),
-                                                           events_lock,
-                                                           event_send_queue));
+                                                           blocking_event_queue));
     QueryBaseType* query = static_cast<QueryBaseType*>(
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 

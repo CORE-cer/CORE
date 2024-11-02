@@ -42,6 +42,8 @@ class EventWrapper {
 #endif
 
  public:
+  EventWrapper() = default;
+
   EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
 
   // Add move

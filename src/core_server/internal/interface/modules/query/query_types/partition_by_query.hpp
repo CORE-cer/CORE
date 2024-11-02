@@ -1,14 +1,13 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
 #include <stdint.h>
 
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <queue>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -65,19 +64,18 @@ class PartitionByQuery
     event_id_to_tuple_idx;
 
  public:
-  PartitionByQuery(Internal::QueryCatalog query_catalog,
-                   RingTupleQueue::Queue& queue,
-                   std::string inproc_receiver_address,
-                   std::unique_ptr<ResultHandlerT>&& result_handler,
-                   std::mutex& event_lock,
-                   std::queue<Types::EventWrapper>& event_queue)
+  PartitionByQuery(
+    Internal::QueryCatalog query_catalog,
+    RingTupleQueue::Queue& queue,
+    std::string inproc_receiver_address,
+    std::unique_ptr<ResultHandlerT>&& result_handler,
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
           query_catalog,
           queue,
           inproc_receiver_address,
           std::move(result_handler),
-          event_lock,
-          event_queue) {}
+          blocking_event_queue) {}
 
   ~PartitionByQuery() { this->stop(); }
 

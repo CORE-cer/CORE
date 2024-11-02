@@ -1,9 +1,9 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
+
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <queue>
 #include <string>
 #include <utility>
 
@@ -29,18 +29,17 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   std::unique_ptr<SingleEvaluator> evaluator;
 
  public:
-  SimpleQuery(Internal::QueryCatalog query_catalog,
-              RingTupleQueue::Queue& queue,
-              std::string inproc_receiver_address,
-              std::unique_ptr<ResultHandlerT>&& result_handler,
-              std::mutex& event_lock,
-              std::queue<Types::EventWrapper>& event_queue)
+  SimpleQuery(
+    Internal::QueryCatalog query_catalog,
+    RingTupleQueue::Queue& queue,
+    std::string inproc_receiver_address,
+    std::unique_ptr<ResultHandlerT>&& result_handler,
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
                                                                   queue,
                                                                   inproc_receiver_address,
                                                                   std::move(result_handler),
-                                                                  event_lock,
-                                                                  event_queue) {}
+                                                                  blocking_event_queue) {}
 
   ~SimpleQuery() { this->stop(); }
 

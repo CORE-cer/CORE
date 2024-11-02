@@ -1,5 +1,7 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
+
 #include <atomic>
 #include <cassert>
 #include <cstdint>
@@ -7,10 +9,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <queue>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -43,27 +42,25 @@ class GenericQuery {
   std::thread worker_thread;
 
   // Events
-  std::mutex& event_lock;
-  std::queue<Types::EventWrapper>& event_send_queue;
+  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue;
 
  public:
   std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
-  GenericQuery(Internal::QueryCatalog query_catalog,
-               RingTupleQueue::Queue& queue,
-               std::string inproc_receiver_address,
-               std::unique_ptr<ResultHandlerT>&& result_handler,
-               std::mutex& event_lock,
-               std::queue<Types::EventWrapper>& event_queue)
+  GenericQuery(
+    Internal::QueryCatalog query_catalog,
+    RingTupleQueue::Queue& queue,
+    std::string inproc_receiver_address,
+    std::unique_ptr<ResultHandlerT>&& result_handler,
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : query_catalog(query_catalog),
         queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
         result_handler(std::move(result_handler)),
-        event_lock(event_lock),
-        event_send_queue(event_queue) {}
+        blocking_event_queue(blocking_event_queue) {}
 
   void init(Internal::CEQL::Query&& query) {
     create_query(std::move(query));
@@ -114,13 +111,9 @@ class GenericQuery {
   }
 
   Types::EventWrapper get_event() {
-    std::lock_guard<std::mutex> lock(event_lock);
-    if (event_send_queue.empty()) {
-      throw std::runtime_error("Event queue is empty when receiving tuple");
-    }
-    Types::EventWrapper event = std::move(event_send_queue.front());
-    event_send_queue.pop();
-    return event;
+    Types::EventWrapper event2;
+    blocking_event_queue.wait_dequeue(event2);
+    return std::move(event2);
   }
 
   std::optional<tECS::Enumerator>
