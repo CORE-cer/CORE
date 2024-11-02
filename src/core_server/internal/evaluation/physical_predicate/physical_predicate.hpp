@@ -4,7 +4,6 @@
 #include <set>
 #include <string>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -26,16 +25,6 @@ class PhysicalPredicate {
 
   PhysicalPredicate() : admits_any_event_type(true) {}
 
-  bool operator()(RingTupleQueue::Tuple& tuple) {
-    // admits_any_event_type is second in the condition because it is rare
-    // that the operator() will be used on such a type.
-    if (admissible_event_types.contains(tuple.id()) || admits_any_event_type) {
-      bool tuple_eval = eval(tuple);
-      return tuple_eval;
-    }
-    return false;
-  }
-
   bool operator()(Types::EventWrapper& event) {
     // admits_any_event_type is second in the condition because it is rare
     // that the operator() will be used on such a type.
@@ -46,8 +35,6 @@ class PhysicalPredicate {
     }
     return false;
   }
-
-  virtual bool eval(RingTupleQueue::Tuple& tuple) = 0;
 
   virtual bool eval(Types::EventWrapper& event_wrapper) = 0;
 

@@ -5,11 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <string_view>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -30,12 +27,6 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
         regex_compiled(regex) {}
 
   ~CompareWithRegexStronglyTyped() override = default;
-
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    uint64_t* pos = tuple[pos_to_compare];
-    RingTupleQueue::Value<std::string_view> attribute_val(pos);
-    return re2::RE2::FullMatch(attribute_val.get(), regex_compiled);
-  }
 
   bool eval(Types::EventWrapper& event) override {
     const Types::StringValue

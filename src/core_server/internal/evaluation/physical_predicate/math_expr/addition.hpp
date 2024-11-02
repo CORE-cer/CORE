@@ -5,7 +5,6 @@
 #include <string>
 #include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -25,14 +24,6 @@ class Addition : public MathExpr<Type> {
   }
 
   ~Addition() override = default;
-
-  Type eval(RingTupleQueue::Tuple& tuple) override {
-    if constexpr (!std::is_arithmetic<Type>::value) {
-      assert(false && "Addition is only valid for arithmetic vals");
-      throw std::logic_error("Addition is only valid for arithmetic vals");
-    } else
-      return left->eval(tuple) + right->eval(tuple);
-  }
 
   Type eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {

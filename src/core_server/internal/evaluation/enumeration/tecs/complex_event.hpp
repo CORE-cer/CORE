@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/enumeration/tecs/eventEvent.hpp"
-#include "event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::tECS {
@@ -17,7 +16,6 @@ class ComplexEvent {
   uint64_t start;
   uint64_t end;
   std::vector<Types::EventWrapper> eventss;
-  std::vector<Event> events;
 
   ComplexEvent(std::pair<std::pair<uint64_t, uint64_t>, std::vector<Types::EventWrapper>>&&
                  complex_event)

@@ -2,27 +2,22 @@
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <iterator>
 #include <map>
-#include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tracy/Tracy.hpp>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
@@ -34,7 +29,6 @@
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
-#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal {
 
