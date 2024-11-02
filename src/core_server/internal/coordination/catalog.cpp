@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <iostream>
 #include <set>
 #include <string>
@@ -12,8 +11,6 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
-#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
