@@ -59,7 +59,9 @@ class BasePolicy {
   std::vector<RingTupleQueue::Tuple> tuple_send_queue = {};
 
   // Events
-  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> blocking_event_queue{1000};
+  std::vector<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>>
+    blocking_event_queues;
+  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> send_event_queue;
 
  public:
   BasePolicy(Catalog& catalog,
@@ -126,11 +128,31 @@ class BasePolicy {
     }
   }
 
+  void send_events_to_queries() {
+    ZoneScopedN("BasePolicy::send_events_to_queries");
+    Types::EventWrapper event;
+    while (send_event_queue.try_dequeue(event)) {
+      send_event_to_queries(std::move(event));
+    }
+  }
+
+  void send_event_to_queries(Types::EventWrapper&& event) {
+    ZoneScopedN("BasePolicy::send_event_to_queries");
+    std::lock_guard<std::mutex> lock(queries_lock);
+    for (int i = 0; i < query_catalogs.size(); i++) {
+      QueryCatalog& query_catalog = query_catalogs[i];
+      if (query_catalog.is_unique_event_id_relevant_to_query(
+            event.get_unique_event_type_id())) {
+        blocking_event_queues[i].enqueue(std::move(event.clone()));
+      }
+    }
+  }
+
   void handle_destruction() {
     stop_condition = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
     for (int i = 0; i < this->last_received_tuple.size(); i++) {
-      while (this->last_sent_tuple[i].load() != this->last_received_tuple[i].get().load()) {
+      while (blocking_event_queues[i].size_approx() != 0) {
         std::this_thread::sleep_for(std::chrono::microseconds(50));
       }
     }
@@ -143,10 +165,10 @@ class BasePolicy {
       while (!stop_condition) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         try_add_tuples_to_send_queue();
-        send_tuples_to_queries();
+        send_events_to_queries();
       }
       force_add_tuples_to_send_queue();
-      send_tuples_to_queries();
+      send_events_to_queries();
     });
   }
 
@@ -158,8 +180,9 @@ class BasePolicy {
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
     query_catalogs.push_back(query_catalog);
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>&
+      blocking_event_queue = blocking_event_queues.emplace_back(1000);
     queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,
-                                                           queue,
                                                            inproc_receiver_address,
                                                            std::move(result_handler),
                                                            blocking_event_queue));
@@ -167,9 +190,6 @@ class BasePolicy {
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
-    last_received_tuple.emplace_back(query->last_received_tuple);
-    last_sent_tuple.emplace_back(nullptr);
-
     zmq::context_t& inproc_context = query->get_inproc_context();
     inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }

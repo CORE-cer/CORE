@@ -66,7 +66,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
       const Types::EventWrapper& event = *iter;
       auto duration = now - event.get_received_time();
       if (duration > time_to_wait) {
-        this->blocking_event_queue.enqueue(std::move(*iter));
+        this->send_event_queue.enqueue(std::move(*iter));
         iter = events.erase(iter);
       } else {
         // If we couldn't remove the first event, stop trying
@@ -91,7 +91,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
     std::lock_guard<std::mutex> lock(tuples_lock);
     for (auto iter = events.begin(); iter != events.end();) {
       Types::EventWrapper event = std::move(*iter);
-        this->blocking_event_queue.enqueue(std::move(*iter));
+        this->send_event_queue.enqueue(std::move(*iter));
       iter = events.erase(iter);
     }
 

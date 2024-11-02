@@ -17,8 +17,6 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
@@ -31,12 +29,10 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
  public:
   SimpleQuery(
     Internal::QueryCatalog query_catalog,
-    RingTupleQueue::Queue& queue,
     std::string inproc_receiver_address,
     std::unique_ptr<ResultHandlerT>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
-                                                                  queue,
                                                                   inproc_receiver_address,
                                                                   std::move(result_handler),
                                                                   blocking_event_queue) {}
@@ -74,7 +70,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   }
 
   std::optional<tECS::Enumerator>
-  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+  process_event(Types::EventWrapper&& event) {
     return evaluator->process_event(std::move(event));
   }
 };

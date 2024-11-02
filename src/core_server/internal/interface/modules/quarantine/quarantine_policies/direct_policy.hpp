@@ -34,7 +34,7 @@ class DirectPolicy : public BasePolicy<ResultHandlerT> {
   void receive_tuple(RingTupleQueue::Tuple& tuple, Types::EventWrapper&& event) override {
     std::lock_guard<std::mutex> lock(tuples_lock);
     tuples.push_back(tuple);
-    this->blocking_event_queue.enqueue(std::move(event));
+    this->send_event_queue.enqueue(std::move(event));
   }
 
  protected:

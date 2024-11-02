@@ -20,8 +20,6 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
@@ -32,7 +30,6 @@ class GenericQuery {
  protected:
   uint64_t current_stream_position = 0;
   Internal::QueryCatalog query_catalog;
-  RingTupleQueue::Queue& queue;
   std::unique_ptr<ResultHandlerT> result_handler;
 
   // Receiver for tuples
@@ -45,18 +42,15 @@ class GenericQuery {
   moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue;
 
  public:
-  std::atomic<uint64_t*> last_received_tuple = nullptr;
   std::atomic<uint64_t> time_of_expiration = 0;
   CEQL::Within::TimeWindow time_window;
 
   GenericQuery(
     Internal::QueryCatalog query_catalog,
-    RingTupleQueue::Queue& queue,
     std::string inproc_receiver_address,
     std::unique_ptr<ResultHandlerT>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : query_catalog(query_catalog),
-        queue(queue),
         receiver_address(inproc_receiver_address),
         receiver(receiver_address),
         result_handler(std::move(result_handler)),
@@ -96,42 +90,24 @@ class GenericQuery {
       result_handler->start();
       while (!stop_condition) {
         std::string serialized_message = receiver.receive();
-        std::optional<RingTupleQueue::Tuple> tuple = serialized_message_to_tuple(
-          serialized_message);
-        if (!tuple.has_value()) {
+        if (serialized_message == "STOP") {
           continue;
         }
         Types::EventWrapper event = get_event();
-        last_received_tuple.store(tuple->get_data());
-        std::optional<tECS::Enumerator> output = process_event(tuple.value(),
-                                                               std::move(event));
+        std::optional<tECS::Enumerator> output = process_event(std::move(event));
         (*result_handler)(std::move(output));
       }
     });
   }
 
   Types::EventWrapper get_event() {
-    Types::EventWrapper event2;
-    blocking_event_queue.wait_dequeue(event2);
-    return std::move(event2);
+    Types::EventWrapper event;
+    blocking_event_queue.wait_dequeue(event);
+    return std::move(event);
   }
 
-  std::optional<tECS::Enumerator>
-  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
-    return static_cast<Derived*>(this)->process_event(tuple, std::move(event));
-  }
-
-  std::optional<RingTupleQueue::Tuple>
-  serialized_message_to_tuple(std::string& serialized_message) {
-    if (serialized_message == "STOP") {
-      return {};
-    }
-    assert(serialized_message.size() == sizeof(uint64_t*));
-
-    uint64_t* data;
-    memcpy(&data, &serialized_message[0], sizeof(uint64_t*));  // NOLINT
-    RingTupleQueue::Tuple tuple = queue.get_tuple(data);
-    return tuple;
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
+    return static_cast<Derived*>(this)->process_event(std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query
