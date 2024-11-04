@@ -65,8 +65,8 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
   }
 
   void force_add_tuples_to_send_queue() override {
+    std::lock_guard<std::mutex> lock(events_lock);
     for (auto iter = events.begin(); iter != events.end();) {
-      Types::EventWrapper event = std::move(*iter);
       this->send_event_queue.enqueue(std::move(*iter));
       iter = events.erase(iter);
     }
