@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <initializer_list>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -48,7 +49,7 @@ struct StreamInfo {
 
     void to_events(std::vector<std::string> csv_data) {
       ZoneScopedN("DataReader::to_events");
-      std::vector<std::shared_ptr<Types::Value>> attributes;
+      std::vector<std::unique_ptr<Types::Value>> attributes;
       std::optional<Types::IntValue> primary_time = {};
       std::size_t id = event_names_to_index[csv_data[0]];
       Types::EventInfo event_info = events_info[id];
@@ -57,23 +58,23 @@ struct StreamInfo {
         switch (attributes_info.value_type) {
           case Types::ValueTypes::INT64:
             attributes.emplace_back(
-              std::make_shared<Types::IntValue>(std::stoll(csv_data[i + 1])));
+              std::make_unique<Types::IntValue>(std::stoll(csv_data[i + 1])));
             break;
           case Types::ValueTypes::STRING_VIEW:
-            attributes.emplace_back(std::make_shared<Types::StringValue>(csv_data[i + 1]));
+            attributes.emplace_back(std::make_unique<Types::StringValue>(csv_data[i + 1]));
             break;
           case Types::ValueTypes::DOUBLE:
             attributes.emplace_back(
-              std::make_shared<Types::DoubleValue>(std::stod(csv_data[i + 1])));
+              std::make_unique<Types::DoubleValue>(std::stod(csv_data[i + 1])));
             break;
           case Types::ValueTypes::BOOL:
-            attributes.emplace_back(std::make_shared<Types::BoolValue>(
+            attributes.emplace_back(std::make_unique<Types::BoolValue>(
               csv_data[i + 1] == "true" ? true : false));
             break;
           case Types::ValueTypes::PRIMARY_TIME: {
-            std::shared_ptr<Types::IntValue> time = std::make_shared<Types::IntValue>(
+            std::unique_ptr<Types::IntValue> time = std::make_unique<Types::IntValue>(
               std::stoll(csv_data[i + 1]));
-            attributes.emplace_back(time);
+            attributes.emplace_back(std::move(time));
             primary_time = *time;
             break;
           }
@@ -84,7 +85,7 @@ struct StreamInfo {
       events.emplace_back(id, std::move(attributes), primary_time);
     }
 
-    std::vector<Types::Event> read_csv() {
+    void read_csv() {
       ZoneScopedN("DataReader::read_csv");
       std::ifstream file(csv_path);
       std::string line;
@@ -99,7 +100,6 @@ struct StreamInfo {
         }
         to_events(tokens);
       }
-      return events;
     }
 
     size_t number_of_lines() {
@@ -152,7 +152,10 @@ struct StreamInfo {
   std::vector<Types::Event> get_events_from_csv(std::string csv_path) {
     ZoneScopedN("StreamInfo::get_events_from_csv");
     DataReader data_reader(csv_path, events_info);
-    return data_reader.read_csv();
+    data_reader.read_csv();
+    std::vector<Event> events = std::move(data_reader.events);
+    data_reader.events.clear();
+    return std::move(events);
   }
 
   template <class Archive>

@@ -60,11 +60,11 @@ Types::EventWrapper get_event_wrapper_event_type_1(std::string val1,
                                                    double val5) {
   auto event = std::make_shared<Types::Event>(
     0,
-    std::vector<std::shared_ptr<Types::Value>>{std::make_shared<Types::StringValue>(val1),
-                                               std::make_shared<Types::IntValue>(val2),
-                                               std::make_shared<Types::IntValue>(val3),
-                                               std::make_shared<Types::DoubleValue>(val4),
-                                               std::make_shared<Types::DoubleValue>(val5)});
+    std::vector<std::shared_ptr<Types::Value>>{std::make_unique<Types::StringValue>(val1),
+                                               std::make_unique<Types::IntValue>(val2),
+                                               std::make_unique<Types::IntValue>(val3),
+                                               std::make_unique<Types::DoubleValue>(val4),
+                                               std::make_unique<Types::DoubleValue>(val5)});
   auto eventWrapper = Types::EventWrapper(std::move(event));
   return std::move(eventWrapper);
 }
@@ -84,8 +84,8 @@ std::vector<Types::AttributeInfo> attributes_of_event_type_2() {
 Types::EventWrapper get_event_wrapper_event_type_2(int64_t val1, int64_t val2) {
   auto event = std::make_shared<Types::Event>(1,
                                               std::vector<std::shared_ptr<Types::Value>>{
-                                                std::make_shared<Types::IntValue>(val1),
-                                                std::make_shared<Types::IntValue>(val2),
+                                                std::make_unique<Types::IntValue>(val1),
+                                                std::make_unique<Types::IntValue>(val2),
                                               });
   auto eventWrapper = Types::EventWrapper(std::move(event));
   return std::move(eventWrapper);
