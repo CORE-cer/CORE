@@ -8,8 +8,6 @@
 #include <type_traits>
 
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -33,19 +31,6 @@ class Attribute : public MathExpr<GlobalType> {
   }
 
   ~Attribute() override = default;
-
-  GlobalType eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("Attribute::eval(tuple)");
-    RingTupleQueue::Value<LocalType> val(tuple[pos]);
-    if constexpr (std::is_same_v<GlobalType, LocalType>) {
-      return val.get();
-    } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      stored_string = std::to_string(val.get());  // It is not a string already.
-      return stored_string;
-    } else {
-      return static_cast<GlobalType>(val.get());
-    }
-  }
 
   GlobalType eval(Types::EventWrapper& event) override {
     ZoneScopedN("Attribute::eval(event)");

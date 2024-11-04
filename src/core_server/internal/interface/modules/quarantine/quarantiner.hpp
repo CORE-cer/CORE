@@ -16,8 +16,6 @@
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
@@ -28,7 +26,6 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 template <typename ResultHandlerT>
 class QuarantineManager {
   Catalog& catalog;
-  RingTupleQueue::Queue& queue;
 
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
@@ -40,8 +37,7 @@ class QuarantineManager {
     stream_type_id_to_relevant_policies;
 
  public:
-  QuarantineManager(Catalog& catalog, RingTupleQueue::Queue& queue)
-      : catalog(catalog), queue(queue) {}
+  QuarantineManager(Catalog& catalog) : catalog(catalog) {}
 
   void declare_query(Internal::CEQL::Query&& parsed_query,
                      std::unique_ptr<ResultHandlerT>&& result_handler) {
@@ -60,14 +56,13 @@ class QuarantineManager {
     }
   }
 
-  void send_tuple_to_queries(Types::StreamTypeId stream_id,
-                             RingTupleQueue::Tuple& tuple,
+  void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
     std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>&
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 
     for (BasePolicy<ResultHandlerT>& relevant_policy : relevant_policies) {
-      relevant_policy.receive_tuple(tuple, std::move(event.clone()));
+      relevant_policy.receive_event(std::move(event.clone()));
     }
   }
 
@@ -95,11 +90,10 @@ class QuarantineManager {
     switch (policy_type) {
       case QuarantinePolicyType::DirectPolicy:
         return std::make_unique<DirectPolicy<ResultHandlerT>>(catalog,
-                                                              queue,
                                                               next_available_inproc_port);
       case QuarantinePolicyType::WaitFixedTimePolicy:
         return std::make_unique<WaitFixedTimePolicy<ResultHandlerT>>(
-          catalog, queue, next_available_inproc_port);
+          catalog, next_available_inproc_port);
       default:
         throw std::runtime_error("Invalid policy type");
     }

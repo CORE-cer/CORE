@@ -9,8 +9,6 @@
 
 #include "cassert"
 #include "comparison_type.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
@@ -58,35 +56,6 @@ class CompareWithAttribute : public PhysicalPredicate {
         second_pos(second_pos) {}
 
   ~CompareWithAttribute() override = default;
-
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("CompareWithAttribute::eval()");
-    uint64_t* pos1 = tuple[first_pos];
-    uint64_t* pos2 = tuple[second_pos];
-    RingTupleQueue::Value<LeftValueType> first_val(pos1);
-    RingTupleQueue::Value<RightValueType> second_val(pos2);
-    if constexpr (!std::is_same_v<LeftValueType, RightValueType>
-                  && (std::is_same_v<LeftValueType, std::string_view>
-                      || std::is_same_v<RightValueType, std::string_view>)) {
-      return false;  // Cannot compare string with non string.
-    } else {
-      if constexpr (Comp == ComparisonType::EQUALS)
-        return first_val.get() == second_val.get();
-      else if constexpr (Comp == ComparisonType::GREATER)
-        return first_val.get() > second_val.get();
-      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return first_val.get() >= second_val.get();
-      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return first_val.get() <= second_val.get();
-      else if constexpr (Comp == ComparisonType::LESS)
-        return first_val.get() < second_val.get();
-
-      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return first_val.get() != second_val.get();
-      else
-        assert(false && "Operator() not implemented for some ComparisonType");
-    }
-  }
 
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithAttribute::eval()");

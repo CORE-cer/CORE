@@ -5,7 +5,6 @@
 #include <tracy/Tracy.hpp>
 #include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -32,11 +31,6 @@ class Literal : public MathExpr<Type> {
 
   std::unique_ptr<MathExpr<Type>> clone() const override {
     return std::make_unique<Literal<Type>>(val);
-  }
-
-  Type eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("Literal::eval()");
-    return val;
   }
 
   Type eval(Types::EventWrapper& event) override {

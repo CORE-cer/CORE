@@ -18,8 +18,6 @@
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
@@ -50,19 +48,17 @@ class DynamicEvaluator : public GenericEvaluator {
                    CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
                    CEQL::Limit limit,
                    CEQL::Within::TimeWindow time_window,
-                   Internal::QueryCatalog& query_catalog,
-                   RingTupleQueue::Queue& queue)
-      : GenericEvaluator(std::move(cea), time_window, query_catalog, queue),
+                   Internal::QueryCatalog& query_catalog)
+      : GenericEvaluator(std::move(cea), time_window, query_catalog),
         evaluator_args(std::move(tuple_evaluator),
                        event_time_of_expiration,
                        consumption_policy,
                        limit) {}
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple,
-                                                Types::EventWrapper&& event,
-                                                size_t evaluator_idx) {
+  std::optional<tECS::Enumerator>
+  process_event(Types::EventWrapper&& event, size_t evaluator_idx) {
     ZoneScopedN("Interface::DynamicEvaluator::process_event");
-    uint64_t time = tuple_time(tuple);
+    uint64_t time = event_time(event);
 
     if (evaluator_idx >= evaluators.size()) {
       std::unique_ptr<Evaluation::Evaluator> evaluator = std::make_unique<
@@ -75,8 +71,9 @@ class DynamicEvaluator : public GenericEvaluator {
       evaluators.push_back(std::move(evaluator));
     }
 
-    std::optional<tECS::Enumerator> enumerator = evaluators[evaluator_idx]
-                                                   ->next(tuple, std::move(event), time);
+    std::optional<tECS::Enumerator> enumerator = evaluators[evaluator_idx]->next(std::move(
+                                                                                   event),
+                                                                                 time);
     if (enumerator.has_value()
         && evaluator_args.consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
       for (const auto& evaluator : evaluators) {

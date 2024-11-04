@@ -6,7 +6,6 @@
 #include <utility>
 
 #include "cassert"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -28,8 +27,6 @@ class NotPredicate : public PhysicalPredicate {
       : PhysicalPredicate(), predicate(std::move(predicate)) {}
 
   ~NotPredicate() override = default;
-
-  bool eval(RingTupleQueue::Tuple& tuple) override { return !predicate->eval(tuple); }
 
   bool eval(Types::EventWrapper& event) override { return !predicate->eval(event); }
 

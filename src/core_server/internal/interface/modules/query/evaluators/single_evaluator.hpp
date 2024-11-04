@@ -15,8 +15,6 @@
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
@@ -31,9 +29,8 @@ class SingleEvaluator : public GenericEvaluator {
                   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy,
                   CEQL::Limit limit,
                   CEQL::Within::TimeWindow time_window,
-                  Internal::QueryCatalog& query_catalog,
-                  RingTupleQueue::Queue& queue)
-      : GenericEvaluator(std::move(cea), time_window, query_catalog, queue),
+                  Internal::QueryCatalog& query_catalog)
+      : GenericEvaluator(std::move(cea), time_window, query_catalog),
         evaluator(this->cea,
                   std::move(tuple_evaluator),
                   time_window.duration,
@@ -41,12 +38,11 @@ class SingleEvaluator : public GenericEvaluator {
                   consumption_policy,
                   limit) {}
 
-  std::optional<tECS::Enumerator>
-  process_event(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
     ZoneScopedN("Interface::SingleEvaluator::process_event");
-    uint64_t time = tuple_time(tuple);
+    uint64_t time = event_time(event);
 
-    return evaluator.next(tuple, std::move(event), time);
+    return evaluator.next(std::move(event), time);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

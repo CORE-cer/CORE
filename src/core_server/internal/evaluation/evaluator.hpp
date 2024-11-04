@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -106,10 +105,11 @@ class Evaluator {
         enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
-  next(RingTupleQueue::Tuple tuple, Types::EventWrapper&& event, uint64_t current_time) {
+  next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
+
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
-                     tuple.data_timestamp());
+                     event.get_primary_time().val);
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto start_time = std::chrono::steady_clock::now();
 #endif
@@ -126,14 +126,15 @@ class Evaluator {
       should_reset.store(false);
     }
 
-    mpz_class predicates_satisfied = tuple_evaluator(tuple, event);
+    mpz_class predicates_satisfied = tuple_evaluator(event);
     current_union_list_map = {};
     current_ordered_keys = {};
     final_states.clear();
     actual_time = current_time;
-    UnionList ul = tecs->new_ulist(tecs->new_bottom(tuple, current_time));
+    UnionList ul = tecs->new_ulist(
+      tecs->new_bottom(std::move(event.clone()), current_time));
     State* q0 = get_initial_state();
-    exec_trans(tuple, q0, std::move(ul), predicates_satisfied, current_time);
+    exec_trans(event, q0, std::move(ul), predicates_satisfied, current_time);
 
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
@@ -142,7 +143,7 @@ class Evaluator {
         tecs->unpin(actual_ul);
       } else {
         remove_out_of_time_nodes_ul(actual_ul);
-        exec_trans(tuple,
+        exec_trans(event,
                    p,
                    std::move(actual_ul),
                    predicates_satisfied,
@@ -174,7 +175,7 @@ class Evaluator {
       LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                    std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                         - start_time),
-                   tuple.data_timestamp());
+                   event.get_primary_time().val);
       return std::move(enumerator);
     }
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
@@ -183,7 +184,7 @@ class Evaluator {
     LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
                  std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
                                                                       - start_time),
-                 tuple.data_timestamp());
+                 event.get_primary_time().val);
     return {};
   }
 
@@ -217,7 +218,7 @@ class Evaluator {
     }
   }
 
-  void exec_trans(RingTupleQueue::Tuple& tuple,
+  void exec_trans(Types::EventWrapper& event,
                   State* p,
                   UnionList&& ul,
                   mpz_class& t,
@@ -225,7 +226,7 @@ class Evaluator {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
-                     tuple.data_timestamp());
+                     event.get_primary_time().val);
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;
@@ -233,7 +234,7 @@ class Evaluator {
     assert(marked_state != nullptr && unmarked_state != nullptr);
     bool recycle_ulist = false;
     if (!marked_state->is_empty) {
-      Node* new_node = tecs->new_extend(tecs->merge(ul), tuple, current_time);
+      Node* new_node = tecs->new_extend(tecs->merge(ul), event, current_time);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs->insert(
           std::move(current_union_list_map[marked_state]), new_node);

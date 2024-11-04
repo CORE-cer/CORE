@@ -9,7 +9,6 @@
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -35,27 +34,6 @@ class CompareMathExprs : public PhysicalPredicate {
         right(std::move(right)) {}
 
   ~CompareMathExprs() override = default;
-
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("CompareMathExprs::eval()");
-    // std::cout << to_string() << std::endl;
-    if constexpr (Comp == ComparisonType::EQUALS) {
-      auto xd1 = left->eval(tuple);
-      auto xd2 = right->eval(tuple);
-      return xd1 == xd2;
-    } else if constexpr (Comp == ComparisonType::GREATER)
-      return left->eval(tuple) > right->eval(tuple);
-    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return left->eval(tuple) >= right->eval(tuple);
-    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return left->eval(tuple) <= right->eval(tuple);
-    else if constexpr (Comp == ComparisonType::LESS)
-      return left->eval(tuple) < right->eval(tuple);
-    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return left->eval(tuple) != right->eval(tuple);
-    else
-      assert(false && "Operator() not implemented for some ComparisonType");
-  }
 
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareMathExprs::eval()");

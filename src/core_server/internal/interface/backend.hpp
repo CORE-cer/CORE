@@ -20,13 +20,10 @@
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
-#include "core_server/internal/interface/modules/event_manager.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
@@ -40,17 +37,12 @@ namespace CORE::Internal::Interface {
 template <typename ResultHandlerT, bool NoLogging = true>
 class Backend {
   Internal::Catalog catalog = {};
-  RingTupleQueue::Queue queue;
 
   // Modules
-  Module::EventManager event_manager;
   Module::Quarantine::QuarantineManager<ResultHandlerT> quarantine_manager;
 
  public:
-  Backend()
-      : queue(100'000, &catalog.tuple_schemas),
-        event_manager(catalog, queue),
-        quarantine_manager(catalog, queue) {
+  Backend() : quarantine_manager(catalog) {
     if constexpr (NoLogging) {
       Logging::enable_logging_stdout_critical();
     }
@@ -106,8 +98,7 @@ class Backend {
       "Backend::send_event_to_queries",
       event.get_unique_event_type_id(),
       stream_id);
-    RingTupleQueue::Tuple tuple = event_manager.event_to_tuple(std::move(event.clone()));
-    quarantine_manager.send_tuple_to_queries(stream_id, tuple, std::move(event));
+    quarantine_manager.send_event_to_queries(stream_id, std::move(event));
   }
 
   void set_quarantine_policy(std::set<std::string>&& stream_names,

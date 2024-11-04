@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "cassert"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -31,16 +30,6 @@ class AndPredicate : public PhysicalPredicate {
       : PhysicalPredicate(), predicates(std::move(predicates)) {}
 
   ~AndPredicate() override = default;
-
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    ZoneScopedN("AndPredicate::eval()");
-    for (auto& predicate : predicates) {
-      if (!(predicate->eval(tuple))) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("AndPredicate::eval()");

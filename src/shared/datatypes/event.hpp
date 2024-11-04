@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
+
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"
 
@@ -54,6 +58,8 @@ struct Event {
       this->attributes.push_back(attr->clone());
     }
   }
+
+  ~Event() { LOG_TRACE_L3("Destroying Event with id {}", event_type_id); }
 
   Event(const Event& other)
       : event_type_id(other.event_type_id), primary_time(other.primary_time) {
