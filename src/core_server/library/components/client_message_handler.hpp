@@ -29,6 +29,15 @@
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
+#include "shared/exceptions/parsing/client_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/event_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -141,9 +150,28 @@ class ClientMessageHandler {
       return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
                                      stream_info),
                                    Types::ServerResponseType::StreamInfo);
-    } catch (std::exception& e) {
+    } catch (AttributeNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::AttributeNameAlreadyDeclaredException);
+    } catch(AttributeNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNotDefinedException>::serialize(e), Types::ServerResponseType::AttributeNotDefinedException);
+    } catch(EventNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::EventNameAlreadyDeclaredException);
+    } catch(EventNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotDefinedException>::serialize(e), Types::ServerResponseType::EventNotDefinedException);
+    } catch(EventNotInStreamException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotInStreamException>::serialize(e), Types::ServerResponseType::EventNotInStreamException);
+    } catch(ParsingSyntaxException& e) {
+      return Types::ServerResponse(CerealSerializer<ParsingSyntaxException>::serialize(e), Types::ServerResponseType::ParsingSyntaxException);
+    } catch(StreamNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::StreamNameAlreadyDeclaredException);
+    } catch (StreamNotFoundException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNotFoundException>::serialize(e), Types::ServerResponseType::StreamNotFoundException);
+    } catch (WarningException& e) {
       return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
-                                   Types::ServerResponseType::Error);
+                                   Types::ServerResponseType::Warning);
+    } catch (ClientException& e) {
+      return Types::ServerResponse(CerealSerializer<ClientException>::serialize(e),
+                                   Types::ServerResponseType::ClientException);
     }
   }
 
@@ -201,6 +229,22 @@ class ClientMessageHandler {
       return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
                                      possible_port.value_or(0)),
                                    Types::ServerResponseType::PortNumber);
+    } catch (AttributeNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::AttributeNameAlreadyDeclaredException);
+    } catch(AttributeNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNotDefinedException>::serialize(e), Types::ServerResponseType::AttributeNotDefinedException);
+    } catch(EventNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::EventNameAlreadyDeclaredException);
+    } catch(EventNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotDefinedException>::serialize(e), Types::ServerResponseType::EventNotDefinedException);
+    } catch(EventNotInStreamException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotInStreamException>::serialize(e), Types::ServerResponseType::EventNotInStreamException);
+    } catch(ParsingSyntaxException& e) {
+      return Types::ServerResponse(CerealSerializer<ParsingSyntaxException>::serialize(e), Types::ServerResponseType::ParsingSyntaxException);
+    } catch(StreamNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::StreamNameAlreadyDeclaredException);
+    } catch (StreamNotFoundException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNotFoundException>::serialize(e), Types::ServerResponseType::StreamNotFoundException);
     } catch (WarningException& e) {
       return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
                                    Types::ServerResponseType::Warning);

@@ -2,9 +2,9 @@
 
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <vector>
-#include <functional>
 
 #include "shared/datatypes/enumerator.hpp"
 
@@ -57,7 +57,7 @@ class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
   static std::function<void(const Types::Enumerator&)> event_handler;
 
   static void handle_complex_event(Types::Enumerator& enumerator) {
-    if (event_handler){
+    if (event_handler) {
       event_handler(enumerator);
     }
   }

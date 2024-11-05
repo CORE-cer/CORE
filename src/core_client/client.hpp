@@ -32,6 +32,15 @@
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
+#include "shared/exceptions/parsing/client_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/event_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE {
@@ -115,11 +124,15 @@ class Client {
   Types::PortNumber add_query(std::string query) {
     Types::ClientRequest create_streamer{std::move(query),
                                          Types::ClientRequestType::AddQuery};
-    Types::ServerResponse response = send_request(create_streamer);
-    assert(response.response_type == Types::ServerResponseType::PortNumber);
-    auto port_number = Internal::CerealSerializer<Types::PortNumber>::deserialize(
-      response.serialized_response_data);
-    return port_number;
+    try {
+      Types::ServerResponse response = send_request(create_streamer);
+      assert(response.response_type == Types::ServerResponseType::PortNumber);
+      auto port_number = Internal::CerealSerializer<Types::PortNumber>::deserialize(
+        response.serialized_response_data);
+      return port_number;
+    } catch (StreamNotFoundException& e) {
+      throw e;
+    }
   }
 
   template <class Handler>
@@ -141,8 +154,9 @@ class Client {
 
   template <typename Handler>
   SubscriptionId subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
-    static_assert(std::is_base_of_v<MessageHandler<Handler>, Handler>
-                  || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
+    static_assert(std::is_base_of_v<
+                    MessageHandler<Handler>,
+                    Handler> || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
 
     auto subscription_id = create_subscribers_and_stop_conditions(port);
     auto subscriber = subscribers[subscription_id].get();
@@ -187,15 +201,62 @@ class Client {
     std::string serialized_request = ClientReqSerializer::serialize(request);
     auto serialized_response = dealer.send_and_receive(serialized_request);
     auto res = ServerResSerializer::deserialize(serialized_response);
-    if (res.response_type == Types::ServerResponseType::Error) {
-      auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+    switch (res.response_type)
+    {
+    case Types::ServerResponseType::AttributeNameAlreadyDeclaredException: {
+      auto client_exception = Internal::CerealSerializer<AttributeNameAlreadyDeclaredException>::deserialize(
         res.serialized_response_data);
-      throw std::runtime_error(response_string);
+      throw client_exception;
     }
-    if (res.response_type == Types::ServerResponseType::Warning) {
+    case Types::ServerResponseType::AttributeNotDefinedException: {
+      auto client_exception = Internal::CerealSerializer<AttributeNotDefinedException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::EventNameAlreadyDeclaredException: {
+      auto client_exception = Internal::CerealSerializer<EventNameAlreadyDeclaredException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::EventNotDefinedException: {
+      auto client_exception = Internal::CerealSerializer<EventNotDefinedException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::EventNotInStreamException: {
+      auto client_exception = Internal::CerealSerializer<EventNotInStreamException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::ParsingSyntaxException: {
+      auto client_exception = Internal::CerealSerializer<ParsingSyntaxException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::StreamNameAlreadyDeclaredException: {
+      auto client_exception = Internal::CerealSerializer<StreamNameAlreadyDeclaredException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::StreamNotFoundException: {
+      auto client_exception = Internal::CerealSerializer<StreamNameAlreadyDeclaredException>::deserialize(
+        res.serialized_response_data);
+      throw client_exception;
+    }
+    case Types::ServerResponseType::Warning: {
       auto response_string = Internal::CerealSerializer<std::string>::deserialize(
         res.serialized_response_data);
       std::cout << response_string << std::flush;
+      break;
+    }
+    case Types::ServerResponseType::Error: {
+      auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+        res.serialized_response_data);
+      std::cout << response_string << std::flush;
+      break;
+    }
+    default:
+      return res;
     }
     return res;
   }
