@@ -2,27 +2,22 @@
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <iterator>
 #include <map>
-#include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tracy/Tracy.hpp>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
@@ -33,7 +28,7 @@
 #include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
-#include "shared/datatypes/value.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal {
 
@@ -252,10 +247,8 @@ class QueryCatalog {
   Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator) const {
     ZoneScopedN("Catalog::convert_enumerator");
     std::vector<Types::ComplexEvent> out;
-    std::unordered_map<RingTupleQueue::Tuple, Types::Event> event_memory;
     for (auto info : enumerator) {
-      out.push_back(
-        tuples_to_complex_event(info.start, info.end, info.event_tuples, event_memory));
+      out.push_back(event_wrappers_to_complex_event(info.start, info.end, info.eventss));
     }
     return {std::move(out)};
   }
@@ -360,67 +353,18 @@ class QueryCatalog {
     }
   }
 
-  Types::ComplexEvent tuples_to_complex_event(
-    uint64_t start,
-    uint64_t end,
-    std::vector<RingTupleQueue::Tuple>& tuples,
-    std::unordered_map<RingTupleQueue::Tuple, Types::Event>& event_memory) const {
-    ZoneScopedN("Catalog::tuple_to_complex_event");
+  Types::ComplexEvent
+  event_wrappers_to_complex_event(uint64_t start,
+                                  uint64_t end,
+                                  std::vector<Types::EventWrapper>& events) const {
+    ZoneScopedN("Catalog::event_wrappers_to_complex_event");
     std::vector<Types::Event> converted_events;
-    for (auto& tuple : tuples) {
-      assert(tuple.id() < events_info.size());
-      if (event_memory.contains(tuple)) {
-        converted_events.push_back(event_memory[tuple]);
-      } else {
-        const Types::EventInfo& event_info = events_info[tuple.id()];
-        converted_events.push_back(tuple_to_event(event_info, tuple));
-      }
+    for (auto& event : events) {
+      assert(event.get_unique_event_type_id() < events_info.size());
+      // TODO: use shared pointer instead of copying the event
+      converted_events.emplace_back(event.get_event_reference());
     }
     return {start, end, std::move(converted_events)};
-  }
-
-  Types::Event
-  tuple_to_event(const Types::EventInfo& event_info, RingTupleQueue::Tuple& tuple) const {
-    ZoneScopedN("Catalog::tuple_to_event");
-    assert(tuple.id() == event_info.id);
-    std::vector<std::shared_ptr<Types::Value>> values;
-    for (auto i = 0; i < event_info.attributes_info.size(); i++) {
-      const Types::AttributeInfo& att_info = event_info.attributes_info[i];
-      std::shared_ptr<Types::Value> val;
-      switch (att_info.value_type) {
-        case Types::ValueTypes::INT64:
-        case Types::ValueTypes::PRIMARY_TIME:
-          val = std::make_shared<Types::IntValue>(
-            RingTupleQueue::Value<int64_t>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::DOUBLE:
-          val = std::make_shared<Types::DoubleValue>(
-            RingTupleQueue::Value<double>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::BOOL:
-          val = std::make_shared<Types::BoolValue>(
-            RingTupleQueue::Value<bool>(tuple[i]).get());
-          break;
-        case Types::ValueTypes::STRING_VIEW:
-          val = std::make_shared<Types::StringValue>(
-            std::string(RingTupleQueue::Value<std::string_view>(tuple[i]).get()));
-          break;
-        case Types::ValueTypes::DATE:
-          val = std::make_shared<Types::DateValue>(
-            RingTupleQueue::Value<std::time_t>(tuple[i]).get());
-          break;
-        default:
-          assert(false && "Some Value Type was not implemented");
-      }
-      values.push_back(std::move(val));
-    }
-    std::chrono::system_clock::time_point primary_time_tp = tuple.data_timestamp();
-    std::shared_ptr<Types::IntValue> primary_time = std::make_shared<Types::IntValue>(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        primary_time_tp.time_since_epoch())
-        .count());
-
-    return {event_info.id, std::move(values), primary_time};
   }
 };
 
