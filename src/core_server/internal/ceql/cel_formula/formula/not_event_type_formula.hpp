@@ -32,7 +32,7 @@ struct NotEventTypeFormula : public Formula {
   }
 
   std::string to_string() const override {
-    return "NOT " + not_formula->to_string();
+    return "NOT ( " + not_formula->to_string() + ")";
   }
 
   void accept_visitor(FormulaVisitor& visitor) override { visitor.visit(*this); }

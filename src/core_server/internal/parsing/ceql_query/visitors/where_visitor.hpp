@@ -140,15 +140,15 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitNot_event_type_cel_formula(
-  CEQLQueryParser::Not_event_type_cel_formulaContext* ctx) override { 
-    visit(ctx->not_event());
+  virtual std::any visitNot_event_type_atomic_cel_formula(
+  CEQLQueryParser::Not_event_type_atomic_cel_formulaContext* ctx) override { 
+    visit(ctx->atomic_cel_formula());
     formula = std::make_unique<CEQL::NotEventTypeFormula>(std::move(formula));
     return {};
   }
 
-  virtual std::any visitNot_event_r(
-    CEQLQueryParser::Not_event_rContext* ctx) override {
+  virtual std::any visitAtomic_cel_formula_r(
+    CEQLQueryParser::Atomic_cel_formula_rContext* ctx) override {
     std::string event_name = ctx->s_event_name()->event_name()->getText();
     if (ctx->s_event_name()->stream_name() == nullptr) {
       check_if_event_exists_in_streams(event_name, streams_events);
@@ -164,21 +164,9 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
-  virtual std::any visitNot_event_as(
-    CEQLQueryParser::Not_event_asContext* ctx) override {
-      visit(ctx->not_event());
-      formula = std::make_unique<CEQL::AsFormula>(std::move(formula),
-                                                  ctx->event_name()->getText());
-      as_events_names.push_back(ctx->event_name()->getText());
-      filter_visitor.add_as_events_to_map(ctx->event_name()->getText(), as_events_info);
-      as_events_info.clear();
-
-      return {};
-  }
-
-  virtual std::any visitNot_event_filter(
-    CEQLQueryParser::Not_event_filterContext* ctx) override {
-      visit(ctx->not_event());
+  virtual std::any visitAtomic_cel_formula_filter(
+    CEQLQueryParser::Atomic_cel_formula_filterContext* ctx) override {
+      visit(ctx->atomic_cel_formula());
       filter_visitor.visit(ctx->filter());
       formula = std::make_unique<CEQL::FilterFormula>(std::move(formula),
                       filter_visitor.get_parsed_filter());
