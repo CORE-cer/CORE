@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <fstream>
 #include <initializer_list>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -74,8 +73,8 @@ struct StreamInfo {
           case Types::ValueTypes::PRIMARY_TIME: {
             std::unique_ptr<Types::IntValue> time = std::make_unique<Types::IntValue>(
               std::stoll(csv_data[i + 1]));
-            attributes.emplace_back(std::move(time));
             primary_time = *time;
+            attributes.emplace_back(std::move(time));
             break;
           }
           case Types::ValueTypes::DATE:
