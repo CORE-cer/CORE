@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -57,6 +58,13 @@ struct Event {
     for (auto& attr : attributes) {
       this->attributes.push_back(attr->clone());
     }
+  }
+
+  Event(UniqueEventTypeId event_type_id,
+        std::vector<std::unique_ptr<Types::Value>>&& attributes,
+        std::optional<Types::IntValue> primary_time = {}) noexcept
+      : event_type_id(event_type_id), primary_time(primary_time) {
+    this->attributes = std::move(attributes);
   }
 
   ~Event() { LOG_TRACE_L3("Destroying Event with id {}", event_type_id); }
