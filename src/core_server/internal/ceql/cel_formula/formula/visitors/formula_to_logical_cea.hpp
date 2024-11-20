@@ -16,6 +16,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
@@ -171,6 +172,10 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     }
     uint64_t variable_id = variables_to_id[formula.variable_name];
     current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
+  }
+
+  void visit(NotEventTypeFormula& formula) override {
+
   }
 };
 }  // namespace CORE::Internal::CEQL
