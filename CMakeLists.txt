@@ -85,7 +85,7 @@ file(GLOB_RECURSE PYBIND_FILES
 message(STATUS "Building python target")
 # include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
 pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
-target_link_libraries(_pycore PRIVATE cereal cppzmq pybind11::module TracyClient)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
