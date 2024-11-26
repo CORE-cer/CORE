@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <functional>
 
 #include "shared/datatypes/enumerator.hpp"
 
@@ -50,6 +51,19 @@ class Printer : public StaticMessageHandler<Printer> {
       std::cout << complex_event.to_string() << std::endl;
   }
 };
+
+class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
+ public:
+  static std::function<void(const Types::Enumerator&)> event_handler;
+
+  static void handle_complex_event(Types::Enumerator& enumerator) {
+    if (event_handler){
+      event_handler(enumerator);
+    }
+  }
+};
+
+std::function<void(const Types::Enumerator&)> CallbackHandler::event_handler = nullptr;
 
 class DummyHandler : public StaticMessageHandler<DummyHandler> {
  public:
