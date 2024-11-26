@@ -90,6 +90,7 @@ class CORE(ConanFile):
     GMP_VERSION = "6.2.1"
     RE2_VERSION = "20230602"
     QUILL_VERSION = "3.7.0"
+    PYBIND_VERSION = "2.13.5"
     READERWRITERQUEUE_VERSION = "1.0.6"
 
     def layout(self):
@@ -116,6 +117,7 @@ class CORE(ConanFile):
         self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
         self.requires("quill/" + CORE.QUILL_VERSION)
+        self.requires("pybind11/" +  CORE.PYBIND_VERSION)
         self.requires("readerwriterqueue/" + CORE.READERWRITERQUEUE_VERSION)
 
     def generate(self):

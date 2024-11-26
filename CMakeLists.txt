@@ -21,6 +21,7 @@ find_package(libpqxx REQUIRED)
 find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
+find_package(pybind11 REQUIRED)
 find_package(readerwriterqueue REQUIRED)
 
 
@@ -74,6 +75,24 @@ file(GLOB_RECURSE SERVER_FILES
 file(GLOB_RECURSE STREAMER_FILES
      src/core_streamer/*.cpp
 )
+
+file(GLOB_RECURSE PYBIND_FILES
+     src/pybind/*.cpp
+)
+
+# message(STATUS "Building python target")
+# # pybind11_add_module(pycore MODULE src/pybind/python_binding.cpp)
+# add_library(pycore MODULE src/pybind/python_binding.cpp)
+# target_link_libraries(pycore PRIVATE pybind11::module)
+
+
+message(STATUS "Building python target")
+# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
+pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+target_link_libraries(_pycore PRIVATE cereal cppzmq pybind11::module TracyClient)
+# target_link_libraries(_pycore PRIVATE ${project_LIB})
+install(TARGETS _pycore DESTINATION .)
+
 
 add_library(core STATIC
             ${SHARED_FILES}
@@ -141,6 +160,7 @@ endif()
 add_executable(online_polkura_example src/targets/online/polkura_example/polkura.cpp)
 add_executable(online_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
 add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
+add_executable(online_coinbase_example src/targets/online/coinbase_example/coinbase.cpp)
 # add_executable(online_client src/targets/online/client.cpp)
 # add_executable(online_server src/targets/online/server.cpp)
 
@@ -149,6 +169,7 @@ add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.
 target_link_libraries(online_polkura_example PRIVATE core)
 target_link_libraries(online_stocks_example PRIVATE core)
 target_link_libraries(online_taxi_example PRIVATE core)
+target_link_libraries(online_coinbase_example PRIVATE core)
 # target_link_libraries(online_client PRIVATE core)
 # target_link_libraries(online_server PRIVATE core)
 

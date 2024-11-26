@@ -5,11 +5,14 @@
 
 namespace CORE {
 
-class AttributeNotDefinedException : public std::exception {
+
+class ClientException : public std::exception {
  public:
-  AttributeNotDefinedException() = default;
-  
-  AttributeNotDefinedException(std::string error_message) { m_message = error_message; }
+
+  ClientException() = default;
+
+  ClientException(std::string error_message)
+      : m_message(std::move(error_message)) {}
 
   template <class Archive>
   void serialize(Archive& archive) {

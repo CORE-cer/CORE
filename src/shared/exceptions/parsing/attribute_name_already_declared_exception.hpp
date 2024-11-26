@@ -5,9 +5,16 @@
 
 namespace CORE {
 
-class AttributeNameAlreadyDeclared : public std::exception {
+class AttributeNameAlreadyDeclaredException : public std::exception {
  public:
-  AttributeNameAlreadyDeclared(std::string error_message) { m_message = error_message; }
+  AttributeNameAlreadyDeclaredException() = default;
+
+  AttributeNameAlreadyDeclaredException(std::string error_message) { m_message = error_message; }
+
+  template <class Archive>
+  void serialize(Archive& archive) {
+    archive(m_message);
+  }
 
   virtual const char* what() const noexcept override { return m_message.c_str(); }
 
