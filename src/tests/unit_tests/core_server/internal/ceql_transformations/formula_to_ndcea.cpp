@@ -211,4 +211,26 @@ TEST_CASE("As Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.final_states == 0b10);
 }
 
+TEST_CASE("Basic Not Event Type Formula", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S",
+                                                           {
+                                                             {"H", {}},
+                                                           }});
+  auto query = Parsing::QueryParser::parse_query(create_query("NOT (H)"), catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b00), 0b10, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+}
+
 }  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests

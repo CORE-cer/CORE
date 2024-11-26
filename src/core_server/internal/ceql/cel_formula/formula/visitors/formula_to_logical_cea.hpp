@@ -31,6 +31,8 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
+
 #include "formula_visitor.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
@@ -175,7 +177,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(NotEventTypeFormula& formula) override {
-
+    formula.not_formula->accept_visitor(*this);
+    current_cea = CEA::NegateExpected()(std::move(current_cea));
   }
 };
 }  // namespace CORE::Internal::CEQL
