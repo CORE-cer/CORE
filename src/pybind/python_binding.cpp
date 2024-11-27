@@ -79,7 +79,7 @@ namespace CORE{
             .def_readonly("name", &Types::AttributeInfo::name)
             .def_readonly("value_type", &Types::AttributeInfo::value_type);
 
-        py::class_<Types::Event>(m, "PyEvent")
+        py::class_<Types::Event, std::shared_ptr<Types::Event>>(m, "PyEvent")
             .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>());
  
         py::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
@@ -93,7 +93,7 @@ namespace CORE{
             .def_readonly("name", &Types::EventInfo::name);
 
         py::class_<Types::Stream>(m, "PyStream")
-            .def(py::init<uint64_t, std::vector<Types::Event>&&>())
+            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Event>>&&>())
             .def_readonly("id", &Types::Stream::id)
             .def_readonly("events", &Types::Stream::events);
 
@@ -109,7 +109,11 @@ namespace CORE{
         py::class_<Streamer>(m, "PyStreamer")
             .def(py::init<std::string, uint16_t>())
             .def("send_stream", py::overload_cast<Types::Stream>(&Streamer::send_stream))
-            .def("send_stream", py::overload_cast<uint64_t, Types::Event&>(&Streamer::send_stream));
+            // .def("send_stream", py::overload_cast<uint64_t, std::shared_ptr<Types::Event>&&>(&Streamer::send_stream))
+            .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
+                self.send_stream(stream_id, std::move(event));
+            }, py::arg("stream_id"), py::arg("event"),
+            "Envía un evento único a un stream.");
 
         py::class_<Client>(m, "PyClient")
             .def(py::init<std::string, uint16_t>())
