@@ -118,9 +118,10 @@ void subscribe_to_queries(Client& client,
 void send_a_stream(TaxiData::Data data) {
   Streamer streamer("tcp://localhost", 5001);
   // clang-format off
-  Types::Event event_to_send{
+  auto event_to_send = std::make_shared<Types::Event>(
     data.event_type,
-      {std::make_shared<Types::IntValue>(data.id),
+    std::vector<std::shared_ptr<Types::Value>>{
+       std::make_shared<Types::IntValue>(data.id),
        std::make_shared<Types::StringValue>(data.medallion),
        std::make_shared<Types::StringValue>(data.hack_license),
        std::make_shared<Types::IntValue>(data.pickup_datetime),
@@ -137,9 +138,9 @@ void send_a_stream(TaxiData::Data data) {
        std::make_shared<Types::DoubleValue>(data.tolls_amount),
        std::make_shared<Types::DoubleValue>(data.total_amount)
       }
-  };
+  );
   // clang-format on
-  streamer.send_stream(0, event_to_send);
+  streamer.send_stream(0, std::move(event_to_send));
 }
 
 int main(int argc, char** argv) {

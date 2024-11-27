@@ -115,17 +115,3 @@ jobs:
         run: |
           chmod +x ./scripts/clang_tidy_check_all_files.sh
           ./scripts/clang_tidy_check_all_files.sh
-  check-tracy-off:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-
-      - name: "Setup env"
-        uses: JRMurr/direnv-nix-action@v4.1.0
-
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: Check tracy off
-        run: grep 'set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)' CMakeLists.txt

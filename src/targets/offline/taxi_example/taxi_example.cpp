@@ -102,9 +102,10 @@ void create_queries(Client& client) {
 void send_a_stream(Library::OfflineServer& server, TaxiData::Data data) {
   ZoneScoped;
   // clang-format off
-  Types::Event event_to_send{
+  auto event_to_send = std::make_shared<Types::Event>(
     data.event_type,
-      {std::make_shared<Types::IntValue>(data.id),
+    std::vector<std::shared_ptr<Types::Value>>{
+       std::make_shared<Types::IntValue>(data.id),
        std::make_shared<Types::StringValue>(data.medallion),
        std::make_shared<Types::StringValue>(data.hack_license),
        std::make_shared<Types::IntValue>(data.pickup_datetime),
@@ -121,7 +122,7 @@ void send_a_stream(Library::OfflineServer& server, TaxiData::Data data) {
        std::make_shared<Types::DoubleValue>(data.tolls_amount),
        std::make_shared<Types::DoubleValue>(data.total_amount)
       }
-  };
+  );
   // clang-format on
   server.receive_stream({0, {event_to_send}});
 }

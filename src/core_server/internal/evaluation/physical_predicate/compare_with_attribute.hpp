@@ -9,11 +9,34 @@
 
 #include "cassert"
 #include "comparison_type.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::CEA {
+
+template <typename T>
+struct ToCoreType;
+
+template <>
+struct ToCoreType<int64_t> {
+  using type = Types::IntValue;
+};
+
+template <>
+struct ToCoreType<double> {
+  using type = Types::DoubleValue;
+};
+
+template <>
+struct ToCoreType<bool> {
+  using type = Types::BoolValue;
+};
+
+template <>
+struct ToCoreType<std::string_view> {
+  using type = Types::StringValue;
+};
 
 template <ComparisonType Comp, typename LeftValueType, typename RightValueType>
 class CompareWithAttribute : public PhysicalPredicate {
@@ -34,30 +57,31 @@ class CompareWithAttribute : public PhysicalPredicate {
 
   ~CompareWithAttribute() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
+  bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithAttribute::eval()");
-    uint64_t* pos1 = tuple[first_pos];
-    uint64_t* pos2 = tuple[second_pos];
-    RingTupleQueue::Value<LeftValueType> first_val(pos1);
-    RingTupleQueue::Value<RightValueType> second_val(pos2);
+    const typename ToCoreType<LeftValueType>::type&
+      pos1 = event.get_attribute_at_index<typename ToCoreType<LeftValueType>::type>(
+        first_pos);
+    const typename ToCoreType<RightValueType>::type&
+      pos2 = event.get_attribute_at_index<typename ToCoreType<RightValueType>::type>(
+        second_pos);
     if constexpr (!std::is_same_v<LeftValueType, RightValueType>
                   && (std::is_same_v<LeftValueType, std::string_view>
                       || std::is_same_v<RightValueType, std::string_view>)) {
       return false;  // Cannot compare string with non string.
     } else {
       if constexpr (Comp == ComparisonType::EQUALS)
-        return first_val.get() == second_val.get();
+        return pos1.val == pos2.val;
       else if constexpr (Comp == ComparisonType::GREATER)
-        return first_val.get() > second_val.get();
+        return pos1.val > pos2.val;
       else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return first_val.get() >= second_val.get();
+        return pos1.val >= pos2.val;
       else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return first_val.get() <= second_val.get();
+        return pos1.val <= pos2.val;
       else if constexpr (Comp == ComparisonType::LESS)
-        return first_val.get() < second_val.get();
-
+        return pos1.val < pos2.val;
       else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return first_val.get() != second_val.get();
+        return pos1.val != pos2.val;
       else
         assert(false && "Operator() not implemented for some ComparisonType");
     }

@@ -9,9 +9,9 @@
 
 #include "cassert"
 #include "comparison_type.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -36,22 +36,23 @@ class CompareWithConstant : public PhysicalPredicate {
 
   ~CompareWithConstant() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
+  bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithConstant::eval()");
-    uint64_t* pos = tuple[pos_to_compare];
-    RingTupleQueue::Value<ValueType> attribute_val(pos);
+    const typename ToCoreType<ValueType>::type&
+      attribute_val = event.get_attribute_at_index<typename ToCoreType<ValueType>::type>(
+        pos_to_compare);
     if constexpr (Comp == ComparisonType::EQUALS)
-      return attribute_val.get() == constant_val;
+      return attribute_val.val == constant_val;
     else if constexpr (Comp == ComparisonType::GREATER)
-      return attribute_val.get() > constant_val;
+      return attribute_val.val > constant_val;
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return attribute_val.get() >= constant_val;
+      return attribute_val.val >= constant_val;
     else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return attribute_val.get() <= constant_val;
+      return attribute_val.val <= constant_val;
     else if constexpr (Comp == ComparisonType::LESS)
-      return attribute_val.get() < constant_val;
+      return attribute_val.val < constant_val;
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return attribute_val.get() != constant_val;
+      return attribute_val.val != constant_val;
     else
       assert(false && "Operator() not implemented for some ComparisonType");
   }

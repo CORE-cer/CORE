@@ -3,9 +3,12 @@
 
 #include <cassert>
 #include <cwchar>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::tECS {
 class Node {
@@ -28,8 +31,9 @@ class Node {
 
   union {
     Node* right = nullptr;
-    RingTupleQueue::Tuple tuple;
   };
+
+  std::optional<Types::EventWrapper> event;
 
   union {
     uint64_t ref_count{0};
@@ -49,15 +53,15 @@ class Node {
    */
 
   /* BOTTOM Node */
-  Node(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
-    reset(tuple, timestamp);  //Se llama a reset para evitar repetir codigo
+  Node(Types::EventWrapper&& event, uint64_t timestamp) {
+    reset(std::move(event), timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
   // TODO: Check if I really need a tuple.
 
-  void reset(RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  void reset(Types::EventWrapper&& event, uint64_t timestamp) {
     left = nullptr;
-    this->tuple = tuple;
+    this->event = std::move(event);
     this->timestamp = timestamp;
     this->node_type = NodeType::BOTTOM;
     this->maximum_start = timestamp;
@@ -65,15 +69,16 @@ class Node {
   }
 
   /* OUTPUT Node */
-  Node(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  Node(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
     assert(node != nullptr);
-    reset(node, tuple,
+    reset(node,
+          std::move(event),
           timestamp);  //Se llama a reset para evitar repetir codigo
   }
 
-  void reset(Node* node, RingTupleQueue::Tuple tuple, uint64_t timestamp) {
+  void reset(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
     this->left = node;
-    this->tuple = tuple;
+    this->event = std::move(event);
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);
@@ -122,9 +127,13 @@ class Node {
     return timestamp;
   }
 
-  RingTupleQueue::Tuple get_tuple() const {
+  Types::EventWrapper get_event_clone() const {
     assert(!is_union());
-    return tuple;
+    if (event.has_value()) {
+      return event.value().clone();
+    } else {
+      throw std::runtime_error("Event is not set");
+    }
   }
 
   Node* next() const {
@@ -151,9 +160,9 @@ class Node {
       out += "    ";
     }
     if (is_bottom()) {
-      out += "Bottom(" + std::to_string(tuple.id()) + ")";
+      // out += "Bottom(" + std::to_string(tuple.id()) + ")";
     } else if (is_output()) {
-      out += "Output(" + std::to_string(tuple.id()) + ")\n";
+      // out += "Output(" + std::to_string(tuple.id()) + ")\n";
       out += left->to_string(depth + 1);
     } else {
       out += "Union\n";

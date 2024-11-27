@@ -1,5 +1,7 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -15,8 +17,7 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
@@ -26,15 +27,17 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   std::unique_ptr<SingleEvaluator> evaluator;
 
  public:
-  SimpleQuery(Internal::QueryCatalog query_catalog,
-              RingTupleQueue::Queue& queue,
-              std::string inproc_receiver_address,
-              std::unique_ptr<ResultHandlerT>&& result_handler)
+  SimpleQuery(
+    Internal::QueryCatalog query_catalog,
+    std::string inproc_receiver_address,
+    std::unique_ptr<ResultHandlerT>&& result_handler,
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
-                                                                  queue,
                                                                   inproc_receiver_address,
-                                                                  std::move(
-                                                                    result_handler)) {}
+                                                                  std::move(result_handler),
+                                                                  blocking_event_queue) {}
+
+  ~SimpleQuery() { this->stop(); }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -63,12 +66,11 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   query.consume_by.policy,
                                                   query.limit,
                                                   this->time_window,
-                                                  this->query_catalog,
-                                                  this->queue);
+                                                  this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
-    return evaluator->process_event(tuple);
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
+    return evaluator->process_event(std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

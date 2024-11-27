@@ -1,5 +1,6 @@
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <tracy/Tracy.hpp>
@@ -45,7 +46,12 @@ int main(int argc, char** argv) {
     std::cout << "Query: " << query_string << std::endl;
 
     client.add_query(std::move(query_string));
-    std::vector<Types::Event> events = stream_info.get_events_from_csv(data_path);
+    std::vector<Types::Event> events = std::move(
+      stream_info.get_events_from_csv(data_path));
+    std::vector<std::shared_ptr<Types::Event>> events_to_send;
+    for (Types::Event event : events) {
+      events_to_send.push_back(std::make_shared<Types::Event>(event));
+    }
 
     std::cout << "Read events " << events.size() << std::endl;
     FrameMark;
@@ -54,10 +60,12 @@ int main(int argc, char** argv) {
     //   ZoneScopedN("main::send_event");
     //   server.receive_stream({0, {event_to_send}});
     // }
-    server.receive_stream({0, std::move(events)});
+    server.receive_stream({0, std::move(events_to_send)});
 
     return 0;
-  } catch (std::exception& e) {
+  }
+
+  catch (std::exception& e) {
     std::cout << "Exception: " << e.what() << std::endl;
     return 1;
   }

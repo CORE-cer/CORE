@@ -11,7 +11,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
@@ -32,8 +32,8 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
 
   ~CompareWithRegexWeaklyTyped() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    return re2::RE2::FullMatch(left->eval(tuple), regex_compiled);
+  bool eval(Types::EventWrapper& event) override {
+    return re2::RE2::FullMatch(left->eval(event), regex_compiled);
   }
 
   std::string to_string() const override {

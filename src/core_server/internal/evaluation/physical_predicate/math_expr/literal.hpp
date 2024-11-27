@@ -5,8 +5,8 @@
 #include <tracy/Tracy.hpp>
 #include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -33,7 +33,7 @@ class Literal : public MathExpr<Type> {
     return std::make_unique<Literal<Type>>(val);
   }
 
-  Type eval(RingTupleQueue::Tuple& tuple) override {
+  Type eval(Types::EventWrapper& event) override {
     ZoneScopedN("Literal::eval()");
     return val;
   }

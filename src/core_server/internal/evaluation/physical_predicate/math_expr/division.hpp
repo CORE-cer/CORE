@@ -5,8 +5,8 @@
 #include <string>
 #include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -24,12 +24,12 @@ class Division : public MathExpr<Type> {
     return std::make_unique<Division<Type>>(left->clone(), right->clone());
   }
 
-  Type eval(RingTupleQueue::Tuple& tuple) override {
+  Type eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Division is only valid for arithmetic vals");
       throw std::logic_error("Division is only valid for arithmetic vals");
     } else
-      return left->eval(tuple) / right->eval(tuple);
+      return left->eval(event) / right->eval(event);
   }
 
   std::string to_string() const override {

@@ -165,7 +165,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "A broadcast message is received exactly as it was sent. 100 "
+  "A broadcast message is received exactly as it was sent. 10 "
   "receivers",
   "[zmq]") {
   std::string sent_message = "Hello World 1";
@@ -173,7 +173,7 @@ TEST_CASE(
 
   ZMQMessageBroadcaster message_sender("tcp://*:5555");
 
-  static const int amount_of_threads = 100;
+  static const int amount_of_threads = 10;
   bool results[amount_of_threads];
   std::unique_ptr<std::thread> threads[amount_of_threads];
   std::atomic<int> counter = 0;

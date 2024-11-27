@@ -6,8 +6,8 @@
 #include <string>
 
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -39,9 +39,9 @@ class InRangePredicate : public PhysicalPredicate {
 
   ~InRangePredicate() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    return (left->eval(tuple) >= lower_bound->eval(tuple))
-           && (left->eval(tuple) <= upper_bound->eval(tuple));
+  bool eval(Types::EventWrapper& event) override {
+    return (left->eval(event) >= lower_bound->eval(event))
+           && (left->eval(event) <= upper_bound->eval(event));
   }
 
   std::string to_string() const override {

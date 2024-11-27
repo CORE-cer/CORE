@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "cassert"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -30,10 +30,10 @@ class OrPredicate : public PhysicalPredicate {
 
   ~OrPredicate() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
+  bool eval(Types::EventWrapper& event) override {
     for (auto& predicate : predicates) {
       // We want to check for event_types individually inside the or.
-      if ((*predicate)(tuple)) {
+      if ((*predicate)(event)) {
         return true;
       }
     }

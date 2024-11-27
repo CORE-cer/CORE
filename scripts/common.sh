@@ -28,6 +28,9 @@ function _setArgs() {
         shift
         J="$1"
         ;;
+      "--profiling")
+        PROFILING=on
+        ;;
     esac
     shift
   done
@@ -36,21 +39,24 @@ function _setArgs() {
 function build() {
   conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
       -s build_type=${BUILD_TYPE}\
-      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING} -o j=${J}
+      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING} -o j=${J} -o profiling=${PROFILING}
 
   build_result=$?
   if [ $build_result -ne 0 ]; then
       echo -e "${RED}Build failed!${NORMAL_OUTPUT}"
       exit 1
   fi
+  # echo current path
 }
 
 # Default values
 BUILD_TYPE="Debug"
-CONAN_PROFILE="conan_profiles/x86_64-linux-gcc"
+CONAN_PROFILE="conan_profiles/x86_64-linux-clang"
 SANITIZER=none
 LOGGING=info
 J="all-1"
+PROFILING=off
+export TSAN_OPTIONS="suppressions=tsan_suppressions.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

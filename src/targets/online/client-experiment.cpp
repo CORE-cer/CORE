@@ -79,10 +79,17 @@ void subscribe_to_queries(Client& client,
 
 void send_a_stream() {
   Streamer streamer("tcp://localhost", 5001);
-  Types::Event event_to_send{0,
-                             {std::make_shared<Types::IntValue>(20),
-                              std::make_shared<Types::IntValue>(2)}};
-  streamer.send_stream(0, event_to_send);
+  // clang-format off
+  auto event_to_send = std::make_shared<Types::Event>(
+    0,
+    std::vector<std::shared_ptr<Types::Value>>{
+      std::make_shared<Types::IntValue>(20),
+      std::make_shared<Types::IntValue>(2)
+    }
+  );
+  // clang-format on
+
+  streamer.send_stream({0, {event_to_send}});
 }
 
 int main(int argc, char** argv) {

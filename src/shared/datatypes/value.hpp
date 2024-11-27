@@ -2,11 +2,13 @@
 
 #include <cstdint>
 #include <ctime>
+#include <memory>
 #include <string>
 
 namespace CORE::Types {
 struct Value {
   virtual ~Value() = default;
+  virtual std::unique_ptr<Value> clone() const = 0;
   virtual std::string to_string() const = 0;
 };
 
@@ -18,6 +20,10 @@ struct StringValue final : public Value {
   StringValue(std::string val) : val(val) {}
 
   ~StringValue() override = default;
+
+  std::unique_ptr<Value> clone() const override {
+    return std::make_unique<StringValue>(this->val);
+  }
 
   std::string to_string() const override { return val; }
 
@@ -36,6 +42,10 @@ struct IntValue final : public Value {
 
   ~IntValue() override = default;
 
+  std::unique_ptr<Value> clone() const override {
+    return std::make_unique<IntValue>(this->val);
+  }
+
   std::string to_string() const override { return std::to_string(val); }
 
   template <class Archive>
@@ -52,6 +62,10 @@ struct DoubleValue final : public Value {
   DoubleValue(double val) : val(val) {}
 
   ~DoubleValue() override = default;
+
+  std::unique_ptr<Value> clone() const override {
+    return std::make_unique<DoubleValue>(this->val);
+  }
 
   std::string to_string() const override { return std::to_string(val); }
 
@@ -70,6 +84,10 @@ struct BoolValue final : public Value {
 
   ~BoolValue() override = default;
 
+  std::unique_ptr<Value> clone() const override {
+    return std::make_unique<BoolValue>(this->val);
+  }
+
   std::string to_string() const override { return std::to_string(val); }
 
   template <class Archive>
@@ -86,6 +104,10 @@ struct DateValue final : public Value {
   DateValue(std::time_t val) : val(val) {}
 
   ~DateValue() override = default;
+
+  std::unique_ptr<Value> clone() const override {
+    return std::make_unique<DateValue>(this->val);
+  }
 
   std::string to_string() const override { return std::to_string(val); }
 
