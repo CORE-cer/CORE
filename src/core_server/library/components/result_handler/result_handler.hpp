@@ -73,6 +73,7 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
     }
     broadcaster = std::make_unique<Internal::ZMQMessageBroadcaster>(
       "tcp://*:" + std::to_string(port.value()));
+    LOG_INFO("Starting broadcaster at port {}", port.value());
   }
 
   void
