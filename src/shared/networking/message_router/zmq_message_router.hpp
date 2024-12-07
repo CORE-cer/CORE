@@ -1,13 +1,19 @@
 #pragma once
+#include <WebSocketProtocol.h>
+#include <libusockets.h>
 #include <zmq.h>
 
 #include <atomic>
 #include <cerrno>
 #include <chrono>
 #include <cstring>
+#include <iostream>
 #include <string>
+#include <string_view>
+#include <thread>
 #include <zmq.hpp>
 
+#include "App.h"
 #include "shared/networking/message_router/message_router.hpp"
 
 namespace CORE::Internal {
@@ -18,18 +24,28 @@ class ZMQMessageRouter : MessageRouter {
   zmq::socket_t socket;
   TransformFunc transformer;
   std::atomic<bool> stop_router;
+  bool with_http_server;
 
  public:
-  ZMQMessageRouter(const std::string& address, TransformFunc&& transformer)
+  ZMQMessageRouter(const std::string& address,
+                   TransformFunc&& transformer,
+                   bool with_http_server = true)
       : context(1),
         socket(context, zmq::socket_type::router),
         transformer(std::move(transformer)),
-        stop_router(false) {
+        stop_router(false),
+        with_http_server(with_http_server) {
     socket.bind(address);
     socket.set(zmq::sockopt::rcvtimeo, 2000);
   }
 
   void start() {
+    // start_http_server in a separate thread
+    if (with_http_server) {
+      std::thread http_server_thread([this] { start_http_server(); });
+      http_server_thread.detach();
+    }
+
     stop_router.store(false);
 
     while (!stop_router.load()) {
@@ -72,6 +88,34 @@ class ZMQMessageRouter : MessageRouter {
       if (e.num() != EAGAIN) throw;
     }
   }
+
+  void start_http_server() {
+    struct UserData {};
+
+    uWS::App()
+      .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
+      .template ws<UserData>(
+        "/*",
+        {
+          .open = [](auto* ws) { std::cout << "new client connected" << std::endl; },
+          .message =
+            [this](auto* ws, std::string_view message, uWS::OpCode opCode) {
+              std::string replyString = std::string(message);
+              ws->send(replyString, opCode);
+            },
+          .close = [](auto* ws, int code, std::string_view message) {},
+        })
+      .listen(3000,
+              [](auto* listenSocket) {
+                if (listenSocket) {
+                  std::cout << "Listening on port " << 3000 << std::endl;
+                  // us_listen_socket_close(0, listenSocket);
+                } else {
+                  std::cout << "Failed to listen on port " << 3000 << std::endl;
+                }
+              })
+      .run();
+  };
 };
 
 }  // namespace CORE::Internal

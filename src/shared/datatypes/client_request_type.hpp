@@ -11,6 +11,7 @@ enum struct ClientRequestType {
   StreamInfoFromId,
   StreamInfoFromName,
   ListStreams,
+  ListQueries,
   AddQuery,
   SetOption
 };

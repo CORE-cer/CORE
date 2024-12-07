@@ -8,6 +8,7 @@ enum struct ServerResponseType {
   EventTypeId,
   PortNumber,
   QueryInfo,
+  QueryInfoVector,
   StreamInfo,
   StreamInfoVector,
   StreamTypeId,
