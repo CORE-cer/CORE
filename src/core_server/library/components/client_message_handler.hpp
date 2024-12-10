@@ -1,6 +1,9 @@
 #pragma once
 
 #include <exception>
+#include <mutex>
+
+#include "shared/datatypes/catalog/query_info.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -48,18 +51,25 @@ class ClientMessageHandler {
 
  private:
   Backend& backend;
+  std::mutex& backend_mutex;
   ResultHandlerFactoryT result_handler_factory;
 
  public:
-  ClientMessageHandler(Backend& backend, ResultHandlerFactoryT result_handler_factory)
-      : backend(backend), result_handler_factory(result_handler_factory) {}
+  ClientMessageHandler(Backend& backend,
+                       std::mutex& backend_mutex,
+                       ResultHandlerFactoryT result_handler_factory)
+      : backend(backend),
+        backend_mutex(backend_mutex),
+        result_handler_factory(result_handler_factory) {}
 
   ClientMessageHandler(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler& operator=(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler(ClientMessageHandler&& other)
-      : backend(other.backend), result_handler_factory(other.result_handler_factory) {}
+      : backend(other.backend),
+        backend_mutex(other.backend_mutex),
+        result_handler_factory(other.result_handler_factory) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
@@ -90,6 +100,8 @@ class ClientMessageHandler {
         return stream_info_from_id(request.serialized_request_data);
       case Types::ClientRequestType::ListStreams:
         return list_all_streams();
+      case Types::ClientRequestType::ListQueries:
+        return list_all_queries();
       case Types::ClientRequestType::AddQuery:
         return add_query(request.serialized_request_data);
       case Types::ClientRequestType::SetOption:
@@ -185,6 +197,15 @@ class ClientMessageHandler {
     return Types::ServerResponse(
       CerealSerializer<std::vector<Types::StreamInfo>>::serialize(info),
       Types::ServerResponseType::StreamInfoVector);
+  }
+
+  Types::ServerResponse list_all_queries() {
+    LOG_INFO("Received request in ClientMessageHandler::list_all_queries");
+    std::vector<Types::QueryInfo> info = backend.get_all_query_infos();
+
+    return Types::ServerResponse(CerealSerializer<std::vector<Types::QueryInfo>>::serialize(
+                                   info),
+                                 Types::ServerResponseType::QueryInfoVector);
   }
 
   Types::ServerResponse add_query(std::string s_query_info) {

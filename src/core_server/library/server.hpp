@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <type_traits>
 #include <utility>
 
@@ -38,6 +39,7 @@ class OfflineServer {
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
   Internal::Interface::Backend<HandlerType, false> backend;
+  std::mutex backend_mutex = {};
 
   ResultHandlerFactoryT result_handler_factory{};
   Components::Router<ResultHandlerFactoryT> router;
@@ -46,8 +48,8 @@ class OfflineServer {
  public:
   OfflineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
-        router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {
+        router{backend, backend_mutex, next_available_port++, result_handler_factory},
+        stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
   }
 
@@ -78,6 +80,7 @@ class OnlineServer {
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
   Internal::Interface::Backend<HandlerType, false> backend;
+  std::mutex backend_mutex = {};
 
   ResultHandlerFactoryT result_handler_factory;
   Components::Router<ResultHandlerFactoryT> router;
@@ -87,8 +90,8 @@ class OnlineServer {
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
         result_handler_factory{next_available_port},
-        router{backend, next_available_port++, result_handler_factory},
-        stream_listener{backend, next_available_port++} {
+        router{backend, backend_mutex, next_available_port++, result_handler_factory},
+        stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
   }
 
