@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <mutex>
 
 #include "shared/datatypes/catalog/query_info.hpp"
 
@@ -50,18 +51,25 @@ class ClientMessageHandler {
 
  private:
   Backend& backend;
+  std::mutex& backend_mutex;
   ResultHandlerFactoryT result_handler_factory;
 
  public:
-  ClientMessageHandler(Backend& backend, ResultHandlerFactoryT result_handler_factory)
-      : backend(backend), result_handler_factory(result_handler_factory) {}
+  ClientMessageHandler(Backend& backend,
+                       std::mutex& backend_mutex,
+                       ResultHandlerFactoryT result_handler_factory)
+      : backend(backend),
+        backend_mutex(backend_mutex),
+        result_handler_factory(result_handler_factory) {}
 
   ClientMessageHandler(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler& operator=(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler(ClientMessageHandler&& other)
-      : backend(other.backend), result_handler_factory(other.result_handler_factory) {}
+      : backend(other.backend),
+        backend_mutex(other.backend_mutex),
+        result_handler_factory(other.result_handler_factory) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 

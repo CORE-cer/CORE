@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <utility>
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -28,14 +29,18 @@ class OnlineStreamsListener {
 
  private:
   Backend& backend;
+  std::mutex& backend_mutex;
   Types::PortNumber receiver_port;
   Internal::ZMQMessageReceiver receiver;
   std::thread worker_thread;
   std::atomic<bool> stop_condition;
 
  public:
-  OnlineStreamsListener(Backend& backend, Types::PortNumber port_number)
+  OnlineStreamsListener(Backend& backend,
+                        std::mutex& backend_mutex,
+                        Types::PortNumber port_number)
       : backend(backend),
+        backend_mutex(backend_mutex),
         receiver_port(port_number),
         receiver("tcp://*:" + std::to_string(port_number)) {
     start();
