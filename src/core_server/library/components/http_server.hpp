@@ -100,6 +100,13 @@ class HTTPServer {
     json += "]";
     return json;
   }
+
+  std::string stream_declaration_from_string(std::string_view stream_declaration) {
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    
+    Types::StreamInfo info = backend.declare_stream(std::string(stream_declaration));
+    return info.to_json();
+  }
 };
 
 }  // namespace CORE::Library::Components
