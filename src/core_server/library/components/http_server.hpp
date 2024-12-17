@@ -8,6 +8,7 @@
 #include <string_view>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -15,6 +16,8 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 
 namespace CORE::Library::Components {
 
@@ -61,10 +64,26 @@ class HTTPServer {
     uWS::App()
       .get("/event-info-from-id/:id",
            [this](auto* res, auto* req) {
-             res->end(event_info_from_id(req->getParameter("id")));
+             res->writeStatus("200 OK")
+               ->writeHeader("Content-Type", "application/json")
+               ->end(event_info_from_id(req->getParameter("id")));
            })
       .get("/all-events-info",
-           [this](auto* res, auto* req) { res->end(all_events_info()); })
+           [this](auto* res, auto* req) {
+             res->writeStatus("200 OK")
+               ->writeHeader("Content-Type", "application/json")
+               ->end(all_events_info());
+           })
+      .get("/stream-declaration-from-string",
+           [this](auto* res, auto* req) {
+             res->writeStatus("200 OK")
+               ->writeHeader("Content-Type", "application/json")
+               ->end(stream_declaration_from_string("DECLARE STREAM S {"
+                                                    "EVENT LOAD { id:int, "
+                                                    "plug_timestamp:int, value:double, "
+                                                    "plug_id:int, household_id:int }"
+                                                    "}"));
+           })
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
       .listen(port_number,
               [this](auto* listenSocket) {
@@ -103,9 +122,13 @@ class HTTPServer {
 
   std::string stream_declaration_from_string(std::string_view stream_declaration) {
     std::lock_guard<std::mutex> lock(backend_mutex);
-    
-    Types::StreamInfo info = backend.declare_stream(std::string(stream_declaration));
-    return info.to_json();
+
+    Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
+      std::string(stream_declaration));
+
+    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
+
+    return stream_info.to_json();
   }
 };
 
