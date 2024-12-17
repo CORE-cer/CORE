@@ -79,6 +79,7 @@ class ClientMessageHandler {
    * message will call this method and return it to the requester (dealer).
    */
   std::string operator()(const std::string& serialized_client_request) {
+    std::lock_guard<std::mutex> lock(backend_mutex);
     return CerealSerializer<Types::ServerResponse>::serialize(handle_client_request(
       CerealSerializer<Types::ClientRequest>::deserialize(serialized_client_request)));
   }

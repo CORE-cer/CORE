@@ -1,5 +1,8 @@
 #pragma once
 
+#include <glaze/core/common.hpp>
+#include <glaze/core/meta.hpp>
+#include <glaze/json/write.hpp>
 #include <string>
 
 #include "datatypes.hpp"
@@ -23,6 +26,14 @@ struct AttributeInfo {
   void serialize(Archive& archive) {
     archive(name, value_type);
   }
-};
 
+  std::string to_json() const {
+    return glz::write_json(*this).value_or("error");
+  }
+
+  struct glaze {
+    using T = CORE::Types::AttributeInfo;  // convenience alias
+    static constexpr auto value = glz::object(&T::name, &T::value_type);
+  };
+};
 }  // namespace CORE::Types
