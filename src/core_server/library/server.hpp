@@ -8,6 +8,7 @@
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/library/components/http_server.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
@@ -43,12 +44,14 @@ class OfflineServer {
 
   ResultHandlerFactoryT result_handler_factory{};
   Components::Router<ResultHandlerFactoryT> router;
+  Components::HTTPServer<ResultHandlerFactoryT> http_server;
   Components::OfflineStreamsListener<HandlerType> stream_listener;
 
  public:
   OfflineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
+        http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
   }
@@ -84,6 +87,7 @@ class OnlineServer {
 
   ResultHandlerFactoryT result_handler_factory;
   Components::Router<ResultHandlerFactoryT> router;
+  Components::HTTPServer<ResultHandlerFactoryT> http_server;
   Components::OnlineStreamsListener<HandlerType> stream_listener;
 
  public:
@@ -91,6 +95,7 @@ class OnlineServer {
       : next_available_port(starting_port),
         result_handler_factory{next_available_port},
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
+        http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
   }

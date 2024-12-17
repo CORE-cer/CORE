@@ -41,10 +41,10 @@ class ZMQMessageRouter : MessageRouter {
 
   void start() {
     // start_http_server in a separate thread
-    if (with_http_server) {
-      std::thread http_server_thread([this] { start_http_server(); });
-      http_server_thread.detach();
-    }
+    // if (with_http_server) {
+    //   std::thread http_server_thread([this] { start_http_server(); });
+    //   http_server_thread.detach();
+    // }
 
     stop_router.store(false);
 
