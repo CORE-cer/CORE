@@ -22,6 +22,7 @@ find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
+find_package(pybind11 REQUIRED)
 
 
 # Profiler
@@ -75,6 +76,28 @@ file(GLOB_RECURSE STREAMER_FILES
      src/core_streamer/*.cpp
 )
 
+file(GLOB_RECURSE PYBIND_FILES
+     src/pybind/*.cpp
+)
+
+# message(STATUS "Building python target")
+# # pybind11_add_module(pycore MODULE src/pybind/python_binding.cpp)
+# add_library(pycore MODULE src/pybind/python_binding.cpp)
+# target_link_libraries(pycore PRIVATE pybind11::module)
+
+
+message(STATUS "Building python target")
+# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
+pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+
+# Add compiler and linker flags to pycore
+target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient)
+# target_link_libraries(_pycore PRIVATE ${project_LIB})
+install(TARGETS _pycore DESTINATION .)
+
+
 add_library(core STATIC
             ${SHARED_FILES}
             ${CLIENT_FILES}
@@ -95,7 +118,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast -Qunused-arguments)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")

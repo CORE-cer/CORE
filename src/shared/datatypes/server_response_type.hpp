@@ -14,5 +14,14 @@ enum struct ServerResponseType {
   Error,
   Warning,
   SuccessEmpty,
+  AttributeNameAlreadyDeclaredException,
+  AttributeNotDefinedException,
+  ClientException,
+  EventNameAlreadyDeclaredException,
+  EventNotDefinedException,
+  EventNotInStreamException,
+  ParsingSyntaxException,
+  StreamNameAlreadyDeclaredException,
+  StreamNotFoundException,
 };
 }  // namespace CORE::Types
