@@ -232,8 +232,6 @@ class ClientMessageHandler {
     }
   };
 
-  // TODO: all queries and port numbers
-
   Types::ServerResponse set_option(std::string s_option) {
     std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);
     LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option",

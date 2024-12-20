@@ -49,6 +49,8 @@ class QuarantineManager {
     // Check if set of streams already has policy associated with it
     if (iter != query_policies.end()) {
       BasePolicy<ResultHandlerT>& query_policy = *(iter->second);
+      // TODO: Add Port
+      catalog.add_query({0, parsed_query.to_string()});
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
       set_query_policy(parsed_query.from.streams, QuarantinePolicyType::DirectPolicy);

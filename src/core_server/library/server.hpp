@@ -74,7 +74,7 @@ class OfflineServer {
  *  Query #n (0 to infinity) = starting_port + 2 + n
  **/
 class OnlineServer {
-  using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
+  using ResultHandlerFactoryT = Components::OfflineResultHandlerFactory;
 
   std::atomic<Types::PortNumber> next_available_port;
 
@@ -93,7 +93,7 @@ class OnlineServer {
  public:
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
-        result_handler_factory{next_available_port},
+        result_handler_factory{},
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
         http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
