@@ -30,6 +30,16 @@
 #include "shared/datatypes/server_response_type.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
+#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/client_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/event_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/exceptions/parsing/warning_exception.hpp"
 
 namespace CORE::Library::Components {
 
@@ -75,27 +85,49 @@ class ClientMessageHandler {
 
  private:
   Types::ServerResponse handle_client_request(Types::ClientRequest request) {
-    switch (request.request_type) {
-      // case Types::ClientRequestType::EventDeclaration:
-      //   return event_declaration(request.serialized_request_data);
-      case Types::ClientRequestType::EventInfoFromId:
-        return event_info_from_id(request.serialized_request_data);
-      case Types::ClientRequestType::ListEvents:
-        return list_all_events();
-      case Types::ClientRequestType::StreamDeclarationFromString:
-        return stream_declaration_from_string(request.serialized_request_data);
-      case Types::ClientRequestType::StreamDeclaration:
-        return stream_declaration(request.serialized_request_data);
-      case Types::ClientRequestType::StreamInfoFromId:
-        return stream_info_from_id(request.serialized_request_data);
-      case Types::ClientRequestType::ListStreams:
-        return list_all_streams();
-      case Types::ClientRequestType::AddQuery:
-        return add_query(request.serialized_request_data);
-      case Types::ClientRequestType::SetOption:
-        return set_option(request.serialized_request_data);
-      default:
-        throw std::runtime_error("Not Implemented!");
+    try {
+      switch (request.request_type) {
+        // case Types::ClientRequestType::EventDeclaration:
+        //   return event_declaration(request.serialized_request_data);
+        case Types::ClientRequestType::EventInfoFromId:
+          return event_info_from_id(request.serialized_request_data);
+        case Types::ClientRequestType::ListEvents:
+          return list_all_events();
+        case Types::ClientRequestType::StreamDeclarationFromString:
+          return stream_declaration_from_string(request.serialized_request_data);
+        case Types::ClientRequestType::StreamDeclaration:
+          return stream_declaration(request.serialized_request_data);
+        case Types::ClientRequestType::StreamInfoFromId:
+          return stream_info_from_id(request.serialized_request_data);
+        case Types::ClientRequestType::ListStreams:
+          return list_all_streams();
+        case Types::ClientRequestType::AddQuery:
+          return add_query(request.serialized_request_data);
+        case Types::ClientRequestType::SetOption:
+          return set_option(request.serialized_request_data);
+        default:
+          throw std::runtime_error("Not Implemented!");
+      }
+    } catch (AttributeNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::AttributeNameAlreadyDeclaredException);
+    } catch (AttributeNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<AttributeNotDefinedException>::serialize(e), Types::ServerResponseType::AttributeNotDefinedException);
+    } catch (EventNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::EventNameAlreadyDeclaredException);
+    } catch (EventNotDefinedException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotDefinedException>::serialize(e), Types::ServerResponseType::EventNotDefinedException);
+    } catch (EventNotInStreamException& e) {
+      return Types::ServerResponse(CerealSerializer<EventNotInStreamException>::serialize(e), Types::ServerResponseType::EventNotInStreamException);
+    } catch (ParsingSyntaxException& e) {
+      return Types::ServerResponse(CerealSerializer<ParsingSyntaxException>::serialize(e), Types::ServerResponseType::ParsingSyntaxException);
+    } catch (StreamNameAlreadyDeclaredException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNameAlreadyDeclaredException>::serialize(e), Types::ServerResponseType::StreamNameAlreadyDeclaredException);
+    } catch (StreamNotFoundException& e) {
+      return Types::ServerResponse(CerealSerializer<StreamNotFoundException>::serialize(e), Types::ServerResponseType::StreamNotFoundException);
+    } catch (WarningException& e) {
+      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()), Types::ServerResponseType::Warning);
+    } catch (ClientException& e) {
+      return Types::ServerResponse(CerealSerializer<ClientException>::serialize(e), Types::ServerResponseType::ClientException);
     }
   }
 
@@ -128,23 +160,18 @@ class ClientMessageHandler {
   stream_declaration_from_string(std::string s_parsed_stream_declaration) {
     auto stream_declaration = CerealSerializer<std::string>::deserialize(
       s_parsed_stream_declaration);
-    try {
-      Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
-        stream_declaration);
-      LOG_INFO(
-        "Received request for declaring stream {} in "
-        "ClientMessageHandler::stream_declaration_from_string",
-        parsed_stream_info.name);
+    Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
+      stream_declaration);
+    LOG_INFO(
+      "Received request for declaring stream {} in "
+      "ClientMessageHandler::stream_declaration_from_string",
+      parsed_stream_info.name);
 
-      Types::StreamInfo stream_info = backend.add_stream_type(
-        std::move(parsed_stream_info));
-      return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
-                                     stream_info),
-                                   Types::ServerResponseType::StreamInfo);
-    } catch (std::exception& e) {
-      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
-                                   Types::ServerResponseType::Error);
-    }
+    Types::StreamInfo stream_info = backend.add_stream_type(
+      std::move(parsed_stream_info));
+    return Types::ServerResponse(CerealSerializer<Types::StreamInfo>::serialize(
+                                    stream_info),
+                                  Types::ServerResponseType::StreamInfo);
   }
 
   Types::ServerResponse stream_declaration(std::string s_parsed_stream_declaration) {
@@ -191,23 +218,15 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    try {
-      LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
-      Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
-      std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
-        backend.get_catalog_reference());
-      std::optional<Types::PortNumber> possible_port = result_handler->get_port();
-      backend.declare_query(std::move(parsed_query), std::move(result_handler));
-      return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
-                                     possible_port.value_or(0)),
-                                   Types::ServerResponseType::PortNumber);
-    } catch (WarningException& e) {
-      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
-                                   Types::ServerResponseType::Warning);
-    } catch (std::exception& e) {
-      return Types::ServerResponse(CerealSerializer<std::string>::serialize(e.what()),
-                                   Types::ServerResponseType::Error);
-    }
+    LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
+    Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
+    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+      backend.get_catalog_reference());
+    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+    backend.declare_query(std::move(parsed_query), std::move(result_handler));
+    return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
+                                    possible_port.value_or(0)),
+                                  Types::ServerResponseType::PortNumber);
   };
 
   // TODO: all queries and port numbers

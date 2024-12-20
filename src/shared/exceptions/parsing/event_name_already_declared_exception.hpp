@@ -5,11 +5,11 @@
 
 namespace CORE {
 
-class AttributeNameAlreadyDeclaredException : public std::exception {
+class EventNameAlreadyDeclaredException : public std::exception {
  public:
-  AttributeNameAlreadyDeclaredException() = default;
+  EventNameAlreadyDeclaredException() = default;
   
-  AttributeNameAlreadyDeclaredException(std::string error_message) { m_message = error_message; }
+  EventNameAlreadyDeclaredException(std::string error_message) { m_message = error_message; }
   
   template <class Archive>
   void serialize(Archive& archive) {

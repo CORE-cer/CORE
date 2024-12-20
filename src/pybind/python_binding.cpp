@@ -10,7 +10,8 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
-#include "shared/exceptions/parsing/event_name_already_declared.hpp"
+#include "shared/exceptions/parsing/client_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/event_not_defined_exception.hpp"
 #include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
 #include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
@@ -116,7 +117,7 @@ namespace CORE{
 
         py::class_<Client>(m, "PyClient")
             .def(py::init<std::string, uint16_t>())
-            .def("declare_stream", py::overload_cast<Types::StreamInfoParsed>(&Client::declare_stream))
+            .def("declare_stream", py::overload_cast<std::string>(&Client::declare_stream))
             .def("add_query", py::overload_cast<std::string>(&Client::add_query));
 
         py::class_<Types::ComplexEvent>(m, "PyComplexEvent")
@@ -136,6 +137,17 @@ namespace CORE{
             .def("__iter__", [](CORE::Types::Enumerator &self) {
                 return py::make_iterator(self.complex_events.begin(), self.complex_events.end());
             }, py::keep_alive<0, 1>());
+
+        py::register_exception<ClientException>(m, "PyClientException");
+        py::register_exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");
+        py::register_exception<AttributeNotDefinedException>(m, "PyAttributeNotDefinedException");
+        py::register_exception<EventNameAlreadyDeclaredException>(m, "PyEventNameAlreadyDeclared");
+        py::register_exception<EventNotDefinedException>(m, "PyEventNotDefinedException");
+        py::register_exception<EventNotInStreamException>(m, "EventNotInStreamException");
+        py::register_exception<ParsingSyntaxException>(m, "PyParsingSyntaxException");
+        py::register_exception<StreamNameAlreadyDeclaredException>(m, "PyStreamNameAlreadyDeclaredException");
+        py::register_exception<StreamNotFoundException>(m, "PyStreamNotFoundException");
+        py::register_exception<WarningException>(m, "PyWarningException");
 
     }
 }
