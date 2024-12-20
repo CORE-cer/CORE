@@ -95,7 +95,7 @@ pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 # Add compiler and linker flags to pycore
 target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
