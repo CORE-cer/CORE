@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -31,7 +30,6 @@
 #include "shared/datatypes/server_response_type.hpp"
 #include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
-#include "shared/exceptions/parsing/client_exception.hpp"
 #include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/event_not_defined_exception.hpp"
 #include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"

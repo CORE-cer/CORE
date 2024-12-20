@@ -1,7 +1,5 @@
 #pragma once
 
-#include <exception>
-
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT

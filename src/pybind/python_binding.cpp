@@ -1,15 +1,34 @@
-#include <pybind11/functional.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <pybind11/attr.h>
+#include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
+#include <pybind11/pybind11.h>  // NOLINT
+#include <pybind11/stl.h>       // NOLINT
 
+#include <cstddef>
+#include <cstdint>
+#include <ctime>
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "core_client/client.hpp"
+#include "core_client/message_handler.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/catalog/datatypes.hpp"
+#include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/complex_event.hpp"
+#include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
+#include "shared/datatypes/stream.hpp"
 #include "shared/datatypes/value.hpp"
 #include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
@@ -60,7 +79,7 @@ PYBIND11_MODULE(_pycore, m) {
             .value("PRIMARY_TIME", Types::ValueTypes::PRIMARY_TIME)
             .export_values();
 
-        py::class_<Types::Value, std::shared_ptr<Types::Value>>(m, "PyValue");
+        py::class_<Types::Value, std::shared_ptr<Types::Value>>(m, "PyValue"); // NOLINT
 
         py::class_<Types::IntValue, Types::Value, std::shared_ptr<Types::IntValue>>(m, "PyIntValue")
             .def(py::init<int64_t>());

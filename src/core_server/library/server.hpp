@@ -5,9 +5,9 @@
 #include <type_traits>
 #include <utility>
 
-// #define QUILL_ROOT_LOGGER_ONLY
-// #include <quill/Quill.h>             // NOLINT
-// #include <quill/detail/LogMacros.h>  // NOLINT
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
