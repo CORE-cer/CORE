@@ -109,7 +109,6 @@ namespace CORE{
         py::class_<Streamer>(m, "PyStreamer")
             .def(py::init<std::string, uint16_t>())
             .def("send_stream", py::overload_cast<Types::Stream>(&Streamer::send_stream))
-            // .def("send_stream", py::overload_cast<uint64_t, std::shared_ptr<Types::Event>&&>(&Streamer::send_stream))
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
             }, py::arg("stream_id"), py::arg("event"),
