@@ -118,6 +118,7 @@ namespace CORE{
         py::class_<Client>(m, "PyClient")
             .def(py::init<std::string, uint16_t>())
             .def("declare_stream", py::overload_cast<std::string>(&Client::declare_stream))
+            .def("declare_option", py::overload_cast<std::string>(&Client::declare_option))
             .def("add_query", py::overload_cast<std::string>(&Client::add_query));
 
         py::class_<Types::ComplexEvent>(m, "PyComplexEvent")
