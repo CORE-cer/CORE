@@ -1,13 +1,16 @@
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h> 
+
 #include <iostream>
 
+#include "core_client/client.hpp"
+#include "core_streamer/streamer.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
-#include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/value.hpp"
-#include "shared/datatypes/event.hpp"
 #include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
 #include "shared/exceptions/parsing/client_exception.hpp"
@@ -18,31 +21,30 @@
 #include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
-#include "core_streamer/streamer.hpp"
-#include "core_client/client.hpp"
 
 namespace py = pybind11;
-namespace CORE{
-    using namespace pybind11::literals;
 
-    void hello_world(){
-        std::cout << "Hello World" << std::endl;
-    }
+namespace CORE {
+using namespace pybind11::literals;
 
-    std::vector<std::unique_ptr<CallbackHandler>> subscribe_to_queries(Client& client,
-                          Types::PortNumber initial_port,
-                          Types::PortNumber final_port) {
-    std::vector<std::unique_ptr<CallbackHandler>> handlers;
-    for (size_t port = initial_port; port < final_port; port++) {
-        std::cout << "Subscribing to port: " << port << std::endl;
-        handlers.emplace_back(std::make_unique<CallbackHandler>());  // Store one enumerator.
-        client.subscribe_to_complex_event<CallbackHandler>(handlers.back().get(), port);
-    }
-    std::cout << "Created handlers" << std::endl;
-    return handlers;
-    }
+void hello_world() { std::cout << "Hello World" << std::endl; }
 
-    PYBIND11_MODULE(_pycore, m) {
+std::vector<std::unique_ptr<CallbackHandler>>
+subscribe_to_queries(Client& client,
+                     Types::PortNumber initial_port,
+                     Types::PortNumber final_port) {
+  std::vector<std::unique_ptr<CallbackHandler>> handlers;
+  for (size_t port = initial_port; port < final_port; port++) {
+    std::cout << "Subscribing to port: " << port << std::endl;
+    handlers.emplace_back(std::make_unique<CallbackHandler>());  // Store one enumerator.
+    client.subscribe_to_complex_event<CallbackHandler>(handlers.back().get(), port);
+  }
+  std::cout << "Created handlers" << std::endl;
+  return handlers;
+}
+
+PYBIND11_MODULE(_pycore, m) {
+  // clang-format off
         m.doc() = "CORE";
 
         m.def("hello", &hello_world);
@@ -149,6 +151,6 @@ namespace CORE{
         py::register_exception<StreamNameAlreadyDeclaredException>(m, "PyStreamNameAlreadyDeclaredException");
         py::register_exception<StreamNotFoundException>(m, "PyStreamNotFoundException");
         py::register_exception<WarningException>(m, "PyWarningException");
-
-    }
+  // clang-format on
 }
+}  // namespace CORE

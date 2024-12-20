@@ -46,8 +46,8 @@ void check_if_event_already_exists(
                            return event.name == event_name;
                          });
   if (it != event_info_parsed_vector.end()) {
-    throw EventNameAlreadyDeclaredException("Event name " + event_name
-                                   + " is defined more than one more time in the stream");
+    throw EventNameAlreadyDeclaredException(
+      "Event name " + event_name + " is defined more than one more time in the stream");
   }
 }
 

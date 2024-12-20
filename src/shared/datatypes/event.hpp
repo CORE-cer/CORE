@@ -69,7 +69,7 @@ struct Event {
 
   // TODO: Add this log in the server sider:
   // LOG_TRACE_L3("Destroying Event with id {}", event_type_id);
-  ~Event() { }
+  ~Event() {}
 
   Event(const Event& other)
       : event_type_id(other.event_type_id), primary_time(other.primary_time) {

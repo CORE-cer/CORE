@@ -8,9 +8,9 @@ namespace CORE {
 class WarningException : public std::exception {
  public:
   WarningException() = default;
-  
+
   WarningException(std::string error_message) { m_message = error_message; }
-  
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(m_message);
