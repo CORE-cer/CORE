@@ -3,6 +3,7 @@
 #include <chrono>
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <thread>
@@ -55,7 +56,7 @@ int main(int argc, char** argv) {
     Streamer streamer("tcp://localhost", 5001);
 
     for (const Types::Event& event : events) {
-      streamer.send_stream({stream_info.id, {event}});
+      streamer.send_stream({stream_info.id, {std::make_shared<Types::Event>(event)}});
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

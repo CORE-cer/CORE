@@ -2,14 +2,15 @@
 
 #include <exception>
 #include <string>
+#include <utility>
 
 namespace CORE {
 
-class EventNotDefinedException : public std::exception {
+class ClientException : public std::exception {
  public:
-  EventNotDefinedException() = default;
+  ClientException() = default;
 
-  EventNotDefinedException(std::string error_message) { m_message = error_message; }
+  ClientException(std::string error_message) : m_message(std::move(error_message)) {}
 
   template <class Archive>
   void serialize(Archive& archive) {

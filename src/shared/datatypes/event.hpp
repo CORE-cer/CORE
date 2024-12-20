@@ -3,7 +3,12 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
+
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"
@@ -35,15 +40,61 @@ struct Event {
    *   from an archive, cereal will not allocate extraneous data."
    *   https://uscilab.github.io/cereal/pointers.html
    */
-  std::vector<std::shared_ptr<Types::Value>> attributes;
-  std::optional<std::shared_ptr<Types::IntValue>> primary_time;
+  std::vector<std::unique_ptr<Types::Value>> attributes;
+  /**
+   * Primary is usually shared with one of the attributes
+   * however we do not use a shared pointer here to remove
+   * a common jump in memory.
+   */
+  std::optional<Types::IntValue> primary_time;
 
   Event() noexcept {}
 
   Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes,
-        std::optional<std::shared_ptr<Types::IntValue>> primary_time = {}) noexcept
-      : event_type_id(event_type_id), attributes(attributes), primary_time(primary_time) {}
+        std::optional<Types::IntValue> primary_time = {}) noexcept
+      : event_type_id(event_type_id), primary_time(primary_time) {
+    this->attributes.reserve(attributes.size());
+    for (auto& attr : attributes) {
+      this->attributes.push_back(attr->clone());
+    }
+  }
+
+  Event(UniqueEventTypeId event_type_id,
+        std::vector<std::unique_ptr<Types::Value>>&& attributes,
+        std::optional<Types::IntValue> primary_time = {}) noexcept
+      : event_type_id(event_type_id), primary_time(primary_time) {
+    this->attributes = std::move(attributes);
+  }
+
+  // TODO: Add this log in the server sider:
+  // LOG_TRACE_L3("Destroying Event with id {}", event_type_id);
+  ~Event() {}
+
+  Event(const Event& other)
+      : event_type_id(other.event_type_id), primary_time(other.primary_time) {
+    attributes.reserve(other.attributes.size());
+    for (const auto& attr : other.attributes) {
+      attributes.push_back(std::unique_ptr<Types::Value>(attr->clone()));
+    }
+  }
+
+  Event& operator=(const Event& other) {
+    if (this == &other) {
+      return *this;
+    }
+    event_type_id = other.event_type_id;
+    primary_time = other.primary_time;
+
+    attributes.clear();
+    attributes.reserve(other.attributes.size());
+
+    for (const auto& attr : other.attributes) {
+      attributes.push_back(std::unique_ptr<Types::Value>(attr->clone()));
+    }
+
+    return *this;
+  }
 
   std::string to_string() const {
     std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";

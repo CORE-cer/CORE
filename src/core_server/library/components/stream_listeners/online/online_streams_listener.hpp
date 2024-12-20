@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
@@ -61,8 +62,8 @@ class OnlineStreamsListener {
         for (auto& event : stream.events) {
           LOG_L3_BACKTRACE("Stream with id {} and event {} in OnlineStreamsListener",
                            stream.id,
-                           event.to_string());
-          backend.send_event_to_queries(stream.id, event);
+                           event->to_string());
+          backend.send_event_to_queries(stream.id, {std::move(event)});
         }
       }
     });

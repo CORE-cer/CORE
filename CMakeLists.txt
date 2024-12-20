@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
 include(FetchContent)
 
@@ -20,25 +21,28 @@ find_package(libpqxx REQUIRED)
 find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
+find_package(readerwriterqueue REQUIRED)
 find_package(pybind11 REQUIRED)
 
 
 # Profiler
 message("Fetching Tracy")
 
+# Output what compiler we are using
+message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
 Set(FETCHCONTENT_QUIET FALSE)
 
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-  GIT_TAG master
+  GIT_TAG 075395620a504c0cdcaf9bab3d196db16a043de7
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
 
-set(ENABLE_PROFILING OFF CACHE BOOL "Enable Profiling" FORCE)
-
-if (ENABLE_PROFILING)
+if (PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
   set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
   set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
@@ -85,6 +89,10 @@ file(GLOB_RECURSE PYBIND_FILES
 message(STATUS "Building python target")
 # include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
 pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+
+# Add compiler and linker flags to pycore
+target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+
 target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
@@ -96,8 +104,9 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 quill::quill TracyClient)
-if (ENABLE_PROFILING)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue)
+if (PROFILING)
+  message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
 endif()
 
@@ -109,7 +118,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
@@ -119,8 +128,8 @@ endif()
 
 if (THREAD_SANITIZER)
   message("Thread sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
-  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
 endif()
 
 if (LOGGING MATCHES "critical")

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <readerwriterqueue/readerwriterqueue.h>
 #include <stdint.h>
 
 #include <cassert>
@@ -23,10 +24,10 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/dynamic_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/queue.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 template <typename ResultHandlerT>
@@ -62,15 +63,18 @@ class PartitionByQuery
     event_id_to_tuple_idx;
 
  public:
-  PartitionByQuery(Internal::QueryCatalog query_catalog,
-                   RingTupleQueue::Queue& queue,
-                   std::string inproc_receiver_address,
-                   std::unique_ptr<ResultHandlerT>&& result_handler)
+  PartitionByQuery(
+    Internal::QueryCatalog query_catalog,
+    std::string inproc_receiver_address,
+    std::unique_ptr<ResultHandlerT>&& result_handler,
+    moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
           query_catalog,
-          queue,
           inproc_receiver_address,
-          std::move(result_handler)) {}
+          std::move(result_handler),
+          blocking_event_queue) {}
+
+  ~PartitionByQuery() { this->stop(); }
 
  private:
   void create_query(Internal::CEQL::Query&& query) {
@@ -100,17 +104,16 @@ class PartitionByQuery
                                                    this->query.value().consume_by.policy,
                                                    this->query.value().limit,
                                                    this->time_window,
-                                                   this->query_catalog,
-                                                   this->queue);
+                                                   this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(RingTupleQueue::Tuple tuple) {
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
-    if (auto it = event_id_to_tuple_idx.find(tuple.id());
+    if (auto it = event_id_to_tuple_idx.find(event.get_unique_event_type_id());
         it != event_id_to_tuple_idx.end()) [[likely]] {
       tuple_indexes = &(it->second);
     } else {
-      tuple_indexes = find_tuple_indexes(tuple);
+      tuple_indexes = find_tuple_indexes(event);
     }
 
     if (!tuple_indexes->has_value()) {
@@ -118,14 +121,14 @@ class PartitionByQuery
     }
 
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
-      tuple, tuple_indexes->value());
-    return evaluator->process_event(tuple, evaluator_idx);
+      event, tuple_indexes->value());
+    return evaluator->process_event(std::move(event), evaluator_idx);
   }
 
-  std::optional<std::vector<uint64_t>>* find_tuple_indexes(RingTupleQueue::Tuple& tuple) {
+  std::optional<std::vector<uint64_t>>* find_tuple_indexes(Types::EventWrapper& event) {
     std::vector<uint64_t> tuple_indexes = {};
 
-    Types::UniqueEventTypeId event_id = tuple.id();
+    Types::UniqueEventTypeId event_id = event.get_unique_event_type_id();
     const Types::EventInfo& event_info = this->query_catalog.get_event_info(event_id);
 
     assert(query.has_value());
@@ -149,13 +152,14 @@ class PartitionByQuery
   }
 
   size_t
-  find_or_create_evaluator_index_from_tuple_indexes(RingTupleQueue::Tuple& tuple,
+  find_or_create_evaluator_index_from_tuple_indexes(Types::EventWrapper& event,
                                                     std::vector<uint64_t>& tuple_indexes) {
     std::vector<uint64_t> tuple_values = {};
     tuple_values.reserve(tuple_indexes.size());
 
     for (const auto& tuple_index : tuple_indexes) {
-      tuple_values.emplace_back(*tuple[tuple_index]);
+      auto value = event.get_attribute_at_index<Types::IntValue>(tuple_index);
+      tuple_values.emplace_back(value.val);
     }
 
     if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values);

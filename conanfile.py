@@ -66,8 +66,8 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64))}
-    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1"}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64)), "profiling": ["on", "off"]}
+    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1", "profiling": "off"}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
@@ -86,10 +86,11 @@ class CORE(ConanFile):
     CATCH2_VERSION = "3.3.2"
     CPPZMQ_VERSION = "4.9.0"
     CEREAL_VERSION = "1.3.2"
-    LIBPQXX_VERSION = "7.7.5"
+    LIBPQXX_VERSION = "7.9.2"
     GMP_VERSION = "6.2.1"
     RE2_VERSION = "20230602"
     QUILL_VERSION = "3.7.0"
+    READERWRITERQUEUE_VERSION = "1.0.6"
     PYBIND_VERSION = "2.13.5"
 
     def layout(self):
@@ -116,6 +117,7 @@ class CORE(ConanFile):
         self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
         self.requires("quill/" + CORE.QUILL_VERSION)
+        self.requires("readerwriterqueue/" + CORE.READERWRITERQUEUE_VERSION)
         self.requires("pybind11/" +  CORE.PYBIND_VERSION)
 
     def generate(self):
@@ -131,6 +133,8 @@ class CORE(ConanFile):
             tc.cache_variables["THREAD_SANITIZER"] = False
 
         tc.cache_variables["LOGGING"] = self.options.logging
+        tc.cache_variables["PROFILING"] = self.options.profiling == "on"
+        print(tc.cache_variables)
         tc.generate()
 
     def build(self):

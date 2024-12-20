@@ -8,7 +8,7 @@
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
-#include "shared/exceptions/parsing/event_name_already_declared.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 
 namespace CORE::Internal::Parsing {
@@ -30,7 +30,7 @@ void check_if_attribute_already_exists(std::vector<Types::AttributeInfo>& attrib
                            return attr.name == attribute_name;
                          });
   if (it != attributes_info.end()) {
-    throw AttributeNameAlreadyDeclared(
+    throw AttributeNameAlreadyDeclaredException(
       "Attribute name " + attribute_name
       + " is defined more than one more time in the same event");
   }
@@ -46,8 +46,8 @@ void check_if_event_already_exists(
                            return event.name == event_name;
                          });
   if (it != event_info_parsed_vector.end()) {
-    throw EventNameAlreadyDeclared("Event name " + event_name
-                                   + " is defined more than one more time in the stream");
+    throw EventNameAlreadyDeclaredException(
+      "Event name " + event_name + " is defined more than one more time in the stream");
   }
 }
 

@@ -5,11 +5,13 @@
 
 namespace CORE {
 
-class EventNotDefinedException : public std::exception {
+class EventNameAlreadyDeclaredException : public std::exception {
  public:
-  EventNotDefinedException() = default;
+  EventNameAlreadyDeclaredException() = default;
 
-  EventNotDefinedException(std::string error_message) { m_message = error_message; }
+  EventNameAlreadyDeclaredException(std::string error_message) {
+    m_message = error_message;
+  }
 
   template <class Archive>
   void serialize(Archive& archive) {
