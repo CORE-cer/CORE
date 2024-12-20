@@ -31,6 +31,9 @@ jobs:
       - name: "Setup conan"
         run: conan profile detect
 
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
+
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
