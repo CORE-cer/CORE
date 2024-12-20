@@ -4,6 +4,7 @@
 #include <string>
 #include <tracy/Tracy.hpp>
 
+#include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -70,6 +71,10 @@ class Backend {
 
   std::vector<Types::StreamInfo> get_all_streams_info() {
     return catalog.get_all_streams_info();
+  }
+
+  std::vector<Types::QueryInfo> get_all_query_infos() {
+    return catalog.get_all_query_infos();
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {

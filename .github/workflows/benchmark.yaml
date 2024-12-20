@@ -37,6 +37,9 @@ jobs:
       - name: add artifactory
         run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
+
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 

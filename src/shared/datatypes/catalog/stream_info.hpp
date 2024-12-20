@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <glaze/core/common.hpp>
+#include <glaze/json/write.hpp>
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -161,5 +163,12 @@ struct StreamInfo {
   void serialize(Archive& archive) {
     archive(id, name, events_info);
   }
+
+  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+
+  struct glaze {
+    using T = CORE::Types::StreamInfo;  // convenience alias
+    static constexpr auto value = glz::object(&T::id, &T::name, &T::events_info);
+  };
 };
 }  // namespace CORE::Types
