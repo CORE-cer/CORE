@@ -148,9 +148,9 @@ class HTTPServer {
       .listen(port_number,
               [this](auto* listenSocket) {
                 if (listenSocket) {
-                  std::cout << "Listening on port " << port_number << std::endl;
+                  std::cerr << "Listening on port " << port_number << std::endl;
                 } else {
-                  std::cout << "Failed to listen on port " << port_number << std::endl;
+                  std::cerr << "Failed to listen on port " << port_number << std::endl;
                 }
               })
       .run();
