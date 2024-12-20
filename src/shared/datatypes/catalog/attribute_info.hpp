@@ -27,9 +27,7 @@ struct AttributeInfo {
     archive(name, value_type);
   }
 
-  std::string to_json() const {
-    return glz::write_json(*this).value_or("error");
-  }
+  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
 
   struct glaze {
     using T = CORE::Types::AttributeInfo;  // convenience alias
