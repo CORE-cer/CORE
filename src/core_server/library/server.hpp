@@ -6,6 +6,10 @@
 #include <type_traits>
 #include <utility>
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
+
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/http_server.hpp"
@@ -98,6 +102,7 @@ class OnlineServer {
         http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
+    LOG_INFO("Server started in port {}", starting_port);
   }
 
   void receive_stream(const Types::Stream& stream) {
