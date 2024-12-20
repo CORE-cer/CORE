@@ -1,6 +1,5 @@
 #pragma once
 #include <WebSocketProtocol.h>
-#include <libusockets.h>
 #include <zmq.h>
 
 #include <atomic>
@@ -10,7 +9,6 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <thread>
 #include <zmq.hpp>
 
 #include "App.h"

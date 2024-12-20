@@ -1,7 +1,6 @@
 #pragma once
 
-#include <exception>
-
+#include "shared/datatypes/catalog/query_info.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
