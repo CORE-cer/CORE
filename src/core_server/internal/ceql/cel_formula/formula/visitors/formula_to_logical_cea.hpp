@@ -31,7 +31,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
-#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected_v2.hpp"
 
 #include "formula_visitor.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"

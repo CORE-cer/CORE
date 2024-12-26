@@ -25,13 +25,20 @@ class NegateExpected : public LogicalCEATransformer<NegateExpected> {
         transitions.push_back({});
         for (Transition& transition : node_transitions) {
             PredicateSet old_predicate_set = std::get<0>(transition);
+            mpz_class old_mask = old_predicate_set.mask;
             mpz_class variables_to_mark = std::get<1>(transition);
             NodeId old_node_id = std::get<2>(transition);
+            // ASSERT NO sea igual a 0 (not not no se puede)
+            // maneja [1 0 1]
 
-            // Negate the value of the value of the expected evaluation
-            mpz_class new_expected = old_predicate_set.mask^old_predicate_set.predicates;
-            PredicateSet new_predicate_set(old_predicate_set.mask, new_expected);
-            transitions[node_id].push_back({new_predicate_set, variables_to_mark, old_node_id});
+            for (int i = 0; i < old_mask.get_ui(); ++i) {
+                mpz_class current_vector = 1 << i;
+                if ((old_mask & current_vector) > 0) {
+                    mpz_class new_expected = current_vector;
+                    PredicateSet new_predicate_set(old_mask, new_expected);
+                    transitions[node_id].push_back({new_predicate_set, variables_to_mark, old_node_id});
+                }
+            }
         }
     }
     out.transitions = transitions;
@@ -40,3 +47,4 @@ class NegateExpected : public LogicalCEATransformer<NegateExpected> {
 };
 
 }  // namespace CORE::Internal::CEA
+          
