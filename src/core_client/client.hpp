@@ -18,6 +18,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/aliases/subscription_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
@@ -43,7 +44,7 @@
 
 namespace CORE {
 class Client {
-  using SubscriptionId = uint64_t;
+  // using SubscriptionId = uint64_t;
   using ClientReqSerializer = Internal::CerealSerializer<Types::ClientRequest>;
   using ServerResSerializer = Internal::CerealSerializer<Types::ServerResponse>;
   using EnumeratorSerializer = Internal::CerealSerializer<Types::Enumerator>;
@@ -130,7 +131,7 @@ class Client {
   }
 
   template <class Handler>
-  SubscriptionId subscribe_to_complex_event(Types::PortNumber port) {
+  Types::SubscriptionId subscribe_to_complex_event(Types::PortNumber port) {
     static_assert(std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
 
     auto subscription_id = create_subscribers_and_stop_conditions(port);
@@ -147,7 +148,7 @@ class Client {
   }
 
   template <typename Handler>
-  SubscriptionId subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
+  Types::SubscriptionId subscribe_to_complex_event(Handler* handler, Types::PortNumber port) {
     static_assert(std::is_base_of_v<MessageHandler<Handler>, Handler>
                   || std::is_base_of_v<StaticMessageHandler<Handler>, Handler>);
 
@@ -166,18 +167,18 @@ class Client {
     return subscription_id;
   }
 
-  void stop_subscription(SubscriptionId subscription_to_stop) {
+  void stop_subscription(Types::SubscriptionId subscription_to_stop) {
     stop_conditions[subscription_to_stop]->store(true);
   }
 
   void stop_all_subscriptions() {
-    for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
+    for (Types::SubscriptionId id = 0; id < stop_conditions.size(); id++) {
       stop_subscription(id);
     }
   }
 
   void join_all_threads() {
-    for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
+    for (Types::SubscriptionId id = 0; id < stop_conditions.size(); id++) {
       subscriber_threads[id].join();
     }
   }
@@ -261,11 +262,11 @@ class Client {
     return out;
   }
 
-  SubscriptionId create_subscribers_and_stop_conditions(Types::PortNumber port) {
+  Types::SubscriptionId create_subscribers_and_stop_conditions(Types::PortNumber port) {
     subscribers.push_back(std::make_unique<Internal::ZMQMessageSubscriber>(
       address + ":" + std::to_string(port)));
     stop_conditions.push_back(std::make_unique<std::atomic<bool>>(false));
-    SubscriptionId subscription_id = subscribers.size() - 1;
+    Types::SubscriptionId subscription_id = subscribers.size() - 1;
     assert(stop_conditions.size() == subscription_id + 1);
     return subscription_id;
   }

@@ -3,6 +3,7 @@
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>  // NOLINT
 #include <pybind11/stl.h>       // NOLINT
+#include <pybind11/functional.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -17,6 +18,8 @@
 #include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
 #include "core_streamer/streamer.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/subscription_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
@@ -102,7 +105,7 @@ PYBIND11_MODULE(_pycore, m) {
             .def_readonly("value_type", &Types::AttributeInfo::value_type);
 
         py::class_<Types::Event, std::shared_ptr<Types::Event>>(m, "PyEvent")
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>());
+            .def(py::init<Types::UniqueEventTypeId, std::vector<std::shared_ptr<Types::Value>>>());
  
         py::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
             .def(py::init<std::string, std::vector<Types::AttributeInfo>>())
@@ -110,12 +113,12 @@ PYBIND11_MODULE(_pycore, m) {
             .def_readonly("attributes", &Types::EventInfoParsed::attributes_info);
 
         py::class_<Types::EventInfo>(m, "PyEventInfo")
-            .def(py::init<uint64_t, std::string, std::vector<Types::AttributeInfo>>())
+            .def(py::init<Types::UniqueEventTypeId, std::string, std::vector<Types::AttributeInfo>>())
             .def_readonly("id", &Types::EventInfo::id)
             .def_readonly("name", &Types::EventInfo::name);
 
         py::class_<Types::Stream>(m, "PyStream")
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Event>>&&>())
+            .def(py::init<Types::StreamTypeId, std::vector<std::shared_ptr<Types::Event>>&&>())
             .def_readonly("id", &Types::Stream::id)
             .def_readonly("events", &Types::Stream::events);
 
@@ -125,11 +128,11 @@ PYBIND11_MODULE(_pycore, m) {
             .def_readonly("events_info", &Types::StreamInfoParsed::events_info);
 
         py::class_<Types::StreamInfo>(m, "PyStreamInfo")
-            .def(py::init<uint64_t, std::string, std::vector<Types::EventInfo>&&>())
+            .def(py::init<Types::StreamTypeId, std::string, std::vector<Types::EventInfo>&&>())
             .def_readonly("events_info", &Types::StreamInfo::events_info);
             
         py::class_<Streamer>(m, "PyStreamer")
-            .def(py::init<std::string, uint16_t>())
+            .def(py::init<std::string, Types::PortNumber>())
             .def("send_stream", py::overload_cast<Types::Stream>(&Streamer::send_stream))
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
@@ -137,7 +140,7 @@ PYBIND11_MODULE(_pycore, m) {
             "Envía un evento único a un stream.");
 
         py::class_<Client>(m, "PyClient")
-            .def(py::init<std::string, uint16_t>())
+            .def(py::init<std::string, Types::SubscriptionId>())
             .def("declare_stream", py::overload_cast<std::string>(&Client::declare_stream))
             .def("declare_option", py::overload_cast<std::string>(&Client::declare_option))
             .def("add_query", py::overload_cast<std::string>(&Client::add_query));
