@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/internal/catch_decomposer.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
 #include <string>
@@ -17,6 +18,7 @@
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "tests/unit_tests/workaround.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests {
 

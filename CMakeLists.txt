@@ -97,7 +97,7 @@ message(STATUS "Building python target")
 pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
 # Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
 target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
@@ -116,15 +116,13 @@ if (PROFILING)
   target_link_libraries(core PUBLIC debuginfod)
 endif()
 
-set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
-
 # Set debug flag for core
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(core PUBLIC CORE_DEBUG)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
