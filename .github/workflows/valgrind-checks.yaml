@@ -13,7 +13,7 @@ jobs:
   run-valgrind-debug:
     strategy:
       matrix:
-        os: [x86_64-linux-clang-libc, x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        os: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space

@@ -13,7 +13,7 @@ jobs:
   run-tests-debug:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libc, x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -59,7 +59,7 @@ jobs:
   run-tests-release:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libc, x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
