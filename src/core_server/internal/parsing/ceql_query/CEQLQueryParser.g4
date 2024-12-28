@@ -54,6 +54,7 @@ cel_formula
  | cel_formula SEMICOLON cel_formula                  # non_contiguous_sequencing_cel_formula
  | cel_formula COLON cel_formula                      # contiguous_sequencing_cel_formula
  | cel_formula K_OR cel_formula                       # or_cel_formula
+ | cel_formula K_AND cel_formula                      # and_cel_formula
  | cel_formula K_FILTER filter                        # filter_cel_formula
  ;
 

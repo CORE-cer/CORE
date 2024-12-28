@@ -33,11 +33,9 @@ struct CEA {
 
  public:
   CEA(LogicalCEA&& logical_cea) {
-    // clang-format off
-    logical_cea = RemoveUnreachableStates()(
-                  RemoveUselessStates()(
-                  RemoveEpsilonTransitions()(
-                  AddUniqueInitialState()(std::move(logical_cea)))));
+    // clang-format offz
+    logical_cea = RemoveUnreachableStates()(RemoveUselessStates()(
+      RemoveEpsilonTransitions()(AddUniqueInitialState()(std::move(logical_cea)))));
     // clang-format on
     amount_of_states = logical_cea.amount_of_states;
     transcribe_transitions(logical_cea);
