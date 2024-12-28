@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
@@ -22,7 +22,13 @@ find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
+find_package(uwebsockets REQUIRED)
+find_package(glaze REQUIRED)
 find_package(pybind11 REQUIRED)
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 
 
 # Profiler
@@ -91,9 +97,9 @@ message(STATUS "Building python target")
 pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
 # Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
@@ -104,13 +110,11 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} -pthread re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets glaze::glaze)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
 endif()
-
-set_target_properties(core PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
 
 # Set debug flag for core
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -118,7 +122,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Qunused-arguments)
+target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")

@@ -19,6 +19,7 @@
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "tests/unit_tests/workaround.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests::LogicalCEAOptimizations {
 

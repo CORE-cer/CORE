@@ -1,10 +1,12 @@
 #pragma once
 
+#include "shared/datatypes/catalog/query_info.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -55,18 +57,25 @@ class ClientMessageHandler {
 
  private:
   Backend& backend;
+  std::mutex& backend_mutex;
   ResultHandlerFactoryT result_handler_factory;
 
  public:
-  ClientMessageHandler(Backend& backend, ResultHandlerFactoryT result_handler_factory)
-      : backend(backend), result_handler_factory(result_handler_factory) {}
+  ClientMessageHandler(Backend& backend,
+                       std::mutex& backend_mutex,
+                       ResultHandlerFactoryT result_handler_factory)
+      : backend(backend),
+        backend_mutex(backend_mutex),
+        result_handler_factory(result_handler_factory) {}
 
   ClientMessageHandler(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler& operator=(const ClientMessageHandler& other) = delete;
 
   ClientMessageHandler(ClientMessageHandler&& other)
-      : backend(other.backend), result_handler_factory(other.result_handler_factory) {}
+      : backend(other.backend),
+        backend_mutex(other.backend_mutex),
+        result_handler_factory(other.result_handler_factory) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
@@ -76,6 +85,7 @@ class ClientMessageHandler {
    * message will call this method and return it to the requester (dealer).
    */
   std::string operator()(const std::string& serialized_client_request) {
+    std::lock_guard<std::mutex> lock(backend_mutex);
     return CerealSerializer<Types::ServerResponse>::serialize(handle_client_request(
       CerealSerializer<Types::ClientRequest>::deserialize(serialized_client_request)));
   }
@@ -224,6 +234,15 @@ class ClientMessageHandler {
       Types::ServerResponseType::StreamInfoVector);
   }
 
+  Types::ServerResponse list_all_queries() {
+    LOG_INFO("Received request in ClientMessageHandler::list_all_queries");
+    std::vector<Types::QueryInfo> info = backend.get_all_query_infos();
+
+    return Types::ServerResponse(CerealSerializer<std::vector<Types::QueryInfo>>::serialize(
+                                   info),
+                                 Types::ServerResponseType::QueryInfoVector);
+  }
+
   Types::ServerResponse add_query(std::string s_query_info) {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
@@ -238,8 +257,6 @@ class ClientMessageHandler {
                                    possible_port.value_or(0)),
                                  Types::ServerResponseType::PortNumber);
   };
-
-  // TODO: all queries and port numbers
 
   Types::ServerResponse set_option(std::string s_option) {
     std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);

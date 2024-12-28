@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <glaze/core/common.hpp>
+#include <glaze/json/write.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -50,6 +52,13 @@ struct EventInfo {
   void serialize(Archive& archive) {
     archive(id, name, attributes_info);
   }
+
+  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+
+  struct glaze {
+    using T = CORE::Types::EventInfo;  // convenience alias
+    static constexpr auto value = glz::object(&T::id, &T::name, &T::attributes_info);
+  };
 };
 
 }  // namespace CORE::Types
