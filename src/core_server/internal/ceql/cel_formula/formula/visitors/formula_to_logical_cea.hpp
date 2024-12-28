@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "core_server/internal/ceql/cel_formula/filters/visitors/apply_filters_to_logical_cea.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"

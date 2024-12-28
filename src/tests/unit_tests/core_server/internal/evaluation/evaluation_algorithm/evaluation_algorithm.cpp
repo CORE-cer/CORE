@@ -1566,7 +1566,7 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
 }
 
 TEST_CASE("Evaluation of a query with AND") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1574,12 +1574,12 @@ TEST_CASE("Evaluation of a query with AND") {
     "SELECT * FROM Stock\n"
     "WHERE (SELL AND SELL)";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -1652,7 +1652,7 @@ TEST_CASE("Evaluation of a query with AND") {
 }
 
 TEST_CASE("Evaluation of a query with OR and AND combined") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1660,12 +1660,12 @@ TEST_CASE("Evaluation of a query with OR and AND combined") {
     "SELECT * FROM Stock\n"
     "WHERE ((BUY OR SELL) AND SELL)";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -1738,7 +1738,7 @@ TEST_CASE("Evaluation of a query with OR and AND combined") {
 }
 
 TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1746,12 +1746,12 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND")
     "SELECT * FROM Stock\n"
     "WHERE ((SELL+) AND SELL)";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -1802,7 +1802,7 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AND")
 TEST_CASE(
   "Evaluation of a query with combination of non contiguous iteration and non contiguous "
   "sequencing") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1810,12 +1810,12 @@ TEST_CASE(
     "SELECT * FROM Stock\n"
     "WHERE (SELL+ AND (SELL;SELL))";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -1857,7 +1857,7 @@ TEST_CASE(
 }
 
 TEST_CASE("Evaluation of a query with combination of filtering and AND") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1865,12 +1865,12 @@ TEST_CASE("Evaluation of a query with combination of filtering and AND") {
     "SELECT * FROM Stock\n"
     "WHERE ((SELL as S FILTER S[name='MSFT']) AND (SELL as S FILTER S[price > 100]))\n";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
