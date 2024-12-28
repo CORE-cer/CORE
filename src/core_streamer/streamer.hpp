@@ -1,7 +1,14 @@
-#include "shared/datatypes/aliases/event_type_id.hpp"
+#pragma once
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
+#include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
@@ -19,8 +26,8 @@ class Streamer {
     sender.send(StreamSerializer::serialize(stream));
   }
 
-  void send_stream(Types::StreamTypeId stream_id, Types::Event& event) {
-    send_stream({stream_id, {event}});
+  void send_stream(Types::StreamTypeId stream_id, std::shared_ptr<Types::Event>&& event) {
+    send_stream({stream_id, {std::move(event)}});
   }
 
   // TODO: Send a stream through a CSV file and an AttributesInfo vector.

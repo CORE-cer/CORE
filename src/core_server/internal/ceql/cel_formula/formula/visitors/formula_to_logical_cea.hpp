@@ -12,7 +12,15 @@
 #include <utility>
 
 #include "core_server/internal/ceql/cel_formula/filters/visitors/apply_filters_to_logical_cea.hpp"
-#include "core_server/internal/ceql/cel_formula/formula/formula_headers.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/projection_formula.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
@@ -66,11 +74,13 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   ~FormulaToLogicalCEA() override = default;
 
   void visit(EventTypeFormula& formula) override {
-    if (query_catalog.get_unique_events_from_event_name(formula.event_name).size() == 0) {
-      throw std::runtime_error("The event_name: " + formula.event_name +
-                               " is not in the catalog, and base cases "
-                               "that are variables are not allowed.");
-    }
+    assert(query_catalog.get_unique_events_from_event_name(formula.event_name).size() != 0
+           && "There event_name is not in the catalog");
+    // if (query_catalog.get_unique_events_from_event_name(formula.event_name).size() == 0) {
+    //   throw std::runtime_error("The event_name: " + formula.event_name +
+    //                            " is not in the catalog, and base cases "
+    //                            "that are variables are not allowed.");
+    // }
     if (formula.stream_name.has_value()) {
       current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
                                                 stream_event_to_id,

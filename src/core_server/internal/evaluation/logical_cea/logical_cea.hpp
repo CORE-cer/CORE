@@ -81,7 +81,7 @@ struct LogicalCEA {
     uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
                                  ? stream_event_id_iter->second
                                  : throw std::logic_error(
-                                   "Stream/Event name combination not found");
+                                     "Stream/Event name combination not found");
 
     VariablesToMark stream_event_mark = mpz_class(1) << stream_event_id;
     VariablesToMark event_mark = mpz_class(1)
@@ -121,8 +121,10 @@ struct LogicalCEA {
          stream_event_to_id) {
       auto&& [current_stream_name, current_event_name] = current_stream_event_name;
       if (current_event_name == event_name) {
-        VariablesToMark current_stream_event_mark = mpz_class(1) < current_stream_event_id;
-        VariablesToMark mark = current_stream_event_mark | event_mark;
+        // FIX: This doesn't make any sense, should fix
+        // VariablesToMark current_stream_event_mark = mpz_class(1)
+        //                                             << current_stream_event_id;
+        VariablesToMark mark = event_mark;
         atomic_cea.transitions[0].push_back(
           std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
       }
@@ -192,6 +194,37 @@ struct LogicalCEA {
     for (size_t i = 0; i < epsilon_transitions.size(); i++) {
       for (const NodeId& end_node : epsilon_transitions[i]) {
         out += "        " + std::to_string(i) + "→ " + std::to_string(end_node) + "\n";
+      }
+    }
+
+    return out;
+  }
+
+  std::string to_string_visualization() const {
+    std::string out = "";
+    std::string initial_states_string = initial_states.get_str(2);
+    std::string final_states_string = final_states.get_str(2);
+
+    for (int i = 0; i < initial_states_string.length(); ++i) {
+      if (initial_states_string[initial_states_string.length() - i - 1] == '1') {
+        out += "i " + std::to_string(i) + "\n";
+      }
+    }
+    for (int i = 0; i < final_states_string.length(); ++i) {
+      if (final_states_string[final_states_string.length() - i - 1] == '1') {
+        out += "f " + std::to_string(i) + "\n";
+      }
+    }
+    for (size_t i = 0; i < transitions.size(); i++) {
+      for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
+           transitions[i]) {
+        out += "t " + std::to_string(i) + " " + std::get<0>(transition).to_string() + " "
+               + std::to_string(std::get<2>(transition)) + "\n";
+      }
+    }
+    for (size_t i = 0; i < epsilon_transitions.size(); i++) {
+      for (const NodeId& end_node : epsilon_transitions[i]) {
+        out += "t " + std::to_string(i) + " ε " + std::to_string(end_node) + "\n";
       }
     }
 

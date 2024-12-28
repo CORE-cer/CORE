@@ -2,11 +2,10 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "core_server/internal/ceql/value/attribute.hpp"
-#include "core_server/internal/ceql/value/string_literal.hpp"
-#include "not_predicate.hpp"
 #include "predicate.hpp"
+#include "visitors/predicate_visitor.hpp"
 
 namespace CORE::Internal::CEQL {
 

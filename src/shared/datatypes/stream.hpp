@@ -1,5 +1,8 @@
 #pragma once
 
+#include <initializer_list>
+#include <memory>
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -14,14 +17,14 @@ namespace CORE::Types {
  */
 struct Stream {
   StreamTypeId id;
-  std::vector<Event> events;
+  std::vector<std::shared_ptr<Event>> events;
 
   Stream() noexcept = default;
 
-  Stream(StreamTypeId id, std::vector<Event>&& events) noexcept
+  Stream(StreamTypeId id, std::vector<std::shared_ptr<Event>>&& events) noexcept
       : id(id), events(std::move(events)) {}
 
-  Stream(StreamTypeId id, std::initializer_list<Event>&& events) noexcept
+  Stream(StreamTypeId id, std::initializer_list<std::shared_ptr<Event>>&& events) noexcept
       : id(id), events(std::move(events)) {}
 
   ~Stream() noexcept = default;

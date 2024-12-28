@@ -10,8 +10,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-tests-debug:
-    # Containers must run in Linux based operating systems
+  run-basic-tests-debug:
+    strategy:
+      matrix:
+        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -21,39 +23,80 @@ jobs:
           remove-dotnet: true
           remove-android: true
 
-      # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Install python and pip
-        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
 
-      - name: setup env
-        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+      - name: "Setup conan"
+        run: conan profile detect
 
-      # - name: add artifactory
-      #   run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
 
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run tests
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+
+  run-sanitizer-tests-debug:
+    strategy:
+      matrix:
+        conan_profile: [x86_64-linux-clang-libstdc]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          overprovision-lvm: true
+          remove-dotnet: true
+          remove-android: true
+
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
+
+      - name: "Setup conan"
+        run: conan profile detect
+
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
+
+      - name: install dependencies conan
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: base build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+
+      - name: build with grammar
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run tests with address sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address -p conan_profiles/${{ matrix.conan_profile }}
 
-      # - name: run tests with thread sanitizer
-      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread
+      - name: run tests with thread sanitizer
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread -p conan_profiles/${{ matrix.conan_profile }}
 
   run-tests-release:
-    # Containers must run in Linux based operating systems
+    strategy:
+      matrix:
+        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -63,39 +106,44 @@ jobs:
           remove-dotnet: true
           remove-android: true
 
-      # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Install python and pip
-        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
 
-      - name: setup env
-        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+      - name: "Setup conan"
+        run: conan profile detect
 
-      # - name: add artifactory
-      #   run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
 
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run tests
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run stock query tests
-        run: chmod +x ./scripts/build_and_test_stock_queries.sh && ./scripts/build_and_test_stock_queries.sh -b Release
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+
+      - name: run unordered stock query tests
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh && ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run smart home query tests
-        run: chmod +x ./scripts/build_and_test_smart_homes_queries.sh && ./scripts/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh && ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run taxi query tests
-        run: chmod +x ./scripts/build_and_test_taxi_queries.sh && ./scripts/build_and_test_taxi_queries.sh -b Release
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_taxi_queries.sh && ./scripts/queries/base_queries/build_and_test_taxi_queries.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       # - name: run tests with address sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address

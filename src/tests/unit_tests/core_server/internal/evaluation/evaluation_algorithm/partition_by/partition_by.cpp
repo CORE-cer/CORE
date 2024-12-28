@@ -19,7 +19,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by single evaluator") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -41,12 +41,12 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY NONE";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -174,7 +174,7 @@ TEST_CASE(
 
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -196,12 +196,12 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY NONE";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 

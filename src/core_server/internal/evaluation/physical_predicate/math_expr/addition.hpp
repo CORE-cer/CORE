@@ -1,9 +1,12 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -22,12 +25,12 @@ class Addition : public MathExpr<Type> {
 
   ~Addition() override = default;
 
-  Type eval(RingTupleQueue::Tuple& tuple) override {
+  Type eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Addition is only valid for arithmetic vals");
       throw std::logic_error("Addition is only valid for arithmetic vals");
     } else
-      return left->eval(tuple) + right->eval(tuple);
+      return left->eval(event) + right->eval(event);
   }
 
   std::string to_string() const override {

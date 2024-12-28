@@ -8,7 +8,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -18,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -30,12 +29,12 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -138,7 +137,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -150,12 +149,12 @@ TEST_CASE(
     "    AND amzn[name='AMZN']"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -307,7 +306,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 with consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -319,12 +318,12 @@ TEST_CASE(
     "    AND amzn[name='AMZN']"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -405,7 +404,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by any") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -427,12 +426,12 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY ANY";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -626,7 +625,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by partition") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -648,12 +647,12 @@ TEST_CASE(
     "PARTITION BY [part]\n"
     "CONSUME BY PARTITION";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 

@@ -8,7 +8,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -17,7 +16,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -30,12 +29,12 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
     "CONSUME BY NONE\n"
     "LIMIT 1";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 
@@ -133,7 +132,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -146,12 +145,12 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
     "CONSUME BY NONE\n"
     "LIMIT 0";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 

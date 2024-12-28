@@ -1,4 +1,7 @@
 #pragma once
+#include <gmpxx.h>
+
+#include <cstdint>
 #include <tuple>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"

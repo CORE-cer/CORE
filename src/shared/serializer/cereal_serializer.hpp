@@ -1,9 +1,8 @@
 #pragma once
-#include <cereal/archives/binary.hpp>
-
-#include "shared/serializer/serializer.hpp"
 
 // Headers for all cereal types
+// NOLINTBEGIN
+#include <cereal/archives/binary.hpp>
 #include <cereal/types/array.hpp>
 #include <cereal/types/atomic.hpp>
 #include <cereal/types/base_class.hpp>
@@ -24,13 +23,17 @@
 #include <cereal/types/set.hpp>
 #include <cereal/types/stack.hpp>
 #include <cereal/types/string.hpp>
-#include <cereal/types/tuple.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/unordered_set.hpp>
 #include <cereal/types/utility.hpp>
 #include <cereal/types/valarray.hpp>
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
+#include <sstream>
+#include <string>
+// NOLINTEND
+
+#include "shared/serializer/serializer.hpp"
 
 namespace CORE::Internal {
 template <typename StructName>

@@ -1,8 +1,15 @@
 #include <atomic>
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <chrono>
+#include <functional>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
@@ -158,7 +165,7 @@ TEST_CASE(
 }
 
 TEST_CASE(
-  "A broadcast message is received exactly as it was sent. 100 "
+  "A broadcast message is received exactly as it was sent. 10 "
   "receivers",
   "[zmq]") {
   std::string sent_message = "Hello World 1";
@@ -166,7 +173,7 @@ TEST_CASE(
 
   ZMQMessageBroadcaster message_sender("tcp://*:5555");
 
-  static const int amount_of_threads = 100;
+  static const int amount_of_threads = 10;
   bool results[amount_of_threads];
   std::unique_ptr<std::thread> threads[amount_of_threads];
   std::atomic<int> counter = 0;

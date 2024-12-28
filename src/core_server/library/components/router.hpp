@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -24,11 +25,13 @@ class Router {
   std::thread router_thread;
 
  public:
-  Router(Internal::Interface::Backend<HandlerType>& backend,
+  Router(Internal::Interface::Backend<HandlerType, false>& backend,
+         std::mutex& backend_mutex,
          Types::PortNumber port_number,
          ResultHandlerFactoryT result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),
-               std::move(ClientMessageHandler(backend, result_handler_factory))) {
+               std::move(
+                 ClientMessageHandler(backend, backend_mutex, result_handler_factory))) {
     start();
   }
 

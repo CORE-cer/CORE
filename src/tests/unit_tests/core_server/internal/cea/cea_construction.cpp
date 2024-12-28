@@ -21,7 +21,7 @@ namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA {
 std::string create_query(std::string clause) {
   // clang-format off
   return "SELECT ALL * \n"
-         "FROM S, S2\n"
+         "FROM S\n"
          "WHERE " + clause + " WITHIN 4 EVENTS\n";
   // clang-format on
 }
@@ -30,7 +30,7 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("(H:+ ; S):+"), catalog);
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -39,42 +39,42 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   auto cea = CEA::CEA(std::move(logical_cea));
 
   INFO(cea.to_string());
-  REQUIRE(cea.amount_of_states == 4);
-  REQUIRE(cea.transitions[0].size() == 3);
-  REQUIRE(cea.transitions[1].size() == 2);
-  REQUIRE(cea.transitions[2].size() == 1);
-  REQUIRE(cea.transitions[3].size() == 1);
+  REQUIRE(cea.amount_of_states == 4);       // NOLINT
+  REQUIRE(cea.transitions[0].size() == 3);  // NOLINT
+  REQUIRE(cea.transitions[1].size() == 2);  // NOLINT
+  REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
+  REQUIRE(cea.transitions[3].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2)));
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
   // clang-format on
-  REQUIRE(cea.initial_state == 3);
-  REQUIRE(cea.final_states == 0b100);
+  REQUIRE(cea.initial_state == 3);     // NOLINT
+  REQUIRE(cea.final_states == 0b100);  // NOLINT
 }
 
 TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
           "[LogicalCEA To CEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("H+"));
+  auto query = Parsing::QueryParser::parse_query(create_query("H+"), catalog);
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA logical_cea = visitor.current_cea;
   INFO(logical_cea.to_string());
 
-  REQUIRE(logical_cea.amount_of_states == 3);
-  REQUIRE(logical_cea.initial_states == 0b001);
-  REQUIRE(logical_cea.final_states == 0b010);
+  REQUIRE(logical_cea.amount_of_states == 3);    // NOLINT
+  REQUIRE(logical_cea.initial_states == 0b001);  // NOLINT
+  REQUIRE(logical_cea.final_states == 0b010);    // NOLINT
 
-  REQUIRE(logical_cea.transitions[0].size() == 1);
-  REQUIRE(logical_cea.transitions[1].size() == 0);
-  REQUIRE(logical_cea.transitions[2].size() == 1);
+  REQUIRE(logical_cea.transitions[0].size() == 1);  // NOLINT
+  REQUIRE(logical_cea.transitions[1].size() == 0);  // NOLINT
+  REQUIRE(logical_cea.transitions[2].size() == 1);  // NOLINT
 
   REQUIRE(std::count(logical_cea.transitions[0].begin(),
                      logical_cea.transitions[0].end(),
@@ -85,28 +85,28 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
                                      false,
                                      2)));
 
-  REQUIRE(logical_cea.epsilon_transitions[1].size() == 1);
-  REQUIRE(logical_cea.epsilon_transitions[2].size() == 1);
-  REQUIRE(logical_cea.epsilon_transitions[1].contains(2));
-  REQUIRE(logical_cea.epsilon_transitions[2].contains(0));
+  REQUIRE(logical_cea.epsilon_transitions[1].size() == 1);  // NOLINT
+  REQUIRE(logical_cea.epsilon_transitions[2].size() == 1);  // NOLINT
+  REQUIRE(logical_cea.epsilon_transitions[1].contains(2));  // NOLINT
+  REQUIRE(logical_cea.epsilon_transitions[2].contains(0));  // NOLINT
 
   auto cea = CEA::CEA(std::move(logical_cea));
 
   INFO(cea.to_string());
   // NOTE: Construction after logical cea not checked
-  REQUIRE(cea.amount_of_states == 3);
-  REQUIRE(cea.transitions[0].size() == 2);
-  REQUIRE(cea.transitions[1].size() == 2);
-  REQUIRE(cea.transitions[2].size() == 1);
+  REQUIRE(cea.amount_of_states == 3);       // NOLINT
+  REQUIRE(cea.transitions[0].size() == 2);  // NOLINT
+  REQUIRE(cea.transitions[1].size() == 2);  // NOLINT
+  REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1)));
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0)));
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
   // clang-format on
-  REQUIRE(cea.initial_state == 0b010);
-  REQUIRE(cea.final_states == 0b001);
+  REQUIRE(cea.initial_state == 0b010);  // NOLINT
+  REQUIRE(cea.final_states == 0b001);   // NOLINT
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA

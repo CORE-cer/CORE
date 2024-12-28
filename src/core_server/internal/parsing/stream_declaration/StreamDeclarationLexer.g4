@@ -49,6 +49,7 @@ STRING: 'string' ;
 DOUBLE : 'double' ;
 LONG : 'long' ;
 BOOLEAN : 'boolean' ;
+PRIMARY_TIME : 'primary_time' ;
 
 
 SEMICOLON : ';' ;

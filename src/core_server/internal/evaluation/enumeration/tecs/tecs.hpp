@@ -1,12 +1,14 @@
 #pragma once
 
-#include <iostream>
-#include <memory>
-#include <string>
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "node.hpp"
 #include "node_manager.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "time_reservator.hpp"
 
 namespace CORE::Internal::tECS {
@@ -52,8 +54,8 @@ class tECS {
    * The bottom node, also known as the terminal node, has no children and
    * tells us that we reached the end of an output
    */
-  [[nodiscard]] Node* new_bottom(RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    auto out = node_manager.alloc(tuple, timestamp);
+  [[nodiscard]] Node* new_bottom(Types::EventWrapper&& event, uint64_t timestamp) {
+    auto out = node_manager.alloc(std::move(event), timestamp);
     assert(out != nullptr);
     return out;
   }
@@ -64,8 +66,8 @@ class tECS {
    * referring to.
    */
   [[nodiscard]] Node*
-  new_extend(Node* node, RingTupleQueue::Tuple& tuple, uint64_t timestamp) {
-    return node_manager.alloc(node, tuple, timestamp);
+  new_extend(Node* node, Types::EventWrapper& event, uint64_t timestamp) {
+    return node_manager.alloc(node, std::move(event.clone()), timestamp);
   }
 
   /**

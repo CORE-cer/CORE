@@ -1,7 +1,10 @@
 #pragma once
+
 #include <cassert>
-#include <chrono>
+#include <cstdint>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace CORE::Internal::CEQL {
 
@@ -21,7 +24,7 @@ struct Within {
     uint64_t duration = DEFAULT_TIME_WINDOW_SIZE;
     std::string attribute_name;
 
-    TimeWindow() : mode(TimeWindowMode::NONE){};
+    TimeWindow() : mode(TimeWindowMode::NONE) {};
 
     TimeWindow(uint64_t time_interval, TimeWindowMode mode)
         : mode(mode), duration(time_interval) {
@@ -73,6 +76,9 @@ struct Within {
         return "Within " + std::to_string(time_window.duration) + " ns";
       case EVENTS:
         return "Within " + std::to_string(time_window.duration) + " events";
+      case ATTRIBUTE:
+        return "Within " + std::to_string(time_window.duration) + " attribute "
+               + time_window.attribute_name;
       case NONE:
         return "";
       default:

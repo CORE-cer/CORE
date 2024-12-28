@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -22,9 +21,6 @@ class QueryCatalog;
 
 class Catalog {
   friend QueryCatalog;
-
- public:
-  RingTupleQueue::TupleSchemas tuple_schemas;
 
  private:
   std::vector<Types::EventInfo> events_info;
@@ -53,6 +49,10 @@ class Catalog {
   Types::QueryInfoId add_query(Types::QueryInfo query_info) noexcept;
 
   Types::QueryInfo get_query_info(Types::QueryInfoId query_info_id) const noexcept;
+
+  const std::set<std::string>& get_stream_names() const noexcept;
+
+  const std::vector<Types::StreamInfo>& get_stream_info_vector() const noexcept;
 
   const std::vector<Types::QueryInfo>& get_all_query_infos() const noexcept;
 

@@ -4,6 +4,7 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <string>
 
+#include "core_server/internal/coordination/catalog.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
@@ -19,8 +20,9 @@ std::string create_stream() {
 }
 
 TEST_CASE("Correct stream declaration parsing") {
+  Catalog catalog;
   Parsing::StreamParser parser;
-  Types::StreamInfoParsed stream = parser.parse_stream(create_stream());
+  Types::StreamInfoParsed stream = parser.parse_stream(create_stream(), catalog);
   REQUIRE(stream.name == "MySensor");
 
   Types::EventInfoParsed first_event = stream.events_info[0];

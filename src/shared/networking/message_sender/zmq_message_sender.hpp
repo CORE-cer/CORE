@@ -1,5 +1,9 @@
 #pragma once
 
+#include <zmq.h>
+
+#include <cstring>
+#include <string>
 #include <zmq.hpp>
 
 #include "shared/networking/message_sender/message_sender.hpp"

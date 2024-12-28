@@ -2,9 +2,11 @@
 #include <cassert>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <type_traits>
 
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -23,12 +25,12 @@ class Multiplication : public MathExpr<Type> {
     return std::make_unique<Multiplication<Type>>(left->clone(), right->clone());
   }
 
-  Type eval(RingTupleQueue::Tuple& tuple) override {
+  Type eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Multiplication is only valid for arithmetic vals");
       throw std::logic_error("Minus is only valid for arithmetic vals");
     } else
-      return left->eval(tuple) * right->eval(tuple);
+      return left->eval(event) * right->eval(event);
   }
 
   std::string to_string() const override {

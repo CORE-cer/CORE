@@ -25,18 +25,20 @@ jobs:
           remove-dotnet: true
           remove-android: true
 
-      # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: Install python and pip
-        run: sudo apt install -y python3 && sudo apt install -y python3-pip
+      - name: "Setup env"
+        uses: JRMurr/direnv-nix-action@v4.1.0
 
-      - name: setup env
-        run: chmod +x ./scripts/setup_in_ubuntu.sh && ./scripts/setup_in_ubuntu.sh
+      - name: "Setup conan"
+        run: conan profile detect
 
-      # - name: add artifactory
-      #   run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
+      - name: update conan default remote
+        run: conan remote update conancenter --url https://center2.conan.io
 
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
@@ -48,7 +50,7 @@ jobs:
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
 
       - name: benchmark stock query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
 
       - name: Read CSV
         id: csv_2
@@ -69,8 +71,30 @@ jobs:
             Stocks:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
 
+      - name: benchmark unordered stock query
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh -b Release
+
+      - name: Read CSV
+        id: csv_2
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/unordered_stocks/benchmark.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output_2
+        with:
+          csvinput: ${{ steps.csv_2.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 2
+          message: |
+            Unordered Stocks:
+            ${{steps.csv-table-output_2.outputs.markdown-table}}
+
       - name: benchmark smart home query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
 
       - name: Read CSV
         id: csv_3
@@ -92,7 +116,7 @@ jobs:
             ${{steps.csv-table-output_3.outputs.markdown-table}}
 
       - name: benchmark taxi query
-        run: chmod +x ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
 
       - name: Read CSV
         id: csv_4

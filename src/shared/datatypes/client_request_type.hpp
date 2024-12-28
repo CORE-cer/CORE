@@ -11,6 +11,8 @@ enum struct ClientRequestType {
   StreamInfoFromId,
   StreamInfoFromName,
   ListStreams,
-  AddQuery
+  ListQueries,
+  AddQuery,
+  SetOption
 };
 }  // namespace CORE::Types

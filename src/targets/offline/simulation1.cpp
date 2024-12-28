@@ -11,7 +11,6 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
-#include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/event.hpp"
@@ -66,9 +65,14 @@ void create_queries(Client& client) {
 
 void send_a_stream(Library::OfflineServer& server) {
   ZoneScoped;
-  Types::Event event_to_send{0,
-                             {std::make_shared<Types::IntValue>(20),
-                              std::make_shared<Types::IntValue>(2)}};
+  // clang-format off
+  auto event_to_send = std::make_shared<Types::Event>(0,
+    std::vector<std::shared_ptr<Types::Value>>{
+       std::make_shared<Types::IntValue>(20),
+       std::make_shared<Types::IntValue>(2)
+    }
+  );
+  // clang-format on
   server.receive_stream({0, {event_to_send}});
 }
 

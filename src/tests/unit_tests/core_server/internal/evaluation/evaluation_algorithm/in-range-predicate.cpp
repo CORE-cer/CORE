@@ -18,7 +18,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of in-range predicate") {
-  Internal::Interface::Backend<TestResultHandler> backend;
+  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -38,12 +38,12 @@ TEST_CASE("Evaluation of in-range predicate") {
     "   AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN']";
 
-  CEQL::Query parsed_query = Parsing::QueryParser::parse_query(string_query);
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
-  std::unique_ptr<TestResultHandler>
-    result_handler_ptr = std::make_unique<TestResultHandler>(
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
       QueryCatalog(backend.get_catalog_reference()));
-  TestResultHandler& result_handler = *result_handler_ptr;
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
 

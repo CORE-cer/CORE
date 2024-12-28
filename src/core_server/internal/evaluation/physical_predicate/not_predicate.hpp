@@ -1,11 +1,13 @@
 #pragma once
+#include <cstdint>
 #include <memory>
+#include <set>
+#include <string>
+#include <utility>
 
 #include "cassert"
-#include "comparison_type.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/tuple.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -26,7 +28,7 @@ class NotPredicate : public PhysicalPredicate {
 
   ~NotPredicate() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override { return !predicate->eval(tuple); }
+  bool eval(Types::EventWrapper& event) override { return !predicate->eval(event); }
 
   std::string to_string() const override { return "NOT " + predicate->to_string(); }
 };

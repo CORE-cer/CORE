@@ -11,12 +11,12 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
-#include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/parsing/event_info_parsed.hpp"
+#include "shared/datatypes/stream.hpp"
 #include "shared/datatypes/value.hpp"
 #include "stocks_data.hpp"
 
@@ -71,16 +71,19 @@ void create_queries(Client& client) {
 
 void send_a_stream(Library::OfflineServer& server, StocksData::Data data) {
   // clang-format off
-  Types::Event event_to_send{
+  auto event_to_send = std::make_shared<Types::Event>(
     data.event_type,
-      {std::make_shared<Types::IntValue>(data.id),
-       std::make_shared<Types::StringValue>(data.name),
-       std::make_shared<Types::IntValue>(data.volume),
-       std::make_shared<Types::DoubleValue>(data.price),
-       std::make_shared<Types::IntValue>(data.stock_time)}
-  };
+    std::vector<std::shared_ptr<Types::Value>>{
+      std::make_shared<Types::IntValue>(data.id),
+      std::make_shared<Types::StringValue>(data.name),
+      std::make_shared<Types::IntValue>(data.volume),
+      std::make_shared<Types::DoubleValue>(data.price),
+      std::make_shared<Types::IntValue>(data.stock_time)
+    }
+  );
   // clang-format on
-  server.receive_stream({0, {event_to_send}});
+
+  server.receive_stream(Types::Stream{0, {event_to_send}});
 }
 
 int main(int argc, char** argv) {

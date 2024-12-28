@@ -2,6 +2,7 @@ from os import path
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import check_min_cppstd
+import multiprocessing
 def create_script(grammar_name, antlr4_version):
     script = f"""#!/bin/bash
 
@@ -31,6 +32,7 @@ def create_script(grammar_name, antlr4_version):
     trap on_error ERR
 
     echo -e "${{GREEN}}Installing antlr-{antlr4_version}" if it is not installed already.$NORMAL_OUTPUT
+    mkdir -p ~/.local/bin
     cd ~/.local/bin && [ ! -f "antlr-{antlr4_version}-complete.jar" ] && wget https://www.antlr.org/download/antlr-{antlr4_version}-complete.jar
     cd -
 
@@ -54,6 +56,9 @@ def create_antlr_autogeneration_scripts(antlr4_version):
     with open(path.join(parsing_dir, "stream_declaration", "autogenerate_script.sh"),
               "w", encoding="utf-8") as f:
         f.write(create_script("StreamDeclaration", antlr4_version))
+    with open(path.join(parsing_dir, "option_declaration", "autogenerate_script.sh"),
+              "w", encoding="utf-8") as f:
+        f.write(create_script("OptionDeclaration", antlr4_version))
 
 class CORE(ConanFile):
     name = "core"
@@ -61,8 +66,8 @@ class CORE(ConanFile):
 
     # Binary Configurations
     settings = "os", "compiler", "build_type", "arch"
-    options = {"sanitizer": ["address", "thread", None]}
-    default_options = {"sanitizer": None}
+    options = {"sanitizer": ["address", "thread", "none"], "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"], "j": ["all-1"] + list(range(1, 64)), "profiling": ["on", "off"]}
+    default_options = {"sanitizer": "none", "logging": "info", "j": "all-1", "profiling": "off"}
 
     exports_sources = "CMakeLists.txt", "src/*"
 
@@ -78,12 +83,17 @@ class CORE(ConanFile):
 
     # Specific versions of the used code
     ANTLR4_VERSION = "4.12.0"
-    CATCH2_VERSION = "3.3.2"
+    CATCH2_VERSION = "3.7.1"
     CPPZMQ_VERSION = "4.9.0"
     CEREAL_VERSION = "1.3.2"
-    LIBPQXX_VERSION = "7.7.5"
-    GMP_VERSION = "6.2.1"
+    LIBPQXX_VERSION = "7.9.2"
+    GMP_VERSION = "6.3.0"
     RE2_VERSION = "20230602"
+    QUILL_VERSION = "3.7.0"
+    READERWRITERQUEUE_VERSION = "1.0.6"
+    UWEBSOCKETS_VERSION = "20.70.0"
+    GLAZE_VERSION = "4.0.1"
+    PYBIND_VERSION = "2.13.5"
 
     def layout(self):
         cmake_layout(self)
@@ -108,6 +118,11 @@ class CORE(ConanFile):
         self.requires("libpqxx/" + CORE.LIBPQXX_VERSION)
         self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
+        self.requires("quill/" + CORE.QUILL_VERSION)
+        self.requires("readerwriterqueue/" + CORE.READERWRITERQUEUE_VERSION)
+        self.requires("uwebsockets/" + CORE.UWEBSOCKETS_VERSION)
+        self.requires("glaze/" + CORE.GLAZE_VERSION)
+        self.requires("pybind11/" +  CORE.PYBIND_VERSION)
 
     def generate(self):
         tc = CMakeToolchain(self, generator="Ninja")
@@ -120,9 +135,16 @@ class CORE(ConanFile):
         else:
             tc.cache_variables["ADDRESS_SANITIZER"] = False
             tc.cache_variables["THREAD_SANITIZER"] = False
+
+        tc.cache_variables["LOGGING"] = self.options.logging
+        tc.cache_variables["PROFILING"] = self.options.profiling == "on"
+        print(tc.cache_variables)
         tc.generate()
 
     def build(self):
         cmake = CMake(self)
         cmake.configure()
-        cmake.build()
+
+        compile_cores = self.options.j if self.options.j != 'all-1' else multiprocessing.cpu_count() - 1
+
+        cmake.build(build_tool_args=[f'-j{compile_cores}'])

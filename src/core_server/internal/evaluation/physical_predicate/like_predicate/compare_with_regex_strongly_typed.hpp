@@ -3,10 +3,12 @@
 #include <re2/re2.h>
 
 #include <cstddef>
-#include <string_view>
+#include <cstdint>
+#include <string>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
-#include "core_server/internal/stream/ring_tuple_queue/value.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::CEA {
 class CompareWithRegexStronglyTyped : public PhysicalPredicate {
@@ -26,10 +28,10 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
 
   ~CompareWithRegexStronglyTyped() override = default;
 
-  bool eval(RingTupleQueue::Tuple& tuple) override {
-    uint64_t* pos = tuple[pos_to_compare];
-    RingTupleQueue::Value<std::string_view> attribute_val(pos);
-    return re2::RE2::FullMatch(attribute_val.get(), regex_compiled);
+  bool eval(Types::EventWrapper& event) override {
+    const Types::StringValue
+      attribute_val = event.get_attribute_at_index<Types::StringValue>(pos_to_compare);
+    return re2::RE2::FullMatch(attribute_val.val, regex_compiled);
   }
 
   std::string to_string() const override {

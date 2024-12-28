@@ -1,10 +1,20 @@
 #pragma once
 
-#include <atomic>
-#include <cstdlib>
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>  // NOLINT
+#include <quill/detail/LogMacros.h>
 
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
+#include <sstream>
+#include <string>
+
+#include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
+#include "shared/logging/setup.hpp"
 #include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
@@ -48,6 +58,10 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
+    LOG_L3_BACKTRACE(
+      "Adding node to node_manager, currently at {} nodes used with {} nodes recycled",
+      amount_of_nodes_used,
+      amount_of_recycled_nodes);
     Node* out = get_node_to_recycle_or_increase_mempool_size_if_necessary();
     if (out != nullptr) {
       out->reset(std::forward<Args>(args)...);
@@ -103,12 +117,12 @@ class NodeManager {
     }
     if (recyclable_node_head == nullptr) {
       if (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load())) {
-        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()))
-          ;
+        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()));
         if (recyclable_node_head != nullptr) {
           return get_node_to_recycle();
         }
       };
+      LOG_DEBUG("Not enough memory to allocate node for TECS");
       increase_mempool_size();
       return nullptr;
     }
@@ -116,6 +130,7 @@ class NodeManager {
   }
 
   void increase_mempool_size() {
+    LOG_DEBUG("Increasing size of memory pool");
     NodePool* new_minipool = new NodePool(minipool_head->size() * 2);
     minipool_head->set_next(new_minipool);
     new_minipool->set_prev(minipool_head);

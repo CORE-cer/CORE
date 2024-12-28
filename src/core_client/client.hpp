@@ -4,10 +4,10 @@
 #include <cassert>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -28,6 +28,14 @@
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
+#include "shared/exceptions/parsing/attribute_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/attribute_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/event_not_defined_exception.hpp"
+#include "shared/exceptions/parsing/event_not_in_stream_exception.hpp"
+#include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
+#include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
+#include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
@@ -51,6 +59,14 @@ class Client {
  public:
   Client(std::string address, Types::PortNumber dealer_port)
       : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
+
+  void declare_option(std::string option_declaration) {
+    Types::ClientRequest option_declaration_req(
+      Internal::CerealSerializer<std::string>::serialize(option_declaration),
+      Types::ClientRequestType::SetOption);
+    Types::ServerResponse res = send_request(option_declaration_req);
+    assert(res.response_type == Types::ServerResponseType::SuccessEmpty);
+  }
 
   Types::StreamInfo declare_stream(std::string stream_declaration) {
     Types::ClientRequest stream_declaration_req(
@@ -178,8 +194,61 @@ class Client {
     std::string serialized_request = ClientReqSerializer::serialize(request);
     auto serialized_response = dealer.send_and_receive(serialized_request);
     auto res = ServerResSerializer::deserialize(serialized_response);
-    if (res.response_type == Types::ServerResponseType::Error) {
-      throw std::runtime_error("The request sent was invalid!");
+    switch (res.response_type) {
+      case Types::ServerResponseType::AttributeNameAlreadyDeclaredException: {
+        auto client_exception = Internal::CerealSerializer<
+          AttributeNameAlreadyDeclaredException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::AttributeNotDefinedException: {
+        auto client_exception = Internal::CerealSerializer<
+          AttributeNotDefinedException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::EventNameAlreadyDeclaredException: {
+        auto client_exception = Internal::CerealSerializer<
+          EventNameAlreadyDeclaredException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::EventNotDefinedException: {
+        auto client_exception = Internal::CerealSerializer<
+          EventNotDefinedException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::EventNotInStreamException: {
+        auto client_exception = Internal::CerealSerializer<
+          EventNotInStreamException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::ParsingSyntaxException: {
+        auto client_exception = Internal::CerealSerializer<
+          ParsingSyntaxException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::StreamNameAlreadyDeclaredException: {
+        auto client_exception = Internal::CerealSerializer<
+          StreamNameAlreadyDeclaredException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::StreamNotFoundException: {
+        auto client_exception = Internal::CerealSerializer<
+          StreamNotFoundException>::deserialize(res.serialized_response_data);
+        throw client_exception;
+      }
+      case Types::ServerResponseType::Warning: {
+        auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+          res.serialized_response_data);
+        std::cout << response_string << std::flush;
+        break;
+      }
+      case Types::ServerResponseType::Error: {
+        auto response_string = Internal::CerealSerializer<std::string>::deserialize(
+          res.serialized_response_data);
+        std::cout << response_string << std::flush;
+        break;
+      }
+      default:
+        return res;
     }
     return res;
   }
