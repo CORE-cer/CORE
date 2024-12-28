@@ -84,6 +84,7 @@ class EventWrapper {
                  attribute_index,
                  id);
     assert(!moved);
+    assert(attribute_index < event->attributes.size());
     return static_cast<const T&>(*(event->attributes)[attribute_index]);
   }
 

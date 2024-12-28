@@ -64,8 +64,8 @@ class HTTPServer {
   void start() {
     std::thread http_server_thread([this] { start_http_server(); });
     http_server_thread.detach();
-    std::thread spam_events_thread([this] { spam_events(); });
-    spam_events_thread.detach();
+    // std::thread spam_events_thread([this] { spam_events(); });
+    // spam_events_thread.detach();
   }
 
   void spam_events() {

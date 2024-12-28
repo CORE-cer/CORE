@@ -10,6 +10,7 @@ struct Value {
   virtual ~Value() = default;
   virtual std::unique_ptr<Value> clone() const = 0;
   virtual std::string to_string() const = 0;
+  virtual std::string get_type() const = 0;
 };
 
 struct StringValue final : public Value {
@@ -26,6 +27,8 @@ struct StringValue final : public Value {
   }
 
   std::string to_string() const override { return val; }
+
+  std::string get_type() const override { return "StringValue"; }
 
   template <class Archive>
   void serialize(Archive& archive) {
@@ -48,6 +51,8 @@ struct IntValue final : public Value {
 
   std::string to_string() const override { return std::to_string(val); }
 
+  std::string get_type() const override { return "IntValue"; }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(val);
@@ -68,6 +73,8 @@ struct DoubleValue final : public Value {
   }
 
   std::string to_string() const override { return std::to_string(val); }
+
+  std::string get_type() const override { return "DoubleValue"; }
 
   template <class Archive>
   void serialize(Archive& archive) {
@@ -90,6 +97,8 @@ struct BoolValue final : public Value {
 
   std::string to_string() const override { return std::to_string(val); }
 
+  std::string get_type() const override { return "BoolValue"; }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(val);
@@ -110,6 +119,8 @@ struct DateValue final : public Value {
   }
 
   std::string to_string() const override { return std::to_string(val); }
+
+  std::string get_type() const override { return "DateValue"; }
 
   template <class Archive>
   void serialize(Archive& archive) {

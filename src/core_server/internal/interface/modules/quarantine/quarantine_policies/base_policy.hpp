@@ -6,6 +6,7 @@
 #include <cassert>
 #include <chrono>
 #include <cstring>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -48,8 +49,7 @@ class BasePolicy {
   std::atomic<bool> stop_condition = false;
 
   // Events
-  std::vector<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>>
-    blocking_event_queues;
+  std::list<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>> blocking_event_queues;
   moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> send_event_queue;
 
  public:
@@ -101,22 +101,24 @@ class BasePolicy {
   void send_event_to_queries(Types::EventWrapper&& event) {
     ZoneScopedN("BasePolicy::send_event_to_queries");
     std::lock_guard<std::mutex> lock(queries_lock);
-    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
+    int i = 0;
+    for (auto& blocking_event_queue : blocking_event_queues) {
       ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(
             event.get_unique_event_type_id())) {
         sender.send("");
-        blocking_event_queues[i].enqueue(std::move(event.clone()));
+        blocking_event_queue.enqueue(std::move(event.clone()));
       }
+      i += 1;
     }
   }
 
   void handle_destruction() {
     stop_condition = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
-    for (int i = 0; i < inner_thread_event_senders.size(); i++) {
-      while (blocking_event_queues[i].size_approx() != 0) {
+    for (auto& blocking_event_queue : blocking_event_queues) {
+      while (blocking_event_queue.size_approx() != 0) {
         std::this_thread::sleep_for(std::chrono::microseconds(50));
       }
     }
