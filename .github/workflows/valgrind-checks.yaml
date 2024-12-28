@@ -42,10 +42,10 @@ jobs:
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: run valgrind with no sanitizer
-        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -p conan_profiles/${{ conan_profile }}
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
