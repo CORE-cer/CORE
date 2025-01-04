@@ -12,9 +12,8 @@
 
 namespace CORE::Library::Components {
 
-template <typename ResultHandlerFactoryT>
 class OfflineStreamsListener {
-  using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT, false>;
+  using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
   Backend& backend;

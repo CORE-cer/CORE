@@ -23,9 +23,8 @@
 
 namespace CORE::Library::Components {
 
-template <typename ResultHandlerFactoryT>
 class OnlineStreamsListener {
-  using Backend = CORE::Internal::Interface::Backend<ResultHandlerFactoryT, false>;
+  using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
   Backend& backend;

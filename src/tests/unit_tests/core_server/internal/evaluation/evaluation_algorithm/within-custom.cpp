@@ -8,7 +8,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -18,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers Within") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -173,7 +172,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -308,7 +307,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers Within smaller + 1") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",

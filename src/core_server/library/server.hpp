@@ -39,17 +39,13 @@ class OfflineServer {
 
   std::atomic<Types::PortNumber> next_available_port;
 
-  using HandlerType = typename std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*,
-    Internal::QueryCatalog>::element_type;
-  Internal::Interface::Backend<HandlerType, false> backend;
+  Internal::Interface::Backend<false> backend;
   std::mutex backend_mutex = {};
 
-  ResultHandlerFactoryT result_handler_factory{};
-  Components::Router<ResultHandlerFactoryT> router;
-  Components::HTTPServer<ResultHandlerFactoryT> http_server;
-  Components::OfflineStreamsListener<HandlerType> stream_listener;
+  std::shared_ptr<Components::ResultHandlerFactory> result_handler_factory{};
+  Components::Router router;
+  Components::HTTPServer http_server;
+  Components::OfflineStreamsListener stream_listener;
 
  public:
   OfflineServer(Types::PortNumber starting_port)
@@ -86,21 +82,21 @@ class OnlineServer {
     decltype(&ResultHandlerFactoryT::create_handler),
     ResultHandlerFactoryT*,
     Internal::QueryCatalog>::element_type;
-  Internal::Interface::Backend<HandlerType, false> backend;
+  Internal::Interface::Backend<false> backend;
   std::mutex backend_mutex = {};
 
-  ResultHandlerFactoryT result_handler_factory;
-  Components::Router<ResultHandlerFactoryT> router;
-  Components::HTTPServer<ResultHandlerFactoryT> http_server;
-  Components::OnlineStreamsListener<HandlerType> stream_listener;
+  std::shared_ptr<Components::ResultHandlerFactory> result_handler_factory;
+  Components::Router router;
+  Components::HTTPServer http_server;
+  Components::OnlineStreamsListener stream_listener;
 
  public:
   OnlineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
-        result_handler_factory{next_available_port},
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
         http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
+    result_handler_factory = std::make_shared<ResultHandlerFactoryT>(next_available_port);
     Internal::Logging::enable_logging_rotating();
     LOG_INFO("Server started in port {}", starting_port);
   }

@@ -17,12 +17,12 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
-template <typename ResultHandlerT>
-class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT> {
-  friend GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>;
+class SimpleQuery : public GenericQuery {
+  friend GenericQuery;
   // Underlying evaluator for tuples
   std::unique_ptr<SingleEvaluator> evaluator;
 
@@ -30,17 +30,17 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
   SimpleQuery(
     Internal::QueryCatalog query_catalog,
     std::string inproc_receiver_address,
-    std::unique_ptr<ResultHandlerT>&& result_handler,
+    std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
-      : GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandlerT>(query_catalog,
-                                                                  inproc_receiver_address,
-                                                                  std::move(result_handler),
-                                                                  blocking_event_queue) {}
+      : GenericQuery(query_catalog,
+                     inproc_receiver_address,
+                     std::move(result_handler),
+                     blocking_event_queue) {}
 
   ~SimpleQuery() { this->stop(); }
 
  private:
-  void create_query(Internal::CEQL::Query&& query) {
+  void create_query(Internal::CEQL::Query&& query) override {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
@@ -69,7 +69,7 @@ class SimpleQuery : public GenericQuery<SimpleQuery<ResultHandlerT>, ResultHandl
                                                   this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {
     return evaluator->process_event(std::move(event));
   }
 };

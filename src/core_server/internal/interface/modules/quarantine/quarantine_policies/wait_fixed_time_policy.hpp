@@ -16,8 +16,7 @@
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
-template <typename ResultHandlerT>
-class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
+class WaitFixedTimePolicy : public BasePolicy {
   constexpr static const std::chrono::duration time_to_wait = std::chrono::milliseconds(
     20);
 
@@ -27,7 +26,7 @@ class WaitFixedTimePolicy : public BasePolicy<ResultHandlerT> {
  public:
   WaitFixedTimePolicy(Catalog& catalog,
                       std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : BasePolicy<ResultHandlerT>(catalog, next_available_inproc_port) {
+      : BasePolicy(catalog, next_available_inproc_port) {
     this->start();
   }
 

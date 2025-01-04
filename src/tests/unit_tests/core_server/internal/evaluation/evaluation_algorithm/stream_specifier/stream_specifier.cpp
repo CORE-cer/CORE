@@ -8,7 +8,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -18,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on two streams using stream specifiers") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -85,7 +84,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers") {
 }
 
 TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -152,7 +151,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
 
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and only where on one stream") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -220,7 +219,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and OR with projection on only one "
   "event") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -300,7 +299,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and OR with projection on repeated "
   "event") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",

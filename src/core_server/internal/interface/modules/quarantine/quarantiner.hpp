@@ -16,6 +16,7 @@
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
@@ -23,24 +24,22 @@
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
-template <typename ResultHandlerT>
 class QuarantineManager {
   Catalog& catalog;
 
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
-  std::map<std::set<Types::StreamTypeId>, std::unique_ptr<BasePolicy<ResultHandlerT>>>
-    query_policies;
+  std::map<std::set<Types::StreamTypeId>, std::unique_ptr<BasePolicy>> query_policies;
 
-  std::map<Types::StreamTypeId,
-           std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>>
+  std::map<Types::StreamTypeId, std::vector<std::reference_wrapper<BasePolicy>>>
     stream_type_id_to_relevant_policies;
 
  public:
   QuarantineManager(Catalog& catalog) : catalog(catalog) {}
 
-  void declare_query(Internal::CEQL::Query&& parsed_query,
-                     std::unique_ptr<ResultHandlerT>&& result_handler) {
+  void
+  declare_query(Internal::CEQL::Query&& parsed_query,
+                std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::set<Types::StreamTypeId> stream_type_ids = get_stream_ids_from_names(
       parsed_query.from.streams);
 
@@ -48,7 +47,7 @@ class QuarantineManager {
 
     // Check if set of streams already has policy associated with it
     if (iter != query_policies.end()) {
-      BasePolicy<ResultHandlerT>& query_policy = *(iter->second);
+      BasePolicy& query_policy = *(iter->second);
       // TODO: Add Port
       catalog.add_query({0, parsed_query.to_string()});
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
@@ -60,26 +59,25 @@ class QuarantineManager {
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
-    std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>&
+    std::vector<std::reference_wrapper<BasePolicy>>&
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 
-    for (BasePolicy<ResultHandlerT>& relevant_policy : relevant_policies) {
+    for (BasePolicy& relevant_policy : relevant_policies) {
       relevant_policy.receive_event(std::move(event.clone()));
     }
   }
 
   void set_query_policy(std::set<std::string>& stream_names,
                         QuarantinePolicyType policy_type) {
-    std::unique_ptr<BasePolicy<ResultHandlerT>> query_policy_ptr = std::move(
-      create_policy(policy_type));
+    std::unique_ptr<BasePolicy> query_policy_ptr = std::move(create_policy(policy_type));
     std::set<Types::StreamTypeId> stream_type_ids = get_stream_ids_from_names(
       stream_names);
 
     auto iter = query_policies.insert({stream_type_ids, std::move(query_policy_ptr)});
 
-    BasePolicy<ResultHandlerT>& query_policy = *(iter.first->second);
+    BasePolicy& query_policy = *(iter.first->second);
     for (const Types::StreamTypeId stream_type_id : stream_type_ids) {
-      std::vector<std::reference_wrapper<BasePolicy<ResultHandlerT>>>&
+      std::vector<std::reference_wrapper<BasePolicy>>&
         relevant_policies = stream_type_id_to_relevant_policies[stream_type_id];
 
       relevant_policies.emplace_back(query_policy);
@@ -87,15 +85,12 @@ class QuarantineManager {
   }
 
  private:
-  std::unique_ptr<BasePolicy<ResultHandlerT>>
-  create_policy(QuarantinePolicyType policy_type) {
+  std::unique_ptr<BasePolicy> create_policy(QuarantinePolicyType policy_type) {
     switch (policy_type) {
       case QuarantinePolicyType::DirectPolicy:
-        return std::make_unique<DirectPolicy<ResultHandlerT>>(catalog,
-                                                              next_available_inproc_port);
+        return std::make_unique<DirectPolicy>(catalog, next_available_inproc_port);
       case QuarantinePolicyType::WaitFixedTimePolicy:
-        return std::make_unique<WaitFixedTimePolicy<ResultHandlerT>>(
-          catalog, next_available_inproc_port);
+        return std::make_unique<WaitFixedTimePolicy>(catalog, next_available_inproc_port);
       default:
         throw std::runtime_error("Invalid policy type");
     }

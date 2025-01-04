@@ -17,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with consume by any") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -137,7 +137,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR with consume by any") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -306,7 +306,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 with consume by any") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -404,7 +404,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by any") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -625,7 +625,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators with "
   "consume by partition") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
