@@ -222,7 +222,7 @@ class HTTPServer {
 
     std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
       backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+    std::optional<Types::PortNumber> possible_port = result_handler->get_port(); //NOLINT
 
     backend.declare_query(std::move(query), std::move(result_handler));
 
