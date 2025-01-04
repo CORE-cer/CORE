@@ -59,7 +59,7 @@ class ClientMessageHandler {
                        std::shared_ptr<ResultHandlerFactory> result_handler_factory)
       : backend(backend),
         backend_mutex(backend_mutex),
-        result_handler_factory(std::move(result_handler_factory)) {}
+        result_handler_factory(result_handler_factory) {}
 
   ClientMessageHandler(const ClientMessageHandler& other) = delete;
 
