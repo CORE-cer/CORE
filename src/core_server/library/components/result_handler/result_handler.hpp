@@ -21,7 +21,6 @@
 
 namespace CORE::Library::Components {
 
-template <class Derived>
 class ResultHandler {
  protected:
   std::optional<Types::PortNumber> port{};
@@ -32,23 +31,26 @@ class ResultHandler {
       : query_catalog(query_catalog) {}
 
   void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
-    static_cast<Derived*>(this)->handle_complex_event(std::move(enumerator));
+    handle_complex_event(std::move(enumerator));
   }
 
-  void start() { static_cast<Derived*>(this)->start_impl(); }
+  virtual void start() = 0;
 
   std::optional<Types::PortNumber> get_port() const { return port; }
+
+  virtual void
+  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& enumerator) = 0;
 
   virtual ~ResultHandler() = default;
 };
 
-class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
+class OfflineResultHandler : public ResultHandler {
  public:
   OfflineResultHandler(const Internal::QueryCatalog& query_catalog)
       : ResultHandler(query_catalog) {}
 
-  void
-  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+  void handle_complex_event(
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     ZoneScopedN("OfflineResultHandler::handle_complex_event");
     if (!internal_enumerator.has_value()) {
       return;
@@ -58,10 +60,10 @@ class OfflineResultHandler : public ResultHandler<OfflineResultHandler> {
     }
   }
 
-  void start_impl() {}
+  void start() override {}
 };
 
-class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
+class OnlineResultHandler : public ResultHandler {
  public:
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
 
@@ -71,7 +73,7 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
     port = assigned_port;
   }
 
-  void start_impl() {
+  void start() override {
     if (!port.has_value()) {
       throw std::runtime_error("port not defined on OnlineResultHandler when starting");
     }
@@ -80,8 +82,8 @@ class OnlineResultHandler : public ResultHandler<OnlineResultHandler> {
     LOG_INFO("Starting broadcaster at port {}", port.value());
   }
 
-  void
-  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+  void handle_complex_event(
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
       enumerator = query_catalog.convert_enumerator(

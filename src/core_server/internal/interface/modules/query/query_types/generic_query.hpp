@@ -20,17 +20,17 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
-template <typename Derived, typename ResultHandlerT>
 class GenericQuery {
  protected:
   uint64_t current_stream_position = 0;
   Internal::QueryCatalog query_catalog;
-  std::unique_ptr<ResultHandlerT> result_handler;
+  std::unique_ptr<Library::Components::ResultHandler> result_handler;
 
   // Receiver for tuples
   std::string receiver_address;
@@ -48,7 +48,7 @@ class GenericQuery {
   GenericQuery(
     Internal::QueryCatalog query_catalog,
     std::string inproc_receiver_address,
-    std::unique_ptr<ResultHandlerT>&& result_handler,
+    std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : query_catalog(query_catalog),
         receiver_address(inproc_receiver_address),
@@ -65,7 +65,9 @@ class GenericQuery {
 
   zmq::context_t& get_inproc_context() { return receiver.get_context(); }
 
-  ResultHandlerT& get_result_handler_reference() const { return *result_handler; }
+  Library::Components::ResultHandler& get_result_handler_reference() const {
+    return *result_handler;
+  }
 
  protected:
   void stop() {
@@ -80,9 +82,7 @@ class GenericQuery {
   }
 
  private:
-  void create_query(Internal::CEQL::Query&& query) {
-    static_cast<Derived*>(this)->create_query(std::move(query));
-  }
+  virtual void create_query(Internal::CEQL::Query&& query) = 0;
 
   void start() {
     worker_thread = std::thread([&]() {
@@ -106,8 +106,6 @@ class GenericQuery {
     return std::move(event);
   }
 
-  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
-    return static_cast<Derived*>(this)->process_event(std::move(event));
-  }
+  virtual std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) = 0;
 };
 }  // namespace CORE::Internal::Interface::Module::Query

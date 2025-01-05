@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core_server/internal/parsing/option_declaration/parser.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -10,14 +13,12 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/option_declaration/parser.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -44,26 +45,18 @@ namespace CORE::Library::Components {
 
 using namespace Internal;
 
-template <typename ResultHandlerFactoryT>
 class ClientMessageHandler {
-  // Extract from ResultHandlerFactoryT the return value of creating a handler
-  // use ::element_type to remove the unique_ptr and get the internal type.
-  using HandlerType = typename std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*,
-    Internal::QueryCatalog>::element_type;
-
-  using Backend = CORE::Internal::Interface::Backend<HandlerType, false>;
+  using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
   Backend& backend;
   std::mutex& backend_mutex;
-  ResultHandlerFactoryT result_handler_factory;
+  std::shared_ptr<ResultHandlerFactory> result_handler_factory;
 
  public:
   ClientMessageHandler(Backend& backend,
                        std::mutex& backend_mutex,
-                       ResultHandlerFactoryT result_handler_factory)
+                       std::shared_ptr<ResultHandlerFactory> result_handler_factory)
       : backend(backend),
         backend_mutex(backend_mutex),
         result_handler_factory(result_handler_factory) {}
@@ -75,7 +68,7 @@ class ClientMessageHandler {
   ClientMessageHandler(ClientMessageHandler&& other)
       : backend(other.backend),
         backend_mutex(other.backend_mutex),
-        result_handler_factory(other.result_handler_factory) {}
+        result_handler_factory(std::move(other.result_handler_factory)) {}
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 
@@ -249,7 +242,7 @@ class ClientMessageHandler {
     // TODO: Check if it is possible to parse it.
     LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
     Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
       backend.get_catalog_reference());
     std::optional<Types::PortNumber> possible_port = result_handler->get_port();
     backend.declare_query(std::move(parsed_query), std::move(result_handler));
@@ -262,8 +255,7 @@ class ClientMessageHandler {
     std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);
     LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option",
              option_declaration);
-    Parsing::Option::OptionsParser<ResultHandlerFactoryT>::parse_option(option_declaration,
-                                                                        backend);
+    Parsing::Option::OptionsParser::parse_option(option_declaration, backend);
     return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
   }
 };

@@ -10,13 +10,13 @@
 #include <string>
 #include <string_view>
 #include <thread>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/ceql/query/query.hpp"
-#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -29,26 +29,20 @@
 
 namespace CORE::Library::Components {
 
-template <typename ResultHandlerFactoryT>
 class HTTPServer {
-  using HandlerType = typename std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*,
-    Internal::QueryCatalog>::element_type;
-
-  using Backend = CORE::Internal::Interface::Backend<HandlerType, false>;
+  using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber port_number;
-  ResultHandlerFactoryT result_handler_factory;
+  std::shared_ptr<ResultHandlerFactory> result_handler_factory;
 
  public:
-  HTTPServer(Internal::Interface::Backend<HandlerType, false>& backend,
+  HTTPServer(Internal::Interface::Backend<false>& backend,
              std::mutex& backend_mutex,
              Types::PortNumber port_number,
-             ResultHandlerFactoryT result_handler_factory)
+             std::shared_ptr<ResultHandlerFactory> result_handler_factory)
       : backend(backend),
         backend_mutex(backend_mutex),
         port_number(port_number),
@@ -226,9 +220,9 @@ class HTTPServer {
     std::lock_guard<std::mutex> lock(backend_mutex);
     Internal::CEQL::Query query = backend.parse_sent_query(query_string);
 
-    std::unique_ptr<HandlerType> result_handler = result_handler_factory.create_handler(
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
       backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+    std::optional<Types::PortNumber> possible_port = result_handler->get_port();  //NOLINT
 
     backend.declare_query(std::move(query), std::move(result_handler));
 

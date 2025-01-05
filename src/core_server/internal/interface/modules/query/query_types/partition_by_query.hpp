@@ -24,15 +24,14 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/dynamic_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
-template <typename ResultHandlerT>
-class PartitionByQuery
-    : public GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT> {
+class PartitionByQuery : public GenericQuery {
   // https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key/12996028#12996028
   struct VectorHash {
     std::size_t operator()(const std::vector<uint64_t> vec) const noexcept {
@@ -51,7 +50,7 @@ class PartitionByQuery
     }
   };
 
-  friend GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>;
+  friend GenericQuery;
 
   std::optional<CEQL::Query> query;
   std::unique_ptr<DynamicEvaluator> evaluator;
@@ -66,18 +65,17 @@ class PartitionByQuery
   PartitionByQuery(
     Internal::QueryCatalog query_catalog,
     std::string inproc_receiver_address,
-    std::unique_ptr<ResultHandlerT>&& result_handler,
+    std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
-      : GenericQuery<PartitionByQuery<ResultHandlerT>, ResultHandlerT>(
-          query_catalog,
-          inproc_receiver_address,
-          std::move(result_handler),
-          blocking_event_queue) {}
+      : GenericQuery(query_catalog,
+                     inproc_receiver_address,
+                     std::move(result_handler),
+                     blocking_event_queue) {}
 
   ~PartitionByQuery() { this->stop(); }
 
  private:
-  void create_query(Internal::CEQL::Query&& query) {
+  void create_query(Internal::CEQL::Query&& query) override {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
@@ -107,7 +105,7 @@ class PartitionByQuery
                                                    this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
+  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
     if (auto it = event_id_to_tuple_idx.find(event.get_unique_event_type_id());
         it != event_id_to_tuple_idx.end()) [[likely]] {

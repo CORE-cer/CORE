@@ -20,8 +20,7 @@
 #include "shared/datatypes/event.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
-class DirectOutputTestResultHandler
-    : public Library::Components::ResultHandler<DirectOutputTestResultHandler> {
+class DirectOutputTestResultHandler : public Library::Components::ResultHandler {
   bool ready = false;
 
   std::condition_variable cv;
@@ -30,11 +29,10 @@ class DirectOutputTestResultHandler
 
  public:
   DirectOutputTestResultHandler(const QueryCatalog& query_catalog)
-      : CORE::Library::Components::ResultHandler<DirectOutputTestResultHandler>(
-          query_catalog) {}
+      : CORE::Library::Components::ResultHandler(query_catalog) {}
 
-  void
-  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+  void handle_complex_event(
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
       enumerator = query_catalog.convert_enumerator(
@@ -68,11 +66,10 @@ class DirectOutputTestResultHandler
     return enumerator;
   }
 
-  void start_impl() {}
+  void start() override {}
 };
 
-class IndirectOutputTestResultHandler
-    : public Library::Components::ResultHandler<DirectOutputTestResultHandler> {
+class IndirectOutputTestResultHandler : public Library::Components::ResultHandler {
   bool ready = false;
 
   std::condition_variable cv;
@@ -81,11 +78,10 @@ class IndirectOutputTestResultHandler
 
  public:
   IndirectOutputTestResultHandler(const QueryCatalog& query_catalog)
-      : CORE::Library::Components::ResultHandler<DirectOutputTestResultHandler>(
-          query_catalog) {}
+      : CORE::Library::Components::ResultHandler(query_catalog) {}
 
-  void
-  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& internal_enumerator) {
+  void handle_complex_event(
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
       enumerator = query_catalog.convert_enumerator(
@@ -119,7 +115,7 @@ class IndirectOutputTestResultHandler
     return enumerator;
   }
 
-  void start_impl() {}
+  void start() override {}
 };
 
 bool is_the_same_as(Types::Event event, uint64_t event_type_id, std::string name);
@@ -135,6 +131,5 @@ bool is_the_same_as(Types::Event event,
                     int64_t value1,
                     int64_t value2);
 
-Types::StreamInfo
-basic_stock_declaration(Interface::Backend<DirectOutputTestResultHandler>& backend);
+Types::StreamInfo basic_stock_declaration(Interface::Backend<>& backend);
 }  // namespace CORE::Internal::Evaluation::UnitTests

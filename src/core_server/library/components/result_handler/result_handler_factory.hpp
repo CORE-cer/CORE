@@ -9,30 +9,27 @@
 
 namespace CORE::Library::Components {
 
-template <typename Derived, typename HandlerType>
 class ResultHandlerFactory {
  public:
   ResultHandlerFactory() {}
 
-  std::unique_ptr<ResultHandler<HandlerType>>
-  create_handler(Internal::QueryCatalog query_catalog) {
-    return static_cast<Derived*>(this)->create_handler_impl(query_catalog);
-  }
+  virtual std::unique_ptr<ResultHandler>
+  create_handler(Internal::QueryCatalog query_catalog) = 0;
+
+  virtual ~ResultHandlerFactory() = default;
 };
 
-class OfflineResultHandlerFactory
-    : public ResultHandlerFactory<OfflineResultHandlerFactory, OfflineResultHandler> {
+class OfflineResultHandlerFactory : public ResultHandlerFactory {
  public:
   OfflineResultHandlerFactory() {}
 
-  std::unique_ptr<OfflineResultHandler>
-  create_handler_impl(Internal::QueryCatalog query_catalog) {
+  std::unique_ptr<ResultHandler>
+  create_handler(Internal::QueryCatalog query_catalog) override {
     return std::make_unique<OfflineResultHandler>(query_catalog);
   }
 };
 
-class OnlineResultHandlerFactory
-    : public ResultHandlerFactory<OnlineResultHandlerFactory, OnlineResultHandler> {
+class OnlineResultHandlerFactory : public ResultHandlerFactory {
  public:
   std::atomic<Types::PortNumber>& next_available_port;
 
@@ -40,8 +37,8 @@ class OnlineResultHandlerFactory
   OnlineResultHandlerFactory(std::atomic<Types::PortNumber>& next_available_port)
       : ResultHandlerFactory(), next_available_port(next_available_port) {}
 
-  std::unique_ptr<OnlineResultHandler>
-  create_handler_impl(Internal::QueryCatalog query_catalog) {
+  std::unique_ptr<ResultHandler>
+  create_handler(Internal::QueryCatalog query_catalog) override {
     return std::make_unique<OnlineResultHandler>(query_catalog, next_available_port++);
   }
 };

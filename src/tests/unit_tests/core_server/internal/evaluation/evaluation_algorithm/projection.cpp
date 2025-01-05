@@ -8,7 +8,6 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -17,7 +16,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -159,7 +158,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
 }
 
 TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -299,7 +298,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel")
 }
 
 TEST_CASE("Evaluation of long query with projection") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -507,7 +506,7 @@ TEST_CASE("Evaluation of long query with projection") {
 }
 
 TEST_CASE("Evaluation of long query with projection swapped order") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -718,7 +717,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR Projection") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -863,7 +862,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 Projection") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -957,7 +956,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over events") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1052,7 +1051,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over BUY "
   "event") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1320,7 +1319,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over events "
   "swapped") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1415,7 +1414,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 / none Projection") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 

@@ -1,34 +1,29 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
-#include <type_traits>
+#include <utility>
 
-#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/client_message_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/networking/message_router/zmq_message_router.hpp"
 
 namespace CORE::Library::Components {
 
-template <typename ResultHandlerFactoryT>
 class Router {
-  using HandlerType = typename std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*,
-    Internal::QueryCatalog>::element_type;
-
  private:
-  Internal::ZMQMessageRouter<ClientMessageHandler<ResultHandlerFactoryT>> router;
+  Internal::ZMQMessageRouter<ClientMessageHandler> router;
   std::thread router_thread;
 
  public:
-  Router(Internal::Interface::Backend<HandlerType, false>& backend,
+  Router(Internal::Interface::Backend<false>& backend,
          std::mutex& backend_mutex,
          Types::PortNumber port_number,
-         ResultHandlerFactoryT result_handler_factory)
+         std::shared_ptr<ResultHandlerFactory> result_handler_factory)
       : router("tcp://*:" + std::to_string(port_number),
                std::move(
                  ClientMessageHandler(backend, backend_mutex, result_handler_factory))) {

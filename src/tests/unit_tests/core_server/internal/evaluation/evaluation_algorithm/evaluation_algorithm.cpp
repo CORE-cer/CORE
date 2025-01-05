@@ -17,7 +17,7 @@
 // NOLINTBEGIN(bugprone-chained-comparison)
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -156,7 +156,7 @@ TEST_CASE("Evaluation on the example stream of the papers") {
 TEST_CASE(
   "Evaluation on the example stream of the paper with within of 4 "
   "seconds") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -287,7 +287,7 @@ TEST_CASE(
 }
 
 TEST_CASE("Evaluation of a query with contiguous events") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -429,7 +429,7 @@ TEST_CASE("Evaluation of a query with contiguous events") {
 }
 
 TEST_CASE("Evaluation of long query") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -640,7 +640,7 @@ TEST_CASE("Evaluation of long query") {
 }
 
 TEST_CASE("Evaluation of long query with continuous and OR") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -775,7 +775,7 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
 }
 
 TEST_CASE("Evaluation of longer query with continuous and OR v2") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1006,7 +1006,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1241,7 +1241,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1338,7 +1338,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1432,7 +1432,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, OR, and "
   "AS") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1499,7 +1499,7 @@ TEST_CASE(
 }
 
 TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") {
-  Internal::Interface::Backend<DirectOutputTestResultHandler> backend;
+  Internal::Interface::Backend<> backend;
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 

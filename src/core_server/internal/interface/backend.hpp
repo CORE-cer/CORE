@@ -4,6 +4,7 @@
 #include <string>
 #include <tracy/Tracy.hpp>
 
+#include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -11,7 +12,6 @@
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
 
-#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <ctime>
@@ -35,12 +35,12 @@
 
 namespace CORE::Internal::Interface {
 
-template <typename ResultHandlerT, bool NoLogging = true>
+template <bool NoLogging = true>
 class Backend {
   Internal::Catalog catalog = {};
 
   // Modules
-  Module::Quarantine::QuarantineManager<ResultHandlerT> quarantine_manager;
+  Module::Quarantine::QuarantineManager quarantine_manager;
 
  public:
   Backend() : quarantine_manager(catalog) {
@@ -86,8 +86,9 @@ class Backend {
   }
 
   // TODO: Propogate parse error to ClientMessageHandler
-  void declare_query(Internal::CEQL::Query&& parsed_query,
-                     std::unique_ptr<ResultHandlerT>&& result_handler) {
+  void
+  declare_query(Internal::CEQL::Query&& parsed_query,
+                std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     quarantine_manager.declare_query(std::move(parsed_query), std::move(result_handler));
   }
 

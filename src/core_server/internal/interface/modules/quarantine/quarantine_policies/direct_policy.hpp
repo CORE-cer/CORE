@@ -11,15 +11,14 @@
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
-template <typename ResultHandlerT>
-class DirectPolicy : public BasePolicy<ResultHandlerT> {
+class DirectPolicy : public BasePolicy {
   // TODO: Optimize
   std::vector<Types::EventWrapper> events;
 
  public:
   DirectPolicy(Catalog& catalog,
                std::atomic<Types::PortNumber>& next_available_inproc_port)
-      : BasePolicy<ResultHandlerT>(catalog, next_available_inproc_port) {
+      : BasePolicy(catalog, next_available_inproc_port) {
     this->start();
   }
 
