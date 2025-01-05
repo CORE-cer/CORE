@@ -96,4 +96,17 @@ class OnlineResultHandler : public ResultHandler {
   }
 };
 
+class WebSocketResultHandler : public ResultHandler {
+ public:
+  std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
+
+  WebSocketResultHandler(const Internal::QueryCatalog& query_catalog)
+      : ResultHandler(query_catalog), broadcaster{nullptr} {}
+
+  void start() override {}
+
+  void handle_complex_event(
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {}
+};
+
 }  // namespace CORE::Library::Components

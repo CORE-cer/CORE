@@ -46,14 +46,12 @@ class OfflineServer {
     std::make_shared<ResultHandlerFactoryT>()};
 
   Components::Router router;
-  Components::HTTPServer http_server;
   Components::OfflineStreamsListener stream_listener;
 
  public:
   OfflineServer(Types::PortNumber starting_port)
       : next_available_port(starting_port),
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
-        http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
         stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
   }
@@ -98,7 +96,7 @@ class OnlineServer {
         result_handler_factory(
           std::make_shared<ResultHandlerFactoryT>(next_available_port)),
         router{backend, backend_mutex, next_available_port++, result_handler_factory},
-        http_server{backend, backend_mutex, next_available_port++, result_handler_factory},
+        http_server{backend, backend_mutex, next_available_port++},
         stream_listener{backend, backend_mutex, next_available_port++} {
     Internal::Logging::enable_logging_rotating();
     LOG_INFO("Server started in port {}", starting_port);

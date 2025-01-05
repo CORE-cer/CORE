@@ -43,4 +43,14 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
   }
 };
 
+class WebSocketResultHandlerFactory : public ResultHandlerFactory {
+ public:
+  WebSocketResultHandlerFactory() : ResultHandlerFactory() {}
+
+  std::unique_ptr<ResultHandler>
+  create_handler(Internal::QueryCatalog query_catalog) override {
+    return std::make_unique<WebSocketResultHandler>(query_catalog);
+  }
+};
+
 }  // namespace CORE::Library::Components

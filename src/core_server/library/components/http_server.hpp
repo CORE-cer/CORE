@@ -1,6 +1,7 @@
 #pragma once
 
 #include <App.h>
+#include <WebSocketProtocol.h>
 
 #include <chrono>
 #include <iostream>
@@ -36,17 +37,15 @@ class HTTPServer {
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber port_number;
-  std::shared_ptr<ResultHandlerFactory> result_handler_factory;
+  std::shared_ptr<WebSocketResultHandlerFactory> result_handler_factory;
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
              std::mutex& backend_mutex,
-             Types::PortNumber port_number,
-             std::shared_ptr<ResultHandlerFactory> result_handler_factory)
+             Types::PortNumber port_number)
       : backend(backend),
         backend_mutex(backend_mutex),
-        port_number(port_number),
-        result_handler_factory(result_handler_factory)
+        port_number(port_number)
 
   {
     start();
@@ -88,7 +87,9 @@ class HTTPServer {
   void stop() {}
 
   void start_http_server() {
-    struct UserData {};
+    struct UserData {
+      std::string ip;
+    };
 
     uWS::App()
       .get("/event-info-from-id/:id",
@@ -139,6 +140,28 @@ class HTTPServer {
                                "WHERE LOAD"));
            })
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
+      .template ws<UserData>(
+        "/*",
+        {
+          .upgrade =
+            [](auto* res, auto* req, auto* context) {
+              res->template upgrade<UserData>({std::string(req->getUrl())},
+                                              req->getHeader("sec-websocket-key"),
+                                              req->getHeader("sec-websocket-protocol"),
+                                              req->getHeader("sec-websocket-extensions"),
+                                              context);
+            },
+          .open = [](auto* ws) { std::cout << "WebSocket connected" << std::endl; },
+          .message =
+            [](auto* ws, std::string_view message, uWS::OpCode opCode) {
+              std::cout << ws->getUserData()->ip << std::endl;
+              ws->send(ws->getUserData()->ip, opCode);
+            },
+          .close =
+            [](auto* ws, int code, std::string_view message) {
+              std::cout << "WebSocket closed" << std::endl;
+            },
+        })
       .listen(port_number,
               [this](auto* listenSocket) {
                 if (listenSocket) {
