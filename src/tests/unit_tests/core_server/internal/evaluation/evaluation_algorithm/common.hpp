@@ -15,6 +15,7 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
@@ -29,7 +30,9 @@ class DirectOutputTestResultHandler : public Library::Components::ResultHandler 
 
  public:
   DirectOutputTestResultHandler(const QueryCatalog& query_catalog)
-      : CORE::Library::Components::ResultHandler(query_catalog) {}
+      : CORE::Library::Components::ResultHandler(
+          query_catalog,
+          Library::Components::ResultHandlerType::CUSTOM) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
@@ -78,7 +81,9 @@ class IndirectOutputTestResultHandler : public Library::Components::ResultHandle
 
  public:
   IndirectOutputTestResultHandler(const QueryCatalog& query_catalog)
-      : CORE::Library::Components::ResultHandler(query_catalog) {}
+      : CORE::Library::Components::ResultHandler(
+          query_catalog,
+          Library::Components::ResultHandlerType::CUSTOM) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {

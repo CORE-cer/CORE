@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "glaze/core/common.hpp"
 #include "glaze/json/write.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -10,12 +11,16 @@ namespace CORE::Types {
 
 struct QueryInfo {
   PortNumber port_number;
+  Library::Components::ResultHandlerType result_handler_type;
   std::string query_string;
 
   QueryInfo() noexcept {}
 
-  QueryInfo(PortNumber port_number, std::string query_string) noexcept
-      : port_number(port_number), query_string(query_string) {}
+  QueryInfo(Library::Components::ResultHandlerType result_handler_type,
+            std::string query_string) noexcept
+      : port_number(0),
+        result_handler_type(result_handler_type),
+        query_string(query_string) {}
 
   template <class Archive>
   void serialize(Archive& archive) {

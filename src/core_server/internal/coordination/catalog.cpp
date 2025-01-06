@@ -3,11 +3,14 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <optional>
+#include <ranges>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -136,8 +139,23 @@ const std::vector<Types::StreamInfo>& Catalog::get_stream_info_vector() const no
   return streams_info;
 }
 
-const std::vector<Types::QueryInfo>& Catalog::get_all_query_infos() const noexcept {
-  return queries_info;
+// Filter by result_handler_type if it is provided
+const std::vector<Types::QueryInfo>
+Catalog::get_all_query_infos(std::optional<Library::Components::ResultHandlerType>
+                               result_handler_type_filter) const noexcept {
+  auto filtered_queries_info = queries_info
+                               | std::views::filter([result_handler_type_filter](
+                                                      const Types::QueryInfo& query_info) {
+                                   if (result_handler_type_filter.has_value()) {
+                                     return query_info.result_handler_type
+                                            == result_handler_type_filter;
+                                   }
+                                   return true;
+                                 })
+                               | std::views::common;
+
+  return std::vector<Types::QueryInfo>(filtered_queries_info.begin(),
+                                       filtered_queries_info.end());
 }
 
 }  // namespace CORE::Internal

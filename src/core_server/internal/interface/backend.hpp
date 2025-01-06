@@ -74,7 +74,7 @@ class Backend {
   }
 
   std::vector<Types::QueryInfo> get_all_query_infos() {
-    return catalog.get_all_query_infos();
+    return catalog.get_all_query_infos({});
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {

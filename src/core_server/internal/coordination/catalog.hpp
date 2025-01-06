@@ -2,10 +2,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -54,7 +56,9 @@ class Catalog {
 
   const std::vector<Types::StreamInfo>& get_stream_info_vector() const noexcept;
 
-  const std::vector<Types::QueryInfo>& get_all_query_infos() const noexcept;
+  const std::vector<Types::QueryInfo>
+  get_all_query_infos(std::optional<Library::Components::ResultHandlerType>
+                        result_handler_type_filter) const noexcept;
 
   std::size_t number_of_events() const { return events_info.size(); }
 

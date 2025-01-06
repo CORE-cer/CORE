@@ -14,6 +14,7 @@
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "result_handler_types.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/networking/message_broadcaster/zmq_message_broadcaster.hpp"
@@ -22,13 +23,16 @@
 namespace CORE::Library::Components {
 
 class ResultHandler {
+  ResultHandlerType result_handler_type;
+
  protected:
   std::optional<Types::PortNumber> port{};
   const Internal::QueryCatalog query_catalog;
 
  public:
-  ResultHandler(const Internal::QueryCatalog query_catalog)
-      : query_catalog(query_catalog) {}
+  ResultHandler(const Internal::QueryCatalog query_catalog,
+                ResultHandlerType result_handler_type)
+      : query_catalog(query_catalog), result_handler_type(result_handler_type) {}
 
   void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
     handle_complex_event(std::move(enumerator));
@@ -41,13 +45,15 @@ class ResultHandler {
   virtual void
   handle_complex_event(std::optional<Internal::tECS::Enumerator>&& enumerator) = 0;
 
+  ResultHandlerType get_result_handler_type() const { return result_handler_type; }
+
   virtual ~ResultHandler() = default;
 };
 
 class OfflineResultHandler : public ResultHandler {
  public:
   OfflineResultHandler(const Internal::QueryCatalog& query_catalog)
-      : ResultHandler(query_catalog) {}
+      : ResultHandler(query_catalog, ResultHandlerType::OFFLINE) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
@@ -69,7 +75,7 @@ class OnlineResultHandler : public ResultHandler {
 
   OnlineResultHandler(const Internal::QueryCatalog& query_catalog,
                       Types::PortNumber assigned_port)
-      : ResultHandler(query_catalog), broadcaster{nullptr} {
+      : ResultHandler(query_catalog, ResultHandlerType::ONLINE), broadcaster{nullptr} {
     port = assigned_port;
   }
 
@@ -98,10 +104,8 @@ class OnlineResultHandler : public ResultHandler {
 
 class WebSocketResultHandler : public ResultHandler {
  public:
-  std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
-
   WebSocketResultHandler(const Internal::QueryCatalog& query_catalog)
-      : ResultHandler(query_catalog), broadcaster{nullptr} {}
+      : ResultHandler(query_catalog, ResultHandlerType::WEBSOCKET) {}
 
   void start() override {}
 
