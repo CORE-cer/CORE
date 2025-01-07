@@ -1,11 +1,17 @@
 #pragma once
 
+#include <list>
+
+#include "core_server/library/components/user_data.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
+#include <WebSocket.h>
+#include <WebSocketProtocol.h>
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -103,14 +109,38 @@ class OnlineResultHandler : public ResultHandler {
 };
 
 class WebSocketResultHandler : public ResultHandler {
+  std::list<uWS::WebSocket<false, true, UserData>*> ws_clients;
+  std::mutex& ws_clients_mutex;
+
  public:
-  WebSocketResultHandler(const Internal::QueryCatalog& query_catalog)
-      : ResultHandler(query_catalog, ResultHandlerType::WEBSOCKET) {}
+  WebSocketResultHandler(const Internal::QueryCatalog& query_catalog,
+                         std::list<uWS::WebSocket<false, true, UserData>*>& ws_clients,
+                         std::mutex& ws_clients_mutex,
+                         UniqueQueryId query_id)
+      : ws_clients(ws_clients),
+        ws_clients_mutex(ws_clients_mutex),
+        ResultHandler(query_catalog, ResultHandlerType::WEBSOCKET) {}
 
   void start() override {}
 
   void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {}
+    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
+    if (!internal_enumerator.has_value()) {
+      return;
+    }
+
+    std::string result;
+    for (const auto& complex_event : internal_enumerator.value()) {
+      result += complex_event.to_string<true>() + "\n";
+    }
+    std::cout << "Sending result: " << result << "\n";
+
+    // Send the result to all connected clients
+    std::lock_guard<std::mutex> lock(ws_clients_mutex);
+    for (auto& ws_client : ws_clients) {
+      ws_client->send(result, uWS::OpCode::TEXT);
+    }
+  }
 };
 
 }  // namespace CORE::Library::Components

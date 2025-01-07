@@ -1,10 +1,17 @@
 #pragma once
 
+#include <WebSocket.h>
+
 #include <atomic>
+#include <cassert>
+#include <list>
+#include <map>
 #include <memory>
+#include <mutex>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/user_data.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 
 namespace CORE::Library::Components {
@@ -45,11 +52,34 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
 
 class WebSocketResultHandlerFactory : public ResultHandlerFactory {
  public:
+  std::mutex shared_websocket_mutex = {};
+  std::map<UniqueQueryId, std::list<uWS::WebSocket<false, true, UserData>*>> handlers;
+
   WebSocketResultHandlerFactory() : ResultHandlerFactory() {}
 
   std::unique_ptr<ResultHandler>
   create_handler(Internal::QueryCatalog query_catalog) override {
-    return std::make_unique<WebSocketResultHandler>(query_catalog);
+    std::list<uWS::WebSocket<false, true, UserData>*> websocket_list = {};
+    std::lock_guard lock(shared_websocket_mutex);
+    handlers[0] = websocket_list;
+    return std::make_unique<WebSocketResultHandler>(query_catalog,
+                                                    websocket_list,
+                                                    shared_websocket_mutex,
+                                                    0);
+  }
+
+  void add_websocket_client_to_query(UniqueQueryId query_id,
+                                     uWS::WebSocket<false, true, UserData>* ws) {
+    std::lock_guard lock(shared_websocket_mutex);
+    assert(handlers.find(query_id) != handlers.end());
+    handlers[query_id].push_back(ws);
+  }
+
+  void remove_websocket_client_from_query(UniqueQueryId query_id,
+                                          uWS::WebSocket<false, true, UserData>* ws) {
+    std::lock_guard lock(shared_websocket_mutex);
+    assert(handlers.find(query_id) != handlers.end());
+    handlers[query_id].remove(ws);
   }
 };
 

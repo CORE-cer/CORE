@@ -18,6 +18,8 @@
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
+#include "core_server/library/components/user_data.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -37,7 +39,7 @@ class HTTPServer {
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber port_number;
-  std::shared_ptr<WebSocketResultHandlerFactory> result_handler_factory;
+  std::unique_ptr<WebSocketResultHandlerFactory> result_handler_factory;
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
@@ -87,10 +89,6 @@ class HTTPServer {
   void stop() {}
 
   void start_http_server() {
-    struct UserData {
-      std::string ip;
-    };
-
     uWS::App()
       .get("/event-info-from-id/:id",
            [this](auto* res, auto* req) {
@@ -145,21 +143,34 @@ class HTTPServer {
         {
           .upgrade =
             [](auto* res, auto* req, auto* context) {
-              res->template upgrade<UserData>({std::string(req->getUrl())},
+              std::string url_without_slash = std::string(req->getUrl());
+              url_without_slash.erase(0, 1);
+              UniqueQueryId query_id = std::stoi(url_without_slash);
+
+              res->template upgrade<UserData>({std::string(req->getUrl()), query_id},
                                               req->getHeader("sec-websocket-key"),
                                               req->getHeader("sec-websocket-protocol"),
                                               req->getHeader("sec-websocket-extensions"),
                                               context);
             },
-          .open = [](auto* ws) { std::cout << "WebSocket connected" << std::endl; },
+          .open =
+            [this](auto* ws) {
+              std::cout << "WebSocket connected" << std::endl;
+              std::cout << "Connecting to query with id " << ws->getUserData()->query_id
+                        << std::endl;
+              result_handler_factory
+                ->add_websocket_client_to_query(ws->getUserData()->query_id, ws);
+            },
           .message =
             [](auto* ws, std::string_view message, uWS::OpCode opCode) {
               std::cout << ws->getUserData()->ip << std::endl;
               ws->send(ws->getUserData()->ip, opCode);
             },
           .close =
-            [](auto* ws, int code, std::string_view message) {
+            [this](auto* ws, int code, std::string_view message) {
               std::cout << "WebSocket closed" << std::endl;
+              result_handler_factory
+                ->remove_websocket_client_from_query(ws->getUserData()->query_id, ws);
             },
         })
       .listen(port_number,
@@ -228,8 +239,8 @@ class HTTPServer {
 
   std::string all_queries_info() {
     std::lock_guard<std::mutex> lock(backend_mutex);
-    std::vector<Types::QueryInfo> infos = backend.get_all_query_infos();
-    std::cout << "Size: " << infos.size() << std::endl;
+    std::vector<Types::QueryInfo> infos = backend.get_all_query_infos(
+      ResultHandlerType::WEBSOCKET);
     std::string json = "[";
     for (const auto& info : infos) {
       json += info.to_json() + ",";
