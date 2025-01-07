@@ -39,7 +39,8 @@ class HTTPServer {
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber port_number;
-  std::unique_ptr<WebSocketResultHandlerFactory> result_handler_factory;
+  std::unique_ptr<WebSocketResultHandlerFactory>
+    result_handler_factory = std::make_unique<WebSocketResultHandlerFactory>();
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
@@ -135,7 +136,7 @@ class HTTPServer {
              res->writeStatus("200 OK")
                ->writeHeader("Content-Type", "application/json")
                ->end(add_query("SELECT * FROM S\n"
-                               "WHERE LOAD"));
+                               "WHERE SELL"));
            })
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
       .template ws<UserData>(

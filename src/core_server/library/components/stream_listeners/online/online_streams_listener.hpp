@@ -67,6 +67,8 @@ class OnlineStreamsListener {
           LOG_L3_BACKTRACE("Stream with id {} and event {} in OnlineStreamsListener",
                            stream.id,
                            event->to_string());
+          std::cout << "Stream with id " << stream.id << " and event "
+                    << event->to_string() << " in OnlineStreamsListener\n";
           backend.send_event_to_queries(stream.id, {std::move(event)});
         }
       }

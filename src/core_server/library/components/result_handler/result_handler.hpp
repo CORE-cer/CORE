@@ -109,14 +109,15 @@ class OnlineResultHandler : public ResultHandler {
 };
 
 class WebSocketResultHandler : public ResultHandler {
-  std::list<uWS::WebSocket<false, true, UserData>*> ws_clients;
+  std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients;
   std::mutex& ws_clients_mutex;
 
  public:
-  WebSocketResultHandler(const Internal::QueryCatalog& query_catalog,
-                         std::list<uWS::WebSocket<false, true, UserData>*>& ws_clients,
-                         std::mutex& ws_clients_mutex,
-                         UniqueQueryId query_id)
+  WebSocketResultHandler(
+    const Internal::QueryCatalog& query_catalog,
+    std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients,
+    std::mutex& ws_clients_mutex,
+    UniqueQueryId query_id)
       : ws_clients(ws_clients),
         ws_clients_mutex(ws_clients_mutex),
         ResultHandler(query_catalog, ResultHandlerType::WEBSOCKET) {}
@@ -137,7 +138,8 @@ class WebSocketResultHandler : public ResultHandler {
 
     // Send the result to all connected clients
     std::lock_guard<std::mutex> lock(ws_clients_mutex);
-    for (auto& ws_client : ws_clients) {
+    for (auto& ws_client : *ws_clients) {
+      std::cout << "Sending result to client" << std::endl;
       ws_client->send(result, uWS::OpCode::TEXT);
     }
   }
