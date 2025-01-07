@@ -131,13 +131,18 @@ class HTTPServer {
                ->writeHeader("Content-Type", "application/json")
                ->end(all_queries_info());
            })
-      .get("/add-query",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(add_query("SELECT * FROM S\n"
-                               "WHERE SELL"));
-           })
+      .post("/add-query",
+            [this](auto* res, auto* req) {
+              res->onData([this, res](std::string_view data, bool is_end) {
+                if (is_end) {
+                  std::string response_add_query = add_query(std::string(data));
+                  std::cout << "Response: " << response_add_query << std::endl;
+                  res->writeStatus("200 OK")->end(response_add_query);
+                }
+              });
+              res->onAborted(
+                []() { std::cout << "/add_query post request aborted" << std::endl; });
+            })
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
       .template ws<UserData>(
         "/*",
