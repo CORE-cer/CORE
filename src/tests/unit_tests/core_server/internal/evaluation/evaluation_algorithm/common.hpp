@@ -70,6 +70,8 @@ class DirectOutputTestResultHandler : public Library::Components::ResultHandler 
   }
 
   void start() override {}
+
+  std::string get_identifier() const override { return "DirectOutputTestResultHandler"; }
 };
 
 class IndirectOutputTestResultHandler : public Library::Components::ResultHandler {
@@ -121,6 +123,10 @@ class IndirectOutputTestResultHandler : public Library::Components::ResultHandle
   }
 
   void start() override {}
+
+  std::string get_identifier() const override {
+    return "IndirectOutputTestResultHandler";
+  }
 };
 
 bool is_the_same_as(Types::Event event, uint64_t event_type_id, std::string name);

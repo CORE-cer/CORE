@@ -5,7 +5,6 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include <list>
 #include <map>
 #include <memory>
@@ -69,7 +68,7 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>
       websocket_list = std::make_shared<std::list<uWS::WebSocket<false, true, UserData>*>>();
     std::lock_guard lock(shared_websocket_mutex);
-    handlers[0] = std::move(websocket_list);
+    handlers[query_id] = std::move(websocket_list);
     return std::make_unique<WebSocketResultHandler>(query_catalog,
                                                     handlers[query_id],
                                                     shared_websocket_mutex,

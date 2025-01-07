@@ -4,6 +4,7 @@
 #include <WebSocketProtocol.h>
 
 #include <chrono>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -91,40 +92,40 @@ class HTTPServer {
 
   void start_http_server() {
     uWS::App()
-      .get("/event-info-from-id/:id",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(event_info_from_id(req->getParameter("id")));
-           })
-      .get("/all-events-info",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(all_events_info());
-           })
-      .get("/stream-declaration-from-string",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(stream_declaration_from_string("DECLARE STREAM S {"
-                                                    "EVENT LOAD { id:int, "
-                                                    "plug_timestamp:int, value:double, "
-                                                    "plug_id:int, household_id:int }"
-                                                    "}"));
-           })
-      .get("/stream-info-from-id/:id",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(stream_info_from_id(req->getParameter("id")));
-           })
-      .get("/all-streams-info",
-           [this](auto* res, auto* req) {
-             res->writeStatus("200 OK")
-               ->writeHeader("Content-Type", "application/json")
-               ->end(all_streams_info());
-           })
+      // .get("/event-info-from-id/:id",
+      //      [this](auto* res, auto* req) {
+      //        res->writeStatus("200 OK")
+      //          ->writeHeader("Content-Type", "application/json")
+      //          ->end(event_info_from_id(req->getParameter("id")));
+      //      })
+      // .get("/all-events-info",
+      //      [this](auto* res, auto* req) {
+      //        res->writeStatus("200 OK")
+      //          ->writeHeader("Content-Type", "application/json")
+      //          ->end(all_events_info());
+      //      })
+      // .get("/stream-declaration-from-string",
+      //      [this](auto* res, auto* req) {
+      //        res->writeStatus("200 OK")
+      //          ->writeHeader("Content-Type", "application/json")
+      //          ->end(stream_declaration_from_string("DECLARE STREAM S {"
+      //                                               "EVENT LOAD { id:int, "
+      //                                               "plug_timestamp:int, value:double, "
+      //                                               "plug_id:int, household_id:int }"
+      //                                               "}"));
+      //      })
+      // .get("/stream-info-from-id/:id",
+      //      [this](auto* res, auto* req) {
+      //        res->writeStatus("200 OK")
+      //          ->writeHeader("Content-Type", "application/json")
+      //          ->end(stream_info_from_id(req->getParameter("id")));
+      //      })
+      // .get("/all-streams-info",
+      //      [this](auto* res, auto* req) {
+      //        res->writeStatus("200 OK")
+      //          ->writeHeader("Content-Type", "application/json")
+      //          ->end(all_streams_info());
+      //      })
       .get("/all-queries-info",
            [this](auto* res, auto* req) {
              res->writeStatus("200 OK")
@@ -135,9 +136,12 @@ class HTTPServer {
             [this](auto* res, auto* req) {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
-                  std::string response_add_query = add_query(std::string(data));
-                  std::cout << "Response: " << response_add_query << std::endl;
-                  res->writeStatus("200 OK")->end(response_add_query);
+                  try {
+                    std::string response_add_query = add_query(data);
+                    res->writeStatus("200 OK")->end(response_add_query);
+                  } catch (const std::exception& e) {
+                    res->writeStatus("400 Bad Request")->end(e.what());
+                  }
                 }
               });
               res->onAborted(
@@ -161,20 +165,14 @@ class HTTPServer {
             },
           .open =
             [this](auto* ws) {
-              std::cout << "WebSocket connected" << std::endl;
-              std::cout << "Connecting to query with id " << ws->getUserData()->query_id
-                        << std::endl;
               result_handler_factory
                 ->add_websocket_client_to_query(ws->getUserData()->query_id, ws);
             },
-          .message =
-            [](auto* ws, std::string_view message, uWS::OpCode opCode) {
-              std::cout << ws->getUserData()->ip << std::endl;
-              ws->send(ws->getUserData()->ip, opCode);
-            },
+          .message = [](auto* ws,
+                        std::string_view message,
+                        uWS::OpCode opCode) { ws->send(ws->getUserData()->ip, opCode); },
           .close =
             [this](auto* ws, int code, std::string_view message) {
-              std::cout << "WebSocket closed" << std::endl;
               result_handler_factory
                 ->remove_websocket_client_from_query(ws->getUserData()->query_id, ws);
             },
@@ -190,58 +188,58 @@ class HTTPServer {
       .run();
   };
 
-  std::string event_info_from_id(std::string_view event_type_id_string_view) {
-    Types::UniqueEventTypeId event_type_id = std::stoul(
-      std::string(event_type_id_string_view));
-
-    std::lock_guard<std::mutex> lock(backend_mutex);
-    Types::EventInfo info = backend.get_event_info(event_type_id);
-
-    return info.to_json();
-  }
-
-  std::string all_events_info() {
-    std::lock_guard<std::mutex> lock(backend_mutex);
-    std::vector<Types::EventInfo> infos = backend.get_all_events_info();
-
-    std::string json = "[";
-
-    for (const auto& info : infos) {
-      json += info.to_json() + ",";
-    }
-
-    json += "]";
-    return json;
-  }
-
-  std::string stream_declaration_from_string(std::string_view stream_declaration) {
-    std::lock_guard<std::mutex> lock(backend_mutex);
-
-    Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
-      std::string(stream_declaration));
-
-    Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
-
-    return stream_info.to_json();
-  }
-
-  std::string stream_info_from_id(std::string_view stream_id_string_view) {
-    Types::StreamTypeId stream_id = std::stoul(std::string(stream_id_string_view));
-    std::lock_guard<std::mutex> lock(backend_mutex);
-    Types::StreamInfo stream_info = backend.get_stream_info(stream_id);
-    return stream_info.to_json();
-  }
-
-  std::string all_streams_info() {
-    std::lock_guard<std::mutex> lock(backend_mutex);
-    std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
-    std::string json = "[";
-    for (const auto& info : infos) {
-      json += info.to_json() + ",";
-    }
-    json += "]";
-    return json;
-  }
+  // std::string event_info_from_id(std::string_view event_type_id_string_view) {
+  //   Types::UniqueEventTypeId event_type_id = std::stoul(
+  //     std::string(event_type_id_string_view));
+  //
+  //   std::lock_guard<std::mutex> lock(backend_mutex);
+  //   Types::EventInfo info = backend.get_event_info(event_type_id);
+  //
+  //   return info.to_json();
+  // }
+  //
+  // std::string all_events_info() {
+  //   std::lock_guard<std::mutex> lock(backend_mutex);
+  //   std::vector<Types::EventInfo> infos = backend.get_all_events_info();
+  //
+  //   std::string json = "[";
+  //
+  //   for (const auto& info : infos) {
+  //     json += info.to_json() + ",";
+  //   }
+  //
+  //   json += "]";
+  //   return json;
+  // }
+  //
+  // std::string stream_declaration_from_string(std::string_view stream_declaration) {
+  //   std::lock_guard<std::mutex> lock(backend_mutex);
+  //
+  //   Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(
+  //     std::string(stream_declaration));
+  //
+  //   Types::StreamInfo stream_info = backend.add_stream_type(std::move(parsed_stream_info));
+  //
+  //   return stream_info.to_json();
+  // }
+  //
+  // std::string stream_info_from_id(std::string_view stream_id_string_view) {
+  //   Types::StreamTypeId stream_id = std::stoul(std::string(stream_id_string_view));
+  //   std::lock_guard<std::mutex> lock(backend_mutex);
+  //   Types::StreamInfo stream_info = backend.get_stream_info(stream_id);
+  //   return stream_info.to_json();
+  // }
+  //
+  // std::string all_streams_info() {
+  //   std::lock_guard<std::mutex> lock(backend_mutex);
+  //   std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
+  //   std::string json = "[";
+  //   for (const auto& info : infos) {
+  //     json += info.to_json() + ",";
+  //   }
+  //   json += "]";
+  //   return json;
+  // }
 
   std::string all_queries_info() {
     std::lock_guard<std::mutex> lock(backend_mutex);
@@ -262,11 +260,11 @@ class HTTPServer {
 
     std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
       backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();  //NOLINT
+    std::string identifier = result_handler->get_identifier();
 
     backend.declare_query(std::move(query), std::move(result_handler));
 
-    return "{ \"port\": \"0\" }";
+    return identifier;
   }
 };
 

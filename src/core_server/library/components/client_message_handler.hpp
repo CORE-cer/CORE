@@ -10,7 +10,6 @@
 
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -20,7 +19,6 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
@@ -244,10 +242,9 @@ class ClientMessageHandler {
     Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
     std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
       backend.get_catalog_reference());
-    std::optional<Types::PortNumber> possible_port = result_handler->get_port();
+    std::string identifier = result_handler->get_identifier();
     backend.declare_query(std::move(parsed_query), std::move(result_handler));
-    return Types::ServerResponse(CerealSerializer<Types::PortNumber>::serialize(
-                                   possible_port.value_or(0)),
+    return Types::ServerResponse(CerealSerializer<std::string>::serialize(identifier),
                                  Types::ServerResponseType::PortNumber);
   };
 
