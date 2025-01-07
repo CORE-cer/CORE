@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <list>
 #include <map>
@@ -57,20 +58,22 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
   std::mutex shared_websocket_mutex = {};
   std::map<UniqueQueryId, std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
     handlers;
+  std::int64_t next_query_id = 0;
 
   WebSocketResultHandlerFactory() : ResultHandlerFactory() {}
 
   std::unique_ptr<ResultHandler>
   create_handler(Internal::QueryCatalog query_catalog) override {
     // std::list<uWS::WebSocket<false, true, UserData>*> websocket_list = {};
+    int64_t query_id = next_query_id++;
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>
       websocket_list = std::make_shared<std::list<uWS::WebSocket<false, true, UserData>*>>();
     std::lock_guard lock(shared_websocket_mutex);
     handlers[0] = std::move(websocket_list);
     return std::make_unique<WebSocketResultHandler>(query_catalog,
-                                                    handlers[0],
+                                                    handlers[query_id],
                                                     shared_websocket_mutex,
-                                                    0);
+                                                    query_id);
   }
 
   void add_websocket_client_to_query(UniqueQueryId query_id,
