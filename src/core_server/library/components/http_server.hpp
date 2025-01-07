@@ -21,14 +21,9 @@
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/components/user_data.hpp"
-#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
-#include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
-#include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
-#include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/datatypes/value.hpp"
 
 namespace CORE::Library::Components {
@@ -168,9 +163,10 @@ class HTTPServer {
               result_handler_factory
                 ->add_websocket_client_to_query(ws->getUserData()->query_id, ws);
             },
-          .message = [](auto* ws,
-                        std::string_view message,
-                        uWS::OpCode opCode) { ws->send(ws->getUserData()->ip, opCode); },
+          .message =
+            [](auto* ws, std::string_view message, uWS::OpCode opCode) {
+              ws->send(ws->getUserData()->ip, opCode);  // NOLINT
+            },
           .close =
             [this](auto* ws, int code, std::string_view message) {
               result_handler_factory

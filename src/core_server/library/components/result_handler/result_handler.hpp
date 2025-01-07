@@ -130,7 +130,7 @@ class WebSocketResultHandler : public ResultHandler {
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
-    if (!internal_enumerator.has_value()) {
+    if (!internal_enumerator.has_value()) {  // NOLINT
       return;
     }
 
@@ -142,7 +142,7 @@ class WebSocketResultHandler : public ResultHandler {
     // Send the result to all connected clients
     std::lock_guard<std::mutex> lock(ws_clients_mutex);
     for (auto& ws_client : *ws_clients) {
-      ws_client->send(result, uWS::OpCode::TEXT);
+      ws_client->send(result, uWS::OpCode::TEXT);  // NOLINT
     }
   }
 
