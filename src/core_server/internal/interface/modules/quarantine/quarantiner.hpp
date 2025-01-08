@@ -49,7 +49,9 @@ class QuarantineManager {
     if (iter != query_policies.end()) {
       BasePolicy& query_policy = *(iter->second);
       // TODO: Add Port
-      catalog.add_query({0, parsed_query.to_string()});
+      catalog.add_query({result_handler->get_identifier(),
+                         result_handler->get_result_handler_type(),
+                         parsed_query.to_string()});
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
       set_query_policy(parsed_query.from.streams, QuarantinePolicyType::DirectPolicy);

@@ -1,32 +1,39 @@
 #pragma once
 
+#include <glaze/core/common.hpp>
 #include <string>
 
-#include "glaze/core/common.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "glaze/json/write.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 
 namespace CORE::Types {
 
 struct QueryInfo {
-  PortNumber port_number;
+  std::string result_handler_identifier;
+  Library::Components::ResultHandlerType result_handler_type;
   std::string query_string;
 
   QueryInfo() noexcept {}
 
-  QueryInfo(PortNumber port_number, std::string query_string) noexcept
-      : port_number(port_number), query_string(query_string) {}
+  QueryInfo(std::string result_handler_identifier,
+            Library::Components::ResultHandlerType result_handler_type,
+            std::string query_string) noexcept
+      : result_handler_identifier(result_handler_identifier),
+        result_handler_type(result_handler_type),
+        query_string(query_string) {}
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(port_number, query_string);
+    archive(result_handler_identifier, result_handler_type, query_string);
   }
 
   std::string to_json() const { return glz::write_json(*this).value_or("error"); }
 
   struct glaze {
-    using T = CORE::Types::QueryInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::port_number, &T::query_string);
+    using T = CORE::Types::QueryInfo;
+    static constexpr auto value = glz::object(&T::result_handler_identifier,
+                                              &T::result_handler_type,
+                                              &T::query_string);
   };
 };
 

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <optional>
 #include <set>
 #include <string>
 #include <tracy/Tracy.hpp>
 
 #include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -73,8 +75,9 @@ class Backend {
     return catalog.get_all_streams_info();
   }
 
-  std::vector<Types::QueryInfo> get_all_query_infos() {
-    return catalog.get_all_query_infos();
+  std::vector<Types::QueryInfo> get_all_query_infos(
+    std::optional<Library::Components::ResultHandlerType> result_handler_type_filter = {}) {
+    return catalog.get_all_query_infos(result_handler_type_filter);
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
