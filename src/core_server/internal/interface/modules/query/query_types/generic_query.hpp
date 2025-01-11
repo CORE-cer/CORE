@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <exception>
@@ -74,7 +75,6 @@ class GenericQuery {
     try {
       ZMQMessageSender sender(receiver_address, receiver.get_context());
       stop_condition = true;
-      sender.send("STOP");
       worker_thread.join();
     } catch (std::exception& e) {
       std::cout << "Exception: " << e.what() << std::endl;
@@ -89,20 +89,23 @@ class GenericQuery {
       ZoneScopedN("QueryImpl::start::worker_thread");  //NOLINT
       result_handler->start();
       while (!stop_condition) {
-        std::string serialized_message = receiver.receive();
-        if (serialized_message == "STOP") {
+        std::optional<Types::EventWrapper> event = get_event();
+        if (!event.has_value()) {
           continue;
         }
-        Types::EventWrapper event = get_event();
-        std::optional<tECS::Enumerator> output = process_event(std::move(event));
+        std::optional<tECS::Enumerator> output = process_event(std::move(event.value()));
         (*result_handler)(std::move(output));
       }
     });
   }
 
-  Types::EventWrapper get_event() {
+  std::optional<Types::EventWrapper> get_event() {
     Types::EventWrapper event;
-    blocking_event_queue.wait_dequeue(event);
+    bool got_event = blocking_event_queue.wait_dequeue_timed(event,
+                                                             std::chrono::milliseconds(50));
+    if (!got_event) {
+      return {};
+    }
     return std::move(event);
   }
 

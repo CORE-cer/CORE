@@ -31,6 +31,15 @@
 namespace CORE::Internal::Interface::Module::Quarantine {
 
 class BasePolicy {
+ protected:
+  std::thread worker_thread;
+  std::atomic<bool> stop_condition = false;
+
+  // Events
+  std::list<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>> blocking_event_queues;
+  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> send_event_queue;
+
+ private:
   Catalog& catalog;
   std::atomic<Types::PortNumber>& next_available_inproc_port;
 
@@ -43,14 +52,6 @@ class BasePolicy {
 
   // TODO: Optimize
   std::mutex queries_lock;
-
- protected:
-  std::thread worker_thread;
-  std::atomic<bool> stop_condition = false;
-
-  // Events
-  std::list<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>> blocking_event_queues;
-  moodycamel::BlockingReaderWriterQueue<Types::EventWrapper> send_event_queue;
 
  public:
   BasePolicy(Catalog& catalog, std::atomic<Types::PortNumber>& next_available_inproc_port)
@@ -104,7 +105,6 @@ class BasePolicy {
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(
             event.get_unique_event_type_id())) {
-        sender.send("");
         blocking_event_queue.enqueue(std::move(event.clone()));
       }
       i += 1;
