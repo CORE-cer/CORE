@@ -123,6 +123,7 @@ class HTTPServer {
       //      })
       .get("/all-queries-info",
            [this](auto* res, auto* req) {
+             set_cors_headers(res);
              res->writeStatus("200 OK")
                ->writeHeader("Content-Type", "application/json")
                ->end(all_queries_info());
@@ -131,9 +132,11 @@ class HTTPServer {
             [this](auto* res, auto* req) {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
+                  set_cors_headers(res);
                   try {
                     std::string response_add_query = add_query(data);
                     res->writeStatus("200 OK")->end(response_add_query);
+
                   } catch (const std::exception& e) {
                     res->writeStatus("400 Bad Request")->end(e.what());
                   }
@@ -183,6 +186,15 @@ class HTTPServer {
               })
       .run();
   };
+
+  void set_cors_headers(auto* response) {
+    response->writeHeader("Access-Control-Allow-Origin", "*");
+    response->writeHeader("Access-Control-Allow-Methods",
+                          "GET, POST, PUT, DELETE, OPTIONS");
+    response->writeHeader("Access-Control-Allow-Headers",
+                          "origin, content-type, accept, x-requested-with");
+    response->writeHeader("Access-Control-Max-Age", "3600");
+  }
 
   // std::string event_info_from_id(std::string_view event_type_id_string_view) {
   //   Types::UniqueEventTypeId event_type_id = std::stoul(
@@ -244,6 +256,9 @@ class HTTPServer {
     std::string json = "[";
     for (const auto& info : infos) {
       json += info.to_json() + ",";
+    }
+    if (!infos.empty()) {
+      json.pop_back();  // remove last comma
     }
     json += "]";
     return json;
