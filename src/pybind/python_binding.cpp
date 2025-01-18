@@ -1,9 +1,9 @@
 #include <pybind11/attr.h>
 #include <pybind11/cast.h>
 #include <pybind11/detail/common.h>
-#include <pybind11/pybind11.h>  // NOLINT
-#include <pybind11/stl.h>       // NOLINT
-#include <pybind11/functional.h> // NOLINT
+#include <pybind11/functional.h>  // NOLINT
+#include <pybind11/pybind11.h>    // NOLINT
+#include <pybind11/stl.h>         // NOLINT
 
 #include <cstddef>
 #include <cstdint>
