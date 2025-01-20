@@ -17,7 +17,7 @@
 namespace CORE::Internal::Interface::Module::Query {
 
 class GenericEvaluator {
-  uint64_t current_stream_position = 0;
+  int64_t current_stream_position = 0;
   Internal::QueryCatalog& query_catalog;
   std::unordered_map<Types::UniqueEventTypeId, uint64_t> indexes{};
 
@@ -36,9 +36,11 @@ class GenericEvaluator {
  protected:
   uint64_t event_time(Types::EventWrapper& event) {
     ZoneScopedN("Interface::GenericEvaluator::tuple_time");
-    uint64_t time;
+    int64_t time;
     switch (time_window.mode) {
       case CEQL::Within::TimeWindowMode::NONE:
+        time = event.get_primary_time().val;
+        break;
       case CEQL::Within::TimeWindowMode::EVENTS:
         time = current_stream_position++;
         break;

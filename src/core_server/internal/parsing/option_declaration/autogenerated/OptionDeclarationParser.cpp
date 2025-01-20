@@ -80,9 +80,9 @@ void optiondeclarationparserParserInitialize() {
   	67,65,1,0,0,0,68,71,1,0,0,0,69,67,1,0,0,0,69,70,1,0,0,0,70,9,1,0,0,0,
   	71,69,1,0,0,0,72,74,3,12,6,0,73,72,1,0,0,0,73,74,1,0,0,0,74,76,1,0,0,
   	0,75,77,3,14,7,0,76,75,1,0,0,0,76,77,1,0,0,0,77,79,1,0,0,0,78,80,3,16,
-  	8,0,79,78,1,0,0,0,79,80,1,0,0,0,80,11,1,0,0,0,81,82,3,22,11,0,82,83,5,
-  	6,0,0,83,13,1,0,0,0,84,85,3,22,11,0,85,86,5,7,0,0,86,15,1,0,0,0,87,88,
-  	3,22,11,0,88,89,5,8,0,0,89,17,1,0,0,0,90,91,3,20,10,0,91,19,1,0,0,0,92,
+  	8,0,79,78,1,0,0,0,79,80,1,0,0,0,80,11,1,0,0,0,81,82,3,24,12,0,82,83,5,
+  	6,0,0,83,13,1,0,0,0,84,85,3,24,12,0,85,86,5,7,0,0,86,15,1,0,0,0,87,88,
+  	3,24,12,0,88,89,5,8,0,0,89,17,1,0,0,0,90,91,3,20,10,0,91,19,1,0,0,0,92,
   	93,5,15,0,0,93,21,1,0,0,0,94,97,3,24,12,0,95,97,3,26,13,0,96,94,1,0,0,
   	0,96,95,1,0,0,0,97,23,1,0,0,0,98,99,5,13,0,0,99,25,1,0,0,0,100,101,5,
   	12,0,0,101,27,1,0,0,0,9,30,32,46,62,69,73,76,79,96
@@ -649,9 +649,7 @@ OptionDeclarationParser::Time_spanContext* OptionDeclarationParser::time_span() 
     _errHandler->sync(this);
 
     _la = _input->LA(1);
-    if (_la == OptionDeclarationParser::DOUBLE_LITERAL
-
-    || _la == OptionDeclarationParser::INTEGER_LITERAL) {
+    if (_la == OptionDeclarationParser::INTEGER_LITERAL) {
       setState(78);
       second_span();
     }
@@ -672,8 +670,8 @@ OptionDeclarationParser::Hour_spanContext::Hour_spanContext(ParserRuleContext *p
   : ParserRuleContext(parent, invokingState) {
 }
 
-OptionDeclarationParser::NumberContext* OptionDeclarationParser::Hour_spanContext::number() {
-  return getRuleContext<OptionDeclarationParser::NumberContext>(0);
+OptionDeclarationParser::IntegerContext* OptionDeclarationParser::Hour_spanContext::integer() {
+  return getRuleContext<OptionDeclarationParser::IntegerContext>(0);
 }
 
 tree::TerminalNode* OptionDeclarationParser::Hour_spanContext::K_HOURS() {
@@ -707,7 +705,7 @@ OptionDeclarationParser::Hour_spanContext* OptionDeclarationParser::hour_span() 
   try {
     enterOuterAlt(_localctx, 1);
     setState(81);
-    number();
+    integer();
     setState(82);
     match(OptionDeclarationParser::K_HOURS);
    
@@ -727,8 +725,8 @@ OptionDeclarationParser::Minute_spanContext::Minute_spanContext(ParserRuleContex
   : ParserRuleContext(parent, invokingState) {
 }
 
-OptionDeclarationParser::NumberContext* OptionDeclarationParser::Minute_spanContext::number() {
-  return getRuleContext<OptionDeclarationParser::NumberContext>(0);
+OptionDeclarationParser::IntegerContext* OptionDeclarationParser::Minute_spanContext::integer() {
+  return getRuleContext<OptionDeclarationParser::IntegerContext>(0);
 }
 
 tree::TerminalNode* OptionDeclarationParser::Minute_spanContext::K_MINUTES() {
@@ -762,7 +760,7 @@ OptionDeclarationParser::Minute_spanContext* OptionDeclarationParser::minute_spa
   try {
     enterOuterAlt(_localctx, 1);
     setState(84);
-    number();
+    integer();
     setState(85);
     match(OptionDeclarationParser::K_MINUTES);
    
@@ -782,8 +780,8 @@ OptionDeclarationParser::Second_spanContext::Second_spanContext(ParserRuleContex
   : ParserRuleContext(parent, invokingState) {
 }
 
-OptionDeclarationParser::NumberContext* OptionDeclarationParser::Second_spanContext::number() {
-  return getRuleContext<OptionDeclarationParser::NumberContext>(0);
+OptionDeclarationParser::IntegerContext* OptionDeclarationParser::Second_spanContext::integer() {
+  return getRuleContext<OptionDeclarationParser::IntegerContext>(0);
 }
 
 tree::TerminalNode* OptionDeclarationParser::Second_spanContext::K_SECONDS() {
@@ -817,7 +815,7 @@ OptionDeclarationParser::Second_spanContext* OptionDeclarationParser::second_spa
   try {
     enterOuterAlt(_localctx, 1);
     setState(87);
-    number();
+    integer();
     setState(88);
     match(OptionDeclarationParser::K_SECONDS);
    

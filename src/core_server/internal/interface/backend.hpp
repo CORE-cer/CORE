@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <set>
 #include <string>
 #include <tracy/Tracy.hpp>
 
@@ -110,9 +109,8 @@ class Backend {
     quarantine_manager.send_event_to_queries(stream_id, std::move(event));
   }
 
-  void set_quarantine_policy(std::set<std::string>&& stream_names,
-                             Module::Quarantine::QuarantinePolicyType policy_type) {
-    quarantine_manager.set_query_policy(stream_names, policy_type);
+  void set_quarantine_policy(Module::Quarantine::QuarantinePolicy&& policy_type) {
+    quarantine_manager.set_query_policy(std::move(policy_type));
   }
 };
 }  // namespace CORE::Internal::Interface

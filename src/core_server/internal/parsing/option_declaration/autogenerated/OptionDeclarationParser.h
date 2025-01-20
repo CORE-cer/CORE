@@ -181,7 +181,7 @@ public:
   public:
     Hour_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    NumberContext *number();
+    IntegerContext *integer();
     antlr4::tree::TerminalNode *K_HOURS();
 
 
@@ -195,7 +195,7 @@ public:
   public:
     Minute_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    NumberContext *number();
+    IntegerContext *integer();
     antlr4::tree::TerminalNode *K_MINUTES();
 
 
@@ -209,7 +209,7 @@ public:
   public:
     Second_spanContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    NumberContext *number();
+    IntegerContext *integer();
     antlr4::tree::TerminalNode *K_SECONDS();
 
 

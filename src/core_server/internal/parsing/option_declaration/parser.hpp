@@ -40,12 +40,15 @@ class OptionsParser {
 
     quarantine_option_visitor.visit(tree);
 
-    Interface::Module::Quarantine::QuarantinePolicyType
+    Interface::Module::Quarantine::QuarantinePolicy::QuarantinePolicyType
       policy_type = quarantine_option_visitor.policy_type;
 
     std::set<std::string> streams = quarantine_option_visitor.streams;
 
-    backend.set_quarantine_policy(std::move(streams), std::move(policy_type));
+    Interface::Module::Quarantine::QuarantinePolicy quarantine_policy =
+      {policy_type, streams, quarantine_option_visitor.time_window};
+
+    backend.set_quarantine_policy(std::move(quarantine_policy));
   }
 };
 }  // namespace CORE::Internal::Parsing::Option

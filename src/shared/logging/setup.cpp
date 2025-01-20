@@ -5,6 +5,7 @@
 #include <quill/Quill.h>
 #include <quill/handlers/RotatingFileHandler.h>
 
+#include <iostream>
 #include <memory>
 
 namespace CORE::Internal::Logging {
@@ -76,7 +77,7 @@ void enable_logging_stdout_critical() {
   quill::start();
 
   auto logger = quill::get_root_logger();
-  logger->set_log_level(quill::LogLevel::Critical);
+  logger->set_log_level(quill::LogLevel::TraceL3);
   int size_backtrace = 10;
   logger->init_backtrace(size_backtrace, quill::LogLevel::Critical);
 }

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <ctime>
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -44,6 +45,10 @@ struct IntValue final : public Value {
   IntValue(int64_t val) : val(val) {}
 
   ~IntValue() override = default;
+
+  static IntValue create_lower_bound() {
+    return IntValue(std::numeric_limits<int64_t>::min());
+  }
 
   std::unique_ptr<Value> clone() const override {
     return std::make_unique<IntValue>(this->val);

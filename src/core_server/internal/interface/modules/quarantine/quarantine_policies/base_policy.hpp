@@ -17,6 +17,10 @@
 #include <vector>
 #include <zmq.hpp>
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
+
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -26,6 +30,7 @@
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/logging/setup.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
@@ -90,8 +95,13 @@ class BasePolicy {
 
   void send_events_to_queries() {
     ZoneScopedN("BasePolicy::send_events_to_queries");
+    LOG_L3_BACKTRACE("Sending events to queries in BasePolicy::send_events_to_queries");
+
     Types::EventWrapper event;
     while (send_event_queue.try_dequeue(event)) {
+      LOG_L3_BACKTRACE(
+        "Sending event with id {} to queries in BasePolicy::send_events_to_queries",
+        event.get_unique_event_type_id());
       send_event_to_queries(std::move(event));
     }
   }
@@ -116,7 +126,7 @@ class BasePolicy {
     std::this_thread::sleep_for(std::chrono::milliseconds(60));
     for (auto& blocking_event_queue : blocking_event_queues) {
       while (blocking_event_queue.size_approx() != 0) {
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
       }
     }
     worker_thread.join();
@@ -126,7 +136,7 @@ class BasePolicy {
     worker_thread = std::thread([&]() {
       ZoneScopedN("BasePolicy::start::worker_thread");  //NOLINT
       while (!stop_condition) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         try_add_tuples_to_send_queue();
         send_events_to_queries();
       }

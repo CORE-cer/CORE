@@ -10,6 +10,10 @@
 #include <utility>
 #include <vector>
 
+#define QUILL_ROOT_LOGGER_ONLY
+#include <quill/Quill.h>             // NOLINT
+#include <quill/detail/LogMacros.h>  // NOLINT
+
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
@@ -21,6 +25,7 @@
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -54,13 +59,20 @@ class QuarantineManager {
                          parsed_query.to_string()});
       query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
     } else {
-      set_query_policy(parsed_query.from.streams, QuarantinePolicyType::DirectPolicy);
+      QuarantinePolicy quarantine_policy =
+        {QuarantinePolicy::QuarantinePolicyType::DirectPolicy, parsed_query.from.streams};
+      set_query_policy(std::move(quarantine_policy));
       declare_query(std::move(parsed_query), std::move(result_handler));
     }
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
+    LOG_L3_BACKTRACE(
+      "Received event with id {} from stream with id {} in "
+      "QuarantineManager::send_event_to_queries",
+      event.get_unique_event_type_id(),
+      stream_id);
     std::vector<std::reference_wrapper<BasePolicy>>&
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 
@@ -69,11 +81,11 @@ class QuarantineManager {
     }
   }
 
-  void set_query_policy(std::set<std::string>& stream_names,
-                        QuarantinePolicyType policy_type) {
-    std::unique_ptr<BasePolicy> query_policy_ptr = std::move(create_policy(policy_type));
+  void set_query_policy(Module::Quarantine::QuarantinePolicy&& quarantine_policy) {
+    std::unique_ptr<BasePolicy> query_policy_ptr = std::move(
+      create_policy(quarantine_policy));
     std::set<Types::StreamTypeId> stream_type_ids = get_stream_ids_from_names(
-      stream_names);
+      quarantine_policy.streams);
 
     auto iter = query_policies.insert({stream_type_ids, std::move(query_policy_ptr)});
 
@@ -87,12 +99,18 @@ class QuarantineManager {
   }
 
  private:
-  std::unique_ptr<BasePolicy> create_policy(QuarantinePolicyType policy_type) {
-    switch (policy_type) {
-      case QuarantinePolicyType::DirectPolicy:
+  std::unique_ptr<BasePolicy> create_policy(QuarantinePolicy quarantine_policy) {
+    switch (quarantine_policy.policy_type) {
+      case QuarantinePolicy::QuarantinePolicyType::DirectPolicy:
         return std::make_unique<DirectPolicy>(catalog, next_available_inproc_port);
-      case QuarantinePolicyType::WaitFixedTimePolicy:
-        return std::make_unique<WaitFixedTimePolicy>(catalog, next_available_inproc_port);
+      case QuarantinePolicy::QuarantinePolicyType::WaitFixedTimePolicy:
+        if (!quarantine_policy.time_window.has_value()) {
+          throw std::runtime_error(
+            "Time window must be specified for WaitFixedTimePolicy");
+        }
+        return std::make_unique<WaitFixedTimePolicy>(catalog,
+                                                     next_available_inproc_port,
+                                                     quarantine_policy.time_window.value());
       default:
         throw std::runtime_error("Invalid policy type");
     }

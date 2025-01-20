@@ -35,15 +35,15 @@ time_span
  ;
 
 hour_span
- : number K_HOURS
+ : integer K_HOURS
  ;
 
 minute_span
- : number K_MINUTES
+ : integer K_MINUTES
  ;
 
 second_span
- : number K_SECONDS
+ : integer K_SECONDS
  ;
 
 stream_name
