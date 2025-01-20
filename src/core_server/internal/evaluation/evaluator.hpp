@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -116,9 +115,6 @@ class Evaluator {
 #endif
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
-    std::cout << "DEbug mode on" << std::endl;
-    std::cout << "last_tuple_time: " << last_tuple_time << std::endl;
-    std::cout << "current_time: " << current_time << std::endl;
     assert(current_time >= last_tuple_time);
     last_tuple_time = current_time;
 #endif

@@ -100,8 +100,11 @@ class BasePolicy {
     Types::EventWrapper event;
     while (send_event_queue.try_dequeue(event)) {
       LOG_L3_BACKTRACE(
-        "Sending event with id {} to queries in BasePolicy::send_events_to_queries",
-        event.get_unique_event_type_id());
+        "Sending event with id {} and time to queries in "
+        "BasePolicy::send_events_to_queries",
+        event.get_unique_event_type_id(),
+        event.get_primary_time().val);
+
       send_event_to_queries(std::move(event));
     }
   }
