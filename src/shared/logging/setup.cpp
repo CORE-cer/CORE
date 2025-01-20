@@ -5,7 +5,6 @@
 #include <quill/Quill.h>
 #include <quill/handlers/RotatingFileHandler.h>
 
-#include <iostream>
 #include <memory>
 
 namespace CORE::Internal::Logging {
