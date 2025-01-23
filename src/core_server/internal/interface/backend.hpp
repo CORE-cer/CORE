@@ -6,6 +6,7 @@
 
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -92,6 +93,10 @@ class Backend {
   declare_query(Internal::CEQL::Query&& parsed_query,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     quarantine_manager.declare_query(std::move(parsed_query), std::move(result_handler));
+  }
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    quarantine_manager.inactivate_query(query_id);
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id, const Types::Event& event) {

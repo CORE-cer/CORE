@@ -22,6 +22,7 @@
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/components/user_data.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/value.hpp"
@@ -145,6 +146,12 @@ class HTTPServer {
               res->onAborted(
                 []() { std::cout << "/add_query post request aborted" << std::endl; });
             })
+      .del("/inactivate-query/:id",
+           [this](auto* res, auto* req) {
+             set_cors_headers(res);
+             inactivate_query(req->getParameter("id"));
+             res->writeStatus("200 OK")->end();
+           })
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
       .template ws<UserData>(
         "/*",
@@ -153,7 +160,7 @@ class HTTPServer {
             [](auto* res, auto* req, auto* context) {
               std::string url_without_slash = std::string(req->getUrl());
               url_without_slash.erase(0, 1);
-              UniqueQueryId query_id = std::stoi(url_without_slash);
+              UniqueWebSocketQueryId query_id = std::stoi(url_without_slash);
 
               res->template upgrade<UserData>({std::string(req->getUrl()), query_id},
                                               req->getHeader("sec-websocket-key"),
@@ -276,6 +283,12 @@ class HTTPServer {
     backend.declare_query(std::move(query), std::move(result_handler));
 
     return identifier;
+  }
+
+  void inactivate_query(std::string_view query_id_string_view) {
+    Types::UniqueQueryId query_id = std::stoi(std::string(query_id_string_view));
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    backend.inactivate_query(query_id);
   }
 };
 

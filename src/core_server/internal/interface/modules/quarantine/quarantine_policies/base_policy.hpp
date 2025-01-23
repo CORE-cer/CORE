@@ -5,10 +5,15 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cstddef>
 #include <cstring>
+#include <iterator>
+#include <limits>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
@@ -16,6 +21,8 @@
 #include <variant>
 #include <vector>
 #include <zmq.hpp>
+
+#include "shared/datatypes/aliases/query_info_id.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -39,6 +46,7 @@ class BasePolicy {
  protected:
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
+  std::map<Types::UniqueQueryId, std::ptrdiff_t> query_id_to_query_index;
 
   // Events
   std::list<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>> blocking_event_queues;
@@ -71,22 +79,60 @@ class BasePolicy {
 
   void
   declare_query(Internal::CEQL::Query&& parsed_query,
+                Types::UniqueQueryId query_id,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::lock_guard<std::mutex> lock(queries_lock);
     if (parsed_query.partition_by.partition_attributes.size() != 0) {
       using QueryDirectType = Query::PartitionByQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
+                                        std::move(query_id),
                                         std::move(result_handler));
     } else {
       using QueryDirectType = Query::SimpleQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
+                                        std::move(query_id),
                                         std::move(result_handler));
     }
   }
 
   virtual void receive_event(Types::EventWrapper&& event) = 0;
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    ZoneScopedN("BasePolicy::inactivate_query");
+    std::lock_guard<std::mutex> lock(queries_lock);
+    auto query_index_it = query_id_to_query_index.find(query_id);
+
+    if (query_index_it == query_id_to_query_index.end()) {
+      return;
+    }
+    std::ptrdiff_t query_index = query_index_it->second;
+
+    // Remove from the query_catalogs
+    query_catalogs.erase(query_catalogs.begin() + query_index);
+
+    // Remove from blocking_event_queues
+    auto event_queue_it = blocking_event_queues.begin();
+    std::advance(event_queue_it, query_index);
+    blocking_event_queues.erase(event_queue_it);
+
+    // Remove query from queries
+    queries.erase(queries.begin() + query_index);
+
+    // Remove from inner_thread_event_senders
+    inner_thread_event_senders.erase(inner_thread_event_senders.begin() + query_index);
+
+    // Remove from query_id_to_query_index
+    query_id_to_query_index.erase(query_id);
+
+    // Fix other query indexes due to the removal
+    for (auto& [id, index] : query_id_to_query_index) {
+      if (index > query_index) {
+        query_id_to_query_index[id] = index - 1;
+      }
+    }
+  }
 
  protected:
   virtual void try_add_tuples_to_send_queue() = 0;
@@ -152,11 +198,20 @@ class BasePolicy {
   template <typename QueryDirectType>
   void
   initialize_query(Internal::CEQL::Query&& parsed_query,
+                   Types::UniqueQueryId query_id,
                    std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
     query_catalogs.push_back(query_catalog);
+
+    if (queries.size() > std::numeric_limits<std::ptrdiff_t>::max() - 1) {
+      throw std::runtime_error("Too many queries");
+    }
+
+    std::ptrdiff_t query_index = static_cast<std::ptrdiff_t>(queries.size());
+    query_id_to_query_index[query_id] = query_index;
+
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>&
       blocking_event_queue = blocking_event_queues.emplace_back(1000);
     queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,

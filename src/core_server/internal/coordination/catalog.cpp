@@ -4,7 +4,6 @@
 #include <cassert>
 #include <iostream>
 #include <optional>
-#include <ranges>
 #include <set>
 #include <string>
 #include <utility>
@@ -116,14 +115,23 @@ const std::vector<Types::StreamInfo>& Catalog::get_all_streams_info() const noex
   return streams_info;
 }
 
-Types::QueryInfoId Catalog::add_query(Types::QueryInfo query_info) noexcept {
-  queries_info.push_back(query_info);
-  return queries_info.size() - 1;
+Types::UniqueQueryId Catalog::add_query(Types::QueryInfo query_info) noexcept {
+  Types::UniqueQueryId query_id = query_id_counter++;
+  unique_query_id_to_queries_info[query_id] = query_info;
+  return query_id;
 }
 
-Types::QueryInfo Catalog::get_query_info(Types::QueryInfoId query_info_id) const noexcept {
-  if (query_info_id < queries_info.size()) {
-    return queries_info[query_info_id];
+void Catalog::inactivate_query(Types::UniqueQueryId query_id) noexcept {
+  auto query_info_it = unique_query_id_to_queries_info.find(query_id);
+  if (query_info_it != unique_query_id_to_queries_info.end()) {
+    unique_query_id_to_queries_info.erase(query_info_it);
+  }
+}
+
+Types::QueryInfo Catalog::get_query_info(Types::UniqueQueryId query_id) const noexcept {
+  auto query_info_it = unique_query_id_to_queries_info.find(query_id);
+  if (query_info_it != unique_query_id_to_queries_info.end()) {
+    return query_info_it->second;
   } else {
     // EventTypeId not found. Return an empty vector
     // maybe in the future, we will want to raise an exception.
@@ -143,19 +151,17 @@ const std::vector<Types::StreamInfo>& Catalog::get_stream_info_vector() const no
 const std::vector<Types::QueryInfo>
 Catalog::get_all_query_infos(std::optional<Library::Components::ResultHandlerType>
                                result_handler_type_filter) const noexcept {
-  auto filtered_queries_info = queries_info
-                               | std::views::filter([result_handler_type_filter](
-                                                      const Types::QueryInfo& query_info) {
-                                   if (result_handler_type_filter.has_value()) {
-                                     return query_info.result_handler_type
-                                            == result_handler_type_filter;
-                                   }
-                                   return true;
-                                 })
-                               | std::views::common;
-
-  return std::vector<Types::QueryInfo>(filtered_queries_info.begin(),
-                                       filtered_queries_info.end());
+  std::vector<Types::QueryInfo> filtered_queries_info;
+  for (const auto& [query_info_id, query_info] : unique_query_id_to_queries_info) {
+    // Filter by result_handler_type if it is provided
+    if (result_handler_type_filter.has_value()) {
+      if (query_info.result_handler_type != result_handler_type_filter) {
+        continue;
+      }
+    }
+    filtered_queries_info.push_back(query_info);
+  }
+  return filtered_queries_info;
 }
 
 }  // namespace CORE::Internal

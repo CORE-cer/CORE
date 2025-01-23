@@ -4,12 +4,12 @@
 #include <string>
 
 namespace CORE::Library::Components {
-using UniqueQueryId = int64_t;
+using UniqueWebSocketQueryId = int64_t;
 using UniqueClientId = int64_t;
 
 struct UserData {
   std::string ip;
-  UniqueQueryId query_id;
+  UniqueWebSocketQueryId query_id;
 };
 
 }  // namespace CORE::Library::Components

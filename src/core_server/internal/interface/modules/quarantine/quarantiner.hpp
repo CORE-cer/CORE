@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "shared/datatypes/aliases/query_info_id.hpp"
+
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
@@ -53,17 +55,27 @@ class QuarantineManager {
     // Check if set of streams already has policy associated with it
     if (iter != query_policies.end()) {
       BasePolicy& query_policy = *(iter->second);
-      // TODO: Add Port
-      catalog.add_query({result_handler->get_identifier(),
-                         result_handler->get_result_handler_type(),
-                         parsed_query.to_string()});
-      query_policy.declare_query(std::move(parsed_query), std::move(result_handler));
+      Types::UniqueQueryId query_id = catalog.add_query(
+        {result_handler->get_identifier(),
+         result_handler->get_result_handler_type(),
+         parsed_query.to_string()});
+      query_policy.declare_query(std::move(parsed_query),
+                                 std::move(query_id),
+                                 std::move(result_handler));
     } else {
       QuarantinePolicy quarantine_policy =
         {QuarantinePolicy::QuarantinePolicyType::DirectPolicy, parsed_query.from.streams};
       set_query_policy(std::move(quarantine_policy));
       declare_query(std::move(parsed_query), std::move(result_handler));
     }
+  }
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    for (auto& [stream_type_ids, query_policy] : query_policies) {
+      query_policy->inactivate_query(query_id);
+    }
+
+    catalog.inactivate_query(query_id);
   }
 
   void send_event_to_queries(Types::StreamTypeId stream_id,

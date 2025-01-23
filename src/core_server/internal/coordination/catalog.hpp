@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -30,7 +31,8 @@ class Catalog {
   std::vector<std::string> unique_event_names;
   std::set<std::string> stream_names;
 
-  std::vector<Types::QueryInfo> queries_info;
+  Types::UniqueQueryId query_id_counter = 0;
+  std::map<Types::UniqueQueryId, Types::QueryInfo> unique_query_id_to_queries_info;
   Types::EventInfo em = {};
 
  public:
@@ -48,9 +50,11 @@ class Catalog {
 
   const std::vector<Types::StreamInfo>& get_all_streams_info() const noexcept;
 
-  Types::QueryInfoId add_query(Types::QueryInfo query_info) noexcept;
+  Types::UniqueQueryId add_query(Types::QueryInfo query_info) noexcept;
 
-  Types::QueryInfo get_query_info(Types::QueryInfoId query_info_id) const noexcept;
+  void inactivate_query(Types::UniqueQueryId query_id) noexcept;
+
+  Types::QueryInfo get_query_info(Types::UniqueQueryId query_id) const noexcept;
 
   const std::set<std::string>& get_stream_names() const noexcept;
 
