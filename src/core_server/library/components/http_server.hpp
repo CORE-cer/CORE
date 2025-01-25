@@ -4,7 +4,6 @@
 #include <Loop.h>
 #include <WebSocketProtocol.h>
 
-#include <chrono>
 #include <exception>
 #include <iostream>
 #include <memory>
