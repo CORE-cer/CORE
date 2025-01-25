@@ -16,7 +16,6 @@ class DirectPolicy : public BasePolicy {
                std::atomic<Types::PortNumber>& next_available_inproc_port)
       : BasePolicy(catalog, next_available_inproc_port) {
     this->start();
-      
   }
 
   ~DirectPolicy() { this->handle_destruction(); }
