@@ -25,8 +25,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
-#include "shared/datatypes/event.hpp"
-#include "shared/datatypes/value.hpp"
 
 namespace CORE::Library::Components {
 
