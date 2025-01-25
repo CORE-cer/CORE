@@ -93,6 +93,12 @@ jobs:
       - name: run tests with thread sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread -p conan_profiles/${{ matrix.conan_profile }}
 
+      - name: run stock query tests with address sanitizer
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+
+      - name: run stock query tests with thread sanitizer
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s thread -p conan_profiles/${{ matrix.conan_profile }}
+
   run-tests-release:
     strategy:
       matrix:
