@@ -113,14 +113,14 @@ class OnlineResultHandler : public ResultHandler {
 class WebSocketResultHandler : public ResultHandler {
   std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients;
   std::mutex& ws_clients_mutex;
-  UniqueQueryId query_id;
+  UniqueWebSocketQueryId query_id;
 
  public:
   WebSocketResultHandler(
     const Internal::QueryCatalog& query_catalog,
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients,
     std::mutex& ws_clients_mutex,
-    UniqueQueryId query_id)
+    UniqueWebSocketQueryId query_id)
       : ws_clients(ws_clients),
         ws_clients_mutex(ws_clients_mutex),
         query_id(query_id),

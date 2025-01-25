@@ -5,17 +5,23 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cstddef>
 #include <cstring>
+#include <iterator>
+#include <limits>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tracy/Tracy.hpp>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <zmq.hpp>
+
+#include "shared/datatypes/aliases/query_info_id.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -31,7 +37,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/logging/setup.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -39,6 +44,7 @@ class BasePolicy {
  protected:
   std::thread worker_thread;
   std::atomic<bool> stop_condition = false;
+  std::map<Types::UniqueQueryId, std::ptrdiff_t> query_id_to_query_index;
 
   // Events
   std::list<moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>> blocking_event_queues;
@@ -53,7 +59,6 @@ class BasePolicy {
 
   std::vector<QueryCatalog> query_catalogs;
   std::vector<QueryVariant> queries;
-  std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
   // TODO: Optimize
   std::mutex queries_lock;
@@ -71,22 +76,60 @@ class BasePolicy {
 
   void
   declare_query(Internal::CEQL::Query&& parsed_query,
+                Types::UniqueQueryId query_id,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::lock_guard<std::mutex> lock(queries_lock);
     if (parsed_query.partition_by.partition_attributes.size() != 0) {
       using QueryDirectType = Query::PartitionByQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
+                                        std::move(query_id),
                                         std::move(result_handler));
     } else {
       using QueryDirectType = Query::SimpleQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
+                                        std::move(query_id),
                                         std::move(result_handler));
     }
   }
 
   virtual void receive_event(Types::EventWrapper&& event) = 0;
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    ZoneScopedN("BasePolicy::inactivate_query");
+    LOG_INFO("Inactivating query with id {} in BasePolicy::inactivate_query", query_id);
+    std::lock_guard<std::mutex> lock(queries_lock);
+    auto query_index_it = query_id_to_query_index.find(query_id);
+
+    if (query_index_it == query_id_to_query_index.end()) {
+      return;
+    }
+    std::ptrdiff_t query_index = query_index_it->second;
+
+    // Remove query from queries
+    queries.erase(queries.begin() + query_index);
+
+    // Remove from the query_catalogs
+    query_catalogs.erase(query_catalogs.begin() + query_index);
+
+    // Remove from blocking_event_queues
+    auto event_queue_it = blocking_event_queues.begin();
+    std::advance(event_queue_it, query_index);
+    blocking_event_queues.erase(event_queue_it);
+
+    // Remove from query_id_to_query_index
+    query_id_to_query_index.erase(query_id);
+
+    // Fix other query indexes due to the removal
+    for (auto& [id, index] : query_id_to_query_index) {
+      if (index > query_index) {
+        query_id_to_query_index[id] = index - 1;
+      }
+    }
+
+    LOG_INFO("Query with id {} inactivated in BasePolicy::inactivate_query", query_id);
+  }
 
  protected:
   virtual void try_add_tuples_to_send_queue() = 0;
@@ -114,7 +157,6 @@ class BasePolicy {
     std::lock_guard<std::mutex> lock(queries_lock);
     int i = 0;
     for (auto& blocking_event_queue : blocking_event_queues) {
-      ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(
             event.get_unique_event_type_id())) {
@@ -152,11 +194,20 @@ class BasePolicy {
   template <typename QueryDirectType>
   void
   initialize_query(Internal::CEQL::Query&& parsed_query,
+                   Types::UniqueQueryId query_id,
                    std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
     query_catalogs.push_back(query_catalog);
+
+    if (queries.size() > std::numeric_limits<std::ptrdiff_t>::max() - 1) {
+      throw std::runtime_error("Too many queries");
+    }
+
+    std::ptrdiff_t query_index = static_cast<std::ptrdiff_t>(queries.size());
+    query_id_to_query_index[query_id] = query_index;
+
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>&
       blocking_event_queue = blocking_event_queues.emplace_back(1000);
     queries.emplace_back(std::make_unique<QueryDirectType>(query_catalog,
@@ -167,9 +218,6 @@ class BasePolicy {
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
-
-    zmq::context_t& inproc_context = query->get_inproc_context();
-    inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

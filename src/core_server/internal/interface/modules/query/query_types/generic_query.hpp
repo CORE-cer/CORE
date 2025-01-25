@@ -15,7 +15,6 @@
 #include <thread>
 #include <tracy/Tracy.hpp>
 #include <utility>
-#include <zmq.hpp>
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query/within.hpp"
@@ -23,8 +22,6 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
-#include "shared/networking/message_receiver/zmq_message_receiver.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 class GenericQuery {
@@ -34,8 +31,6 @@ class GenericQuery {
   std::unique_ptr<Library::Components::ResultHandler> result_handler;
 
   // Receiver for tuples
-  std::string receiver_address;
-  Internal::ZMQMessageReceiver receiver;
   std::atomic<bool> stop_condition = false;
   std::thread worker_thread;
 
@@ -52,8 +47,6 @@ class GenericQuery {
     std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
     moodycamel::BlockingReaderWriterQueue<Types::EventWrapper>& blocking_event_queue)
       : query_catalog(query_catalog),
-        receiver_address(inproc_receiver_address),
-        receiver(receiver_address),
         result_handler(std::move(result_handler)),
         blocking_event_queue(blocking_event_queue) {}
 
@@ -64,8 +57,6 @@ class GenericQuery {
 
   virtual ~GenericQuery() {};
 
-  zmq::context_t& get_inproc_context() { return receiver.get_context(); }
-
   Library::Components::ResultHandler& get_result_handler_reference() const {
     return *result_handler;
   }
@@ -73,7 +64,6 @@ class GenericQuery {
  protected:
   void stop() {
     try {
-      ZMQMessageSender sender(receiver_address, receiver.get_context());
       stop_condition = true;
       worker_thread.join();
     } catch (std::exception& e) {
