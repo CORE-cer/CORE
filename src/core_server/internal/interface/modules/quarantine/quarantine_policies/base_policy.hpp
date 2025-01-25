@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstring>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <list>
@@ -38,7 +39,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/logging/setup.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -61,7 +61,6 @@ class BasePolicy {
 
   std::vector<QueryCatalog> query_catalogs;
   std::vector<QueryVariant> queries;
-  std::vector<Internal::ZMQMessageSender> inner_thread_event_senders = {};
 
   // TODO: Optimize
   std::mutex queries_lock;
@@ -101,6 +100,7 @@ class BasePolicy {
 
   void inactivate_query(Types::UniqueQueryId query_id) {
     ZoneScopedN("BasePolicy::inactivate_query");
+    LOG_INFO("Inactivating query with id {} in BasePolicy::inactivate_query", query_id);
     std::lock_guard<std::mutex> lock(queries_lock);
     auto query_index_it = query_id_to_query_index.find(query_id);
 
@@ -109,6 +109,9 @@ class BasePolicy {
     }
     std::ptrdiff_t query_index = query_index_it->second;
 
+    // Remove query from queries
+    queries.erase(queries.begin() + query_index);
+
     // Remove from the query_catalogs
     query_catalogs.erase(query_catalogs.begin() + query_index);
 
@@ -116,12 +119,6 @@ class BasePolicy {
     auto event_queue_it = blocking_event_queues.begin();
     std::advance(event_queue_it, query_index);
     blocking_event_queues.erase(event_queue_it);
-
-    // Remove query from queries
-    queries.erase(queries.begin() + query_index);
-
-    // Remove from inner_thread_event_senders
-    inner_thread_event_senders.erase(inner_thread_event_senders.begin() + query_index);
 
     // Remove from query_id_to_query_index
     query_id_to_query_index.erase(query_id);
@@ -132,6 +129,8 @@ class BasePolicy {
         query_id_to_query_index[id] = index - 1;
       }
     }
+
+    LOG_INFO("Query with id {} inactivated in BasePolicy::inactivate_query", query_id);
   }
 
  protected:
@@ -160,7 +159,6 @@ class BasePolicy {
     std::lock_guard<std::mutex> lock(queries_lock);
     int i = 0;
     for (auto& blocking_event_queue : blocking_event_queues) {
-      ZMQMessageSender& sender = inner_thread_event_senders[i];
       QueryCatalog& query_catalog = query_catalogs[i];
       if (query_catalog.is_unique_event_id_relevant_to_query(
             event.get_unique_event_type_id())) {
@@ -222,9 +220,6 @@ class BasePolicy {
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
     query->init(std::move(parsed_query));
-
-    zmq::context_t& inproc_context = query->get_inproc_context();
-    inner_thread_event_senders.emplace_back(inproc_receiver_address, inproc_context);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

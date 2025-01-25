@@ -124,7 +124,7 @@ Types::UniqueQueryId Catalog::add_query(Types::QueryInfo query_info) noexcept {
 void Catalog::inactivate_query(Types::UniqueQueryId query_id) noexcept {
   auto query_info_it = unique_query_id_to_queries_info.find(query_id);
   if (query_info_it != unique_query_id_to_queries_info.end()) {
-    unique_query_id_to_queries_info.erase(query_info_it);
+    query_info_it->second.active = false;
   }
 }
 

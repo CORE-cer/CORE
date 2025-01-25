@@ -96,6 +96,7 @@ class Backend {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
+    LOG_INFO("Inactivating query with id {} in Backend::inactivate_query", query_id);
     quarantine_manager.inactivate_query(query_id);
   }
 

@@ -71,6 +71,8 @@ class QuarantineManager {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
+    LOG_INFO("Inactivating query with id {} in QuarantineManager::inactivate_query",
+             query_id);
     for (auto& [stream_type_ids, query_policy] : query_policies) {
       query_policy->inactivate_query(query_id);
     }
