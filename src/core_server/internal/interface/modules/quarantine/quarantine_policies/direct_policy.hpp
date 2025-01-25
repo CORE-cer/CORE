@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <utility>
-#include <vector>
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
@@ -12,9 +11,6 @@
 namespace CORE::Internal::Interface::Module::Quarantine {
 
 class DirectPolicy : public BasePolicy {
-  // TODO: Optimize
-  std::vector<Types::EventWrapper> events;
-
  public:
   DirectPolicy(Catalog& catalog,
                std::atomic<Types::PortNumber>& next_available_inproc_port)
@@ -29,8 +25,12 @@ class DirectPolicy : public BasePolicy {
   }
 
  protected:
-  void try_add_tuples_to_send_queue() override { this->events.clear(); }
+  void try_add_tuples_to_send_queue() override {
+    // No need to try to add tuples to send queue as they are directly sent
+  }
 
-  void force_add_tuples_to_send_queue() override { try_add_tuples_to_send_queue(); }
+  void force_add_tuples_to_send_queue() override {
+    // No need to try to add tuples to send queue as they are directly sent
+  }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine
