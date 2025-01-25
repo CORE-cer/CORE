@@ -152,6 +152,12 @@ class HTTPServer {
              inactivate_query(req->getParameter("id"));
              res->writeStatus("200 OK")->end();
            })
+      .options("/inactivate-query/*",
+               [this](auto* res, auto* req) {
+                 set_cors_headers(res);
+                 res->writeStatus("200 OK")->end();
+               })
+
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
       .template ws<UserData>(
         "/*",
