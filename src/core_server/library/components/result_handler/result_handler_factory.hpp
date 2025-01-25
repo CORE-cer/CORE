@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Loop.h>
 #include <WebSocket.h>
 
 #include <atomic>
@@ -9,6 +10,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
+#include <stdexcept>
 #include <utility>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -53,18 +56,24 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
 };
 
 class WebSocketResultHandlerFactory : public ResultHandlerFactory {
- public:
   std::mutex shared_websocket_mutex = {};
   std::map<UniqueWebSocketQueryId,
            std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
     handlers;
   std::int64_t next_query_id = 0;
+  std::optional<uWS::Loop*> uws_loop;
 
+ public:
   WebSocketResultHandlerFactory() : ResultHandlerFactory() {}
+
+  void set_uws_loop(uWS::Loop* loop) { uws_loop = loop; }
 
   std::unique_ptr<ResultHandler>
   create_handler(Internal::QueryCatalog query_catalog) override {
-    // std::list<uWS::WebSocket<false, true, UserData>*> websocket_list = {};
+    if (!uws_loop.has_value()) {
+      throw std::runtime_error("uWS loop not set");
+    }
+
     int64_t query_id = next_query_id++;
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>
       websocket_list = std::make_shared<std::list<uWS::WebSocket<false, true, UserData>*>>();
@@ -73,6 +82,7 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
     return std::make_unique<WebSocketResultHandler>(query_catalog,
                                                     handlers[query_id],
                                                     shared_websocket_mutex,
+                                                    uws_loop.value(),
                                                     query_id);
   }
 

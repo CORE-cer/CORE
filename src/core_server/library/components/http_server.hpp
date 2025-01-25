@@ -1,6 +1,7 @@
 #pragma once
 
 #include <App.h>
+#include <Loop.h>
 #include <WebSocketProtocol.h>
 
 #include <chrono>
@@ -55,33 +56,13 @@ class HTTPServer {
 
  private:
   void start() {
-    std::thread http_server_thread([this] { start_http_server(); });
+    std::thread http_server_thread([this] {
+      result_handler_factory->set_uws_loop(uWS::Loop::get());
+      start_http_server();
+    });
     http_server_thread.detach();
     // std::thread spam_events_thread([this] { spam_events(); });
     // spam_events_thread.detach();
-  }
-
-  void spam_events() {
-    int i = 0;
-    while (true) {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-      std::lock_guard<std::mutex> lock(backend_mutex);
-      // clang-format off
-      auto event_to_send = std::make_shared<Types::Event>(
-        0,
-        std::vector<std::shared_ptr<Types::Value>>{
-          std::make_shared<Types::IntValue>(i),
-          std::make_shared<Types::IntValue>(i),
-          std::make_shared<Types::DoubleValue>(2.0),
-          std::make_shared<Types::IntValue>(2),
-          std::make_shared<Types::IntValue>(5),
-        }
-      );
-      // clang-format on
-
-      backend.send_event_to_queries(0, {std::move(event_to_send)});
-      i += 1;
-    }
   }
 
   void stop() {}
