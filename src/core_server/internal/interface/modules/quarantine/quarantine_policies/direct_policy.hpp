@@ -25,10 +25,12 @@ class DirectPolicy : public BasePolicy {
   }
 
  protected:
-  // No need to try to add tuples to send queue as they are directly sent
-  void try_add_tuples_to_send_queue() override {}
+  void try_add_tuples_to_send_queue() override {
+    // No need to try to add tuples to send queue as they are directly sent
+  }
 
-  // No need to try to add tuples to send queue as they are directly sent
-  void force_add_tuples_to_send_queue() override {}
+  void force_add_tuples_to_send_queue() override {
+    // No need to try to add tuples to send queue as they are directly sent
+  }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine
