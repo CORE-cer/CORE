@@ -20,7 +20,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <zmq.hpp>
 
 #include "shared/datatypes/aliases/query_info_id.hpp"
 

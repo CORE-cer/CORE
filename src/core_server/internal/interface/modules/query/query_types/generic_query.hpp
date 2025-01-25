@@ -15,7 +15,6 @@
 #include <thread>
 #include <tracy/Tracy.hpp>
 #include <utility>
-#include <zmq.hpp>
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query/within.hpp"
