@@ -55,7 +55,8 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
 class WebSocketResultHandlerFactory : public ResultHandlerFactory {
  public:
   std::mutex shared_websocket_mutex = {};
-  std::map<UniqueWebSocketQueryId, std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
+  std::map<UniqueWebSocketQueryId,
+           std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
     handlers;
   std::int64_t next_query_id = 0;
 
