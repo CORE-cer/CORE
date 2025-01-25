@@ -13,6 +13,9 @@ struct QueryInfo {
   Library::Components::ResultHandlerType result_handler_type;
   std::string query_string;
 
+  // Marks if query if currently active in system
+  bool active = true;
+
   QueryInfo() noexcept {}
 
   QueryInfo(std::string result_handler_identifier,
@@ -33,7 +36,8 @@ struct QueryInfo {
     using T = CORE::Types::QueryInfo;
     static constexpr auto value = glz::object(&T::result_handler_identifier,
                                               &T::result_handler_type,
-                                              &T::query_string);
+                                              &T::query_string,
+                                              &T::active);
   };
 };
 

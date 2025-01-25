@@ -55,7 +55,8 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
 class WebSocketResultHandlerFactory : public ResultHandlerFactory {
  public:
   std::mutex shared_websocket_mutex = {};
-  std::map<UniqueQueryId, std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
+  std::map<UniqueWebSocketQueryId,
+           std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>>>
     handlers;
   std::int64_t next_query_id = 0;
 
@@ -75,14 +76,14 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
                                                     query_id);
   }
 
-  void add_websocket_client_to_query(UniqueQueryId query_id,
+  void add_websocket_client_to_query(UniqueWebSocketQueryId query_id,
                                      uWS::WebSocket<false, true, UserData>* ws) {
     std::lock_guard lock(shared_websocket_mutex);
     assert(handlers.find(query_id) != handlers.end());
     handlers[query_id]->push_back(ws);
   }
 
-  void remove_websocket_client_from_query(UniqueQueryId query_id,
+  void remove_websocket_client_from_query(UniqueWebSocketQueryId query_id,
                                           uWS::WebSocket<false, true, UserData>* ws) {
     std::lock_guard lock(shared_websocket_mutex);
     assert(handlers.find(query_id) != handlers.end());
