@@ -33,7 +33,7 @@ class OfflineStreamsListener {
     LOG_L3_BACKTRACE("Received stream with id {} and {} events in OfflineStreamsListener",
                      stream.id,
                      stream.events.size());
-    std::lock_guard<std::mutex> lock(backend_mutex);
+    std::lock_guard lock(backend_mutex);
     for (const auto& event : stream.events) {
       LOG_L3_BACKTRACE("Stream with id {} and event {} in OfflineStreamsListener",
                        stream.id,

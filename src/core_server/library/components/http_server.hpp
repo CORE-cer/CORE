@@ -54,7 +54,7 @@ class HTTPServer {
 
  private:
   void start() {
-    std::thread http_server_thread([this] {
+    std::jthread http_server_thread([this] {
       result_handler_factory->set_uws_loop(uWS::Loop::get());
       start_http_server();
     });
