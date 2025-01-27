@@ -18,7 +18,6 @@
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
 #include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/logging/setup.hpp"
 
@@ -50,8 +49,8 @@ class OfflineServer {
   Components::OfflineStreamsListener stream_listener;
 
  public:
-  OfflineServer(ServerConfig::FixedPorts fixed_ports, Types::PortNumber next_open_port)
-      : server_config{fixed_ports, next_open_port},
+  OfflineServer(ServerConfig&& server_config)
+      : server_config(std::move(server_config)),
         router{backend,
                backend_mutex,
                server_config.get_fixed_ports().router,
@@ -63,6 +62,8 @@ class OfflineServer {
   void receive_stream(Types::Stream&& stream) {
     stream_listener.receive_stream(std::move(stream));
   }
+
+  ServerConfig& get_server_config() { return server_config; }
 };
 
 /**
@@ -95,8 +96,8 @@ class OnlineServer {
   Components::OnlineStreamsListener stream_listener;
 
  public:
-  OnlineServer(ServerConfig::FixedPorts fixed_ports, Types::PortNumber next_open_port)
-      : server_config{fixed_ports, next_open_port},
+  OnlineServer(ServerConfig&& server_config)
+      : server_config(std::move(server_config)),
         result_handler_factory(std::make_shared<ResultHandlerFactoryT>(server_config)),
         router{backend,
                backend_mutex,
@@ -113,6 +114,8 @@ class OnlineServer {
   void receive_stream(const Types::Stream& stream) {
     static_assert("in memory receive_stream not supported on online server");
   }
+
+  ServerConfig& get_server_config() { return server_config; }
 };
 
 }  // namespace CORE::Library

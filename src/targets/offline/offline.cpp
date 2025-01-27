@@ -30,10 +30,10 @@ int main(int argc, char** argv) {
 
   FrameMark;
   try {
-    Library::ServerConfig::FixedPorts fixed_ports{443, 5000, 5001};
+    Library::ServerConfig server_config = Library::ServerConfig::from_args(argc, argv);
     Types::PortNumber starting_port{5002};
-    Library::OfflineServer server{fixed_ports, starting_port};
-    Client client{"tcp://localhost", fixed_ports.router};
+    Library::OfflineServer server{std::move(server_config)};
+    Client client{"tcp://localhost", server.get_server_config().get_fixed_ports().router};
 
     std::string query_string = client.read_file(query_path);
     std::string declaration_string = client.read_file(declaration_path);
