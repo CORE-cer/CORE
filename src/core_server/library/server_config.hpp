@@ -37,7 +37,7 @@ class ServerConfig {
 
     while (std::find(used_ports.begin(), used_ports.end(), proposed_port)
            != used_ports.end()) {
-      Types::PortNumber proposed_port = next_open_port++;
+      proposed_port = next_open_port++;
     }
 
     used_ports.push_back(proposed_port);
