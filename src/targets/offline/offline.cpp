@@ -9,6 +9,8 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
+#include "core_server/library/server_config.hpp"
+#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 
@@ -28,8 +30,10 @@ int main(int argc, char** argv) {
 
   FrameMark;
   try {
-    Library::OfflineServer server{443, 5000};
-    Client client{"tcp://localhost", 5000};
+    Library::ServerConfig::FixedPorts fixed_ports{443, 5000, 5001};
+    Types::PortNumber starting_port{5002};
+    Library::OfflineServer server{fixed_ports, starting_port};
+    Client client{"tcp://localhost", fixed_ports.router};
 
     std::string query_string = client.read_file(query_path);
     std::string declaration_string = client.read_file(declaration_path);

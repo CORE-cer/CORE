@@ -12,6 +12,7 @@
 #include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
 #include "core_server/library/server.hpp"
+#include "core_server/library/server_config.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
@@ -99,8 +100,9 @@ int main(int argc, char** argv) {
     }
     int amount_of_messages = std::stoi(argv[1]);
 
-    Types::PortNumber starting_port{5000};
-    Library::OnlineServer server{443, starting_port};
+    Library::ServerConfig::FixedPorts fixed_ports{443, 5000, 5001};
+    Types::PortNumber starting_port{5002};
+    Library::OnlineServer server{fixed_ports, starting_port};
     Client client{"tcp://localhost", starting_port};
 
     do_declarations(client);

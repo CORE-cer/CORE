@@ -50,13 +50,13 @@ class OfflineServer {
   Components::OfflineStreamsListener stream_listener;
 
  public:
-  OfflineServer(Types::PortNumber webserver_port, Types::PortNumber next_open_port)
-      : server_config{webserver_port, next_open_port},
+  OfflineServer(ServerConfig::FixedPorts fixed_ports, Types::PortNumber next_open_port)
+      : server_config{fixed_ports, next_open_port},
         router{backend,
                backend_mutex,
-               server_config.get_next_open_port(),
+               server_config.get_fixed_ports().router,
                result_handler_factory},
-        stream_listener{backend, backend_mutex, server_config.get_next_open_port()} {
+        stream_listener{backend, backend_mutex} {
     Internal::Logging::enable_logging_rotating();
   }
 
@@ -95,15 +95,17 @@ class OnlineServer {
   Components::OnlineStreamsListener stream_listener;
 
  public:
-  OnlineServer(Types::PortNumber webserver_port, Types::PortNumber next_open_port)
-      : server_config{webserver_port, next_open_port},
+  OnlineServer(ServerConfig::FixedPorts fixed_ports, Types::PortNumber next_open_port)
+      : server_config{fixed_ports, next_open_port},
         result_handler_factory(std::make_shared<ResultHandlerFactoryT>(server_config)),
         router{backend,
                backend_mutex,
-               server_config.get_next_open_port(),
+               server_config.get_fixed_ports().router,
                result_handler_factory},
-        http_server{backend, backend_mutex, server_config.get_next_open_port()},
-        stream_listener{backend, backend_mutex, server_config.get_next_open_port()} {
+        http_server{backend, backend_mutex, server_config.get_fixed_ports().webserver},
+        stream_listener{backend,
+                        backend_mutex,
+                        server_config.get_fixed_ports().stream_listener} {
     Internal::Logging::enable_logging_rotating();
     LOG_INFO("Server started");
   }

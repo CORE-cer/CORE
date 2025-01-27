@@ -11,6 +11,7 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
+#include "core_server/library/server_config.hpp"
 #include "core_streamer/streamer.hpp"
 #include "polkura_data.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -96,9 +97,10 @@ void send_a_stream(PolkuraData::Data data) {
 
 int main(int argc, char** argv) {
   try {
-    Types::PortNumber starting_port{5000};
-    Library::OfflineServer server{443, starting_port};
-    Client client{"tcp://localhost", starting_port};
+    Library::ServerConfig::FixedPorts fixed_ports{443, 5000, 5001};
+    Types::PortNumber starting_port{5002};
+    Library::OfflineServer server{fixed_ports, starting_port};
+    Client client{"tcp://localhost", fixed_ports.router};
 
     do_declarations(client);
     create_queries(client);

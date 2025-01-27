@@ -6,7 +6,6 @@
 #include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "core_server/internal/interface/backend.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/logging/setup.hpp"
 
@@ -20,9 +19,7 @@ class OfflineStreamsListener {
   std::mutex& backend_mutex;
 
  public:
-  OfflineStreamsListener(Backend& backend,
-                         std::mutex& backend_mutex,
-                         Types::PortNumber port_number)
+  OfflineStreamsListener(Backend& backend, std::mutex& backend_mutex)
       : backend(backend), backend_mutex(backend_mutex) {}
 
   // Delete Copy constructor and assigment as that should not be done with the stream listener
