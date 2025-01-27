@@ -6,6 +6,7 @@
 #include <ostream>
 #include <thread>
 #include <tracy/Tracy.hpp>
+
 #include "core_server/library/server_config.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 
