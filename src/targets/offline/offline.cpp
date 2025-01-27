@@ -9,7 +9,6 @@
 
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 
@@ -29,8 +28,7 @@ int main(int argc, char** argv) {
 
   FrameMark;
   try {
-    Types::PortNumber starting_port{5000};
-    Library::OfflineServer server{starting_port};
+    Library::OfflineServer server{443, 5000};
     Client client{"tcp://localhost", 5000};
 
     std::string query_string = client.read_file(query_path);

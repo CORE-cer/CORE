@@ -1,10 +1,11 @@
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <mutex>
 #include <type_traits>
 #include <utility>
+
+#include "core_server/library/server_config.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -37,7 +38,7 @@ namespace CORE::Library {
 class OfflineServer {
   using ResultHandlerFactoryT = Components::OfflineResultHandlerFactory;
 
-  std::atomic<Types::PortNumber> next_available_port;
+  ServerConfig server_config;
 
   Internal::Interface::Backend<false> backend;
   std::mutex backend_mutex = {};
@@ -49,10 +50,13 @@ class OfflineServer {
   Components::OfflineStreamsListener stream_listener;
 
  public:
-  OfflineServer(Types::PortNumber starting_port)
-      : next_available_port(starting_port),
-        router{backend, backend_mutex, next_available_port++, result_handler_factory},
-        stream_listener{backend, backend_mutex, next_available_port++} {
+  OfflineServer(Types::PortNumber webserver_port, Types::PortNumber next_open_port)
+      : server_config{webserver_port, next_open_port},
+        router{backend,
+               backend_mutex,
+               server_config.get_next_open_port(),
+               result_handler_factory},
+        stream_listener{backend, backend_mutex, server_config.get_next_open_port()} {
     Internal::Logging::enable_logging_rotating();
   }
 
@@ -76,7 +80,7 @@ class OfflineServer {
 class OnlineServer {
   using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
 
-  std::atomic<Types::PortNumber> next_available_port;
+  ServerConfig server_config;
 
   using HandlerType = typename std::invoke_result_t<
     decltype(&ResultHandlerFactoryT::create_handler),
@@ -91,15 +95,17 @@ class OnlineServer {
   Components::OnlineStreamsListener stream_listener;
 
  public:
-  OnlineServer(Types::PortNumber starting_port)
-      : next_available_port(starting_port),
-        result_handler_factory(
-          std::make_shared<ResultHandlerFactoryT>(next_available_port)),
-        router{backend, backend_mutex, next_available_port++, result_handler_factory},
-        http_server{backend, backend_mutex, next_available_port++},
-        stream_listener{backend, backend_mutex, next_available_port++} {
+  OnlineServer(Types::PortNumber webserver_port, Types::PortNumber next_open_port)
+      : server_config{webserver_port, next_open_port},
+        result_handler_factory(std::make_shared<ResultHandlerFactoryT>(server_config)),
+        router{backend,
+               backend_mutex,
+               server_config.get_next_open_port(),
+               result_handler_factory},
+        http_server{backend, backend_mutex, server_config.get_next_open_port()},
+        stream_listener{backend, backend_mutex, server_config.get_next_open_port()} {
     Internal::Logging::enable_logging_rotating();
-    LOG_INFO("Server started in port {}", starting_port);
+    LOG_INFO("Server started");
   }
 
   void receive_stream(const Types::Stream& stream) {
