@@ -5,15 +5,13 @@
 #include <thread>
 
 #include "core_server/library/server.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 
 using namespace CORE;
 using namespace CORE::Internal;
 
 int main(int argc, char** argv) {
   try {
-    Types::PortNumber starting_port{5000};
-    Library::OnlineServer server{starting_port};
+    Library::OnlineServer server{443, 5000};
     while (true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     }

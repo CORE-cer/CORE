@@ -26,7 +26,7 @@ class ServerConfig {
   ServerConfig& operator=(ServerConfig&& other) = delete;
   ServerConfig(ServerConfig&& other) = delete;
 
-  [[nodiscard]] Types::PortNumber get_webserver_port() const {
+  [[nodiscard]] Types::PortNumber get_webserver_port() {
     std::lock_guard lock(server_config_mutex);
     return webserver_port;
   }

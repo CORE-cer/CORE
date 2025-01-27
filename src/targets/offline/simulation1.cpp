@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
     int amount_of_messages = std::stoi(argv[1]);
 
     Types::PortNumber starting_port{5000};
-    Library::OfflineServer server{starting_port};
-    Client client{"tcp://localhost", 5000};
+    Library::OfflineServer server{443, starting_port};
+    Client client{"tcp://localhost", starting_port};
 
     do_declarations(client);
     create_queries(client);

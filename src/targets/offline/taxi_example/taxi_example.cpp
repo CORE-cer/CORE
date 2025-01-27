@@ -130,8 +130,8 @@ void send_a_stream(Library::OfflineServer& server, TaxiData::Data data) {
 int main(int argc, char** argv) {
   try {
     Types::PortNumber starting_port{5000};
-    Library::OfflineServer server{starting_port};
-    Client client{"tcp://localhost", 5000};
+    Library::OfflineServer server{443, starting_port};
+    Client client{"tcp://localhost", starting_port};
 
     do_declarations(client);
     create_queries(client);

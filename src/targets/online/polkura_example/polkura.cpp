@@ -113,8 +113,8 @@ void send_a_stream(PolkuraData::Data data) {
 int main(int argc, char** argv) {
   try {
     Types::PortNumber starting_port{5000};
-    Library::OnlineServer server{starting_port};
-    Client client{"tcp://localhost", 5000};
+    Library::OnlineServer server{443, starting_port};
+    Client client{"tcp://localhost", starting_port};
 
     do_declarations(client);
     Types::PortNumber initial_port_number = 5002;

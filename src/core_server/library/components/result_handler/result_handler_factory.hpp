@@ -3,7 +3,6 @@
 #include <Loop.h>
 #include <WebSocket.h>
 
-#include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <list>
@@ -17,7 +16,7 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/user_data.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
+#include "core_server/library/server_config.hpp"
 
 namespace CORE::Library::Components {
 
@@ -43,15 +42,16 @@ class OfflineResultHandlerFactory : public ResultHandlerFactory {
 
 class OnlineResultHandlerFactory : public ResultHandlerFactory {
  public:
-  std::atomic<Types::PortNumber>& next_available_port;
+  ServerConfig& server_config;
 
  public:
-  OnlineResultHandlerFactory(std::atomic<Types::PortNumber>& next_available_port)
-      : ResultHandlerFactory(), next_available_port(next_available_port) {}
+  OnlineResultHandlerFactory(ServerConfig& server_config)
+      : ResultHandlerFactory(), server_config(server_config) {}
 
   std::unique_ptr<ResultHandler>
   create_handler(Internal::QueryCatalog query_catalog) override {
-    return std::make_unique<OnlineResultHandler>(query_catalog, next_available_port++);
+    return std::make_unique<OnlineResultHandler>(query_catalog,
+                                                 server_config.get_next_open_port());
   }
 };
 
