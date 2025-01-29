@@ -10,28 +10,15 @@
 #include "core_client/client.hpp"
 #include "core_server/library/server.hpp"
 #include "core_server/library/server_config.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 
 using namespace CORE;
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
-    std::cout << "There must be at least 4 arguments: The query path, data path, and any "
-                 "options."
-              << std::endl;
-    return 1;
-  }
-
-  std::string query_path = argv[1];
-  std::string declaration_path = argv[2];
-  std::string data_path = argv[3];
-
   FrameMark;
   try {
     Library::ServerConfig server_config = Library::ServerConfig::from_args(argc, argv);
-    Types::PortNumber starting_port{5002};
     Library::OfflineServer server{std::move(server_config)};
     Client client{"tcp://localhost", server.get_server_config().get_fixed_ports().router};
 
