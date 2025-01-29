@@ -170,7 +170,7 @@ s_event_name
  ;
 
 event_name
- : any_name
+ : any_name | keyword
  ;
 
 stream_name

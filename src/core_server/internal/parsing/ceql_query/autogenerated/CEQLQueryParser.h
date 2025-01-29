@@ -1064,6 +1064,7 @@ public:
     Event_nameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     Any_nameContext *any_name();
+    KeywordContext *keyword();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
