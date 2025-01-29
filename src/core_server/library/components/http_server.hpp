@@ -118,7 +118,6 @@ class HTTPServer {
                     res->end(response_add_query);
 
                   } catch (const std::exception& e) {
-                    std::cout << "Exception: " << e.what() << std::endl;
                     res->writeStatus("400 Bad Request");
                     set_cors_headers(res);
                     res->end(e.what());
