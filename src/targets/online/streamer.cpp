@@ -11,37 +11,30 @@
 #include <vector>
 
 #include "core_client/client.hpp"
-#include "shared/datatypes/aliases/port_number.hpp"
+#include "core_server/library/server_config.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 
 using namespace CORE;
 
 int main(int argc, char** argv) {
-  if (argc != 3) {
-    std::cout << "There must be 2 arguments: The declaration path and the data path."
-              << std::endl;
-    return 1;
-  }
-
-  std::string declaration_path = argv[1];
-  std::string data_path = argv[2];
-
   FrameMark;
   try {
-    Types::PortNumber starting_port{5000};
-    Client client{"tcp://localhost", starting_port};
+    Library::ServerConfig server_config = Library::ServerConfig::from_args(argc, argv);
+    Client client{"tcp://localhost", server_config.get_fixed_ports().router};
 
-    std::string declaration_string = client.read_file(declaration_path);
+    std::string declaration_string = client.read_file(
+      server_config.get_declaration_path());
 
     std::cout << "Declaring Stream" << std::endl;
     Types::StreamInfo stream_info = client.declare_stream(declaration_string);
 
-    std::vector<Types::Event> events = stream_info.get_events_from_csv(data_path);
+    std::vector<Types::Event> events = stream_info.get_events_from_csv(
+      server_config.get_csv_data_path());
 
     std::cout << "Read events " << events.size() << std::endl;
 
-    Streamer streamer("tcp://localhost", 5002);
+    Streamer streamer("tcp://localhost", server_config.get_fixed_ports().stream_listener);
 
     for (const Types::Event& event : events) {
       streamer.send_stream({stream_info.id, {std::make_shared<Types::Event>(event)}});

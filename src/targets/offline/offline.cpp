@@ -22,13 +22,16 @@ int main(int argc, char** argv) {
     Library::OfflineServer server{std::move(server_config)};
     Client client{"tcp://localhost", server.get_server_config().get_fixed_ports().router};
 
-    std::string query_string = client.read_file(query_path);
-    std::string declaration_string = client.read_file(declaration_path);
+    std::string query_string = client.read_file(
+      server.get_server_config().get_query_path());
+    std::string declaration_string = client.read_file(
+      server.get_server_config().get_declaration_path());
 
     Types::StreamInfo stream_info = client.declare_stream(declaration_string);
 
-    for (int i = 4; i < argc; i++) {
-      std::string option_declaration_string = client.read_file(argv[i]);
+    if (server.get_server_config().get_options_path().size() > 0) {
+      std::string option_declaration_string = client.read_file(
+        server.get_server_config().get_options_path());
       client.declare_option(option_declaration_string);
     }
 
@@ -36,7 +39,7 @@ int main(int argc, char** argv) {
 
     client.add_query(std::move(query_string));
     std::vector<Types::Event> events = std::move(
-      stream_info.get_events_from_csv(data_path));
+      stream_info.get_events_from_csv(server.get_server_config().get_csv_data_path()));
     std::vector<std::shared_ptr<Types::Event>> events_to_send;
     for (Types::Event event : events) {
       events_to_send.push_back(std::make_shared<Types::Event>(event));

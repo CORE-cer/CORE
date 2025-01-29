@@ -35,7 +35,7 @@ for query in $queries; do
     # if ! test -f "$base_dir/expected_results/$query_file"; then
     #     ./build/${BUILD_TYPE}/offline_experiment_stocks src/targets/experiments/stocks/queries/$query_file src/targets/experiments/stocks/stock_data.csv > src/targets/experiments/stocks/expected_results/$query_file
     # fi
-    $run_and_compare_script $executable "$query $base_dir/$declaration $base_dir/$csv $base_dir/$quarantine_declaration" "$base_dir/expected_results/$query_file"
+    $run_and_compare_script $executable "-q $query -d $base_dir/$declaration -c $base_dir/$csv -o $base_dir/$quarantine_declaration" "$base_dir/expected_results/$query_file"
     if [ $? -ne 0 ]; then
         rm -rf $base_dir/expected_results
         echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"

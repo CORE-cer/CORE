@@ -162,16 +162,6 @@ if (LOGGING MATCHES "trace_l3")
   target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L3)
 endif()
 # executable target
-# Commented out due to from multiple streams not currently implemented
-
-add_executable(offline_polkura_example src/targets/offline/polkura_example/polkura.cpp)
-add_executable(offline_stocks_example src/targets/offline/stocks_example/stocks_example.cpp)
-add_executable(offline_taxi_example src/targets/offline/taxi_example/taxi_example.cpp)
-
-target_link_libraries(offline_polkura_example PRIVATE core)
-target_link_libraries(offline_stocks_example PRIVATE core)
-target_link_libraries(offline_taxi_example PRIVATE core)
-
 # Main Offline
 add_executable(offline src/targets/offline/offline.cpp)
 target_link_libraries(offline PRIVATE core)

@@ -69,6 +69,7 @@ class ServerConfig {
 
   std::string query_path;
   std::string declaration_path;
+  std::string options_path;
   std::string csv_data_path;
 
  public:
@@ -76,6 +77,7 @@ class ServerConfig {
                Types::PortNumber next_open_port,
                std::string query_path,
                std::string declaration_path,
+               std::string options_path,
                std::string csv_data_path)
       : fixed_ports(fixed_ports),
         next_open_port(next_open_port),
@@ -86,6 +88,7 @@ class ServerConfig {
         },
         query_path(query_path),
         declaration_path(declaration_path),
+        options_path(options_path),
         csv_data_path(csv_data_path) {}
 
   ServerConfig& operator=(const ServerConfig& other) = delete;
@@ -112,6 +115,7 @@ class ServerConfig {
     starting_port_from_args(program);
     query_from_args(program);
     declaration_from_args(program);
+    options_from_args(program);
     csv_data_from_args(program);
 
     try {
@@ -127,12 +131,14 @@ class ServerConfig {
     Types::PortNumber starting_port = program.get<int>("startingport");
     std::string query_path = program.get<std::string>("query");
     std::string declaration_path = program.get<std::string>("declaration");
+    std::string options_path = program.get<std::string>("options");
     std::string csv_data_path = program.get<std::string>("csv");
 
     return ServerConfig{fixed_ports,
                         starting_port,
                         query_path,
                         declaration_path,
+                        options_path,
                         csv_data_path};
   }
 
@@ -155,6 +161,26 @@ class ServerConfig {
     return proposed_port;
   }
 
+  [[nodiscard]] std::string get_query_path() {
+    std::lock_guard lock(server_config_mutex);
+    return query_path;
+  }
+
+  [[nodiscard]] std::string get_declaration_path() {
+    std::lock_guard lock(server_config_mutex);
+    return declaration_path;
+  }
+
+  [[nodiscard]] std::string get_options_path() {
+    std::lock_guard lock(server_config_mutex);
+    return options_path;
+  }
+
+  [[nodiscard]] std::string get_csv_data_path() {
+    std::lock_guard lock(server_config_mutex);
+    return csv_data_path;
+  }
+
  private:
   static void starting_port_from_args(argparse::ArgumentParser& program) {
     program.add_argument("-sp", "--startingport")
@@ -171,6 +197,12 @@ class ServerConfig {
     program.add_argument("-d", "--declaration")
       .help("Path to the declaration file")
       .required();
+  }
+
+  static void options_from_args(argparse::ArgumentParser& program) {
+    program.add_argument("-o", "--options")
+      .help("Path to the options file")
+      .default_value("");
   }
 
   static void csv_data_from_args(argparse::ArgumentParser& program) {
