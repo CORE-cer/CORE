@@ -20,7 +20,7 @@ null
 token symbolic names:
 null
 WS
-K_DECLARE
+K_CREATE
 K_QUARANTINE
 K_FIXED_TIME
 K_DIRECT
