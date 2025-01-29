@@ -138,7 +138,7 @@ def create_ticker_attributes(json_response):
     return attributes
 
 
-ticker_stream_declaration = """DECLARE STREAM S { \n
+ticker_stream_declaration = """DECLARE STREAM Ticker { \n
                         EVENT BUY { sequence:int, product_id:string, price:double, open24h:double, volume_24h:float, low_24h:float, \
                         high_24h:float, volume_30d:float, best_bid:float, best_bid_size:float, best_ask:float, best_ask_size:float, \
                         time:date, trade_id:int, last_size:float } \n,
@@ -173,7 +173,7 @@ def create_matches_attributes(json_response):
     return attributes
 
 
-matches_stream_declaration = """DECLARE STREAM S2 { \n
+matches_stream_declaration = """DECLARE STREAM Matches { \n
                         EVENT BUY { trade_id:int, maker_order_id:string, taker_order_id:string, \
                         size:float, price:float, product_id:string, sequence:int, time:date } \n,
                         EVENT SELL { trade_id:int, maker_order_id:string, taker_order_id:string, \
