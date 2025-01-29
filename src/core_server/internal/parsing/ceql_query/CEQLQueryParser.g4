@@ -5,7 +5,7 @@ options {
 }
 
 parse
- : (core_query | error )* EOF
+ : core_query EOF
  ;
 
 error
