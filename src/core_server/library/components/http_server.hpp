@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -112,11 +113,19 @@ class HTTPServer {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
                   try {
-                    std::string response_add_query = add_query(data);
-                    res->writeStatus("200 OK");
-                    set_cors_headers(res);
-                    res->end(response_add_query);
-
+                    struct Data {
+                      std::string query;
+                      std::string query_name;
+                    };
+                    auto s = glz::read_json<Data>(data);
+                    if (s.has_value()) {
+                      std::string response_add_query = add_query(s->query, s->query_name);
+                      res->writeStatus("200 OK");
+                      set_cors_headers(res);
+                      res->end(response_add_query);
+                    } else {
+                      throw std::runtime_error("Error parsing json");
+                    }
                   } catch (const std::exception& e) {
                     res->writeStatus("400 Bad Request");
                     set_cors_headers(res);
@@ -256,6 +265,23 @@ class HTTPServer {
     }
     json += "]";
     return json;
+  }
+
+  std::string
+  add_query(std::string_view query_string_view, std::string_view query_name_view) {
+    std::string query_string(query_string_view);
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    Internal::CEQL::Query query = backend.parse_sent_query(query_string);
+
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
+      backend.get_catalog_reference());
+    std::string identifier = result_handler->get_identifier();
+
+    backend.declare_query(std::move(query),
+                          std::string(query_name_view),
+                          std::move(result_handler));
+
+    return identifier;
   }
 
   std::string add_query(std::string_view query_string_view) {

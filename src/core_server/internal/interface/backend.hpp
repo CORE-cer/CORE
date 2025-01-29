@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
 
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -92,7 +93,14 @@ class Backend {
   void
   declare_query(Internal::CEQL::Query&& parsed_query,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
-    quarantine_manager.declare_query(std::move(parsed_query), std::move(result_handler));
+    declare_query(std::move(parsed_query), "", std::move(result_handler));
+  }
+
+  void
+  declare_query(Internal::CEQL::Query&& parsed_query,
+                std::string query_name,
+                std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
+    quarantine_manager.declare_query(std::move(parsed_query), query_name, std::move(result_handler));
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
