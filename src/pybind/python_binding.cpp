@@ -127,7 +127,9 @@ PYBIND11_MODULE(_pycore, m) {
 
         py::class_<Types::StreamInfo>(m, "PyStreamInfo")
             .def(py::init<uint64_t, std::string, std::vector<Types::EventInfo>&&>())
-            .def_readonly("events_info", &Types::StreamInfo::events_info);
+            .def_readonly("events_info", &Types::StreamInfo::events_info)
+            .def_readonly("name", &Types::StreamInfo::name)
+            .def_readonly("id", &Types::StreamInfo::id);
             
         py::class_<Streamer>(m, "PyStreamer")
             .def(py::init<std::string, uint16_t>())
