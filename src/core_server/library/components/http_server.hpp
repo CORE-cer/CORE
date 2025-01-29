@@ -111,13 +111,17 @@ class HTTPServer {
             [this](auto* res, auto* req) {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
-                  set_cors_headers(res);
                   try {
                     std::string response_add_query = add_query(data);
-                    res->writeStatus("200 OK")->end(response_add_query);
+                    res->writeStatus("200 OK");
+                    set_cors_headers(res);
+                    res->end(response_add_query);
 
                   } catch (const std::exception& e) {
-                    res->writeStatus("400 Bad Request")->end(e.what());
+                    std::cout << "Exception: " << e.what() << std::endl;
+                    res->writeStatus("400 Bad Request");
+                    set_cors_headers(res);
+                    res->end(e.what());
                   }
                 }
               });
