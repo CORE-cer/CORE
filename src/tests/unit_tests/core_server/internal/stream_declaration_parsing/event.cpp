@@ -27,7 +27,7 @@ Types::EventInfoParsed parse_event(std::string stream) {
 
 TEST_CASE("Correct event visitor parsing") {
   std::string stream =
-    "DECLARE STREAM MySensor {\n"
+    "CREATE STREAM MySensor {\n"
     "EVENT Temp { ID:int, Value1:string, Value2:boolean }\n"
     "}";
   Types::EventInfoParsed event = parse_event(stream);

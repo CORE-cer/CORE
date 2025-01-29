@@ -29,7 +29,7 @@ Types::StreamInfoParsed parse_stream(std::string stream, Catalog& catalog) {
 
 TEST_CASE("Correct stream visitor parsing") {
   std::string declaration =
-    "DECLARE STREAM MySensor {\n"
+    "CREATE STREAM MySensor {\n"
     "EVENT Temp { ID:int, Value1:string, Value2:boolean },\n"
     "EVENT Hum { ID:int, Value3:double },\n"
     "EVENT Hum2 { ID:int }\n"

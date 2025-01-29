@@ -1,4 +1,4 @@
-DECLARE STREAM S {
+CREATE STREAM S {
 EVENT BUY { id:int, name:string, volume:int, price:double, stock_time:primary_time },
 EVENT SELL { id:int, name:string, volume:int, price:double, stock_time:primary_time }
 }

@@ -1,4 +1,4 @@
-DECLARE STREAM S {
+CREATE STREAM S {
 EVENT TRIP {
     id:int, medallion:string, hack_license:string, 
     pickup_datetime:int, dropoff_datetime:int, 

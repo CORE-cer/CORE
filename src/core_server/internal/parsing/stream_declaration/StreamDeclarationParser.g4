@@ -24,7 +24,7 @@ core_declaration
  ;
 
 stream_declaration
- : K_DECLARE K_STREAM stream_name '{' event_list '}'
+ : K_CREATE K_STREAM stream_name '{' event_list '}'
  ;
 
 event_list
@@ -77,7 +77,7 @@ keyword
  | K_AS
  | K_BY
  | K_CONSUME
- | K_DECLARE
+ | K_CREATE
  | K_DISTINCT
  | K_EVENT
  | K_EVENTS

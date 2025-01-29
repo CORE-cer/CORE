@@ -60,7 +60,7 @@ For more detailed installation and setup instructions, including manual installa
 If a user wants to connect a stream to CORE he has to declare the stream that is going to connect. In order to declare the stream, the client has to specify the name of the stream, the events that this stream has and the attributes (with its specific type) of each event. Here is an example:  
 
 ```bash
-"DECLARE STREAM StreamName {\n"
+"CREATE STREAM StreamName {\n"
 "EVENT EventName { AttributeName:AttributeType, Value1:string, Value2:boolean },\n"
 "EVENT Hum { ID:int, Value3:double },\n"
 "EVENT Hum2 { ID:int }\n"

@@ -12,7 +12,7 @@
 namespace CORE::Internal::CEQL::UnitTests {
 
 std::string create_stream() {
-  return "DECLARE STREAM MySensor {\n"
+  return "CREATE STREAM MySensor {\n"
          "EVENT Temp { ID:int, Value1:string, Value2:boolean },\n"
          "EVENT Hum { ID:int, Value3:double },\n"
          "EVENT Hum2 { ID:int }\n"
