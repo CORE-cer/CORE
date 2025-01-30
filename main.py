@@ -101,7 +101,6 @@ ticker = {
 
 ## Attributes creators with stream declarations
 def create_ticker_attributes(json_response):
-    sequence = _pycore.PyIntValue(json_response["sequence"])
     product_id = _pycore.PyStringValue(json_response["product_id"])
     price = _pycore.PyDoubleValue(float(json_response["price"]))
     open_24h = _pycore.PyDoubleValue(float(json_response["open_24h"]))
@@ -114,11 +113,7 @@ def create_ticker_attributes(json_response):
     best_ask = _pycore.PyDoubleValue(float(json_response["best_ask"]))
     best_ask_size = _pycore.PyDoubleValue(float(json_response["best_ask_size"]))
     time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
-    trade_id = _pycore.PyIntValue(json_response["trade_id"])
-    last_size = _pycore.PyDoubleValue(float(json_response["last_size"]))
-
     attributes = [
-        sequence,
         product_id,
         price,
         open_24h,
@@ -131,8 +126,6 @@ def create_ticker_attributes(json_response):
         best_ask,
         best_ask_size,
         time,
-        trade_id,
-        last_size,
     ]
 
     return attributes
