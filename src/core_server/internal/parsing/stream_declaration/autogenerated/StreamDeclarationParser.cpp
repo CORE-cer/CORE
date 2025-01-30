@@ -56,7 +56,7 @@ void streamdeclarationparserParserInitialize() {
       "','", "'..'", "'('", "')'", "'['", "']'", "'{'", "'}'", "':'"
     },
     std::vector<std::string>{
-      "", "K_ALL", "K_AND", "K_ANY", "K_AS", "K_BY", "K_CONSUME", "K_DECLARE", 
+      "", "K_ALL", "K_AND", "K_ANY", "K_AS", "K_BY", "K_CONSUME", "K_CREATE", 
       "K_DISTINCT", "K_EVENT", "K_EVENTS", "K_FILTER", "K_FROM", "K_HOURS", 
       "K_IN", "K_LAST", "K_LIKE", "K_MAX", "K_MINUTES", "K_NEXT", "K_NONE", 
       "K_NOT", "K_OR", "K_PARTITION", "K_SECONDS", "K_SELECT", "K_STREAM", 
@@ -200,13 +200,13 @@ StreamDeclarationParser::ParseContext* StreamDeclarationParser::parse() {
     setState(34);
     _errHandler->sync(this);
     _la = _input->LA(1);
-    while (_la == StreamDeclarationParser::K_DECLARE
+    while (_la == StreamDeclarationParser::K_CREATE
 
     || _la == StreamDeclarationParser::UNEXPECTED_CHAR) {
       setState(32);
       _errHandler->sync(this);
       switch (_input->LA(1)) {
-        case StreamDeclarationParser::K_DECLARE: {
+        case StreamDeclarationParser::K_CREATE: {
           setState(30);
           core_stmt();
           break;
@@ -394,8 +394,8 @@ StreamDeclarationParser::Stream_declarationContext::Stream_declarationContext(Pa
   : ParserRuleContext(parent, invokingState) {
 }
 
-tree::TerminalNode* StreamDeclarationParser::Stream_declarationContext::K_DECLARE() {
-  return getToken(StreamDeclarationParser::K_DECLARE, 0);
+tree::TerminalNode* StreamDeclarationParser::Stream_declarationContext::K_CREATE() {
+  return getToken(StreamDeclarationParser::K_CREATE, 0);
 }
 
 tree::TerminalNode* StreamDeclarationParser::Stream_declarationContext::K_STREAM() {
@@ -445,7 +445,7 @@ StreamDeclarationParser::Stream_declarationContext* StreamDeclarationParser::str
   try {
     enterOuterAlt(_localctx, 1);
     setState(46);
-    match(StreamDeclarationParser::K_DECLARE);
+    match(StreamDeclarationParser::K_CREATE);
     setState(47);
     match(StreamDeclarationParser::K_STREAM);
     setState(48);
@@ -1069,8 +1069,8 @@ tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_CONSUME() {
   return getToken(StreamDeclarationParser::K_CONSUME, 0);
 }
 
-tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_DECLARE() {
-  return getToken(StreamDeclarationParser::K_DECLARE, 0);
+tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_CREATE() {
+  return getToken(StreamDeclarationParser::K_CREATE, 0);
 }
 
 tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_DISTINCT() {

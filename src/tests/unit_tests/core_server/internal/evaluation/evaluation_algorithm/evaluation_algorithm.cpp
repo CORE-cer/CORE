@@ -1565,6 +1565,66 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 102));
 }
 
+TEST_CASE("Filter directly on event") {
+  Internal::Interface::Backend<> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL\n"
+    "FILTER SELL[name='MSFT']";
+
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
+
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference()));
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL MSFT 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+  REQUIRE(output.complex_events[0].start == 2);
+  REQUIRE(output.complex_events[0].end == 2);
+  REQUIRE(output.complex_events[0].events.size() == 1);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests
 
 // NOLINTEND(bugprone-chained-comparison)

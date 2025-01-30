@@ -99,7 +99,11 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
   }
 
   virtual std::any visitString(CEQLQueryParser::StringContext* ctx) override {
-    value = std::make_unique<CEQL::StringLiteral>(ctx->getText());
+    std::string string_with_quotes = ctx->getText();
+    std::string string_without_quotes = string_with_quotes.substr(1,
+                                                                  string_with_quotes.size()
+                                                                    - 2);
+    value = std::make_unique<CEQL::StringLiteral>(string_without_quotes);
     return {};
   }
 

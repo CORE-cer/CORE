@@ -6,16 +6,17 @@
 #include <ostream>
 #include <thread>
 #include <tracy/Tracy.hpp>
+#include <utility>
 
-#include "shared/datatypes/aliases/port_number.hpp"
+#include "core_server/library/server_config.hpp"
 
 using namespace CORE;
 
 int main(int argc, char** argv) {
   FrameMark;
   try {
-    Types::PortNumber starting_port{5000};
-    Library::OnlineServer server{starting_port};
+    Library::ServerConfig server_config = Library::ServerConfig::from_args(argc, argv);
+    Library::OnlineServer server{std::move(server_config)};
 
     while (true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10000));

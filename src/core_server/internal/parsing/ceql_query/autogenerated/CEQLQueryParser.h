@@ -139,11 +139,8 @@ public:
   public:
     ParseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    Core_queryContext *core_query();
     antlr4::tree::TerminalNode *EOF();
-    std::vector<Core_queryContext *> core_query();
-    Core_queryContext* core_query(size_t i);
-    std::vector<ErrorContext *> error();
-    ErrorContext* error(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

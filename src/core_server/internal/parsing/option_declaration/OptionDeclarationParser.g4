@@ -17,7 +17,7 @@ error
 
 
 option_declaration
- : K_DECLARE K_QUARANTINE LEFT_CURLY_BRACKET quarantine_policy* RIGHT_CURLY_BRACKET
+ : K_CREATE K_QUARANTINE LEFT_CURLY_BRACKET quarantine_policy* RIGHT_CURLY_BRACKET
  ;
 
 

@@ -2,7 +2,7 @@ lexer grammar OptionDeclarationLexer;
 
 WS : [ \t\r\n]+ -> skip ;
 
-K_DECLARE   : D E C L A R E;
+K_CREATE   : C R E A T E;
 K_QUARANTINE   : Q U A R A N T I N E;
 K_FIXED_TIME : F I X E D '_' T I M E;
 K_DIRECT : D I R E C T;

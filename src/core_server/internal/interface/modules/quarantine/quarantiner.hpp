@@ -46,6 +46,7 @@ class QuarantineManager {
 
   void
   declare_query(Internal::CEQL::Query&& parsed_query,
+                std::string query_name,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::set<Types::StreamTypeId> stream_type_ids = get_stream_ids_from_names(
       parsed_query.from.streams);
@@ -58,7 +59,8 @@ class QuarantineManager {
       Types::UniqueQueryId query_id = catalog.add_query(
         {result_handler->get_identifier(),
          result_handler->get_result_handler_type(),
-         parsed_query.to_string()});
+         parsed_query.to_string(),
+         query_name});
       query_policy.declare_query(std::move(parsed_query),
                                  std::move(query_id),
                                  std::move(result_handler));
@@ -66,7 +68,9 @@ class QuarantineManager {
       QuarantinePolicy quarantine_policy =
         {QuarantinePolicy::QuarantinePolicyType::DirectPolicy, parsed_query.from.streams};
       set_query_policy(std::move(quarantine_policy));
-      declare_query(std::move(parsed_query), std::move(result_handler));
+      declare_query(std::move(parsed_query),
+                    std::move(query_name),
+                    std::move(result_handler));
     }
   }
 

@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -24,6 +25,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Library::Components {
 
@@ -94,12 +96,13 @@ class HTTPServer {
       //          ->writeHeader("Content-Type", "application/json")
       //          ->end(stream_info_from_id(req->getParameter("id")));
       //      })
-      // .get("/all-streams-info",
-      //      [this](auto* res, auto* req) {
-      //        res->writeStatus("200 OK")
-      //          ->writeHeader("Content-Type", "application/json")
-      //          ->end(all_streams_info());
-      //      })
+      .get("/all-streams-info",
+           [this](auto* res, auto* req) {
+             set_cors_headers(res);
+             res->writeStatus("200 OK")
+               ->writeHeader("Content-Type", "application/json")
+               ->end(all_streams_info());
+           })
       .get("/all-queries-info",
            [this](auto* res, auto* req) {
              set_cors_headers(res);
@@ -111,13 +114,24 @@ class HTTPServer {
             [this](auto* res, auto* req) {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
-                  set_cors_headers(res);
                   try {
-                    std::string response_add_query = add_query(data);
-                    res->writeStatus("200 OK")->end(response_add_query);
-
+                    struct Data {
+                      std::string query;
+                      std::string query_name;
+                    };
+                    auto s = glz::read_json<Data>(data);
+                    if (s.has_value()) {
+                      std::string response_add_query = add_query(s->query, s->query_name);
+                      res->writeStatus("200 OK");
+                      set_cors_headers(res);
+                      res->end(response_add_query);
+                    } else {
+                      throw std::runtime_error("Error parsing json");
+                    }
                   } catch (const std::exception& e) {
-                    res->writeStatus("400 Bad Request")->end(e.what());
+                    res->writeStatus("400 Bad Request");
+                    set_cors_headers(res);
+                    res->end(e.what());
                   }
                 }
               });
@@ -229,16 +243,17 @@ class HTTPServer {
   //   return stream_info.to_json();
   // }
   //
-  // std::string all_streams_info() {
-  //   std::lock_guard<std::mutex> lock(backend_mutex);
-  //   std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
-  //   std::string json = "[";
-  //   for (const auto& info : infos) {
-  //     json += info.to_json() + ",";
-  //   }
-  //   json += "]";
-  //   return json;
-  // }
+  std::string all_streams_info() {
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
+    std::string json = "[";
+    for (const auto& info : infos) {
+      json += info.to_json() + ",";
+    }
+    json = json.substr(0, json.size() - 1);
+    json += "]";
+    return json;
+  }
 
   std::string all_queries_info() {
     std::lock_guard<std::mutex> lock(backend_mutex);
@@ -253,6 +268,23 @@ class HTTPServer {
     }
     json += "]";
     return json;
+  }
+
+  std::string
+  add_query(std::string_view query_string_view, std::string_view query_name_view) {
+    std::string query_string(query_string_view);
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    Internal::CEQL::Query query = backend.parse_sent_query(query_string);
+
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
+      backend.get_catalog_reference());
+    std::string identifier = result_handler->get_identifier();
+
+    backend.declare_query(std::move(query),
+                          std::string(query_name_view),
+                          std::move(result_handler));
+
+    return identifier;
   }
 
   std::string add_query(std::string_view query_string_view) {

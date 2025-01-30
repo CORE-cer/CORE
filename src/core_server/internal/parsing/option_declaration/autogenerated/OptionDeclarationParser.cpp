@@ -51,7 +51,7 @@ void optiondeclarationparserParserInitialize() {
       "", "", "", "", "", "", "", "", "", "'{'", "'}'", "','"
     },
     std::vector<std::string>{
-      "", "WS", "K_DECLARE", "K_QUARANTINE", "K_FIXED_TIME", "K_DIRECT", 
+      "", "WS", "K_CREATE", "K_QUARANTINE", "K_FIXED_TIME", "K_DIRECT", 
       "K_HOURS", "K_MINUTES", "K_SECONDS", "LEFT_CURLY_BRACKET", "RIGHT_CURLY_BRACKET", 
       "COMMA", "DOUBLE_LITERAL", "INTEGER_LITERAL", "NUMERICAL_EXPONENT", 
       "IDENTIFIER", "UNEXPECTED_CHAR"
@@ -190,13 +190,13 @@ OptionDeclarationParser::ParseContext* OptionDeclarationParser::parse() {
     setState(32);
     _errHandler->sync(this);
     _la = _input->LA(1);
-    while (_la == OptionDeclarationParser::K_DECLARE
+    while (_la == OptionDeclarationParser::K_CREATE
 
     || _la == OptionDeclarationParser::UNEXPECTED_CHAR) {
       setState(30);
       _errHandler->sync(this);
       switch (_input->LA(1)) {
-        case OptionDeclarationParser::K_DECLARE: {
+        case OptionDeclarationParser::K_CREATE: {
           setState(28);
           option_declaration();
           break;
@@ -286,8 +286,8 @@ OptionDeclarationParser::Option_declarationContext::Option_declarationContext(Pa
   : ParserRuleContext(parent, invokingState) {
 }
 
-tree::TerminalNode* OptionDeclarationParser::Option_declarationContext::K_DECLARE() {
-  return getToken(OptionDeclarationParser::K_DECLARE, 0);
+tree::TerminalNode* OptionDeclarationParser::Option_declarationContext::K_CREATE() {
+  return getToken(OptionDeclarationParser::K_CREATE, 0);
 }
 
 tree::TerminalNode* OptionDeclarationParser::Option_declarationContext::K_QUARANTINE() {
@@ -338,7 +338,7 @@ OptionDeclarationParser::Option_declarationContext* OptionDeclarationParser::opt
   try {
     enterOuterAlt(_localctx, 1);
     setState(40);
-    match(OptionDeclarationParser::K_DECLARE);
+    match(OptionDeclarationParser::K_CREATE);
     setState(41);
     match(OptionDeclarationParser::K_QUARANTINE);
     setState(42);

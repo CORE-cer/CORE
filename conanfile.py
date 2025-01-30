@@ -94,6 +94,7 @@ class CORE(ConanFile):
     UWEBSOCKETS_VERSION = "20.70.0"
     GLAZE_VERSION = "4.0.1"
     PYBIND_VERSION = "2.13.5"
+    ARGPARSE_VERSION = "3.1"
 
     def layout(self):
         cmake_layout(self)
@@ -123,6 +124,7 @@ class CORE(ConanFile):
         self.requires("uwebsockets/" + CORE.UWEBSOCKETS_VERSION)
         self.requires("glaze/" + CORE.GLAZE_VERSION)
         self.requires("pybind11/" +  CORE.PYBIND_VERSION)
+        self.requires("argparse/" +  CORE.ARGPARSE_VERSION)
 
     def generate(self):
         tc = CMakeToolchain(self, generator="Ninja")

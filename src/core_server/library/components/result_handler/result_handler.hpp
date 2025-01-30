@@ -139,15 +139,18 @@ class WebSocketResultHandler : public ResultHandler {
       return;
     }
 
-    std::string result;
+    std::string result_json = "[";
     for (const auto& complex_event : internal_enumerator.value()) {
-      result += complex_event.to_string<true>() + "\n";
+      result_json += complex_event.to_json();
+      result_json += ",";
     }
+    result_json = result_json.substr(0, result_json.size() - 1);
+    result_json += "]";
 
-    uws_loop->defer([this, result]() {
+    uws_loop->defer([this, result_json]() {
       std::lock_guard<std::mutex> lock(ws_clients_mutex);
       for (auto& ws_client : *ws_clients) {
-        ws_client->send(result, uWS::OpCode::TEXT);  // NOLINT
+        ws_client->send(result_json, uWS::OpCode::TEXT);  // NOLINT
       }
     });
     // Send the result to all connected clients

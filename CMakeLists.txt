@@ -25,6 +25,7 @@ find_package(readerwriterqueue REQUIRED)
 find_package(uwebsockets REQUIRED)
 find_package(glaze REQUIRED)
 find_package(pybind11 REQUIRED)
+find_package(argparse REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
@@ -110,7 +111,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets glaze::glaze argparse::argparse)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
@@ -161,36 +162,6 @@ if (LOGGING MATCHES "trace_l3")
   target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L3)
 endif()
 # executable target
-# Commented out due to from multiple streams not currently implemented
-
-# add_executable(online_simulation1 src/targets/online/simulation1.cpp)
-# add_executable(online_simulation2 src/targets/online/simulation2.cpp)
-add_executable(online_polkura_example src/targets/online/polkura_example/polkura.cpp)
-add_executable(online_stocks_example src/targets/online/stocks_example/stocks_example.cpp)
-add_executable(online_taxi_example src/targets/online/taxi_example/taxi_example.cpp)
-# add_executable(online_client src/targets/online/client.cpp)
-# add_executable(online_server src/targets/online/server.cpp)
-
-# target_link_libraries(online_simulation2 PRIVATE core)
-# target_link_libraries(online_simulation1 PRIVATE core)
-target_link_libraries(online_polkura_example PRIVATE core)
-target_link_libraries(online_stocks_example PRIVATE core)
-target_link_libraries(online_taxi_example PRIVATE core)
-# target_link_libraries(online_client PRIVATE core)
-# target_link_libraries(online_server PRIVATE core)
-
-# add_executable(offline_simulation1 src/targets/offline/simulation1.cpp)
-# add_executable(offline_simulation2 src/targets/offline/simulation2.cpp)
-add_executable(offline_polkura_example src/targets/offline/polkura_example/polkura.cpp)
-add_executable(offline_stocks_example src/targets/offline/stocks_example/stocks_example.cpp)
-add_executable(offline_taxi_example src/targets/offline/taxi_example/taxi_example.cpp)
-
-# target_link_libraries(offline_simulation1 PRIVATE core)
-# target_link_libraries(offline_simulation2 PRIVATE core)
-target_link_libraries(offline_polkura_example PRIVATE core)
-target_link_libraries(offline_stocks_example PRIVATE core)
-target_link_libraries(offline_taxi_example PRIVATE core)
-
 # Main Offline
 add_executable(offline src/targets/offline/offline.cpp)
 target_link_libraries(offline PRIVATE core)

@@ -12,7 +12,7 @@
 class  OptionDeclarationParser : public antlr4::Parser {
 public:
   enum {
-    WS = 1, K_DECLARE = 2, K_QUARANTINE = 3, K_FIXED_TIME = 4, K_DIRECT = 5, 
+    WS = 1, K_CREATE = 2, K_QUARANTINE = 3, K_FIXED_TIME = 4, K_DIRECT = 5, 
     K_HOURS = 6, K_MINUTES = 7, K_SECONDS = 8, LEFT_CURLY_BRACKET = 9, RIGHT_CURLY_BRACKET = 10, 
     COMMA = 11, DOUBLE_LITERAL = 12, INTEGER_LITERAL = 13, NUMERICAL_EXPONENT = 14, 
     IDENTIFIER = 15, UNEXPECTED_CHAR = 16
@@ -92,7 +92,7 @@ public:
   public:
     Option_declarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *K_DECLARE();
+    antlr4::tree::TerminalNode *K_CREATE();
     antlr4::tree::TerminalNode *K_QUARANTINE();
     antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
     antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
