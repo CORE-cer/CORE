@@ -21,16 +21,6 @@
 using namespace CORE;
 
 int main(int argc, char** argv) {
-  if (argc != 4) {
-    std::cout << "There must be 3 arguments: The query path and the data path."
-              << std::endl;
-    return 1;
-  }
-
-  std::string query_path = argv[1];
-  std::string declaration_path = argv[2];
-  std::string data_path = argv[3];
-
   FrameMark;
   try {
     Library::ServerConfig server_config = Library::ServerConfig::from_args(argc, argv);

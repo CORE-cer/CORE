@@ -53,7 +53,7 @@ class OfflineServer {
       : server_config(std::move(server_config)),
         router{backend,
                backend_mutex,
-               server_config.get_fixed_ports().router,
+               this->server_config.get_fixed_ports().router,
                result_handler_factory},
         stream_listener{backend, backend_mutex} {
     Internal::Logging::enable_logging_rotating();
@@ -101,12 +101,14 @@ class OnlineServer {
         result_handler_factory(std::make_shared<ResultHandlerFactoryT>(server_config)),
         router{backend,
                backend_mutex,
-               server_config.get_fixed_ports().router,
+               this->server_config.get_fixed_ports().router,
                result_handler_factory},
-        http_server{backend, backend_mutex, server_config.get_fixed_ports().webserver},
+        http_server{backend,
+                    backend_mutex,
+                    this->server_config.get_fixed_ports().webserver},
         stream_listener{backend,
                         backend_mutex,
-                        server_config.get_fixed_ports().stream_listener} {
+                        this->server_config.get_fixed_ports().stream_listener} {
     Internal::Logging::enable_logging_rotating();
     LOG_INFO("Server started");
   }
