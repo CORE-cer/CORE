@@ -138,13 +138,13 @@ def create_ticker_attributes(json_response):
     return attributes
 
 
-ticker_stream_declaration = """CREATE STREAM Ticker { \n
-                        EVENT BUY { sequence:int, product_id:string, price:double, open24h:double, volume_24h:float, low_24h:float, \
-                        high_24h:float, volume_30d:float, best_bid:float, best_bid_size:float, best_ask:float, best_ask_size:float, \
-                        time:date, trade_id:int, last_size:float } \n,
-                        EVENT SELL { sequence:int, product_id:string, price:double, open24h:double, volume_24h:float, low_24h:float, \
-                        high_24h:float, volume_30d:float, best_bid:float, best_bid_size:float, best_ask:float, best_ask_size:float, \
-                        time:date, trade_id:int, last_size:float } \n
+ticker_stream_declaration = """CREATE STREAM TICKER { \n
+                        EVENT Buy { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
+                        high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
+                        time:primary_time } \n,
+                        EVENT SELL { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
+                        high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
+                        time:primary_time } \n
                         }
                         """
 
