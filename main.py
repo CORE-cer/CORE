@@ -112,6 +112,7 @@ def create_ticker_attributes(json_response):
     best_bid_size = _pycore.PyDoubleValue(float(json_response["best_bid_size"]))
     best_ask = _pycore.PyDoubleValue(float(json_response["best_ask"]))
     best_ask_size = _pycore.PyDoubleValue(float(json_response["best_ask_size"]))
+    last_size = _pycore.PyDoubleValue(float(json_response["last_size"]))
     time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
     attributes = [
         product_id,
@@ -125,6 +126,7 @@ def create_ticker_attributes(json_response):
         best_bid_size,
         best_ask,
         best_ask_size,
+        last_size,
         time,
     ]
 
@@ -134,10 +136,10 @@ def create_ticker_attributes(json_response):
 ticker_stream_declaration = """CREATE STREAM TICKER { \n
                         EVENT Buy { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
                         high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
-                        time:primary_time } \n,
+                        last_size:double, time:primary_time } \n,
                         EVENT Sell { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
                         high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
-                        time:primary_time } \n
+                        last_size:double, time:primary_time } \n
                         }
                         """
 
@@ -338,4 +340,3 @@ if __name__ == "__main__":
     except:
         print("Exited unexpectedly..")
         print(f"Total time: {time.time() - start_time_total}")
-
