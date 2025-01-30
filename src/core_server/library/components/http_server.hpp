@@ -98,6 +98,7 @@ class HTTPServer {
       //      })
       .get("/all-streams-info",
            [this](auto* res, auto* req) {
+             set_cors_headers(res);
              res->writeStatus("200 OK")
                ->writeHeader("Content-Type", "application/json")
                ->end(all_streams_info());
@@ -249,6 +250,7 @@ class HTTPServer {
     for (const auto& info : infos) {
       json += info.to_json() + ",";
     }
+    json = json.substr(0, json.size() - 1);
     json += "]";
     return json;
   }
