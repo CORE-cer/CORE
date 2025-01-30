@@ -100,7 +100,9 @@ class Backend {
   declare_query(Internal::CEQL::Query&& parsed_query,
                 std::string query_name,
                 std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
-    quarantine_manager.declare_query(std::move(parsed_query), query_name, std::move(result_handler));
+    quarantine_manager.declare_query(std::move(parsed_query),
+                                     query_name,
+                                     std::move(result_handler));
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
