@@ -142,7 +142,7 @@ ticker_stream_declaration = """CREATE STREAM TICKER { \n
                         EVENT Buy { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
                         high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
                         time:primary_time } \n,
-                        EVENT SELL { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
+                        EVENT Sell { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
                         high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
                         time:primary_time } \n
                         }
@@ -174,10 +174,10 @@ def create_matches_attributes(json_response):
 
 
 matches_stream_declaration = """CREATE STREAM Matches { \n
-                        EVENT BUY { trade_id:int, maker_order_id:string, taker_order_id:string, \
-                        size:float, price:float, product_id:string, sequence:int, time:date } \n,
-                        EVENT SELL { trade_id:int, maker_order_id:string, taker_order_id:string, \
-                        size:float, price:float, product_id:string, sequence:int, time:date } \n
+                        EVENT Buy { trade_id:int, maker_order_id:string, taker_order_id:string, \
+                        size:double, price:double, product_id:string, sequence:int, time:primary_time } \n,
+                        EVENT Sell { trade_id:int, maker_order_id:string, taker_order_id:string, \
+                        size:double, price:double, product_id:string, sequence:int, time:primary_time } \n
                         }
                         """
 
