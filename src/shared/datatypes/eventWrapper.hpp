@@ -6,6 +6,8 @@
 #include <chrono>
 #include <cstddef>
 #include <ctime>
+#include <glaze/core/common.hpp>
+#include <glaze/core/meta.hpp>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -32,7 +34,6 @@ concept DerivedFromValue = std::is_base_of_v<Types::Value, T>;
 
 class EventWrapper {
   friend class Internal::Interface::Module::EventManager;
-  std::shared_ptr<const Event> event;
   // Primary time is nanoseconds. Either specified by event or the time the event was received
   Types::IntValue primary_time;
   std::chrono::time_point<ClockType> received_time;
@@ -42,6 +43,7 @@ class EventWrapper {
 #endif
 
  public:
+  std::shared_ptr<const Event> event;
   EventWrapper() = default;
 
   EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
@@ -117,6 +119,12 @@ class EventWrapper {
     return event;
   }
 
+  const Event& get_event() const {
+    LOG_TRACE_L3("Getting event from EventWrapper with id {}", id);
+    assert(!moved);
+    return *event;
+  }
+
  private:
   void set_times() {
     LOG_TRACE_L3("Setting times for EventWrapper with id {}", id);
@@ -135,3 +143,10 @@ class EventWrapper {
 };
 
 }  // namespace CORE::Types
+
+//
+template <>
+struct glz::meta<CORE::Types::EventWrapper> {
+  using T = CORE::Types::EventWrapper;
+  static constexpr auto value = object("event", [](const T& t) { return t.get_event(); });
+};

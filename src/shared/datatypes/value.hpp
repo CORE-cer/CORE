@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <ctime>
+#include <glaze/core/common.hpp>
+#include <glaze/core/meta.hpp>
 #include <limits>
 #include <memory>
 #include <string>
@@ -133,3 +135,11 @@ struct DateValue final : public Value {
   }
 };
 }  // namespace CORE::Types
+
+template <>
+struct glz::meta<CORE::Types::Value> {
+  using T = CORE::Types::Value;
+  static constexpr auto value = object("value", [](CORE::Types::Value& self) -> auto {
+    self.to_string();
+  });
+};

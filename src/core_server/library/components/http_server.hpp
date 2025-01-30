@@ -25,6 +25,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
+#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Library::Components {
 
@@ -95,12 +96,12 @@ class HTTPServer {
       //          ->writeHeader("Content-Type", "application/json")
       //          ->end(stream_info_from_id(req->getParameter("id")));
       //      })
-      // .get("/all-streams-info",
-      //      [this](auto* res, auto* req) {
-      //        res->writeStatus("200 OK")
-      //          ->writeHeader("Content-Type", "application/json")
-      //          ->end(all_streams_info());
-      //      })
+      .get("/all-streams-info",
+           [this](auto* res, auto* req) {
+             res->writeStatus("200 OK")
+               ->writeHeader("Content-Type", "application/json")
+               ->end(all_streams_info());
+           })
       .get("/all-queries-info",
            [this](auto* res, auto* req) {
              set_cors_headers(res);
@@ -241,16 +242,16 @@ class HTTPServer {
   //   return stream_info.to_json();
   // }
   //
-  // std::string all_streams_info() {
-  //   std::lock_guard<std::mutex> lock(backend_mutex);
-  //   std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
-  //   std::string json = "[";
-  //   for (const auto& info : infos) {
-  //     json += info.to_json() + ",";
-  //   }
-  //   json += "]";
-  //   return json;
-  // }
+  std::string all_streams_info() {
+    std::lock_guard<std::mutex> lock(backend_mutex);
+    std::vector<Types::StreamInfo> infos = backend.get_all_streams_info();
+    std::string json = "[";
+    for (const auto& info : infos) {
+      json += info.to_json() + ",";
+    }
+    json += "]";
+    return json;
+  }
 
   std::string all_queries_info() {
     std::lock_guard<std::mutex> lock(backend_mutex);

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <glaze/core/common.hpp>
+#include <glaze/json/write.hpp>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
@@ -34,5 +36,12 @@ class ComplexEvent {
     }
     return out + ")";
   }
+
+  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+
+  struct glaze {
+    using T = CORE::Internal::tECS::ComplexEvent;
+    static constexpr auto value = glz::object(&T::start, &T::end, &T::eventss);
+  };
 };
 }  // namespace CORE::Internal::tECS
