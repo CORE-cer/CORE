@@ -43,6 +43,7 @@ TEST_CASE("Evaluation on the example stream of the papers unordered") {
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -238,6 +239,7 @@ TEST_CASE("Evaluation on the example stream of the papers unordered expected dro
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
