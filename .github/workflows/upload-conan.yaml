@@ -41,6 +41,7 @@ jobs:
       - name: Set up GCC
         run: |
           sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
 
       - name: Check versions
         run: |
