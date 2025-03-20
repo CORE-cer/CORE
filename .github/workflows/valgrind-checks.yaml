@@ -48,6 +48,9 @@ jobs:
           clang-format --version
           gcc -v
 
+      - name: Run valgrind
+        run: sudo apt install -y valgrind
+
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
 
