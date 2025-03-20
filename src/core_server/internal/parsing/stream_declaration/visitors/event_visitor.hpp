@@ -3,6 +3,7 @@
 #include <any>
 #include <cstddef>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -53,7 +54,11 @@ class EventVisitor : public StreamDeclarationParserBaseVisitor {
     StreamDeclarationParser::Attribute_declarationContext* ctx) override {
     std::string attribute_name = ctx->attribute_name()->getText();
     std::string datatype_string = ctx->datatype()->getText();
-    Types::ValueTypes value_type = types_map[datatype_string];
+    auto value_type_it = types_map.find(datatype_string);
+    if (value_type_it == types_map.end()) {
+      throw std::runtime_error("Invalid datatype " + datatype_string);
+    }
+    Types::ValueTypes value_type = value_type_it->second;
     Types::AttributeInfo attribute(attribute_name, value_type);
     check_if_attribute_already_exists(attributes_info, attribute);
     attributes_info.push_back(attribute);

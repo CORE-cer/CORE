@@ -44,7 +44,8 @@ TEST_CASE("Evaluation on two streams using for ignores second") {
   std::string string_query =
     "SELECT * FROM S1 \n"
     "WHERE BUY \n"
-    "FILTER S1>BUY[name='MSFT']";
+    "FILTER S1>BUY[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 

@@ -27,6 +27,7 @@ TEST_CASE("Evaluation on the example stream of the papers") {
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -296,7 +297,8 @@ TEST_CASE("Evaluation of a query with contiguous events") {
     "WHERE SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -437,7 +439,8 @@ TEST_CASE("Evaluation of long query") {
     "SELECT * FROM Stock\n"
     "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL "
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
-    "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
+    "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -647,7 +650,8 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
-    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -784,7 +788,8 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
     "WHERE (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
     "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
-    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1015,7 +1020,8 @@ TEST_CASE(
     "WHERE (SELL):+ as msft; (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1250,7 +1256,8 @@ TEST_CASE(
     "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1344,7 +1351,8 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+: BUY: SELL";
+    "WHERE (SELL)+: BUY: SELL\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1439,7 +1447,8 @@ TEST_CASE(
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL OR BUY)+ as msft\n"
-    "FILTER msft[name='MSFT']";
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1506,7 +1515,8 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL)+ as msft\n"
-    "FILTER msft[name='MSFT']";
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -1573,7 +1583,8 @@ TEST_CASE("Filter directly on event") {
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL\n"
-    "FILTER SELL[name='MSFT']";
+    "FILTER SELL[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 

@@ -101,7 +101,6 @@ ticker = {
 
 ## Attributes creators with stream declarations
 def create_ticker_attributes(json_response):
-    sequence = _pycore.PyIntValue(json_response["sequence"])
     product_id = _pycore.PyStringValue(json_response["product_id"])
     price = _pycore.PyDoubleValue(float(json_response["price"]))
     open_24h = _pycore.PyDoubleValue(float(json_response["open_24h"]))
@@ -113,12 +112,9 @@ def create_ticker_attributes(json_response):
     best_bid_size = _pycore.PyDoubleValue(float(json_response["best_bid_size"]))
     best_ask = _pycore.PyDoubleValue(float(json_response["best_ask"]))
     best_ask_size = _pycore.PyDoubleValue(float(json_response["best_ask_size"]))
-    time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
-    trade_id = _pycore.PyIntValue(json_response["trade_id"])
     last_size = _pycore.PyDoubleValue(float(json_response["last_size"]))
-
+    time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
     attributes = [
-        sequence,
         product_id,
         price,
         open_24h,
@@ -130,21 +126,20 @@ def create_ticker_attributes(json_response):
         best_bid_size,
         best_ask,
         best_ask_size,
-        time,
-        trade_id,
         last_size,
+        time,
     ]
 
     return attributes
 
 
-ticker_stream_declaration = """CREATE STREAM Ticker { \n
-                        EVENT BUY { sequence:int, product_id:string, price:double, open24h:double, volume_24h:float, low_24h:float, \
-                        high_24h:float, volume_30d:float, best_bid:float, best_bid_size:float, best_ask:float, best_ask_size:float, \
-                        time:date, trade_id:int, last_size:float } \n,
-                        EVENT SELL { sequence:int, product_id:string, price:double, open24h:double, volume_24h:float, low_24h:float, \
-                        high_24h:float, volume_30d:float, best_bid:float, best_bid_size:float, best_ask:float, best_ask_size:float, \
-                        time:date, trade_id:int, last_size:float } \n
+ticker_stream_declaration = """CREATE STREAM TICKER { \n
+                        EVENT Buy { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
+                        high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
+                        last_size:double, time:primary_time } \n,
+                        EVENT Sell { product_id:string, price:double, open24h:double, volume_24h:double, low_24h:double, \
+                        high_24h:double, volume_30d:double, best_bid:double, best_bid_size:double, best_ask:double, best_ask_size:double, \
+                        last_size:double, time:primary_time } \n
                         }
                         """
 
@@ -174,10 +169,10 @@ def create_matches_attributes(json_response):
 
 
 matches_stream_declaration = """CREATE STREAM Matches { \n
-                        EVENT BUY { trade_id:int, maker_order_id:string, taker_order_id:string, \
-                        size:float, price:float, product_id:string, sequence:int, time:date } \n,
-                        EVENT SELL { trade_id:int, maker_order_id:string, taker_order_id:string, \
-                        size:float, price:float, product_id:string, sequence:int, time:date } \n
+                        EVENT Buy { trade_id:int, maker_order_id:string, taker_order_id:string, \
+                        size:double, price:double, product_id:string, sequence:int, time:primary_time } \n,
+                        EVENT Sell { trade_id:int, maker_order_id:string, taker_order_id:string, \
+                        size:double, price:double, product_id:string, sequence:int, time:primary_time } \n
                         }
                         """
 
@@ -345,4 +340,3 @@ if __name__ == "__main__":
     except:
         print("Exited unexpectedly..")
         print(f"Total time: {time.time() - start_time_total}")
-

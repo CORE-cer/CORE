@@ -245,7 +245,8 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT S1>BUY FROM S1, S2\n"
-    "WHERE (S1>BUY OR S2>BUY) \n";
+    "WHERE (S1>BUY OR S2>BUY)"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
@@ -325,7 +326,8 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT BUY FROM S1, S2\n"
-    "WHERE (S1>BUY OR S2>BUY) \n";
+    "WHERE (S1>BUY OR S2>BUY) \n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 

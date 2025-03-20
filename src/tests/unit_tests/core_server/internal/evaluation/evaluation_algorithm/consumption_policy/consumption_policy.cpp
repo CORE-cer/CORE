@@ -27,6 +27,7 @@ TEST_CASE("Evaluation on the example stream of the papers with consume by any") 
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY ANY";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -146,7 +147,8 @@ TEST_CASE(
     "WHERE (SELL):+ as msft; (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']"
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY ANY";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -315,7 +317,8 @@ TEST_CASE(
     "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']"
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY ANY";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -424,6 +427,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "PARTITION BY [part]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY ANY";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -645,6 +649,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "PARTITION BY [part]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY PARTITION";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);

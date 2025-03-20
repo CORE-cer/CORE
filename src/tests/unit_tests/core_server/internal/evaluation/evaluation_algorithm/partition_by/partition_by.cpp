@@ -38,6 +38,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "PARTITION BY [part]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
@@ -193,6 +194,7 @@ TEST_CASE(
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
     "PARTITION BY [part]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
