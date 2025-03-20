@@ -37,6 +37,16 @@ jobs:
           wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
           sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
 
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+
+      - name: Check versions
+        run: |
+          clang --version
+          clang-format --version
+          gcc -v
+
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
 
@@ -87,6 +97,16 @@ jobs:
           sudo apt update
           wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
           sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+
+      - name: Check versions
+        run: |
+          clang --version
+          clang-format --version
+          gcc -v
 
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
@@ -142,6 +162,16 @@ jobs:
           wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
           sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
 
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+
+      - name: Check versions
+        run: |
+          clang --version
+          clang-format --version
+          gcc -v
+
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
 
@@ -191,6 +221,27 @@ jobs:
 
       - name: Check out repository code
         uses: actions/checkout@v3
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18.1.8"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+
+      - name: Check versions
+        run: |
+          clang --version
+          clang-format --version
+          gcc -v
 
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
