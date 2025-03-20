@@ -60,6 +60,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18.1.8"
+
       - name: Get Conan
         uses: turtlebrowser/get-conan@v1.2
 
