@@ -26,8 +26,8 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: "Setup env"
-        uses: JRMurr/direnv-nix-action@v4.1.0
+      - name: Get Conan
+        uses: turtlebrowser/get-conan@v1.2
 
       - name: "Setup conan"
         run: conan profile detect
