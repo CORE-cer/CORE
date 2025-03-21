@@ -38,6 +38,7 @@ class HTTPServer {
   Types::PortNumber port_number;
   std::unique_ptr<WebSocketResultHandlerFactory>
     result_handler_factory = std::make_unique<WebSocketResultHandlerFactory>();
+  std::thread http_server_thread;
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
@@ -55,7 +56,7 @@ class HTTPServer {
 
  private:
   void start() {
-    std::jthread http_server_thread([this] {
+    http_server_thread = std::thread([this] {
       result_handler_factory->set_uws_loop(uWS::Loop::get());
       start_http_server();
     });
@@ -64,7 +65,7 @@ class HTTPServer {
     // spam_events_thread.detach();
   }
 
-  void stop() {}
+  void stop() { http_server_thread.join(); }
 
   void start_http_server() {
     uWS::App()
