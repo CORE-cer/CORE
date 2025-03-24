@@ -1,10 +1,7 @@
 [settings]
-arch=x86_64
+arch=armv8
 compiler=clang
 compiler.cppstd=gnu23
 compiler.libcxx=libc++
 compiler.version=19
-os=Linux
-[buildenv]
-C=clang
-CXX=clang++
+os=Macos

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
+#include <ctime>
 #include <cwchar>
 #include <set>
 #include <string>
@@ -36,6 +38,12 @@ struct ToCoreType<bool> {
 template <>
 struct ToCoreType<std::string_view> {
   using type = Types::StringValue;
+};
+
+template <typename T>
+  requires(!std::same_as<T, int64_t>) && std::same_as<T, std::time_t>
+struct ToCoreType<T> {
+  using type = Types::DateValue;
 };
 
 template <ComparisonType Comp, typename LeftValueType, typename RightValueType>
