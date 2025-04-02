@@ -5,7 +5,7 @@ options {
 }
 
 parse
- : core_query EOF
+ : (core_query | error )* EOF
  ;
 
 error
@@ -48,6 +48,7 @@ from_clause
 cel_formula
  : LEFT_PARENTHESIS cel_formula RIGHT_PARENTHESIS     # par_cel_formula
  | s_event_name                                       # event_type_cel_formula
+ | (K_NOT | REGEX_EXCLAMAITON) LEFT_PARENTHESIS atomic_cel_formula RIGHT_PARENTHESIS   # not_event_type_atomic_cel_formula
  | cel_formula K_AS event_name                        # as_cel_formula
  | cel_formula PLUS                                   # non_contiguous_iteration_cel_formula
  | cel_formula COLON_PLUS                             # contiguous_iteration_cel_formula
@@ -171,6 +172,11 @@ s_event_name
 
 event_name
  : any_name
+ ;
+
+atomic_cel_formula
+ : s_event_name                                   # atomic_cel_formula_r
+ | atomic_cel_formula K_FILTER filter             # atomic_cel_formula_filter
  ;
 
 stream_name

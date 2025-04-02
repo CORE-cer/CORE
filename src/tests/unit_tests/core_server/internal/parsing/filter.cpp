@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/and_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/atomic_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/or_filter.hpp"
@@ -49,6 +50,15 @@ std::string create_query(std::string filter_clause) {
   // clang-format on
 }
 
+std::string create_not_query(std::string not_clause) {
+  // clang-format off
+  return "SELECT ALL * \n"
+         "FROM S3\n"
+         "WHERE NOT ( " + not_clause + ") \n"
+         "WITHIN 4 EVENTS\n";
+  // clang-format on
+}
+
 Where parse_where(std::string query) {
   Catalog catalog;
   Types::AttributeInfo temp("temp", Types::ValueTypes::INT64);
@@ -56,6 +66,7 @@ Where parse_where(std::string query) {
     {"S", {{"H", {}}, {"T", {temp}}}});
   stream_info = catalog.add_stream_type({"S1", {{"H", {}}, {"t2", {temp}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
+  stream_info = catalog.add_stream_type({"S3", {{"H", {}}, {"T", {temp}}}});
 
   antlr4::ANTLRInputStream input(query);
   CEQLQueryLexer lexer(&input);
@@ -73,6 +84,10 @@ Where parse_where(std::string query) {
   Parsing::WhereVisitor where_visitor(catalog, streams_events);
   where_visitor.visit(tree);
   return where_visitor.get_parsed_where();
+}
+
+std::unique_ptr<Formula> parse_formula(std::string query) {
+  return std::move(parse_where(query).formula);
 }
 
 template <typename T>
@@ -172,4 +187,49 @@ TEST_CASE("or filter works", "[Predicate, Inequality]") {
   REQUIRE(filter->equals(expected_filter.get()));
 }
 
+TEST_CASE("not event filter", "[Where, Not, FILTER]") {
+  auto query = create_not_query("T FILTER T[temp>2]");
+  // cout << formula->to_string();
+  auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
+    std::make_unique<CEQL::FilterFormula>(
+      make_unique<EventTypeFormula>("T"),
+        make_unique<AtomicFilter>("T",
+        make_unique<InequalityPredicate>(
+          make_unique<Attribute>("temp"),
+          InequalityPredicate::LogicalOperation::GREATER,
+          make_unique<IntegerLiteral>(2)
+        )
+      )
+    )
+  );
+  // cout << expected_formula->to_string();
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+
+  // auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
+  //   std::make_unique<CEQL::AtomicFilter>(
+  //     "T",
+  //     make_unique<InequalityPredicate>(
+  //       make_unique<Attribute>("Int"),
+  //       InequalityPredicate::LogicalOperation::LESS_EQUALS,
+  //       make_unique<IntegerLiteral>(2)
+  //     )
+  //   )
+  // );
+
+// TEST_CASE("not > physical_predicate works", "[Predicate]") {
+//   auto query = create_query("t2[not temp > 50]");
+//   std::unique_ptr<Predicate> predicate = parse_predicate(query);
+//   auto expected_predicate = make_unique<InequalityPredicate>(
+//     make_unique<Attribute>("temp"),
+//     InequalityPredicate::LogicalOperation::LESS_EQUALS,
+//     make_unique<IntegerLiteral>(50));
+//   INFO("Expected: " + expected_predicate->to_string());
+//   INFO("Got: " + predicate->to_string());
+//   REQUIRE(predicate->equals(expected_predicate.get()));
+// }
 }  // namespace CORE::Internal::CEQL::UnitTests::FilterTests

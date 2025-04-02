@@ -16,6 +16,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
@@ -30,6 +31,8 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected_v3.hpp"
+
 #include "formula_visitor.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
@@ -171,6 +174,11 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     }
     uint64_t variable_id = variables_to_id[formula.variable_name];
     current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
+  }
+
+  void visit(NotEventTypeFormula& formula) override {
+    formula.not_formula->accept_visitor(*this);
+    current_cea = CEA::NegateExpected()(std::move(current_cea));
   }
 };
 }  // namespace CORE::Internal::CEQL
