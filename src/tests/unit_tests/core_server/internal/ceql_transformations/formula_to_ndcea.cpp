@@ -216,54 +216,57 @@ TEST_CASE("As Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.final_states == 0b10);
 }
 
-// TEST_CASE("Basic Not Event Type Formula", "[CEQL To LogicalCEA]") {
-//   Catalog catalog;
-//   Types::StreamInfo stream_info = catalog.add_stream_type({"S",
-//                                                            {
-//                                                              {"H", {}},
-//                                                            }});
-//   auto query = Parsing::QueryParser::parse_query(create_query("NOT (H)"), catalog);
-//   QueryCatalog query_catalog(catalog);
-//   auto visitor = FormulaToLogicalCEA(query_catalog);
-//   query.where.formula->accept_visitor(visitor);
-//   CEA::LogicalCEA cea = visitor.current_cea;
-//   cout << cea.to_string();
-//   REQUIRE(cea.amount_of_states == 2);
-//   REQUIRE(cea.transitions[0].size() == 1);
-//   REQUIRE(cea.transitions[1].size() == 0);
-//   REQUIRE(cea.epsilon_transitions[0].size() == 0);
-//   REQUIRE(cea.epsilon_transitions[1].size() == 0);
-//   REQUIRE(cea.transitions[0][0]
-//           == std::make_tuple(CEA::PredicateSet(0b10, 0b00), 0b10, 1));
-//   REQUIRE(cea.initial_states == 0b1);
-//   REQUIRE(cea.final_states == 0b10);
-// }
+TEST_CASE("Basic Not Event Type Formula", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S",
+                                                           {
+                                                             {"H", {}},
+                                                           }});
+  auto query = Parsing::QueryParser::parse_query(create_query("NOT (H)"), catalog);
+  QueryCatalog query_catalog(catalog);
+  auto visitor = FormulaToLogicalCEA(query_catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cout << cea.to_string();
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b10, 0b00), 0b00, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+}
 // //  R; NOT(R); S
 // // (R: NOT(S) :+: S) OR (R:S)
-// TEST_CASE("Basic Not Event Type Filtered", "[CEQL To LogicalCEA]") {
-//   Catalog catalog;
-//   Types::AttributeInfo Int("Int", Types::ValueTypes::INT64);
-//   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
-//   auto query = Parsing::QueryParser::parse_query(create_query("NOT (H FILTER H[Int > 2])"),
-//                                                  catalog);
-//   QueryCatalog query_catalog(catalog);
-//   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
-//   query = transformer(std::move(query));
-//   auto visitor = FormulaToLogicalCEA(query_catalog);
-//   query.where.formula->accept_visitor(visitor);
-//   CEA::LogicalCEA cea = visitor.current_cea;
-//   REQUIRE(cea.amount_of_states == 2);
-//   REQUIRE(cea.transitions[0].size() == 2);
-//   REQUIRE(cea.transitions[1].size() == 0);
-//   REQUIRE(cea.epsilon_transitions[0].size() == 0);
-//   REQUIRE(cea.epsilon_transitions[1].size() == 0);
-//   REQUIRE(cea.transitions[0][0]
-//           == std::make_tuple(CEA::PredicateSet(0b010, 0b000), 0b10, 1));
-//   REQUIRE(cea.transitions[0][1]
-//           == std::make_tuple(CEA::PredicateSet(0b100, 0b000), 0b10, 1));
-//   REQUIRE(cea.initial_states == 0b1);
-//   REQUIRE(cea.final_states == 0b10);
+TEST_CASE("Basic Not Event Type Filtered", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::AttributeInfo Int("Int", Types::ValueTypes::INT64);
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
+  auto query = Parsing::QueryParser::parse_query(create_query("NOT (H FILTER H[Int > 2])"),
+                                                 catalog);
+  QueryCatalog query_catalog(catalog);
+  AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
+  query = transformer(std::move(query));
+  auto visitor = FormulaToLogicalCEA(query_catalog);
+  query.where.formula->accept_visitor(visitor);
+  CEA::LogicalCEA cea = visitor.current_cea;
+  cout << cea.to_string();
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.transitions[0].size() == 2);
+  REQUIRE(cea.transitions[1].size() == 0);
+  REQUIRE(cea.epsilon_transitions[0].size() == 0);
+  REQUIRE(cea.epsilon_transitions[1].size() == 0);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(0b010, 0b00), 0b00, 1));
+  REQUIRE(cea.transitions[0][1]
+          == std::make_tuple(CEA::PredicateSet(0b100, 0b00), 0b00, 1));
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
   // este es el caso
-// }
+}
+
+
 
 }  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests

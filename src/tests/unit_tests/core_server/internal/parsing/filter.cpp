@@ -50,6 +50,7 @@ std::string create_query(std::string filter_clause) {
   // clang-format on
 }
 
+// Agregue esto para hacer el test de FILTER NOT
 std::string create_not_query(std::string not_clause) {
   // clang-format off
   return "SELECT ALL * \n"
@@ -66,6 +67,7 @@ Where parse_where(std::string query) {
     {"S", {{"H", {}}, {"T", {temp}}}});
   stream_info = catalog.add_stream_type({"S1", {{"H", {}}, {"t2", {temp}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
+  // Agregue esto para hacer el test de FILTER NOT
   stream_info = catalog.add_stream_type({"S3", {{"H", {}}, {"T", {temp}}}});
 
   antlr4::ANTLRInputStream input(query);
@@ -187,9 +189,10 @@ TEST_CASE("or filter works", "[Predicate, Inequality]") {
   REQUIRE(filter->equals(expected_filter.get()));
 }
 
+// Test de FILTER NOT
 TEST_CASE("not event filter", "[Where, Not, FILTER]") {
   auto query = create_not_query("T FILTER T[temp>2]");
-  // cout << formula->to_string();
+  auto formula = parse_formula(query);
   auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
     std::make_unique<CEQL::FilterFormula>(
       make_unique<EventTypeFormula>("T"),
@@ -202,34 +205,9 @@ TEST_CASE("not event filter", "[Where, Not, FILTER]") {
       )
     )
   );
-  // cout << expected_formula->to_string();
-  auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
   REQUIRE(formula->equals(expected_formula.get()));
 }
 
-
-  // auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
-  //   std::make_unique<CEQL::AtomicFilter>(
-  //     "T",
-  //     make_unique<InequalityPredicate>(
-  //       make_unique<Attribute>("Int"),
-  //       InequalityPredicate::LogicalOperation::LESS_EQUALS,
-  //       make_unique<IntegerLiteral>(2)
-  //     )
-  //   )
-  // );
-
-// TEST_CASE("not > physical_predicate works", "[Predicate]") {
-//   auto query = create_query("t2[not temp > 50]");
-//   std::unique_ptr<Predicate> predicate = parse_predicate(query);
-//   auto expected_predicate = make_unique<InequalityPredicate>(
-//     make_unique<Attribute>("temp"),
-//     InequalityPredicate::LogicalOperation::LESS_EQUALS,
-//     make_unique<IntegerLiteral>(50));
-//   INFO("Expected: " + expected_predicate->to_string());
-//   INFO("Got: " + predicate->to_string());
-//   REQUIRE(predicate->equals(expected_predicate.get()));
-// }
 }  // namespace CORE::Internal::CEQL::UnitTests::FilterTests
