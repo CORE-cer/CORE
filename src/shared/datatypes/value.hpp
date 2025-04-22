@@ -2,8 +2,6 @@
 
 #include <cstdint>
 #include <ctime>
-#include <glaze/core/common.hpp>
-#include <glaze/core/meta.hpp>
 #include <limits>
 #include <memory>
 #include <string>

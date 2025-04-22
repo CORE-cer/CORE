@@ -4,12 +4,12 @@
 #include <Loop.h>
 #include <WebSocketProtocol.h>
 #include <minjsoncpp.h>
+#include "glaze/json/read.hpp"
 
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>

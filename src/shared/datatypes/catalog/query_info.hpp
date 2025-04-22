@@ -1,7 +1,6 @@
 #pragma once
 
 #include <minjsoncpp.h>
-#include <glaze/core/common.hpp>
 #include <string>
 
 #include "core_server/library/components/result_handler/result_handler_types.hpp"

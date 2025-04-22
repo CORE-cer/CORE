@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
