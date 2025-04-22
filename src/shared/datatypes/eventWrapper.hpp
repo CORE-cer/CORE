@@ -10,6 +10,7 @@
 #include <glaze/core/meta.hpp>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -125,6 +126,12 @@ class EventWrapper {
     return *event;
   }
 
+  std::string to_json() const {
+    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON", id);
+    assert(!moved);
+    return event->to_json();
+  }
+
  private:
   void set_times() {
     LOG_TRACE_L3("Setting times for EventWrapper with id {}", id);
@@ -143,10 +150,3 @@ class EventWrapper {
 };
 
 }  // namespace CORE::Types
-
-//
-template <>
-struct glz::meta<CORE::Types::EventWrapper> {
-  using T = CORE::Types::EventWrapper;
-  static constexpr auto value = object("event", [](const T& t) { return t.get_event(); });
-};

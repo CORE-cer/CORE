@@ -4,7 +4,7 @@
 #include <glaze/core/meta.hpp>
 
 namespace CORE::Library::Components {
-enum class ResultHandlerType {
+enum ResultHandlerType {
   OFFLINE,
   ONLINE,
   WEBSOCKET,
@@ -12,9 +12,3 @@ enum class ResultHandlerType {
 };
 
 }  // namespace CORE::Library::Components
-
-template <>
-struct glz::meta<CORE::Library::Components::ResultHandlerType> {
-  using enum CORE::Library::Components::ResultHandlerType;
-  static constexpr auto value = glz::enumerate(OFFLINE, ONLINE, WEBSOCKET, CUSTOM);
-};

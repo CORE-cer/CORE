@@ -164,11 +164,25 @@ struct StreamInfo {
     archive(id, name, events_info);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"id\":" + std::to_string(id) + ",";
+    out += "\"name\":\"" + name + "\",";
+    out += "\"events_info\":[";
+    auto it = events_info.begin();
+    while (it != events_info.end()) {
+      out += it->to_json();
+      ++it;
+      if (it != events_info.end()) {
+        out += ",";
+      }
+    }
 
-  struct glaze {
-    using T = CORE::Types::StreamInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::id, &T::name, &T::events_info);
-  };
+    out += "]}";
+    return out;
+  }
+
 };
 }  // namespace CORE::Types
+
+

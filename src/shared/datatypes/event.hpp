@@ -1,12 +1,12 @@
 #pragma once
 
-#include <glaze/core/common.hpp>
-#include <glaze/core/meta.hpp>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "minjsoncpp.h"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -106,6 +106,24 @@ struct Event {
     return out + "])";
   }
 
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"attributes\": [";
+    auto it = attributes.begin();
+    while (it != attributes.end()) {
+      out += (*it)->to_json();
+      ++it;
+      if (it != attributes.end()) {
+        out += ",";
+      }
+    }
+
+    out += "]}";
+
+    return out;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(event_type_id, attributes);
@@ -113,18 +131,3 @@ struct Event {
 };
 
 }  // namespace CORE::Types
-
-template <>
-struct glz::meta<CORE::Types::Event> {
-  using T = CORE::Types::Event;
-  static constexpr auto value = object("event_type_id",
-                                       &T::event_type_id,
-                                       "attributes",
-                                       [](CORE::Types::Event& self) -> auto {
-                                         std::vector<std::string> out;
-                                         for (auto& val : self.attributes) {
-                                           out.push_back(val->to_string());
-                                         }
-                                         return out;
-                                       });
-};

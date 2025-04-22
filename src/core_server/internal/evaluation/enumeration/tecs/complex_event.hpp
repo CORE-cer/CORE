@@ -37,11 +37,25 @@ class ComplexEvent {
     return out + ")";
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"start\": " + std::to_string(start) + ", ";
+    out += "\"end\": " + std::to_string(end) + ", ";
+    out += "\"eventss\": [";
+    auto it = eventss.begin();
+    while (it != eventss.end()) {
+      out += it->to_json();
+      ++it;
+      if (it != eventss.end()) {
+        out += ",";
+      }
+    }
 
-  struct glaze {
-    using T = CORE::Internal::tECS::ComplexEvent;
-    static constexpr auto value = glz::object(&T::start, &T::end, &T::eventss);
-  };
+    out += "]}";
+
+    return out;
+  }
 };
 }  // namespace CORE::Internal::tECS
+
+
