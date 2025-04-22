@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <string>
 
 #include "datatypes.hpp"
