@@ -1,10 +1,10 @@
 #pragma once
 
+#include <minjsoncpp.h>
 #include <glaze/core/common.hpp>
 #include <string>
 
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
-#include "glaze/json/write.hpp"
 
 namespace CORE::Types {
 
@@ -40,16 +40,18 @@ struct QueryInfo {
     archive(result_handler_identifier, result_handler_type, query_string);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"result_handler_identifier\":\"" + minjson::escape(result_handler_identifier) + "\",";
+    out += "\"result_handler_type\":\"" + std::to_string(result_handler_type) + "\",";
+    out += "\"query_string\":\"" + minjson::escape(query_string) + "\",";
+    out += "\"query_name\":\"" + minjson::escape(query_name) + "\",";
+    out += "\"active\":" + std::to_string(active) + "}";
 
-  struct glaze {
-    using T = CORE::Types::QueryInfo;
-    static constexpr auto value = glz::object(&T::result_handler_identifier,
-                                              &T::result_handler_type,
-                                              &T::query_string,
-                                              &T::query_name,
-                                              &T::active);
-  };
+    return out;
+  }
+
+
 };
 
 }  // namespace CORE::Types

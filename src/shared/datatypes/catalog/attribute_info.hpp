@@ -26,11 +26,12 @@ struct AttributeInfo {
     archive(name, value_type);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
-
-  struct glaze {
-    using T = CORE::Types::AttributeInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::name, &T::value_type);
-  };
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"name\": \"" + name + "\", ";
+    out += "\"value_type\": " + std::to_string(value_type);
+    out += "}";
+    return out;
+  }
 };
 }  // namespace CORE::Types

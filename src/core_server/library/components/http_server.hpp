@@ -3,6 +3,7 @@
 #include <App.h>
 #include <Loop.h>
 #include <WebSocketProtocol.h>
+#include <minjsoncpp.h>
 
 #include <exception>
 #include <iostream>
