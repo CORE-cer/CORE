@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
@@ -36,6 +38,7 @@ class ComplexEvent {
   }
 
   std::string to_json() const {
+    std::cout << "ComplexEvent to_json: " << std::endl;
     std::string out = "{";
     out += "\"start\": " + std::to_string(start) + ", ";
     out += "\"end\": " + std::to_string(end) + ", ";
@@ -49,11 +52,27 @@ class ComplexEvent {
       }
     }
 
+    out += "],";
+
+    out += "\"marked_variables\": [";
+    it = eventss.begin();
+    while (it != eventss.end()) {
+      assert(it->marked_variables.has_value());
+      if (it->marked_variables.has_value()) {
+        out += it->marked_variables->get_str(2);
+      }
+
+      ++it;
+      if (it != eventss.end()) {
+        out += ",";
+      }
+    }
+
     out += "]}";
+
+    std::cout << "ComplexEvent to_json: " << out << std::endl;
 
     return out;
   }
 };
 }  // namespace CORE::Internal::tECS
-
-

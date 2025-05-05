@@ -18,6 +18,7 @@ class DetCEA {
   using State = Det::State;
   using States = Det::State::States;
   using StateManager = Det::StateManager;
+  using VariablesToMark = mpz_class;
 
  public:
   State* initial_state;
@@ -71,38 +72,42 @@ class DetCEA {
                              mpz_class& evaluation,
                              const uint64_t& current_iteration) {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
-    mpz_class marked_bitset = computed_bitsets.first;
+    mpz_class marked_bitset = computed_bitsets.first.first;
+    mpz_class marked_variables = computed_bitsets.first.second;
     mpz_class unmarked_bitset = computed_bitsets.second;
     State* marked_state = state_manager.create_or_return_existing_state(marked_bitset,
                                                                         cea);
+    marked_state->marked_variables = std::move(marked_variables);
     State* unmarked_state = state_manager.create_or_return_existing_state(unmarked_bitset,
                                                                           cea);
     return {marked_state, unmarked_state};
   }
 
-  std::pair<mpz_class, mpz_class>
+  std::pair<std::pair<mpz_class, mpz_class>, mpz_class>
   compute_next_bitsets(State* state, mpz_class evaluation) {
     assert(state != nullptr);
     // TODO: State is not nullptr but is giving a segfault.
     auto states_bitset = state->states;
     auto states_vector = get_states_from_mpz_class(state->states);
     mpz_class new_marked_states = 0;
+    mpz_class new_marked_variables = 0;
     mpz_class new_unmarked_states = 0;
     for (uint64_t state : states_vector) {
       for (auto transition : cea.transitions[state]) {
         PredicateSet& predicate = std::get<0>(transition);
         if (predicate.is_satisfied_by(evaluation)) {
-          bool is_marked = std::get<1>(transition);
+          VariablesToMark variables_to_mark = std::get<1>(transition);
           uint64_t target_node = std::get<2>(transition);
-          if (is_marked) {
+          if (variables_to_mark != 0) {
             new_marked_states |= mpz_class(1) << target_node;
+            new_marked_variables |= variables_to_mark;
           } else {
             new_unmarked_states |= mpz_class(1) << target_node;
           }
         }
       }
     }
-    return {new_marked_states, new_unmarked_states};
+    return {{new_marked_states, new_marked_variables}, new_unmarked_states};
   }
 
   std::vector<uint64_t> get_states_from_mpz_class(mpz_class states) {
