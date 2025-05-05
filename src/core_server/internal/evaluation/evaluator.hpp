@@ -230,11 +230,15 @@ class Evaluator {
     assert(p != nullptr);
     States next_states = cea.next(p, t, current_iteration);
     auto marked_state = next_states.marked_state;
+    mpz_class marked_variables = next_states.marked_state->marked_variables;
     auto unmarked_state = next_states.unmarked_state;
     assert(marked_state != nullptr && unmarked_state != nullptr);
     bool recycle_ulist = false;
     if (!marked_state->is_empty) {
-      Node* new_node = tecs->new_extend(tecs->merge(ul), event, current_time);
+      Node* new_node = tecs->new_extend(tecs->merge(ul),
+                                        event,
+                                        current_time,
+                                        marked_variables);
       if (current_union_list_map.contains(marked_state)) {
         current_union_list_map[marked_state] = tecs->insert(
           std::move(current_union_list_map[marked_state]), new_node);

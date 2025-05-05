@@ -40,6 +40,7 @@ class State {
   CEA& cea;
   bool is_final;
   bool is_empty;
+  mpz_class marked_variables;
 
   State* prev_evictable_state = nullptr;
   State* next_evictable_state = nullptr;
