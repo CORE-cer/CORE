@@ -84,7 +84,7 @@ struct CEA {
       for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
            transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ","
-               + std::get<1>(transition).get_str() + ","
+               + std::get<1>(transition).get_str(2) + ","
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }
