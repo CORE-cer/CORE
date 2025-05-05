@@ -86,7 +86,6 @@ class DetCEA {
   std::pair<std::pair<mpz_class, mpz_class>, mpz_class>
   compute_next_bitsets(State* state, mpz_class evaluation) {
     assert(state != nullptr);
-    // TODO: State is not nullptr but is giving a segfault.
     auto states_bitset = state->states;
     auto states_vector = get_states_from_mpz_class(state->states);
     mpz_class new_marked_states = 0;
