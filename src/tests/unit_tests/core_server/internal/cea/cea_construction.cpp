@@ -45,13 +45,13 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
   REQUIRE(cea.transitions[3].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2))); // NOLINT
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), true, 2))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 2))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0b0, 1))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 2))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0b0, 1))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
+  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
   // clang-format on
   REQUIRE(cea.initial_state == 3);     // NOLINT
   REQUIRE(cea.final_states == 0b100);  // NOLINT
@@ -99,11 +99,11 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
   REQUIRE(cea.transitions[1].size() == 2);  // NOLINT
   REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
   REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
   REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), true, 0))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
   // clang-format on
   REQUIRE(cea.initial_state == 0b010);  // NOLINT
   REQUIRE(cea.final_states == 0b001);   // NOLINT
