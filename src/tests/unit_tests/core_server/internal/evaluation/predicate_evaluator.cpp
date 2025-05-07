@@ -98,25 +98,24 @@ Types::EventWrapper add_event_type_2(int64_t val1, int64_t val2) {
 std::string create_query(std::string filter_clause) {
   // clang-format off
   return "SELECT ALL * \n"
-         "FROM S, S2\n"
-         "WHERE S>T as X; S>T as event1; S>T as event2; S>T as Y\n"
-         "--WHERE H+ OR H+\n"
+         "FROM S\n"
+         "WHERE S>event1 as X; S>event2 as Y\n"
          "FILTER\n"
          + filter_clause + "\n"
          "WITHIN 4 EVENTS\n";
   // clang-format on
 }
 
-CEQL::Query parse_query(std::string query) {  // Only parses where and from correctly
-  Catalog catalog;
-  Types::AttributeInfo Integer1("Integer1", Types::ValueTypes::INT64);
-  Types::AttributeInfo Integer2("Integer2", Types::ValueTypes::INT64);
-  Types::AttributeInfo Double1("Double1", Types::ValueTypes::DOUBLE);
-  Types::AttributeInfo String("String", Types::ValueTypes::STRING_VIEW);
+void process_catalog(Catalog& catalog) {
   Types::StreamInfo stream_info = catalog.add_stream_type(
-    {"S", {{"H", {}}, {"T", {Integer1, Integer2, Double1, String}}}});
-  stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
+    {"S",
+     {{"event1", attributes_of_event_type_1()}, {"event2", attributes_of_event_type_2()}}});
+  REQUIRE(stream_info.events_info[0].id == 0);
+  REQUIRE(stream_info.events_info[1].id == 1);
+}
 
+CEQL::Query parse_query(std::string query,
+                        Catalog& catalog) {  // Only parses where and from correctly
   antlr4::ANTLRInputStream input(query);
   CEQLQueryLexer lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
@@ -140,7 +139,7 @@ CEQL::Query parse_query(std::string query) {  // Only parses where and from corr
   CEQL::Query parsed_query(CEQL::Select(CEQL::Select::Strategy::ALL,
                                         true,
                                         std::move(formula)),
-                           CEQL::From({}),
+                           CEQL::From({"S"}),
                            std::move(where_visitor.get_parsed_where()),
                            CEQL::PartitionBy(),
                            CEQL::Within(),
@@ -161,16 +160,13 @@ TEST_CASE(
   "(bitset)",
   "[PredicateEvaluator]") {
   Catalog catalog;
-  Types::StreamInfo stream_info = catalog.add_stream_type(
-    {"S",
-     {{"event1", attributes_of_event_type_1()}, {"event2", attributes_of_event_type_2()}}});
-  REQUIRE(stream_info.events_info[0].id == 0);
-  REQUIRE(stream_info.events_info[1].id == 1);
+  process_catalog(catalog);
 
   SECTION("StronglyTyped compare with constant") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 >= 20 AND Double1 >= 1.0] AND "
-                   "event2[Integer1 <= 30 OR Integer2 > 3]"));
+    CEQL::Query query = parse_query(create_query(
+                                      "event1[Integer1 >= 20 AND Double1 >= 1.0] AND "
+                                      "event2[Integer1 <= 30 OR Integer2 > 3]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -179,9 +175,11 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped compare with attribute mixed types math_exprs") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 >= Double1 AND Integer2 <= 1.0] AND "
-                   "event2[Integer1 >= (Integer1 + 30) / Integer2 AND 6 > Integer2]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 >= Double1 AND "
+                                                 "Integer2 <= 1.0] AND "
+                                                 "event2[Integer1 >= (Integer1 + 30) / "
+                                                 "Integer2 AND 6 > Integer2]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -193,9 +191,10 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped simple comparison predicates") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 >= 20 AND Double1 >= 1.0] AND "
-                   "event2[Integer1 <= 30 OR Integer2 > 3]"));
+    CEQL::Query query = parse_query(create_query(
+                                      "X[Integer1 >= 20 AND Double1 >= 1.0] AND "
+                                      "event2[Integer1 <= 30 OR Integer2 > 3]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_2(20, 0);
@@ -204,9 +203,10 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped complicated comparison predicates") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 >= 20 AND Integer2 >= Integer1 * 2] AND "
-                   "Y[Integer2 >= 30 OR Double1 > 3]"));
+    CEQL::Query query = parse_query(create_query("X[Integer1 >= 20 AND Integer2 >= "
+                                                 "Integer1 * 2] AND "
+                                                 "Y[Integer2 >= 30 OR Double1 > 3]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto predicates = get_predicates(query, query_catalog);
     INFO("Predicates with size: " + std::to_string(predicates.size()));
@@ -221,11 +221,15 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped complicated comparison predicates no.2") {
-    CEQL::Query query = parse_query(
-      create_query("X[NOT((Integer1 - Integer2) * Integer1 / (Double1 + 2) >= "
-                   "20 AND NOT (Integer2 >= Integer1 * 2))] AND "
-                   "X[Integer1 >= Double1 OR Integer1 == Integer1] AND Y[Integer1 != "
-                   "Integer2]"));
+    CEQL::Query query = parse_query(create_query("X[NOT((Integer1 - Integer2) * "
+                                                 "Integer1 "
+                                                 "/ (Double1 + 2) >= "
+                                                 "20 AND NOT (Integer2 >= Integer1 * "
+                                                 "2))] AND "
+                                                 "X[Integer1 >= Double1 OR Integer1 == "
+                                                 "Integer1] AND Y[Integer1 != "
+                                                 "Integer2]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto predicates = get_predicates(query, query_catalog);
     INFO("Predicates with size: " + std::to_string(predicates.size()));
@@ -245,7 +249,7 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.*>>]"));
+    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.*>>]"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -257,7 +261,7 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.>>]"));
+    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.>>]"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -269,7 +273,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"));
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -281,7 +285,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"));
+    CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -293,9 +297,10 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped IN RANGE (int, int) predicate complex true") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 IN RANGE (((Integer2*100)/120), "
-                   "Integer1 * Integer2)]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 IN RANGE "
+                                                 "(((Integer2*100)/120), "
+                                                 "Integer1 * Integer2)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 292, 350, 0.0, 1.2);
@@ -307,9 +312,10 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped IN RANGE (int, int) predicate complex false") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 IN RANGE (((Integer2*100)/120), "
-                   "Integer1 * Integer2)]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 IN RANGE "
+                                                 "(((Integer2*100)/120), "
+                                                 "Integer1 * Integer2)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 150, 200, 0.0, 1.2);
@@ -321,8 +327,9 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped IN RANGE (int, int) predicate trivially false") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 IN RANGE (Integer1, Integer2)]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 IN RANGE (Integer1, "
+                                                 "Integer2)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 19, 0.0, 1.2);
@@ -334,8 +341,9 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped IN RANGE predicate mixed types match") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 IN RANGE (Integer1, Double1)]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 IN RANGE (Integer1, "
+                                                 "Double1)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 19, 20.5, 1.2);
@@ -347,8 +355,9 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped IN RANGE predicate mixed types not match") {
-    CEQL::Query query = parse_query(
-      create_query("event1[Integer1 IN RANGE (Integer1, Double1)]"));
+    CEQL::Query query = parse_query(create_query("event1[Integer1 IN RANGE (Integer1, "
+                                                 "Double1)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 19, 19.8, 1.2);
@@ -360,8 +369,9 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped IN RANGE predicate myxed types matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 IN RANGE (Integer1, Double1)]"));
+    CEQL::Query query = parse_query(create_query("X[Integer1 IN RANGE (Integer1, "
+                                                 "Double1)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 25.5, 1.2);
@@ -373,8 +383,9 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped IN RANGE predicate (int, int) matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 IN RANGE (Integer1, Integer2)]"));
+    CEQL::Query query = parse_query(create_query("X[Integer1 IN RANGE (Integer1, "
+                                                 "Integer2)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 25, 25.5, 1.2);
@@ -386,8 +397,9 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped IN RANGE predicate (int, int) not matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 IN RANGE (Integer1, Integer2)]"));
+    CEQL::Query query = parse_query(create_query("X[Integer1 IN RANGE (Integer1, "
+                                                 "Integer2)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 15, 25.5, 1.2);
@@ -399,8 +411,9 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped IN RANGE predicate mixed types not matching") {
-    CEQL::Query query = parse_query(
-      create_query("X[Integer1 IN RANGE (Integer1, Double1)]"));
+    CEQL::Query query = parse_query(create_query("X[Integer1 IN RANGE (Integer1, "
+                                                 "Double1)]"),
+                                    catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 25, 18.5, 1.2);

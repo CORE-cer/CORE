@@ -40,12 +40,12 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   using EventName = std::string;
 
  private:
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
 
  public:
   CEA::LogicalCEA current_cea{0};
 
-  FormulaToLogicalCEA(QueryCatalog& query_catalog) : query_catalog(query_catalog) {}
+  FormulaToLogicalCEA(const QueryCatalog& query_catalog) : query_catalog(query_catalog) {}
 
   ~FormulaToLogicalCEA() override = default;
 
@@ -134,10 +134,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     formula.formula->accept_visitor(*this);
     auto marking_id = query_catalog.get_marking_id(formula.variable_name);
     if (!marking_id.has_value()) {
-      query_catalog.assign_marking_id_to_AS_variable(formula.variable_name);
+      throw std::runtime_error("AS variable not found in query catalog");
     }
-    marking_id = query_catalog.get_marking_id(formula.variable_name);
-    assert(marking_id.has_value() && "Marking id not found after assigning it");
     current_cea = CEA::MarkVariable(marking_id.value())(std::move(current_cea));
   }
 };

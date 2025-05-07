@@ -23,7 +23,7 @@ template <typename GlobalType>
 class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
  public:
   std::string name;
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
 
   // If Type == std::string_view, then the underlying string is stored, if not
   // a char is stored.
@@ -31,7 +31,7 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
                             std::string,
                             char>::type stored_string;
 
-  NonStronglyTypedAttribute(std::string name, QueryCatalog& query_catalog)
+  NonStronglyTypedAttribute(std::string name, const QueryCatalog& query_catalog)
       : name(name), query_catalog(query_catalog) {}
 
   std::unique_ptr<MathExpr<GlobalType>> clone() const override {

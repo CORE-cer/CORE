@@ -28,12 +28,12 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   };
 
  private:
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
   std::set<Types::UniqueEventTypeId> compatible_event_types = {};
   bool has_added_an_event_type = false;
 
  public:
-  ObtainCompatibleEventTypes(QueryCatalog& query_catalog) : query_catalog(query_catalog) {
+  ObtainCompatibleEventTypes(const QueryCatalog& query_catalog) : query_catalog(query_catalog) {
     for (Types::UniqueEventTypeId i = 0; i < query_catalog.number_of_events(); i++) {
       compatible_event_types.insert(i);
     }
