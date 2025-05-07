@@ -37,22 +37,14 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
     out += "[";
     assert(it->marked_variables.has_value());
     std::string marked_variables_binary = it->marked_variables->get_str(2);
-    std::cout << "length of marked_variables_binary: " << marked_variables_binary.length()
-              << std::endl;
     for (size_t left_right_marked_variable = 0;
          left_right_marked_variable < marked_variables_binary.length();
          ++left_right_marked_variable) {
       if (left_right_marked_variable > SIZE_MAX) {
-        std::cout << "marked_variable is out of range for int64_t: "
-                  << left_right_marked_variable << std::endl;
         throw std::out_of_range("marked_variable is out of range for int64_t");
       }
       size_t right_left_marked_variable = marked_variables_binary.length() - 1
                                           - left_right_marked_variable;
-      std::cout << "right_left_marked_variable: " << right_left_marked_variable
-                << std::endl;
-      std::cout << "marked_variables_binary[right_left_marked_variable]: "
-                << marked_variables_binary[right_left_marked_variable] << std::endl;
       bool is_marked = marked_variables_binary[right_left_marked_variable] == '1';
       if (is_marked) {
         auto event_or_as_variable_name = query_catalog.get_event_or_as_variable_name(
