@@ -65,6 +65,11 @@ class QueryCatalog {
   std::map<std::pair<StreamName, EventName>, MarkingId> stream_event_name_pair_to_marking_id;
   // Store the mapping of event names or AS variable name to the marking id assigned to each event.
   std::map<EventOrASVariableName, MarkingId> event_or_as_variable_name_to_marking_id;
+  // Store all reverse mappings
+  // Store reverse mapping of marking id to event name and stream name
+  std::map<MarkingId, std::pair<StreamName, EventName>> marking_id_to_stream_event_name_pair;
+  // Store reverse mapping of marking id to event name or AS variable name
+  std::map<MarkingId, EventOrASVariableName> marking_id_to_event_or_as_variable_name;
 
   std::vector<Types::QueryInfo> queries_info;
   Types::EventInfo em = {};
@@ -99,7 +104,9 @@ class QueryCatalog {
     if (event_or_as_variable_name_to_marking_id.contains(variable_name)) {
       throw std::runtime_error("AS variable name already exists");
     }
-    event_or_as_variable_name_to_marking_id.insert({variable_name, next_marking_id++});
+    event_or_as_variable_name_to_marking_id.insert({variable_name, next_marking_id});
+    marking_id_to_event_or_as_variable_name.insert({next_marking_id, variable_name});
+    next_marking_id++;
   }
 
   // Find the marking id for a given stream name and event name pair.
@@ -134,6 +141,28 @@ class QueryCatalog {
       }
     }
     return marking_ids;
+  }
+
+  // Find the event and stream name pair for a given marking id
+  std::optional<std::pair<StreamName, EventName>>
+  get_stream_event_name_pair(MarkingId marking_id) const {
+    auto iter = marking_id_to_stream_event_name_pair.find(marking_id);
+    if (iter != marking_id_to_stream_event_name_pair.end()) {
+      return iter->second;
+    } else {
+      return {};
+    }
+  }
+
+  // Find the event or AS variable name for a given marking id
+  std::optional<EventOrASVariableName>
+  get_event_or_as_variable_name(MarkingId marking_id) const {
+    auto iter = marking_id_to_event_or_as_variable_name.find(marking_id);
+    if (iter != marking_id_to_event_or_as_variable_name.end()) {
+      return iter->second;
+    } else {
+      return {};
+    }
   }
 
   const Types::StreamInfo& get_stream_info(std::string stream_name) const {
@@ -324,7 +353,10 @@ class QueryCatalog {
             "Stream name and Event name combination already added");
         }
         stream_event_name_pair_to_marking_id.insert(
-          {{stream_info.name, event_info.name}, next_marking_id++});
+          {{stream_info.name, event_info.name}, next_marking_id});
+        marking_id_to_stream_event_name_pair.insert(
+          {next_marking_id, {stream_info.name, event_info.name}});
+        next_marking_id++;
       }
     }
   }
@@ -334,7 +366,9 @@ class QueryCatalog {
       if (event_or_as_variable_name_to_marking_id.contains(event_info.name)) {
         return;
       }
-      event_or_as_variable_name_to_marking_id.insert({event_info.name, next_marking_id++});
+      event_or_as_variable_name_to_marking_id.insert({event_info.name, next_marking_id});
+      marking_id_to_event_or_as_variable_name.insert({next_marking_id, event_info.name});
+      next_marking_id++;
     }
   }
 
