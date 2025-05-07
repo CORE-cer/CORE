@@ -38,7 +38,7 @@ TEST_CASE("Basic Event Type", "[CEQL To LogicalCEA]") {
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("H"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -59,7 +59,7 @@ TEST_CASE("Basic Event Type Filtered", "[CEQL To LogicalCEA]") {
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
   auto query = Parsing::QueryParser::parse_query(create_query("H FILTER H[Int > 2]"),
                                                  catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
   auto visitor = FormulaToLogicalCEA(query_catalog);
@@ -80,7 +80,7 @@ TEST_CASE("Or Formula", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::QueryParser::parse_query(create_query("H OR S"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -105,7 +105,7 @@ TEST_CASE("Sequencing Formula", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
   auto query = Parsing::QueryParser::parse_query(create_query("H ; S"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -137,7 +137,7 @@ TEST_CASE("Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("H:+"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -160,7 +160,7 @@ TEST_CASE("Non-Contiguous Iteration Formula", "[CEQL To LogicalCEA]") {
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("H+"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -199,7 +199,7 @@ TEST_CASE("As Formula", "[CEQL To LogicalCEA]") {
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("H AS X"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;

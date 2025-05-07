@@ -10,13 +10,13 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
-#include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -52,12 +52,14 @@ class QueryCatalog {
   std::map<MarkingId, std::pair<StreamName, EventName>> marking_id_to_stream_event_name_pair;
   std::map<MarkingId, EventOrASVariableName> marking_id_to_event_or_as_variable_name;
 
-  std::vector<Types::QueryInfo> queries_info;
   Types::EventInfo em = {};
+  CEQL::Query query;
 
  public:
-  explicit QueryCatalog(const Catalog& catalog, std::set<std::string> relevant_streams);
-  explicit QueryCatalog(const Catalog& catalog);
+  explicit QueryCatalog(const Catalog& catalog,
+                        CEQL::Query& query,
+                        std::set<std::string> relevant_streams);
+  explicit QueryCatalog(const Catalog& catalog, CEQL::Query& query);
 
   void assign_marking_id_to_AS_variable(EventOrASVariableName variable_name);
 
