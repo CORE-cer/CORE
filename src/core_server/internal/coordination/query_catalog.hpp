@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -34,6 +35,11 @@ namespace CORE::Internal {
 
 class QueryCatalog {
  private:
+  using StreamName = std::string;
+  using EventName = std::string;
+  using EventOrASVariableName = std::string;
+  using MarkingId = int64_t;
+
   std::vector<Types::EventInfo> events_info;
   std::vector<Types::StreamInfo> streams_info;
   std::vector<std::string> unique_event_names_query;
@@ -53,6 +59,13 @@ class QueryCatalog {
   std::map<std::string, std::set<Types::UniqueEventTypeId>> event_types_with_attribute;
   std::map<Types::UniqueEventTypeId, std::size_t> unique_event_id_to_events_info_idx;
 
+  // Marking ids are assigned to all valid event, event and stream name pairs, together with AS variables
+  MarkingId next_marking_id = 0;
+  // Store the mapping of stream name and event name to the marking id assigned to each event.
+  std::map<std::pair<StreamName, EventName>, MarkingId> stream_event_name_pair_to_marking_id;
+  // Store the mapping of event names or AS variable name to the marking id assigned to each event.
+  std::map<EventOrASVariableName, MarkingId> event_or_as_variable_name_to_marking_id;
+
   std::vector<Types::QueryInfo> queries_info;
   Types::EventInfo em = {};
 
@@ -65,6 +78,8 @@ class QueryCatalog {
     }
     add_event_name_to_event_name_ids(catalog);
     add_unique_event_id_to_event_name_ids(catalog);
+    populate_stream_event_to_marking_id();
+    populate_event_to_marking_id();
   }
 
   QueryCatalog(const Catalog& catalog) {
@@ -73,6 +88,52 @@ class QueryCatalog {
     }
     add_event_name_to_event_name_ids(catalog);
     add_unique_event_id_to_event_name_ids(catalog);
+    populate_stream_event_to_marking_id();
+    populate_event_to_marking_id();
+  }
+
+  void assign_marking_id_to_AS_variable(EventOrASVariableName variable_name) {
+    if (variable_name.empty()) {
+      throw std::runtime_error("AS variable name cannot be empty");
+    }
+    if (event_or_as_variable_name_to_marking_id.contains(variable_name)) {
+      throw std::runtime_error("AS variable name already exists");
+    }
+    event_or_as_variable_name_to_marking_id.insert({variable_name, next_marking_id++});
+  }
+
+  // Find the marking id for a given stream name and event name pair.
+  std::optional<MarkingId>
+  get_marking_id(std::string stream_name, std::string event_name) const {
+    auto iter = stream_event_name_pair_to_marking_id.find({stream_name, event_name});
+    if (iter != stream_event_name_pair_to_marking_id.end()) {
+      return iter->second;
+    } else {
+      return {};
+    }
+  }
+
+  // Find the marking id for a given event or AS variable name.
+  std::optional<MarkingId> get_marking_id(EventOrASVariableName variable_name) const {
+    auto iter = event_or_as_variable_name_to_marking_id.find(variable_name);
+    if (iter != event_or_as_variable_name_to_marking_id.end()) {
+      return iter->second;
+    } else {
+      return {};
+    }
+  }
+
+  // Find the marking id for a given event or AS variable name.
+  std::vector<MarkingId>
+  get_all_marking_ids_for_event(EventOrASVariableName event_name) const {
+    std::vector<MarkingId> marking_ids;
+    for (const auto& [stream_event_name, marking_id] :
+         stream_event_name_pair_to_marking_id) {
+      if (stream_event_name.second == event_name) {
+        marking_ids.push_back(marking_id);
+      }
+    }
+    return marking_ids;
   }
 
   const Types::StreamInfo& get_stream_info(std::string stream_name) const {
@@ -254,6 +315,29 @@ class QueryCatalog {
   }
 
  private:
+  void populate_stream_event_to_marking_id() {
+    for (const Types::StreamInfo& stream_info : get_all_streams_info()) {
+      for (const Types::EventInfo& event_info : stream_info.events_info) {
+        if (stream_event_name_pair_to_marking_id.contains(
+              {stream_info.name, event_info.name})) {
+          throw std::runtime_error(
+            "Stream name and Event name combination already added");
+        }
+        stream_event_name_pair_to_marking_id.insert(
+          {{stream_info.name, event_info.name}, next_marking_id++});
+      }
+    }
+  }
+
+  void populate_event_to_marking_id() {
+    for (const Types::EventInfo& event_info : events_info) {
+      if (event_or_as_variable_name_to_marking_id.contains(event_info.name)) {
+        return;
+      }
+      event_or_as_variable_name_to_marking_id.insert({event_info.name, next_marking_id++});
+    }
+  }
+
   void add_stream_type(Types::StreamInfo stream_info) noexcept {
     Types::StreamTypeId stream_type_id = stream_info.id;
 

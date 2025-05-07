@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
-#include <map>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -15,7 +14,6 @@
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
-#include "shared/datatypes/aliases/event_type_id.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -43,22 +41,19 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
                                  mpz_class(1) << physical_predicate_id);
   }
 
-  ApplyAtomicFilter(
-    const QueryCatalog& query_catalog,
-    const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
-    const StreamName stream_name,
-    const EventName event_name,
-    CEQL::AtomicFilter& atomic_filter)
+  ApplyAtomicFilter(const QueryCatalog& query_catalog,
+                    const StreamName stream_name,
+                    const EventName event_name,
+                    CEQL::AtomicFilter& atomic_filter)
       : physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
-    auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
-    uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
-                                 ? stream_event_id_iter->second
-                                 : throw std::logic_error(
-                                     "Stream/Event name combination not found");
-
-    VariablesToMark stream_event = mpz_class(1) << stream_event_id;
+    auto stream_event_marking_id = query_catalog.get_marking_id(stream_name, event_name);
+    if (!stream_event_marking_id.has_value()) {
+      throw std::runtime_error(
+        "Stream name and Event name combination not found in query catalog");
+    }
+    VariablesToMark stream_event = mpz_class(1) << stream_event_marking_id.value();
 
     variables_to_filter = stream_event;
     assert(
@@ -68,20 +63,18 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
                                  mpz_class(1) << physical_predicate_id);
   }
 
-  ApplyAtomicFilter(
-    const QueryCatalog& query_catalog,
-    const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
-    const EventName event_name,
-    CEQL::AtomicFilter& atomic_filter)
+  ApplyAtomicFilter(const QueryCatalog& query_catalog,
+                    const EventName event_name,
+                    CEQL::AtomicFilter& atomic_filter)
       : physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
-    Types::EventNameTypeId
-      query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
-        event_name);
+    auto event_marking_id = query_catalog.get_marking_id(event_name);
+    if (!event_marking_id.has_value()) {
+      throw std::runtime_error("Event name not found in query catalog");
+    }
 
-    VariablesToMark event = mpz_class(1)
-                            << (stream_event_to_id.size() + query_event_name_id);
+    VariablesToMark event = mpz_class(1) << event_marking_id.value();
 
     variables_to_filter = event;
     assert(
