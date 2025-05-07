@@ -77,6 +77,7 @@ class GenericQuery {
   void start() {
     worker_thread = std::thread([&]() {
       ZoneScopedN("QueryImpl::start::worker_thread");  //NOLINT
+      result_handler->set_query_catalog(query_catalog);
       result_handler->start();
       while (!stop_condition) {
         std::optional<Types::EventWrapper> event = get_event();

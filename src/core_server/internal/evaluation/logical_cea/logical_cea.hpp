@@ -175,7 +175,7 @@ struct LogicalCEA {
     // clang-format off
     std::string out =
       "LogicalCEA\n"
-      "    Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
+      "    |Q| = " + std::to_string(amount_of_states) + "\n"
       "    I = (bitset) " + initial_states.get_str(2) + "\n"
       "    F = (bitset) " + final_states.get_str(2) + "\n"
       "    Δ : [PredicateSet × (bitset) VariablesToMark → FinalState]" + "\n";

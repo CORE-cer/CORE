@@ -48,9 +48,9 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
       bool is_marked = marked_variables_binary[right_left_marked_variable] == '1';
       if (is_marked) {
         auto event_or_as_variable_name = query_catalog.get_event_or_as_variable_name(
-          static_cast<int64_t>(right_left_marked_variable));
+          static_cast<int64_t>(left_right_marked_variable));
         auto stream_event_name = query_catalog.get_stream_event_name_pair(
-          static_cast<int64_t>(right_left_marked_variable));
+          static_cast<int64_t>(left_right_marked_variable));
         if (event_or_as_variable_name.has_value()) {
           out += "\"" + event_or_as_variable_name.value() + "\"";
         } else if (stream_event_name.has_value()) {
@@ -72,8 +72,6 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
   }
 
   out += "]}";
-
-  std::cout << "ComplexEvent to_json: " << out << std::endl;
 
   return out;
 }
