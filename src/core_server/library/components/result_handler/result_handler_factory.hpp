@@ -13,7 +13,6 @@
 #include <stdexcept>
 #include <utility>
 
-#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/user_data.hpp"
 #include "core_server/library/server_config.hpp"
@@ -24,8 +23,7 @@ class ResultHandlerFactory {
  public:
   ResultHandlerFactory() {}
 
-  virtual std::unique_ptr<ResultHandler>
-  create_handler(Internal::QueryCatalog query_catalog) = 0;
+  virtual std::unique_ptr<ResultHandler> create_handler() = 0;
 
   virtual ~ResultHandlerFactory() = default;
 };
@@ -34,9 +32,8 @@ class OfflineResultHandlerFactory : public ResultHandlerFactory {
  public:
   OfflineResultHandlerFactory() {}
 
-  std::unique_ptr<ResultHandler>
-  create_handler(Internal::QueryCatalog query_catalog) override {
-    return std::make_unique<OfflineResultHandler>(query_catalog);
+  std::unique_ptr<ResultHandler> create_handler() override {
+    return std::make_unique<OfflineResultHandler>();
   }
 };
 
@@ -48,10 +45,8 @@ class OnlineResultHandlerFactory : public ResultHandlerFactory {
   OnlineResultHandlerFactory(ServerConfig& server_config)
       : ResultHandlerFactory(), server_config(server_config) {}
 
-  std::unique_ptr<ResultHandler>
-  create_handler(Internal::QueryCatalog query_catalog) override {
-    return std::make_unique<OnlineResultHandler>(query_catalog,
-                                                 server_config.get_next_open_port());
+  std::unique_ptr<ResultHandler> create_handler() override {
+    return std::make_unique<OnlineResultHandler>(server_config.get_next_open_port());
   }
 };
 
@@ -68,8 +63,7 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
 
   void set_uws_loop(uWS::Loop* loop) { uws_loop = loop; }
 
-  std::unique_ptr<ResultHandler>
-  create_handler(Internal::QueryCatalog query_catalog) override {
+  std::unique_ptr<ResultHandler> create_handler() override {
     if (!uws_loop.has_value()) {
       throw std::runtime_error("uWS loop not set");
     }
@@ -79,8 +73,7 @@ class WebSocketResultHandlerFactory : public ResultHandlerFactory {
       websocket_list = std::make_shared<std::list<uWS::WebSocket<false, true, UserData>*>>();
     std::lock_guard lock(shared_websocket_mutex);
     handlers[query_id] = std::move(websocket_list);
-    return std::make_unique<WebSocketResultHandler>(query_catalog,
-                                                    handlers[query_id],
+    return std::make_unique<WebSocketResultHandler>(handlers[query_id],
                                                     shared_websocket_mutex,
                                                     uws_loop.value(),
                                                     query_id);

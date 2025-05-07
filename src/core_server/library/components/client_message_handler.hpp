@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "core_server/internal/ceql/query/query.hpp"
-#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -240,8 +239,7 @@ class ClientMessageHandler {
     // TODO: Check if it is possible to parse it.
     LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
     Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
-    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
-      backend.get_catalog_reference());
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
     backend.declare_query(std::move(parsed_query), std::move(result_handler));
     return Types::ServerResponse(CerealSerializer<std::string>::serialize(identifier),

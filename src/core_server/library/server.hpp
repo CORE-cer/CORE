@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <mutex>
-#include <type_traits>
 #include <utility>
 
 #include "core_server/library/server_config.hpp"
@@ -11,7 +10,6 @@
 #include <quill/Quill.h>             // NOLINT
 #include <quill/detail/LogMacros.h>  // NOLINT
 
-#include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/http_server.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
@@ -83,10 +81,6 @@ class OnlineServer {
 
   ServerConfig server_config;
 
-  using HandlerType = typename std::invoke_result_t<
-    decltype(&ResultHandlerFactoryT::create_handler),
-    ResultHandlerFactoryT*,
-    Internal::QueryCatalog>::element_type;
   Internal::Interface::Backend<false> backend;
   std::mutex backend_mutex = {};
 
