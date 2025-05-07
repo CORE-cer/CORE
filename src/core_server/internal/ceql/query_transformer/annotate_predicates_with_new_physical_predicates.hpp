@@ -35,10 +35,10 @@ class AnnotatePredicatesWithNewPhysicalPredicates
 
  private:
   GetAllAtomicFilters visitor;
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
 
  public:
-  AnnotatePredicatesWithNewPhysicalPredicates(QueryCatalog& query_catalog)
+  AnnotatePredicatesWithNewPhysicalPredicates(const QueryCatalog& query_catalog)
       : query_catalog(query_catalog) {}
 
   Query eval(Query&& query) {

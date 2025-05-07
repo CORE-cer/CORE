@@ -56,12 +56,7 @@ class QueryCatalog {
   CEQL::Query query;
 
  public:
-  explicit QueryCatalog(const Catalog& catalog,
-                        CEQL::Query& query,
-                        std::set<std::string> relevant_streams);
   explicit QueryCatalog(const Catalog& catalog, CEQL::Query& query);
-
-  void assign_marking_id_to_AS_variable(EventOrASVariableName variable_name);
 
   std::optional<MarkingId>
   get_marking_id(std::string stream_name, std::string event_name) const;
@@ -114,6 +109,7 @@ class QueryCatalog {
  private:
   void populate_stream_event_to_marking_id();
   void populate_event_to_marking_id();
+  void assign_marking_ids_to_AS_variables();
   void add_stream_type(Types::StreamInfo stream_info) noexcept;
   void add_event_type(Types::EventInfo event_info) noexcept;
   void add_event_name_to_event_name_ids(const Catalog& catalog);

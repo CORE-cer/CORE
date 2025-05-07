@@ -44,27 +44,9 @@ struct Query {
         consume_by(other.consume_by),
         limit(other.limit) {}
 
-  Query& operator=(const Query& other) {
-    if (this != &other) {
-      select = other.select.clone();
-      from = other.from;
-      where = other.where.clone();
-      partition_by = other.partition_by;
-      within = other.within;
-      consume_by = other.consume_by;
-      limit = other.limit;
-    }
-    return *this;
-  }
+  Query(Query&& other) noexcept = default;
 
-  Query(Query&& other) noexcept
-      : select(std::move(other.select)),
-        from(std::move(other.from)),
-        where(std::move(other.where)),
-        partition_by(std::move(other.partition_by)),
-        within(std::move(other.within)),
-        consume_by(std::move(other.consume_by)),
-        limit(std::move(other.limit)) {}
+  Query& operator=(Query&& other) noexcept = default;
 
   std::string to_string() const {
     std::string out = select.to_string() + "\n" + from.to_string() + "\n"

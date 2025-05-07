@@ -20,7 +20,7 @@ struct Where {
 
   Where clone() const {
     assert(formula != nullptr);
-    return Where(formula->clone());
+    return {formula->clone()};
   }
 };
 }  // namespace CORE::Internal::CEQL

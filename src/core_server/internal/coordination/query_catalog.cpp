@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/cel_formula/formula/visitors/get_all_as_variables_visitor.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
@@ -30,6 +31,10 @@
 namespace CORE::Internal {
 
 QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(query) {
+  assert(
+    query.from.streams.size() > 0
+    && "QueryCatalog constructor: Query must have at least one stream in the FROM "
+       "clause");
   for (const Types::StreamInfo stream_info : catalog.get_all_streams_info()) {
     if (query.from.streams.contains(stream_info.name)) {
       add_stream_type(stream_info);
@@ -39,18 +44,7 @@ QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(q
   add_unique_event_id_to_event_name_ids(catalog);
   populate_stream_event_to_marking_id();
   populate_event_to_marking_id();
-}
-
-void QueryCatalog::assign_marking_id_to_AS_variable(EventOrASVariableName variable_name) {
-  if (variable_name.empty()) {
-    throw std::runtime_error("AS variable name cannot be empty");
-  }
-  if (event_or_as_variable_name_to_marking_id.contains(variable_name)) {
-    throw std::runtime_error("AS variable name already exists");
-  }
-  event_or_as_variable_name_to_marking_id.insert({variable_name, next_marking_id});
-  marking_id_to_event_or_as_variable_name.insert({next_marking_id, variable_name});
-  next_marking_id++;
+  assign_marking_ids_to_AS_variables();
 }
 
 std::optional<QueryCatalog::MarkingId>
@@ -316,6 +310,23 @@ void QueryCatalog::populate_event_to_marking_id() {
     event_or_as_variable_name_to_marking_id.insert({event_info_obj.name, next_marking_id});
     marking_id_to_event_or_as_variable_name.insert({next_marking_id, event_info_obj.name});
     next_marking_id++;
+  }
+}
+
+void QueryCatalog::assign_marking_ids_to_AS_variables() {
+  CEQL::GetAllASVariablesVisitor visitor;
+  query.where.formula->accept_visitor(visitor);
+
+  for (const auto& as_variable : visitor.as_variables) {
+    auto marking_id = get_marking_id(as_variable);
+    if (marking_id.has_value()) {
+      throw std::runtime_error("AS variable already has a marking id: " + as_variable
+                               + "." + "Are you using an event name as an AS variable?");
+    } else {
+      event_or_as_variable_name_to_marking_id.insert({as_variable, next_marking_id});
+      marking_id_to_event_or_as_variable_name.insert({next_marking_id, as_variable});
+      next_marking_id++;
+    }
   }
 }
 
