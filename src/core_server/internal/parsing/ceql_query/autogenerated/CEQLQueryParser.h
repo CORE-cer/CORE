@@ -289,8 +289,8 @@ public:
   public:
     S_list_of_variablesContext(List_of_variablesContext *ctx);
 
-    std::vector<S_event_nameContext *> s_event_name();
-    S_event_nameContext* s_event_name(size_t i);
+    std::vector<S_event_name_with_projectionContext *> s_event_name_with_projection();
+    S_event_name_with_projectionContext* s_event_name_with_projection(size_t i);
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
@@ -1051,10 +1051,10 @@ public:
   public:
     S_event_name_with_projectionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    S_event_nameContext *s_event_name();
     antlr4::tree::TerminalNode *LEFT_SQUARE_BRACKET();
     List_of_attribute_namesContext *list_of_attribute_names();
     antlr4::tree::TerminalNode *RIGHT_SQUARE_BRACKET();
-    S_event_nameContext *s_event_name();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;

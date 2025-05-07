@@ -136,15 +136,14 @@ CEQL::Query parse_query(std::string query,
                              std::set<std::pair<std::string, std::string>>{});
 
   // TODO: Partitionby, within and consume_by
-  CEQL::Query parsed_query(CEQL::Select(CEQL::Select::Strategy::ALL,
-                                        true,
-                                        std::move(formula)),
-                           CEQL::From({"S"}),
-                           std::move(where_visitor.get_parsed_where()),
-                           CEQL::PartitionBy(),
-                           CEQL::Within(),
-                           CEQL::ConsumeBy(),
-                           CEQL::Limit());
+  CEQL::Query parsed_query(
+    CEQL::Select(CEQL::Select::Strategy::ALL, true, std::move(formula), {}, {}),
+    CEQL::From({"S"}),
+    std::move(where_visitor.get_parsed_where()),
+    CEQL::PartitionBy(),
+    CEQL::Within(),
+    CEQL::ConsumeBy(),
+    CEQL::Limit());
   return parsed_query;
 }
 

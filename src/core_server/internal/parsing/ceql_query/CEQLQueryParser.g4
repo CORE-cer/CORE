@@ -37,7 +37,7 @@ selection_strategy
 list_of_variables
  : STAR                         # s_star
  | K_NONE                         # s_none
- | s_event_name ( COMMA s_event_name )*   # s_list_of_variables
+ | s_event_name_with_projection ( COMMA s_event_name_with_projection )*   # s_list_of_variables
  ;
 
 from_clause
@@ -166,7 +166,7 @@ named_event
  ;
 
 s_event_name_with_projection
- : s_event_name ? LEFT_SQUARE_BRACKET list_of_attribute_names RIGHT_SQUARE_BRACKET
+ : s_event_name (LEFT_SQUARE_BRACKET list_of_attribute_names RIGHT_SQUARE_BRACKET)?
  ;
 
 s_event_name

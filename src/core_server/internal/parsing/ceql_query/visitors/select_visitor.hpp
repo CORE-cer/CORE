@@ -22,6 +22,7 @@ namespace CORE::Internal::Parsing {
 class SelectVisitor : public CEQLQueryParserBaseVisitor {
   using VariableName = std::string;
   using StreamName = std::string;
+  using AttributeName = std::string;
 
  private:
   CEQL::Select::Strategy strategy = CEQL::Select::Strategy::DEFAULT;
@@ -32,6 +33,11 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
   Catalog& catalog;
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events_map;
   std::vector<std::string>& as_events;
+
+  // Attribute projection
+  std::map<VariableName, std::set<AttributeName>> attribute_projection_variable;
+  std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>
+    attribute_projection_stream_event;
 
   void check_if_events_exists_in_streams_or_as_events(std::string event_name) {
     bool as_formula_found = false;
@@ -53,7 +59,11 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
       : catalog(catalog), streams_events_map(streams_events), as_events(as_events) {}
 
   CEQL::Select get_parsed_select() {
-    return CEQL::Select(std::move(strategy), std::move(is_star), std::move(formula));
+    return CEQL::Select(std::move(strategy),
+                        std::move(is_star),
+                        std::move(formula),
+                        std::move(attribute_projection_variable),
+                        std::move(attribute_projection_stream_event));
   }
 
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
