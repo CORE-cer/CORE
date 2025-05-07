@@ -1,8 +1,6 @@
 #pragma once
 
-#include <cstdint>
 #include <iostream>
-#include <map>
 #include <string>
 #include <utility>
 
@@ -23,47 +21,30 @@ class ApplyFiltersToLogicalCEA : public FilterVisitor {
 
  private:
   CEA::LogicalCEA& logical_cea;
-  const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id;
-  const std::map<std::string, uint64_t>& variables_to_id;
   const QueryCatalog& query_catalog;
 
  public:
-  ApplyFiltersToLogicalCEA(
-    CEA::LogicalCEA& logical_cea,
-    const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
-    const std::map<std::string, uint64_t>& variables_to_id,
-    const QueryCatalog& query_catalog)
-      : logical_cea(logical_cea),
-        stream_event_to_id(stream_event_to_id),
-        variables_to_id(variables_to_id),
-        query_catalog(query_catalog) {}
+  ApplyFiltersToLogicalCEA(CEA::LogicalCEA& logical_cea, const QueryCatalog& query_catalog)
+      : logical_cea(logical_cea), query_catalog(query_catalog) {}
 
   ~ApplyFiltersToLogicalCEA() override = default;
 
   void visit(AtomicFilter& filter) override {
-    if (!variables_to_id.contains(filter.variable_name)
-        && query_catalog.get_unique_events_from_event_name(filter.variable_name).size()
-             == 0) {
+    auto variable_marking_id = query_catalog.get_marking_id(filter.variable_name);
+    if (!variable_marking_id.has_value()) {
       std::cout << "WARNING: Filtering a variable that was not previously "
-                   "declared."
-                << std::endl;
+                   "declared: "
+                << filter.variable_name << std::endl;
       return;
     }
-    if (variables_to_id.contains(filter.variable_name)) {
-      uint64_t pertaining_variable_id = variables_to_id.at(filter.variable_name);
-      logical_cea = CEA::ApplyAtomicFilter(pertaining_variable_id,
-                                           filter)(std::move(logical_cea));
-    } else if (filter.stream_name.has_value()) {
+    if (filter.stream_name.has_value()) {
       logical_cea = CEA::ApplyAtomicFilter(query_catalog,
-                                           stream_event_to_id,
                                            filter.stream_name.value(),
                                            filter.variable_name,
                                            filter)(std::move(logical_cea));
     } else {
-      logical_cea = CEA::ApplyAtomicFilter(query_catalog,
-                                           stream_event_to_id,
-                                           filter.variable_name,
-                                           filter)(std::move(logical_cea));
+      logical_cea = CEA::ApplyAtomicFilter(query_catalog, filter.variable_name, filter)(
+        std::move(logical_cea));
     }
   }
 

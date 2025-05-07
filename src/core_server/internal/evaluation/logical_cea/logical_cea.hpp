@@ -2,14 +2,14 @@
 
 #include <gmpxx.h>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <map>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -57,11 +57,9 @@ struct LogicalCEA {
         initial_states(other.initial_states),
         final_states(other.final_states) {}
 
-  static LogicalCEA
-  atomic_cea(const QueryCatalog& query_catalog,
-             const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
-             const StreamName stream_name,
-             const EventName event_name) {
+  static LogicalCEA atomic_cea(const QueryCatalog& query_catalog,
+                               const StreamName stream_name,
+                               const EventName event_name) {
     auto atomic_cea = LogicalCEA(2);
     std::size_t number_of_streams = query_catalog.number_of_streams();
     Types::StreamTypeId query_stream_id = query_catalog.get_query_stream_id_from_stream_name(
@@ -77,15 +75,19 @@ struct LogicalCEA {
     mpz_class expected_eval = stream_predicate_position | event_name_predicate_position;
     mpz_class predicate_mask = expected_eval;
 
-    auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
-    uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
-                                 ? stream_event_id_iter->second
-                                 : throw std::logic_error(
-                                     "Stream/Event name combination not found");
+    auto stream_event_marking_id = query_catalog.get_marking_id(stream_name, event_name);
+    if (!stream_event_marking_id.has_value()) {
+      throw std::runtime_error(
+        "Stream name and Event name combination not found in query catalog");
+    }
 
-    VariablesToMark stream_event_mark = mpz_class(1) << stream_event_id;
-    VariablesToMark event_mark = mpz_class(1)
-                                 << (stream_event_to_id.size() + query_event_name_id);
+    auto event_marking_id = query_catalog.get_marking_id(event_name);
+    if (!event_marking_id.has_value()) {
+      throw std::runtime_error("Event name not found in query catalog");
+    }
+
+    VariablesToMark stream_event_mark = mpz_class(1) << stream_event_marking_id.value();
+    VariablesToMark event_mark = mpz_class(1) << event_marking_id.value();
 
     VariablesToMark mark = stream_event_mark | event_mark;
 
@@ -99,9 +101,7 @@ struct LogicalCEA {
   }
 
   static LogicalCEA
-  atomic_cea(const QueryCatalog& query_catalog,
-             const std::map<std::pair<StreamName, EventName>, uint64_t>& stream_event_to_id,
-             const EventName event_name) {
+  atomic_cea(const QueryCatalog& query_catalog, const EventName event_name) {
     auto atomic_cea = LogicalCEA(2);
     std::size_t number_of_streams = query_catalog.number_of_streams();
     Types::EventNameTypeId
@@ -114,20 +114,19 @@ struct LogicalCEA {
     mpz_class expected_eval = event_name_predicate_position;
     mpz_class predicate_mask = expected_eval;
 
-    VariablesToMark event_mark = mpz_class(1)
-                                 << (stream_event_to_id.size() + query_event_name_id);
+    auto event_marking_id = query_catalog.get_marking_id(event_name);
 
-    for (auto&& [current_stream_event_name, current_stream_event_id] :
-         stream_event_to_id) {
-      auto&& [current_stream_name, current_event_name] = current_stream_event_name;
-      if (current_event_name == event_name) {
-        // FIX: This doesn't make any sense, should fix
-        // VariablesToMark current_stream_event_mark = mpz_class(1)
-        //                                             << current_stream_event_id;
-        VariablesToMark mark = event_mark;
-        atomic_cea.transitions[0].push_back(
-          std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
-      }
+    if (!event_marking_id.has_value()) {
+      throw std::runtime_error("Event name not found in query catalog");
+    }
+
+    VariablesToMark event_mark = mpz_class(1) << event_marking_id.value();
+
+    auto marking_ids_for_event = query_catalog.get_all_marking_ids_for_event(event_name);
+
+    for (auto&& marking_id : marking_ids_for_event) {
+      atomic_cea.transitions[0].push_back(
+        std::make_tuple(PredicateSet(expected_eval, predicate_mask), event_mark, 1));
     }
 
     atomic_cea.initial_states = mpz_class(1) << 0;
@@ -185,7 +184,7 @@ struct LogicalCEA {
       if (transitions[i].size() != 0) out += "    Δ[" + std::to_string(i) + "]:\n";
       for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
            transitions[i]) {
-        out += "        " + std::get<0>(transition).to_string() + ",0xb"
+        out += "        " + std::get<0>(transition).to_string() + ",0b"
                + std::get<1>(transition).get_str(2) + "→"
                + std::to_string(std::get<2>(transition)) + "\n";
       }
