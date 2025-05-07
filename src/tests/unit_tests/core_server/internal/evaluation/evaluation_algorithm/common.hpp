@@ -31,14 +31,13 @@ class DirectOutputTestResultHandler : public Library::Components::ResultHandler 
  public:
   DirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler(
-          query_catalog,
           Library::Components::ResultHandlerType::CUSTOM) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog.convert_enumerator(
+      enumerator = query_catalog.value().convert_enumerator(
         std::move(internal_enumerator.value()));
     }
     std::unique_lock lk(output_mutex);
@@ -84,14 +83,13 @@ class IndirectOutputTestResultHandler : public Library::Components::ResultHandle
  public:
   IndirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler(
-          query_catalog,
           Library::Components::ResultHandlerType::CUSTOM) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog.convert_enumerator(
+      enumerator = query_catalog.value().convert_enumerator(
         std::move(internal_enumerator.value()));
     }
     std::unique_lock lk(output_mutex);

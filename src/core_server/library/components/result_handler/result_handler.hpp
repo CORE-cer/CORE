@@ -3,6 +3,7 @@
 #include <Loop.h>
 
 #include <list>
+#include <stdexcept>
 
 #include "core_server/library/components/user_data.hpp"
 #define QUILL_ROOT_LOGGER_ONLY
@@ -33,14 +34,20 @@ class ResultHandler {
   ResultHandlerType result_handler_type;
 
  protected:
-  const Internal::QueryCatalog query_catalog;
+  std::optional<const Internal::QueryCatalog> query_catalog;
 
  public:
-  ResultHandler(const Internal::QueryCatalog query_catalog,
-                ResultHandlerType result_handler_type)
-      : query_catalog(query_catalog), result_handler_type(result_handler_type) {}
+  ResultHandler(ResultHandlerType result_handler_type)
+      : result_handler_type(result_handler_type) {}
+
+  void set_query_catalog(const Internal::QueryCatalog& query_catalog) {
+    this->query_catalog.emplace(query_catalog);
+  }
 
   void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
+    if (!query_catalog.has_value()) {
+      throw std::runtime_error("Query catalog is not set");
+    }
     handle_complex_event(std::move(enumerator));
   }
 
@@ -58,8 +65,7 @@ class ResultHandler {
 
 class OfflineResultHandler : public ResultHandler {
  public:
-  OfflineResultHandler(const Internal::QueryCatalog& query_catalog)
-      : ResultHandler(query_catalog, ResultHandlerType::OFFLINE) {}
+  OfflineResultHandler() : ResultHandler(ResultHandlerType::OFFLINE) {}
 
   void handle_complex_event(
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
@@ -83,10 +89,9 @@ class OnlineResultHandler : public ResultHandler {
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
   Types::PortNumber port{};
 
-  OnlineResultHandler(const Internal::QueryCatalog& query_catalog,
-                      Types::PortNumber assigned_port)
+  OnlineResultHandler(Types::PortNumber assigned_port)
       : port(assigned_port),
-        ResultHandler(query_catalog, ResultHandlerType::ONLINE),
+        ResultHandler(ResultHandlerType::ONLINE),
         broadcaster{nullptr} {}
 
   void start() override {
@@ -99,7 +104,7 @@ class OnlineResultHandler : public ResultHandler {
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog.convert_enumerator(
+      enumerator = query_catalog.value().convert_enumerator(
         std::move(internal_enumerator.value()));
     }
     std::string serialized_enumerator{
@@ -120,7 +125,6 @@ class WebSocketResultHandler : public ResultHandler {
 
  public:
   WebSocketResultHandler(
-    const Internal::QueryCatalog& query_catalog,
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients,
     std::mutex& ws_clients_mutex,
     uWS::Loop* uws_loop,
@@ -129,7 +133,7 @@ class WebSocketResultHandler : public ResultHandler {
         ws_clients_mutex(ws_clients_mutex),
         uws_loop(uws_loop),
         query_id(query_id),
-        ResultHandler(query_catalog, ResultHandlerType::WEBSOCKET) {}
+        ResultHandler(ResultHandlerType::WEBSOCKET) {}
 
   void start() override {}
 
@@ -141,7 +145,7 @@ class WebSocketResultHandler : public ResultHandler {
 
     std::string result_json = "[";
     for (const auto& complex_event : internal_enumerator.value()) {
-      result_json += complex_event.to_json();
+      result_json += complex_event.to_json(query_catalog.value());
       result_json += ",";
     }
     result_json = result_json.substr(0, result_json.size() - 1);

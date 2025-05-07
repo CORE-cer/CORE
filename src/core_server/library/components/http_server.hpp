@@ -4,7 +4,6 @@
 #include <Loop.h>
 #include <WebSocketProtocol.h>
 #include <minjsoncpp.h>
-#include "glaze/json/read.hpp"
 
 #include <exception>
 #include <iostream>
@@ -23,6 +22,7 @@
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/components/user_data.hpp"
+#include "glaze/json/read.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
@@ -278,8 +278,7 @@ class HTTPServer {
     std::lock_guard<std::mutex> lock(backend_mutex);
     Internal::CEQL::Query query = backend.parse_sent_query(query_string);
 
-    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
-      backend.get_catalog_reference());
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
 
     backend.declare_query(std::move(query),
@@ -294,8 +293,7 @@ class HTTPServer {
     std::lock_guard<std::mutex> lock(backend_mutex);
     Internal::CEQL::Query query = backend.parse_sent_query(query_string);
 
-    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
-      backend.get_catalog_reference());
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
 
     backend.declare_query(std::move(query), std::move(result_handler));

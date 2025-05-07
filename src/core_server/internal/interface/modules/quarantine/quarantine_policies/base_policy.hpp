@@ -199,6 +199,8 @@ class BasePolicy {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query.from.streams);
+    result_handler->set_query_catalog(query_catalog);
+
     query_catalogs.push_back(query_catalog);
 
     if (queries.size() > std::numeric_limits<std::ptrdiff_t>::max() - 1) {
