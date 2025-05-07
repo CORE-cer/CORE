@@ -198,7 +198,7 @@ class BasePolicy {
                    std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    QueryCatalog query_catalog(catalog, parsed_query.from.streams);
+    QueryCatalog query_catalog(catalog, parsed_query);
 
     query_catalogs.push_back(query_catalog);
 

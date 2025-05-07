@@ -30,6 +30,8 @@ struct Select {
     return out + "}";
   }
 
+  Select clone() const { return Select(Strategy(strategy), is_star, formula->clone()); }
+
  private:
   static std::string strategy_to_string(Strategy strat) {
     switch (strat) {

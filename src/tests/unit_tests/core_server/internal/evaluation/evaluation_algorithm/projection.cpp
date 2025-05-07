@@ -32,7 +32,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -175,7 +175,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel")
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -315,7 +315,7 @@ TEST_CASE("Evaluation of long query with projection") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -524,7 +524,7 @@ TEST_CASE("Evaluation of long query with projection swapped order") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -737,7 +737,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -883,7 +883,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -975,7 +975,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1071,7 +1071,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1160,7 +1160,7 @@ TEST_CASE(
 
 //   std::unique_ptr<TestResultHandler>
 //     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
+//       QueryCatalog(backend.get_catalog_reference(), parsed_query));
 //   TestResultHandler& result_handler = *result_handler_ptr;
 
 //   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1251,7 +1251,7 @@ TEST_CASE(
 
 //   std::unique_ptr<TestResultHandler>
 //     result_handler_ptr = std::make_unique<TestResultHandler>(
-//       QueryCatalog(backend.get_catalog_reference()));
+//       QueryCatalog(backend.get_catalog_reference(), parsed_query));
 //   TestResultHandler& result_handler = *result_handler_ptr;
 
 //   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1340,7 +1340,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1439,7 +1439,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));

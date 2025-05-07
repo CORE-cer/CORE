@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -28,22 +29,11 @@
 
 namespace CORE::Internal {
 
-QueryCatalog::QueryCatalog(const Catalog& catalog,
-                           std::set<std::string> relevant_streams) {
+QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(query) {
   for (const Types::StreamInfo stream_info : catalog.get_all_streams_info()) {
-    if (relevant_streams.contains(stream_info.name)) {
+    if (query.from.streams.contains(stream_info.name)) {
       add_stream_type(stream_info);
     }
-  }
-  add_event_name_to_event_name_ids(catalog);
-  add_unique_event_id_to_event_name_ids(catalog);
-  populate_stream_event_to_marking_id();
-  populate_event_to_marking_id();
-}
-
-QueryCatalog::QueryCatalog(const Catalog& catalog) {
-  for (const Types::StreamInfo stream_info : catalog.get_all_streams_info()) {
-    add_stream_type(stream_info);
   }
   add_event_name_to_event_name_ids(catalog);
   add_unique_event_id_to_event_name_ids(catalog);
