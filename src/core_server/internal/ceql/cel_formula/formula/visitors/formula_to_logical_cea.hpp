@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
-#include <map>
 #include <ostream>
 #include <stdexcept>
 #include <string>
