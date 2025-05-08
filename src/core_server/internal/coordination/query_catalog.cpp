@@ -160,6 +160,19 @@ void QueryCatalog::populate_default_attribute_projections() {
 //   }
 // }
 
+const std::vector<bool>&
+QueryCatalog::get_attribute_projection(MarkingId marking_id,
+                                       Types::UniqueEventTypeId event_type_id) const {
+  try {
+    const auto& projection_map_for_marking_id = attribute_projections.at(marking_id);
+    return projection_map_for_marking_id.at(event_type_id);
+  } catch (const std::out_of_range& oor) {
+    throw std::runtime_error(
+      "Attribute projection not found for marking_id: " + std::to_string(marking_id)
+      + " and event_type_id: " + std::to_string(event_type_id) + ". Details: " + oor.what());
+  }
+}
+
 std::optional<QueryCatalog::MarkingId>
 QueryCatalog::get_marking_id(std::string stream_name, std::string event_name) const {
   auto iter = stream_event_name_pair_to_marking_id.find({stream_name, event_name});

@@ -25,12 +25,13 @@
 namespace CORE::Internal {
 
 class QueryCatalog {
- private:
+ public:
+  using MarkingId = uint64_t;
   using StreamName = std::string;
   using EventName = std::string;
   using EventOrASVariableName = std::string;
-  using MarkingId = int64_t;
 
+ private:
   std::vector<Types::EventInfo> events_info;
   std::vector<Types::StreamInfo> streams_info;
   std::vector<std::string> unique_event_names_query;
@@ -64,7 +65,7 @@ class QueryCatalog {
   CEQL::Query query;
 
  public:
-  explicit QueryCatalog(const Catalog& catalog, CEQL::Query& query);
+  QueryCatalog(const Catalog& catalog, CEQL::Query& query);
 
   std::optional<MarkingId>
   get_marking_id(std::string stream_name, std::string event_name) const;
@@ -113,6 +114,14 @@ class QueryCatalog {
                                std::string attribute_name) const;
 
   Types::Enumerator convert_enumerator(tECS::Enumerator&& enumerator) const;
+
+  // Method to get the attribute projection for a given marking ID and event type ID
+  [[nodiscard]] const std::vector<bool>&
+  get_attribute_projection(MarkingId marking_id,
+                           Types::UniqueEventTypeId event_type_id) const;
+
+  // Existing public methods
+  [[nodiscard]] const CEQL::Query& get_query() const;
 
  private:
   void populate_stream_event_to_marking_id();
