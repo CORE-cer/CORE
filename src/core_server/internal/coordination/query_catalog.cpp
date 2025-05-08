@@ -48,6 +48,7 @@ QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(q
   populate_event_to_marking_id();
   assign_marking_ids_to_AS_variables();
   populate_default_attribute_projections();
+  apply_user_attribute_projections();
   // populate_attribute_projections_for_stream_events();
   // populate_attribute_projections_for_events();
   // populate_attribute_projections_for_as_variables();
@@ -108,57 +109,94 @@ void QueryCatalog::populate_default_attribute_projections() {
   }
 }
 
-// void QueryCatalog::populate_attribute_projections_for_stream_events() {
-//   for (const Types::StreamInfo& stream_info_obj : get_all_streams_info()) {
-//     for (const Types::EventInfo& event_info_obj : stream_info_obj.events_info) {
-//       auto projection_it = query.select.attribute_projection_stream_event.find(
-//         {stream_info_obj.name, event_info_obj.name});
-//
-//       // In case of no projection specified
-//       if (projection_it == query.select.attribute_projection_stream_event.end()) {
-//         std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(),
-//                                                true);
-//         attribute_projections.insert(
-//           {event_info_obj.id, std::move(attribute_projection)});
-//         continue;
-//       }
-//
-//       // In case of specified attribute projection
-//       std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(),
-//                                              false);
-//       for (int attribute_i = 0; attribute_i < event_info_obj.attributes_info.size();
-//            ++attribute_i) {
-//         const auto& attribute_info = event_info_obj.attributes_info[attribute_i];
-//         if (projection_it->second.contains(attribute_info.name)) {
-//           attribute_projection[attribute_i] = true;
-//         }
-//       }
-//     }
-//   }
-// }
-//
-// void QueryCatalog::populate_attribute_projections_for_events() {
-//   for (const auto& event_info : events_info) {
-//     auto projection_it = query.select.attribute_projection_variable.find(
-//       event_info.name);
-//     // In case of no projection specified
-//     if (projection_it == query.select.attribute_projection_variable.end()) {
-//       std::vector<bool> attribute_projection(event_info.attributes_info.size(), true);
-//       attribute_projections.insert({event_info.id, std::move(attribute_projection)});
-//       return;
-//     }
-//
-//     // In case of specified attribute projection
-//     std::vector<bool> attribute_projection(event_info.attributes_info.size(), false);
-//     for (int attribute_i = 0; attribute_i < event_info.attributes_info.size();
-//          ++attribute_i) {
-//       const auto& attribute_info = event_info.attributes_info[attribute_i];
-//       if (projection_it->second.contains(attribute_info.name)) {
-//         attribute_projection[attribute_i] = true;
-//       }
-//     }
-//   }
-// }
+void QueryCatalog::apply_user_attribute_projections() {
+  // Process attribute_projection_stream_event
+  for (const auto& [stream_event_pair, projected_attributes] :
+       query.select.attribute_projection_stream_event) {
+    const auto& [stream_name, event_name] = stream_event_pair;
+    std::optional<MarkingId> marking_id_opt = get_marking_id(stream_name, event_name);
+    if (!marking_id_opt) {
+      throw std::runtime_error("Marking ID not found for stream and event pair: "
+                               + stream_name + ", " + event_name);
+    }
+    MarkingId marking_id = marking_id_opt.value();
+
+    // For stream_event_pair, there's a unique event type
+    const Types::EventInfo&
+      event_info_for_stream_event = get_unique_event_from_stream_event_name(stream_name,
+                                                                            event_name);
+    Types::UniqueEventTypeId unique_event_id = event_info_for_stream_event.id;
+
+    std::vector<bool> projection_vector(event_info_for_stream_event.attributes_info.size(),
+                                        false);
+    for (size_t i = 0; i < event_info_for_stream_event.attributes_info.size(); ++i) {
+      if (projected_attributes.count(event_info_for_stream_event.attributes_info[i].name)) {
+        projection_vector[i] = true;
+      }
+    }
+    // The default projection would have created an entry for this unique_event_id already.
+    // We overwrite it here.
+    attribute_projections[marking_id][unique_event_id] = std::move(projection_vector);
+  }
+
+  // Process attribute_projection_variable
+  for (const auto& [variable_name, projected_attributes] :
+       query.select.attribute_projection_variable) {
+    std::optional<MarkingId> marking_id_opt = get_marking_id(variable_name);
+    if (!marking_id_opt) {
+      throw new std::runtime_error("Marking ID not found for variable name: "
+                                   + variable_name);
+    }
+    MarkingId marking_id = marking_id_opt.value();
+
+    if (!attribute_projections.contains(marking_id)) {
+      throw std::runtime_error("Marking ID not found in attribute projections");
+    }
+
+    auto event_unique_ids_it = event_name_to_possible_unique_event_id.find(variable_name);
+    if (event_unique_ids_it != event_name_to_possible_unique_event_id.end()) {
+      // Case 1: Variable name is a specific event type
+      const std::set<Types::UniqueEventTypeId>& possible_unique_ids = event_unique_ids_it
+                                                                        ->second;
+      for (const auto& unique_event_id : possible_unique_ids) {
+        if (!attribute_projections.at(marking_id).contains(unique_event_id)) {
+          throw std::runtime_error(
+            "Unique event ID not found in marking ID's "
+            "attribute projections");
+        }
+        const Types::EventInfo& event_info = get_event_info(unique_event_id);
+        std::vector<bool> projection_vector(event_info.attributes_info.size(), false);
+        for (size_t i = 0; i < event_info.attributes_info.size(); ++i) {
+          if (projected_attributes.contains(event_info.attributes_info[i].name)) {
+            projection_vector[i] = true;
+          }
+        }
+        attribute_projections[marking_id][unique_event_id] = std::move(projection_vector);
+      }
+    } else {
+      // Case 2: Variable name is an AS variable
+      // The default population should have added all possible event types for this AS variable's marking ID.
+      // We need to iterate over those and apply the projection.
+      auto& projections_for_marking_id = attribute_projections.at(marking_id);
+      // Iterate by creating a copy of keys to avoid iterator invalidation if map structure changes (it won't here, but good practice for modification loops)
+      std::vector<Types::UniqueEventTypeId> ids_to_process;
+      for (const auto& pair : projections_for_marking_id) {
+        ids_to_process.push_back(pair.first);
+      }
+
+      for (const auto& unique_event_id : ids_to_process) {
+        const Types::EventInfo& event_info = get_event_info(unique_event_id);
+        std::vector<bool> projection_vector(event_info.attributes_info.size(), false);
+        for (size_t i = 0; i < event_info.attributes_info.size(); ++i) {
+          if (projected_attributes.contains(event_info.attributes_info[i].name)) {
+            projection_vector[i] = true;
+          }
+        }
+        attribute_projections[marking_id][unique_event_id] = std::move(projection_vector);
+      }
+    }
+  }
+}
 
 const std::vector<bool>&
 QueryCatalog::get_attribute_projection(MarkingId marking_id,
@@ -167,9 +205,9 @@ QueryCatalog::get_attribute_projection(MarkingId marking_id,
     const auto& projection_map_for_marking_id = attribute_projections.at(marking_id);
     return projection_map_for_marking_id.at(event_type_id);
   } catch (const std::out_of_range& oor) {
-    throw std::runtime_error(
-      "Attribute projection not found for marking_id: " + std::to_string(marking_id)
-      + " and event_type_id: " + std::to_string(event_type_id) + ". Details: " + oor.what());
+    throw std::runtime_error("Attribute projection not found for marking_id: "
+                             + std::to_string(marking_id) + " and event_type_id: "
+                             + std::to_string(event_type_id) + ". Details: " + oor.what());
   }
 }
 

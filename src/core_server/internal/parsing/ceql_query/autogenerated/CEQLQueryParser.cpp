@@ -819,30 +819,30 @@ std::any CEQLQueryParser::S_starContext::accept(tree::ParseTreeVisitor *visitor)
   else
     return visitor->visitChildren(this);
 }
-//----------------- S_list_of_variablesContext ------------------------------------------------------------------
+//----------------- S_event_name_with_projection_listContext ------------------------------------------------------------------
 
-std::vector<CEQLQueryParser::S_event_name_with_projectionContext *> CEQLQueryParser::S_list_of_variablesContext::s_event_name_with_projection() {
+std::vector<CEQLQueryParser::S_event_name_with_projectionContext *> CEQLQueryParser::S_event_name_with_projection_listContext::s_event_name_with_projection() {
   return getRuleContexts<CEQLQueryParser::S_event_name_with_projectionContext>();
 }
 
-CEQLQueryParser::S_event_name_with_projectionContext* CEQLQueryParser::S_list_of_variablesContext::s_event_name_with_projection(size_t i) {
+CEQLQueryParser::S_event_name_with_projectionContext* CEQLQueryParser::S_event_name_with_projection_listContext::s_event_name_with_projection(size_t i) {
   return getRuleContext<CEQLQueryParser::S_event_name_with_projectionContext>(i);
 }
 
-std::vector<tree::TerminalNode *> CEQLQueryParser::S_list_of_variablesContext::COMMA() {
+std::vector<tree::TerminalNode *> CEQLQueryParser::S_event_name_with_projection_listContext::COMMA() {
   return getTokens(CEQLQueryParser::COMMA);
 }
 
-tree::TerminalNode* CEQLQueryParser::S_list_of_variablesContext::COMMA(size_t i) {
+tree::TerminalNode* CEQLQueryParser::S_event_name_with_projection_listContext::COMMA(size_t i) {
   return getToken(CEQLQueryParser::COMMA, i);
 }
 
-CEQLQueryParser::S_list_of_variablesContext::S_list_of_variablesContext(List_of_variablesContext *ctx) { copyFrom(ctx); }
+CEQLQueryParser::S_event_name_with_projection_listContext::S_event_name_with_projection_listContext(List_of_variablesContext *ctx) { copyFrom(ctx); }
 
 
-std::any CEQLQueryParser::S_list_of_variablesContext::accept(tree::ParseTreeVisitor *visitor) {
+std::any CEQLQueryParser::S_event_name_with_projection_listContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<CEQLQueryParserVisitor*>(visitor))
-    return parserVisitor->visitS_list_of_variables(this);
+    return parserVisitor->visitS_event_name_with_projection_list(this);
   else
     return visitor->visitChildren(this);
 }
@@ -894,7 +894,7 @@ CEQLQueryParser::List_of_variablesContext* CEQLQueryParser::list_of_variables() 
       }
 
       case CEQLQueryParser::IDENTIFIER: {
-        _localctx = _tracker.createInstance<CEQLQueryParser::S_list_of_variablesContext>(_localctx);
+        _localctx = _tracker.createInstance<CEQLQueryParser::S_event_name_with_projection_listContext>(_localctx);
         enterOuterAlt(_localctx, 3);
         setState(170);
         s_event_name_with_projection();

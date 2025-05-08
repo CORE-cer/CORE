@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -92,17 +93,51 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
+  virtual std::any visitS_event_name_with_projection(
+    CEQLQueryParser::S_event_name_with_projectionContext* ctx) override {
+    auto [stream_name, event_name] = std::any_cast<
+      std::pair<std::optional<StreamName>, std::string>>(visit(ctx->s_event_name()));
+
+    if (!ctx->list_of_attribute_names()) {
+      return {};
+    }
+    auto attribute_names = std::any_cast<std::set<AttributeName>>(
+      visit(ctx->list_of_attribute_names()));
+
+    if (stream_name) {
+      auto stream_event_pair = std::make_pair(stream_name.value(), event_name);
+      streams_events.emplace(stream_event_pair);
+      attribute_projection_stream_event.emplace(stream_event_pair, attribute_names);
+    } else {
+      variables.emplace(event_name);
+      attribute_projection_variable.emplace(event_name, attribute_names);
+    }
+
+    return {};
+  }
+
   virtual std::any visitS_event_name(CEQLQueryParser::S_event_nameContext* ctx) override {
     std::string event_name = ctx->event_name()->getText();
     if (ctx->stream_name()) {
       std::string stream_name = ctx->stream_name()->getText();
       check_event_in_specific_stream(stream_name, event_name, streams_events_map);
-      streams_events.insert({stream_name, event_name});
+      streams_events.emplace(stream_name, event_name);
+      return std::make_pair(std::optional<StreamName>(stream_name), event_name);
     } else {
       check_if_events_exists_in_streams_or_as_events(event_name);
-      variables.insert(ctx->event_name()->getText());
+      variables.emplace(event_name);
+      return std::make_pair(std::optional<StreamName>(), event_name);
     }
     return {};
+  }
+
+  virtual std::any visitList_of_attribute_names(
+    CEQLQueryParser::List_of_attribute_namesContext* ctx) override {
+    std::set<AttributeName> attribute_names;
+    for (auto& attr : ctx->attribute_name()) {
+      attribute_names.emplace(attr->getText());
+    }
+    return attribute_names;
   }
 
   virtual std::any visitSs_all(CEQLQueryParser::Ss_allContext* ctx) override {

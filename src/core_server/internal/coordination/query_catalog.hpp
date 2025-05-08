@@ -128,6 +128,7 @@ class QueryCatalog {
   void populate_event_to_marking_id();
   void assign_marking_ids_to_AS_variables();
   void populate_default_attribute_projections();
+  void apply_user_attribute_projections();
   // void populate_attribute_projections_for_stream_events();
   // void populate_attribute_projections_for_events();
   // void populate_attribute_projections_for_as_variables();

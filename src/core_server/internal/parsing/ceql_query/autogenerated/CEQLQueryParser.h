@@ -285,9 +285,9 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  S_list_of_variablesContext : public List_of_variablesContext {
+  class  S_event_name_with_projection_listContext : public List_of_variablesContext {
   public:
-    S_list_of_variablesContext(List_of_variablesContext *ctx);
+    S_event_name_with_projection_listContext(List_of_variablesContext *ctx);
 
     std::vector<S_event_name_with_projectionContext *> s_event_name_with_projection();
     S_event_name_with_projectionContext* s_event_name_with_projection(size_t i);
