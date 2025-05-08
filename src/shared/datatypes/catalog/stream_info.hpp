@@ -179,8 +179,5 @@ struct StreamInfo {
     out += "]}";
     return out;
   }
-
 };
 }  // namespace CORE::Types
-
-
