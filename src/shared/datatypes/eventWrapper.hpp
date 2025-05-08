@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -138,6 +139,14 @@ class EventWrapper {
     LOG_TRACE_L3("Converting EventWrapper with id {} to JSON", id);
     assert(!moved);
     return event->to_json();
+  }
+
+  std::string
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON with attribute projection",
+                 id);
+    assert(!moved);
+    return event->to_json_with_attribute_projection(attribute_projection);
   }
 
  private:

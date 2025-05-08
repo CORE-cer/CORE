@@ -46,13 +46,21 @@ class QueryCatalog {
   std::map<std::string, std::set<Types::UniqueEventTypeId>> event_types_with_attribute;
   std::map<Types::UniqueEventTypeId, std::size_t> unique_event_id_to_events_info_idx;
 
+  // Marking ids are assigned to all valid event, event and stream name pairs, together with AS variables
   MarkingId next_marking_id = 0;
+  // Store the mapping of stream name and event name to the marking id assigned to each event.
   std::map<std::pair<StreamName, EventName>, MarkingId> stream_event_name_pair_to_marking_id;
+  // Store the mapping of event names or AS variable name to the marking id assigned to each event.
   std::map<EventOrASVariableName, MarkingId> event_or_as_variable_name_to_marking_id;
+  // Store the mapping of marking id to the stream name and event name pair.
   std::map<MarkingId, std::pair<StreamName, EventName>> marking_id_to_stream_event_name_pair;
+  // Store the mapping of marking id to the event name or AS variable name.
   std::map<MarkingId, EventOrASVariableName> marking_id_to_event_or_as_variable_name;
 
-  Types::EventInfo em = {};
+  // Store the attribute projections for events
+  std::map<MarkingId, std::map<Types::UniqueEventTypeId, std::vector<bool>>>
+    attribute_projections;
+
   CEQL::Query query;
 
  public:
@@ -110,6 +118,10 @@ class QueryCatalog {
   void populate_stream_event_to_marking_id();
   void populate_event_to_marking_id();
   void assign_marking_ids_to_AS_variables();
+  void populate_default_attribute_projections();
+  // void populate_attribute_projections_for_stream_events();
+  // void populate_attribute_projections_for_events();
+  // void populate_attribute_projections_for_as_variables();
   void add_stream_type(Types::StreamInfo stream_info) noexcept;
   void add_event_type(Types::EventInfo event_info) noexcept;
   void add_event_name_to_event_name_ids(const Catalog& catalog);
