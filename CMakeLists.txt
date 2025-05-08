@@ -58,6 +58,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable (tracy)
 FetchContent_MakeAvailable(minjsoncpp)
 
+if(TARGET TracyClient)
+    set_target_properties(TracyClient PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    message(STATUS "Enabled POSITION_INDEPENDENT_CODE for TracyClient target.")
+else()
+    message(WARNING "TracyClient target was not found after FetchContent_MakeAvailable(tracy). The -fPIC fix might not be applied correctly.")
+endif()
+
 if (PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
   set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
