@@ -37,7 +37,7 @@ selection_strategy
 list_of_variables
  : STAR                         # s_star
  | K_NONE                         # s_none
- | s_event_name_with_projection ( COMMA s_event_name_with_projection )*   # s_list_of_variables
+ | s_event_name_with_projection ( COMMA s_event_name_with_projection )* # s_event_name_with_projection_list
  ;
 
 from_clause

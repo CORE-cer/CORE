@@ -68,6 +68,14 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
 
           const auto& attribute_projection = query_catalog.get_attribute_projection(
             current_marking_id, current_event_type_id);
+          for (size_t i = 0; i < attribute_projection.size(); ++i) {
+            if (attribute_projection[i]) {
+              std::cout << "1";
+            } else {
+              std::cout << "0";
+            }
+          }
+          std::cout << "\n" << std::endl;
           std::string filtered_event_json = current_event_wrapper
                                               .to_json_with_attribute_projection(
                                                 attribute_projection);
