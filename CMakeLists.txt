@@ -114,7 +114,7 @@ pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 # Add compiler and linker flags to pycore
 target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads minjsoncpp)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads minjsoncpp gmp::gmp gmp::gmpxx gmp::libgmp)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
