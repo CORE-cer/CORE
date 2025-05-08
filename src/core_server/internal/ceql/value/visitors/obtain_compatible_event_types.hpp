@@ -33,7 +33,8 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   bool has_added_an_event_type = false;
 
  public:
-  ObtainCompatibleEventTypes(const QueryCatalog& query_catalog) : query_catalog(query_catalog) {
+  ObtainCompatibleEventTypes(const QueryCatalog& query_catalog)
+      : query_catalog(query_catalog) {
     for (Types::UniqueEventTypeId i = 0; i < query_catalog.number_of_events(); i++) {
       compatible_event_types.insert(i);
     }

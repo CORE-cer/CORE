@@ -1,6 +1,7 @@
 #pragma once
 
 #include <minjsoncpp.h>
+
 #include <string>
 
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
@@ -41,7 +42,8 @@ struct QueryInfo {
 
   std::string to_json() const {
     std::string out = "{";
-    out += "\"result_handler_identifier\":\"" + minjson::escape(result_handler_identifier) + "\",";
+    out += "\"result_handler_identifier\":\"" + minjson::escape(result_handler_identifier)
+           + "\",";
     out += "\"result_handler_type\":\"" + std::to_string(result_handler_type) + "\",";
     out += "\"query_string\":\"" + minjson::escape(query_string) + "\",";
     out += "\"query_name\":\"" + minjson::escape(query_name) + "\",";
@@ -49,8 +51,6 @@ struct QueryInfo {
 
     return out;
   }
-
-
 };
 
 }  // namespace CORE::Types
