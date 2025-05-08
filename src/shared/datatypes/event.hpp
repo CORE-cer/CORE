@@ -1,5 +1,8 @@
 #pragma once
 
+#include <gmpxx.h>
+
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -115,6 +118,25 @@ struct Event {
       if (it != attributes.end()) {
         out += ",";
       }
+    }
+
+    out += "]}";
+
+    return out;
+  }
+
+  std::string
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+    std::string out = "{";
+    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"attributes\": [";
+    for (size_t i = 0; i < attributes.size(); ++i) {
+      if (attribute_projection[i]) {
+        out += attributes[i]->to_json() + ",";
+      }
+    }
+    if (out.back() == ',') {
+      out.pop_back();  // Remove the last comma
     }
 
     out += "]}";

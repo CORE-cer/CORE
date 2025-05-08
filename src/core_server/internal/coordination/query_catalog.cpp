@@ -5,7 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <map>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -45,7 +47,118 @@ QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(q
   populate_stream_event_to_marking_id();
   populate_event_to_marking_id();
   assign_marking_ids_to_AS_variables();
+  populate_default_attribute_projections();
+  // populate_attribute_projections_for_stream_events();
+  // populate_attribute_projections_for_events();
+  // populate_attribute_projections_for_as_variables();
 }
+
+void QueryCatalog::populate_default_attribute_projections() {
+  for (const Types::StreamInfo& stream_info_obj : get_all_streams_info()) {
+    for (const Types::EventInfo& event_info_obj : stream_info_obj.events_info) {
+      std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(), true);
+      std::optional<MarkingId> marking_id_stream_event_pair = get_marking_id(
+        stream_info_obj.name, event_info_obj.name);
+      if (!marking_id_stream_event_pair.has_value()) {
+        throw std::runtime_error("Marking ID not found for stream and event pair");
+      }
+
+      // Insert the attribute projection for the stream and event pair
+      // Since this marking id is unique to a single event, we only need one entry in internal map
+      attribute_projections.insert(
+        {marking_id_stream_event_pair.value(),
+         {{event_info_obj.id, std::move(attribute_projection)}}});
+    }
+  }
+
+  for (const auto& [event_or_as_variable_name, marking_id] :
+       event_or_as_variable_name_to_marking_id) {
+    auto event_unique_id_it = event_name_to_possible_unique_event_id.find(
+      event_or_as_variable_name);
+
+    // All possible unique event ids for the event name
+    std::set<Types::UniqueEventTypeId> possible_unique_event_ids = {};
+    // If not found in event_name_to_possible_unique_event_id, it is an AS variable
+    // For now, AS can be any event so we handle all possible event types
+    if (event_unique_id_it == event_name_to_possible_unique_event_id.end()) {
+      auto keys = std::views::keys(unique_event_id_to_events_info_idx);
+      possible_unique_event_ids = {keys.begin(), keys.end()};
+    } else {
+      possible_unique_event_ids = event_unique_id_it->second;
+    }
+
+    bool first = true;
+    for (const auto& unique_event_id : possible_unique_event_ids) {
+      auto event_info_it = unique_event_id_to_events_info_idx.find(unique_event_id);
+      if (event_info_it == unique_event_id_to_events_info_idx.end()) {
+        throw std::runtime_error(
+          "Event ID not found in unique_event_id_to_events_info_idx");
+      }
+      const auto& event_info_obj = events_info[event_info_it->second];
+      std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(), true);
+      if (first) {
+        attribute_projections.insert(
+          {marking_id, {{event_info_obj.id, std::move(attribute_projection)}}});
+        first = false;
+      } else {
+        attribute_projections[marking_id].insert(
+          {{event_info_obj.id, std::move(attribute_projection)}});
+      }
+    }
+  }
+}
+
+// void QueryCatalog::populate_attribute_projections_for_stream_events() {
+//   for (const Types::StreamInfo& stream_info_obj : get_all_streams_info()) {
+//     for (const Types::EventInfo& event_info_obj : stream_info_obj.events_info) {
+//       auto projection_it = query.select.attribute_projection_stream_event.find(
+//         {stream_info_obj.name, event_info_obj.name});
+//
+//       // In case of no projection specified
+//       if (projection_it == query.select.attribute_projection_stream_event.end()) {
+//         std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(),
+//                                                true);
+//         attribute_projections.insert(
+//           {event_info_obj.id, std::move(attribute_projection)});
+//         continue;
+//       }
+//
+//       // In case of specified attribute projection
+//       std::vector<bool> attribute_projection(event_info_obj.attributes_info.size(),
+//                                              false);
+//       for (int attribute_i = 0; attribute_i < event_info_obj.attributes_info.size();
+//            ++attribute_i) {
+//         const auto& attribute_info = event_info_obj.attributes_info[attribute_i];
+//         if (projection_it->second.contains(attribute_info.name)) {
+//           attribute_projection[attribute_i] = true;
+//         }
+//       }
+//     }
+//   }
+// }
+//
+// void QueryCatalog::populate_attribute_projections_for_events() {
+//   for (const auto& event_info : events_info) {
+//     auto projection_it = query.select.attribute_projection_variable.find(
+//       event_info.name);
+//     // In case of no projection specified
+//     if (projection_it == query.select.attribute_projection_variable.end()) {
+//       std::vector<bool> attribute_projection(event_info.attributes_info.size(), true);
+//       attribute_projections.insert({event_info.id, std::move(attribute_projection)});
+//       return;
+//     }
+//
+//     // In case of specified attribute projection
+//     std::vector<bool> attribute_projection(event_info.attributes_info.size(), false);
+//     for (int attribute_i = 0; attribute_i < event_info.attributes_info.size();
+//          ++attribute_i) {
+//       const auto& attribute_info = event_info.attributes_info[attribute_i];
+//       if (projection_it->second.contains(attribute_info.name)) {
+//         attribute_projection[attribute_i] = true;
+//       }
+//     }
+//   }
+// }
 
 std::optional<QueryCatalog::MarkingId>
 QueryCatalog::get_marking_id(std::string stream_name, std::string event_name) const {
@@ -427,7 +540,8 @@ void QueryCatalog::add_unique_event_id_to_event_name_ids(const Catalog& catalog)
           // but good for consistency with the above function or if event.name could map to multiple
           // if catalog.unique_event_names wasn't perfectly unique (which it should be).
           throw std::runtime_error(
-            "event name found twice in catalog unique_event_names during unique_event_id "
+            "event name found twice in catalog unique_event_names during "
+            "unique_event_id "
             "mapping");
         }
         found = true;
