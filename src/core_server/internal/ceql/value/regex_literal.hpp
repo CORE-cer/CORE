@@ -11,11 +11,11 @@ struct RegexLiteral final : public Value {
 
   RegexLiteral() noexcept {}
 
-  RegexLiteral(std::string s_value) noexcept : value(s_value) {}
+  RegexLiteral(std::string s_value) : value(s_value) {}
 
   ~RegexLiteral() noexcept override {}
 
-  std::string to_string() const noexcept override { return value; }
+  std::string to_string() const override { return value; }
 
   bool operator==(const RegexLiteral& other) const noexcept {
     return value == other.value;

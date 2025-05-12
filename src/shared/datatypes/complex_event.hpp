@@ -25,10 +25,10 @@ struct ComplexEvent {
   ComplexEvent(uint64_t start, uint64_t end, std::vector<Event>&& events) noexcept
       : start(start), end(end), events(std::move(events)) {}
 
-  ComplexEvent(uint64_t start, uint64_t end, std::initializer_list<Event>&& events) noexcept
+  ComplexEvent(uint64_t start, uint64_t end, std::initializer_list<Event>&& events)
       : start(start), end(end), events(std::move(events)) {}
 
-  ComplexEvent(uint64_t start, uint64_t end, std::vector<Event>& events) noexcept
+  ComplexEvent(uint64_t start, uint64_t end, std::vector<Event>& events)
       : start(start), end(end), events(events) {}
 
   std::string to_string() const {

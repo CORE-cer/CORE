@@ -22,11 +22,10 @@ struct StreamInfoParsed {
 
   StreamInfoParsed() noexcept = default;
 
-  StreamInfoParsed(std::string stream_name,
-                   std::vector<EventInfoParsed>&& events_info) noexcept
+  StreamInfoParsed(std::string stream_name, std::vector<EventInfoParsed>&& events_info)
       : name(stream_name), events_info(std::move(events_info)) {}
 
-  StreamInfoParsed(std::initializer_list<EventInfoParsed>&& events_info) noexcept
+  StreamInfoParsed(std::initializer_list<EventInfoParsed>&& events_info)
       : events_info(std::move(events_info)) {}
 
   ~StreamInfoParsed() noexcept = default;

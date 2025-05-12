@@ -12,7 +12,7 @@ struct AttributeInfo {
 
   AttributeInfo() noexcept {}
 
-  AttributeInfo(std::string name, ValueTypes value_type) noexcept
+  AttributeInfo(std::string name, ValueTypes value_type)
       : name(name), value_type(value_type) {}
 
   bool operator==(const AttributeInfo& other) const {

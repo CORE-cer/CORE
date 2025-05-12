@@ -11,11 +11,11 @@ struct StringLiteral final : public Value {
 
   StringLiteral() noexcept {}
 
-  StringLiteral(std::string s_value) noexcept : value(s_value) {}
+  StringLiteral(std::string s_value) : value(s_value) {}
 
   ~StringLiteral() noexcept override {}
 
-  std::string to_string() const noexcept override { return value; }
+  std::string to_string() const override { return value; }
 
   bool operator==(const StringLiteral& other) const noexcept {
     return value == other.value;

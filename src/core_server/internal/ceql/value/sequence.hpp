@@ -38,7 +38,7 @@ struct Sequence final : public Value {
     }
   }
 
-  Sequence(const Sequence& other) noexcept {
+  Sequence(const Sequence& other) {
     type = other.type;
     switch (type) {
       case UPPER_BOUND:
@@ -70,7 +70,7 @@ struct Sequence final : public Value {
   Sequence(std::vector<std::unique_ptr<Value>>&& values) noexcept
       : values(std::move(values)), type(SEQUENCE) {}
 
-  std::string to_string() const noexcept override {
+  std::string to_string() const override {
     switch (type) {
       case UPPER_BOUND:
         return ".." + upper_bound->to_string();

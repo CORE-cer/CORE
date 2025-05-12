@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 
 #include "shared/datatypes/complex_event.hpp"
@@ -18,7 +19,8 @@ struct Enumerator {
 
   Enumerator() noexcept = default;
 
-  Enumerator(std::vector<ComplexEvent>&& events) noexcept : complex_events(events) {}
+  Enumerator(std::vector<ComplexEvent>&& events) noexcept
+      : complex_events(std::move(events)) {}
 
   ~Enumerator() noexcept = default;
 
