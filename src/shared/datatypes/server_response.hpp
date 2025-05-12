@@ -27,8 +27,7 @@ struct ServerResponse {
 
   ServerResponse() noexcept = default;
 
-  ServerResponse(std::string&& serialized_response_data,
-                 ServerResponseType response_type) noexcept
+  ServerResponse(std::string&& serialized_response_data, ServerResponseType response_type)
       : serialized_response_data(serialized_response_data),
         response_type(response_type) {}
 

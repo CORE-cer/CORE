@@ -55,7 +55,7 @@ struct Event {
 
   Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes,
-        std::optional<Types::IntValue> primary_time = {}) noexcept
+        std::optional<Types::IntValue> primary_time = {})
       : event_type_id(event_type_id), primary_time(primary_time) {
     this->attributes.reserve(attributes.size());
     for (auto& attr : attributes) {

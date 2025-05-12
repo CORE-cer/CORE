@@ -23,7 +23,7 @@ struct EventInfo {
 
   EventInfo(UniqueEventTypeId event_type_id,
             std::string name,
-            std::vector<AttributeInfo>&& attributes_info) noexcept
+            std::vector<AttributeInfo>&& attributes_info)
       : id(event_type_id), name(name), attributes_info(attributes_info) {
     for (size_t id = 0; id < attributes_info.size(); id++) {
       attribute_names_to_ids[attributes_info[id].name] = id;

@@ -12,6 +12,9 @@ namespace CORE {
 
 template <class Derived>
 class MessageHandler {
+  friend Derived;
+  MessageHandler() = default;
+
  public:
   void eval(Types::Enumerator enumerator) {
     static_cast<Derived*>(this)->handle_complex_event(enumerator);
@@ -26,10 +29,15 @@ class MessageHandler {
   }
 
   bool needs_to_stop_implementation() { return false; }
+
+  friend Derived;
 };
 
 template <class Derived>
 class StaticMessageHandler {
+  friend Derived;
+  StaticMessageHandler() = default;
+
  public:
   static void eval(Types::Enumerator enumerator) {
     Derived::handle_complex_event(enumerator);
@@ -42,10 +50,14 @@ class StaticMessageHandler {
   }
 
   static bool needs_to_stop_implementation() { return false; }
+
+  friend Derived;
 };
 
 class Printer : public StaticMessageHandler<Printer> {
  public:
+  Printer() = default;
+
   static void handle_complex_event(Types::Enumerator& enumerator) {
     for (auto& complex_event : enumerator)
       std::cout << complex_event.to_string() << std::endl;
@@ -54,6 +66,8 @@ class Printer : public StaticMessageHandler<Printer> {
 
 class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
  public:
+  CallbackHandler() = default;
+
   static std::function<void(const Types::Enumerator&)> event_handler;
 
   static void handle_complex_event(Types::Enumerator& enumerator) {
@@ -67,12 +81,16 @@ std::function<void(const Types::Enumerator&)> CallbackHandler::event_handler = n
 
 class DummyHandler : public StaticMessageHandler<DummyHandler> {
  public:
+  DummyHandler() = default;
+
   static void handle_complex_event(Types::Enumerator& enumerator) {}
 };
 
 class LimitedMessageStorer : public MessageHandler<LimitedMessageStorer> {
  public:
   std::vector<Types::Enumerator> storage{};
+
+  LimitedMessageStorer() = default;
 
  private:
   uint64_t current_index = 0;

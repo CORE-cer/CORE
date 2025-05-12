@@ -17,11 +17,11 @@ struct QueryInfo {
   // Marks if query if currently active in system
   bool active = true;
 
-  QueryInfo() noexcept {}
+  QueryInfo() {}
 
   QueryInfo(std::string result_handler_identifier,
             Library::Components::ResultHandlerType result_handler_type,
-            std::string query_string) noexcept
+            std::string query_string)
       : result_handler_identifier(result_handler_identifier),
         result_handler_type(result_handler_type),
         query_string(query_string) {}
@@ -29,7 +29,7 @@ struct QueryInfo {
   QueryInfo(std::string result_handler_identifier,
             Library::Components::ResultHandlerType result_handler_type,
             std::string query_string,
-            std::string query_name) noexcept
+            std::string query_name)
       : result_handler_identifier(result_handler_identifier),
         result_handler_type(result_handler_type),
         query_string(query_string),

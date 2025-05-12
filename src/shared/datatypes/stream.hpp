@@ -24,7 +24,7 @@ struct Stream {
   Stream(StreamTypeId id, std::vector<std::shared_ptr<Event>>&& events) noexcept
       : id(id), events(std::move(events)) {}
 
-  Stream(StreamTypeId id, std::initializer_list<std::shared_ptr<Event>>&& events) noexcept
+  Stream(StreamTypeId id, std::initializer_list<std::shared_ptr<Event>>&& events)
       : id(id), events(std::move(events)) {}
 
   ~Stream() noexcept = default;

@@ -128,10 +128,10 @@ struct StreamInfo {
 
   StreamInfo(StreamTypeId stream_type_id,
              std::string stream_name,
-             std::vector<EventInfo>&& events_info) noexcept
+             std::vector<EventInfo>&& events_info)
       : id(stream_type_id), name(stream_name), events_info(std::move(events_info)) {}
 
-  StreamInfo(std::initializer_list<EventInfo>&& events_info) noexcept
+  StreamInfo(std::initializer_list<EventInfo>&& events_info)
       : events_info(std::move(events_info)) {}
 
   ~StreamInfo() noexcept = default;

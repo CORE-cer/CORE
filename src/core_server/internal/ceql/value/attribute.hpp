@@ -11,11 +11,11 @@ struct Attribute final : public Value {
 
   Attribute() noexcept {}
 
-  Attribute(std::string value) noexcept : value(value) {}
+  Attribute(std::string value) : value(value) {}
 
   ~Attribute() noexcept override {}
 
-  std::string to_string() const noexcept override { return value; }
+  std::string to_string() const override { return value; }
 
   bool operator==(const Attribute& other) const noexcept { return value == other.value; }
 

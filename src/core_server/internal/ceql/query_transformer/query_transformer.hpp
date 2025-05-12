@@ -14,6 +14,10 @@ namespace CORE::Internal::CEQL {
  */
 template <class Derived>
 class QueryTransformer {
+  friend Derived;
+
+  QueryTransformer() = default;
+
  public:
   Query operator()(Query&& query) {
     return static_cast<Derived*>(this)->eval(std::move(query));

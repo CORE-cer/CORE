@@ -16,7 +16,7 @@ struct IntegerLiteral final : public Value {
 
   ~IntegerLiteral() noexcept {}
 
-  std::string to_string() const noexcept override { return std::to_string(this->value); }
+  std::string to_string() const override { return std::to_string(this->value); }
 
   bool operator==(const IntegerLiteral& other) const noexcept {
     return value == other.value;

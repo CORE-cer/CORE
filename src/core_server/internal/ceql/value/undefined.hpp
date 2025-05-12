@@ -11,7 +11,7 @@ struct Undefined final : public Value {
 
   ~Undefined() noexcept override {}
 
-  std::string to_string() const noexcept override { return "Undefined"; }
+  std::string to_string() const override { return "Undefined"; }
 
   bool operator==(const Undefined& other) const noexcept { return true; }
 
