@@ -5,7 +5,6 @@
 #include <cassert>
 #include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <list>
 #include <mutex>
 #include <ratio>
