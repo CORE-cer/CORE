@@ -95,6 +95,7 @@ class CORE(ConanFile):
     GLAZE_VERSION = "4.0.1"
     PYBIND_VERSION = "2.13.5"
     ARGPARSE_VERSION = "3.1"
+    NLOHMANN_JSON_VERSION = "3.12.0"
 
     def layout(self):
         cmake_layout(self)
@@ -125,6 +126,7 @@ class CORE(ConanFile):
         self.requires("glaze/" + CORE.GLAZE_VERSION)
         self.requires("pybind11/" +  CORE.PYBIND_VERSION)
         self.requires("argparse/" +  CORE.ARGPARSE_VERSION)
+        self.requires("nlohmann_json/" + CORE.NLOHMANN_JSON_VERSION)
 
     def generate(self):
         tc = CMakeToolchain(self, generator="Ninja")

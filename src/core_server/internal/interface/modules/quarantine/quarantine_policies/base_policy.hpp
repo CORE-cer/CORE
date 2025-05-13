@@ -6,7 +6,6 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <cstring>
 #include <iterator>
 #include <limits>
 #include <list>

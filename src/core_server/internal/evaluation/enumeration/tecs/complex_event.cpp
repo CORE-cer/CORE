@@ -1,7 +1,5 @@
 #include "complex_event.hpp"
 
-#include <support/CPPUtils.h>
-
 #include <cassert>
 #include <cstddef>
 #include <iostream>

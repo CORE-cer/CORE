@@ -26,6 +26,7 @@ find_package(uwebsockets REQUIRED)
 find_package(glaze REQUIRED)
 find_package(pybind11 REQUIRED)
 find_package(argparse REQUIRED)
+find_package(nlohmann_json REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
@@ -49,14 +50,7 @@ FetchContent_Declare (
   GIT_PROGRESS TRUE
 )
 
-FetchContent_Declare(
-  minjsoncpp
-  GIT_REPOSITORY https://github.com/toughengineer/minjsoncpp.git
-  GIT_TAG main
-)
-
 FetchContent_MakeAvailable (tracy)
-FetchContent_MakeAvailable(minjsoncpp)
 
 if(TARGET TracyClient)
     set_target_properties(TracyClient PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -114,7 +108,7 @@ pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 # Add compiler and linker flags to pycore
 target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads minjsoncpp gmp::gmp gmp::gmpxx gmp::libgmp)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient glaze::glaze Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
@@ -125,7 +119,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets glaze::glaze argparse::argparse minjsoncpp)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets glaze::glaze argparse::argparse nlohmann_json::nlohmann_json)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)

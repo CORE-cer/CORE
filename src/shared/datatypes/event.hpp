@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cstddef>
 #include <memory>
 #include <optional>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <ctime>
 #include <string>
 #include <tracy/Tracy.hpp>
 

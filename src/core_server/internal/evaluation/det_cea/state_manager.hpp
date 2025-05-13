@@ -104,21 +104,24 @@ class StateManager {
       amount_of_used_states,
       amount_of_allowed_states);
     State* new_state;
-    new_state = allocate_state(std::forward<Args>(args)...);
-    if (new_state == nullptr) {
-      // Not enough memory, try to evict a state.
+    bool is_allocatable = check_can_allocate_state();
+    if (is_allocatable) {
+      // There is enough memory to allocate a new state.
+      new_state = allocate_state(std::forward<Args>(args)...);
+    } else {
+      // There is not enough memory to allocate a new state.
+      // Try to evict a state.
       new_state = evictable_state_head;
       if (new_state != nullptr) {
         // Successfully evicted a state, reset it and return it.
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
-        LOG_DEBUG("Not enough memory to allocate DetCEA state");
+        LOG_DEBUG("Not enough memory to allocate DetCEA state, force increasing size");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);
       }
-    } else {
     }
     assert(new_state != nullptr);
     return new_state;
@@ -139,6 +142,24 @@ class StateManager {
     } else {
       return nullptr;
     }
+  }
+
+  /**
+   * Checks if there is enough memory to allocate a new state. If there is not
+   * enough memory and the amount of used states is less than the amount of
+   * allowed states, it will increase the size of the mempool.
+   *
+   * @return True if there is enough memory to allocate a new state, false
+   * otherwise.
+   */
+  bool check_can_allocate_state() {
+    if (amount_of_used_states < amount_of_allowed_states) {
+      if (minipool_head->is_full()) {
+        increase_mempool_size();
+      }
+      return true;
+    }
+    return false;
   }
 
   /**
