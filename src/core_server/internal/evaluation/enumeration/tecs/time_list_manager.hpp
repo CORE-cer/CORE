@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdlib>
 #include <memory>
 
 #include "node.hpp"

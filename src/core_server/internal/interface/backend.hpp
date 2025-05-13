@@ -16,8 +16,6 @@
 #include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <cassert>
-#include <cstring>
-#include <ctime>
 #include <memory>
 #include <utility>
 #include <vector>

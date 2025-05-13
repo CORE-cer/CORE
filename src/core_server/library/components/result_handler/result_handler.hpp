@@ -104,8 +104,9 @@ class OnlineResultHandler : public ResultHandler {
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog.value().convert_enumerator(
-        std::move(internal_enumerator.value()));
+      enumerator = query_catalog  // NOLINT(bugprone-unchecked-optional-access)
+                     .value()
+                     .convert_enumerator(std::move(internal_enumerator.value()));
     }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};
@@ -145,7 +146,8 @@ class WebSocketResultHandler : public ResultHandler {
 
     std::string result_json = "[";
     for (const auto& complex_event : internal_enumerator.value()) {
-      result_json += complex_event.to_json(query_catalog.value());
+      result_json += complex_event.to_json(
+        query_catalog.value());  // NOLINT(bugprone-unchecked-optional-access)
       result_json += ",";
     }
     result_json = result_json.substr(0, result_json.size() - 1);

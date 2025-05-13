@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <cwchar>
 #include <memory>
 #include <set>
 #include <string>
