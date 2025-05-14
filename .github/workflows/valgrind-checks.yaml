@@ -32,10 +32,13 @@ jobs:
           name: CORE-cer/conan-center-index-custom
           path: conan-center-index-custom
 
-      - run: ls
-      - run: |
-        cd conan-center-index-custom
-        ls
+      - name: x
+        run: ls
+
+      - name: y
+        run: |
+          cd conan-center-index-custom
+          ls
 
       - name: Add custom ConanCenter index
         run: conan remote add coreremote ./conan-center-index-custom --allowed-packages="gmpcustom/*"
