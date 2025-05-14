@@ -56,6 +56,15 @@ jobs:
       - name: "Setup conan"
         run: conan profile detect
 
+      - name: Checkout custom ConanCenter index
+        uses: actions/checkout@v4
+        with:
+          name: CORE-cer/conan-center-index-custom
+          path: conan-center-index-custom
+
+      - name: Add custom ConanCenter index
+        run: conan remote add coreremote ./conan-center-index-custom --allowed-packages="gmpcustom/*"
+
       - name: add artifactory
         run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
