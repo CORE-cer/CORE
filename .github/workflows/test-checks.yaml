@@ -60,7 +60,7 @@ jobs:
       - name: Checkout custom ConanCenter index
         uses: actions/checkout@v4
         with:
-          name: CORE-cer/conan-center-index-custom
+          repository: CORE-cer/conan-center-index-custom
           path: conan-center-index-custom
 
       - name: Add custom ConanCenter index
@@ -131,7 +131,7 @@ jobs:
       - name: Checkout custom ConanCenter index
         uses: actions/checkout@v4
         with:
-          name: CORE-cer/conan-center-index-custom
+          repository: CORE-cer/conan-center-index-custom
           path: conan-center-index-custom
 
       - name: Add custom ConanCenter index
@@ -202,7 +202,7 @@ jobs:
       - name: Checkout custom ConanCenter index
         uses: actions/checkout@v4
         with:
-          name: CORE-cer/conan-center-index-custom
+          repository: CORE-cer/conan-center-index-custom
           path: conan-center-index-custom
 
       - name: Add custom ConanCenter index
@@ -283,7 +283,7 @@ jobs:
       - name: Checkout custom ConanCenter index
         uses: actions/checkout@v4
         with:
-          name: CORE-cer/conan-center-index-custom
+          repository: CORE-cer/conan-center-index-custom
           path: conan-center-index-custom
 
       - name: Add custom ConanCenter index
