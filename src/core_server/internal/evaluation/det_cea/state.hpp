@@ -2,9 +2,12 @@
 #include <gmpxx.h>
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <utility>
+#include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 
@@ -15,24 +18,28 @@ class State {
 
  private:
   struct StatesData {
-    uint64_t marked_state_id;
-    State* marked_state;
-    uint64_t unmarked_state_id;
-    State* unmarked_state;
+    std::vector<State*> states;
+    std::vector<uint64_t> states_ids;
+
+    StatesData(std::vector<State*> states) : states(states) {
+      states_ids.reserve(states.size());
+      for (auto& state : states) {
+        assert(state != nullptr);
+        states_ids.push_back(state->id);
+      }
+    }
 
     bool is_consistent() {
-      assert(marked_state != nullptr && unmarked_state != nullptr);
-      return (marked_state_id == marked_state->id)
-             && (unmarked_state_id == unmarked_state->id);
+      for (size_t i = 0; i < states.size(); i++) {
+        if (states[i]->id != states_ids[i]) {
+          return false;
+        }
+      }
+      return true;
     }
   };
 
  public:
-  struct States {
-    State* marked_state;
-    State* unmarked_state;
-  };
-
   uint64_t id;
   mpz_class states;
   // The id is stored in the transitions because in the future we might
@@ -51,17 +58,19 @@ class State {
   std::map<mpz_class, StatesData> transitions;
 
  public:
-  State(mpz_class states, CEA& cea)
+  State(mpz_class states, CEA& cea, mpz_class marked_variables)
       : id(IdCounter++),
         states(states),
         cea(cea),
+        marked_variables(marked_variables),
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
 
-  void reset(mpz_class states, CEA& cea) {
+  void reset(mpz_class states, CEA& cea, mpz_class marked_variables) {
     this->id = IdCounter++;
     this->states = states;
     this->cea = cea;
+    this->marked_variables = marked_variables;
     this->ref_count = 0;
     is_final = (states & cea.final_states) != 0;
     is_empty = states == 0;
@@ -75,7 +84,7 @@ class State {
     ref_count -= 1;
   }
 
-  States next(mpz_class evaluation, uint64_t& n_hits) {
+  std::optional<std::vector<State*>> next(mpz_class evaluation, uint64_t& n_hits) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
@@ -84,20 +93,18 @@ class State {
         transitions.erase(it);
       } else {
         n_hits++;
-        return {states_data.marked_state, states_data.unmarked_state};
+        return states_data.states;
       }
     }
-    return {nullptr, nullptr};
+    return {};
   }
 
-  void add_transition(mpz_class evaluation, States next_states) {
+  void add_transition(mpz_class evaluation, std::vector<State*> next_states) {
     assert(!transitions.contains(evaluation));
-    assert(next_states.unmarked_state != nullptr && next_states.marked_state != nullptr);
-    transitions.insert(std::make_pair(evaluation,
-                                      StatesData{next_states.marked_state->id,
-                                                 next_states.marked_state,
-                                                 next_states.unmarked_state->id,
-                                                 next_states.unmarked_state}));
+    for (auto& state : next_states) {
+      assert(state != nullptr);
+    }
+    transitions.insert(std::make_pair(evaluation, next_states));
   }
 
   bool is_evictable() { return ref_count == 0; }

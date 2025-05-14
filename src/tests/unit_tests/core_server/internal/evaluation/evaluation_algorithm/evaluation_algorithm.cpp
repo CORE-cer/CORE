@@ -134,6 +134,10 @@ TEST_CASE("Evaluation on the example stream of the papers") {
   REQUIRE(output.complex_events.size() == 4);
 
   REQUIRE(output.complex_events[0].events.size() == 3);
+  INFO(output.complex_events[0].to_string());
+  INFO(output.complex_events[1].to_string());
+  INFO(output.complex_events[2].to_string());
+  INFO(output.complex_events[3].to_string());
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
