@@ -60,7 +60,7 @@ class DetCEA {
     assert(state != nullptr);
     n_nexts++;
     auto next_states = state->next(evaluation, n_hits);  // memoized
-    for (auto& state : next_states.value_or({})) {
+    for (auto& state : next_states.value_or(std::vector<State*>())) {
       assert(state != nullptr);
     }
     if (!next_states.has_value()) {
