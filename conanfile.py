@@ -92,7 +92,6 @@ class CORE(ConanFile):
     QUILL_VERSION = "3.7.0"
     READERWRITERQUEUE_VERSION = "1.0.6"
     UWEBSOCKETS_VERSION = "20.70.0"
-    GLAZE_VERSION = "4.0.1"
     PYBIND_VERSION = "2.13.5"
     ARGPARSE_VERSION = "3.1"
     NLOHMANN_JSON_VERSION = "3.12.0"
@@ -123,7 +122,6 @@ class CORE(ConanFile):
         self.requires("quill/" + CORE.QUILL_VERSION)
         self.requires("readerwriterqueue/" + CORE.READERWRITERQUEUE_VERSION)
         self.requires("uwebsockets/" + CORE.UWEBSOCKETS_VERSION)
-        self.requires("glaze/" + CORE.GLAZE_VERSION)
         self.requires("pybind11/" +  CORE.PYBIND_VERSION)
         self.requires("argparse/" +  CORE.ARGPARSE_VERSION)
         self.requires("nlohmann_json/" + CORE.NLOHMANN_JSON_VERSION)
