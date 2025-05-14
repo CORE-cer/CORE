@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
 #include <quill/Quill.h>  // NOLINT
@@ -29,7 +31,8 @@ const size_t STATE_MANAGER_MAX_SIZE = 4;
  */
 class StateManager {
   using StatePool = MiniPool::MiniPool<State>;
-  using States = Det::State::States;
+  using VariablesToMark = mpz_class;
+  using StateStates = mpz_class;
 
  private:
   size_t amount_of_used_states{0};
@@ -38,7 +41,8 @@ class StateManager {
   State* evictable_state_head = nullptr;
   State* evictable_state_tail = nullptr;
   std::vector<State*> states;
-  std::map<mpz_class, uint64_t> states_bitset_to_index;
+  std::map<std::pair<StateStates, VariablesToMark>, uint64_t>
+    states_bitset_and_marked_variable_to_index;
 
  public:
   StateManager()
@@ -84,13 +88,14 @@ class StateManager {
     return out;
   }
 
-  State* create_or_return_existing_state(mpz_class bitset, CEA& cea) {
-    auto it = states_bitset_to_index.find(bitset);
-    if (it != states_bitset_to_index.end()) {
+  State*
+  create_or_return_existing_state(mpz_class bitset, CEA& cea, mpz_class marked_variables) {
+    auto it = states_bitset_and_marked_variable_to_index.find({bitset, marked_variables});
+    if (it != states_bitset_and_marked_variable_to_index.end()) {
       assert(it->second < states.size());
       return states[it->second];
     } else {
-      State* state = alloc(bitset, cea);
+      State* state = alloc(bitset, cea, marked_variables);
       return state;
     }
   }
@@ -137,7 +142,9 @@ class StateManager {
       State* state = minipool_head->alloc(std::forward<Args>(args)...);
       // Add the state to the list of states as is a new state.
       states.push_back(state);
-      states_bitset_to_index[state->states] = states.size() - 1;
+      states_bitset_and_marked_variable_to_index[{state->states,
+                                                  state->marked_variables}] = states.size()
+                                                                              - 1;
       return state;
     } else {
       return nullptr;
@@ -234,11 +241,14 @@ class StateManager {
 
   template <class... Args>
   void reset_state(State* const& state, Args&&... args) {
-    mpz_class old_states = state->states;
+    StateStates old_states = state->states;
+    VariablesToMark old_marked_variables = state->marked_variables;
     unset_evictable_state(state);
     state->reset(std::forward<Args>(args)...);
-    states_bitset_to_index[state->states] = states_bitset_to_index[old_states];
-    states_bitset_to_index.erase(old_states);
+    states_bitset_and_marked_variable_to_index[{
+      state->states, state->marked_variables}] = states_bitset_and_marked_variable_to_index
+      [{old_states, old_marked_variables}];
+    states_bitset_and_marked_variable_to_index.erase({old_states, old_marked_variables});
   }
 };
 }  // namespace CORE::Internal::CEA::Det

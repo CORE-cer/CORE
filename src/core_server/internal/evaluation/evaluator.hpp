@@ -34,8 +34,8 @@ class Evaluator {
  private:
   using UnionList = std::vector<tECS::Node*>;
   using State = CEA::Det::State;
-  using States = CEA::Det::State::States;
   using Node = tECS::Node;
+
   //                                   // Name in paper
   CEA::DetCEA& cea;                    // A
   PredicateEvaluator tuple_evaluator;  // t generator
@@ -228,42 +228,46 @@ class Evaluator {
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
                      event.get_primary_time().val);
     assert(p != nullptr);
-    States next_states = cea.next(p, t, current_iteration);
-    auto marked_state = next_states.marked_state;
-    mpz_class marked_variables = next_states.marked_state->marked_variables;
-    auto unmarked_state = next_states.unmarked_state;
-    assert(marked_state != nullptr && unmarked_state != nullptr);
+    std::vector<State*> next_states = cea.next(p, t, current_iteration);
     bool recycle_ulist = false;
-    if (!marked_state->is_empty) {
-      Node* new_node = tecs->new_extend(tecs->merge(ul),
-                                        event,
-                                        current_time,
-                                        marked_variables);
-      if (current_union_list_map.contains(marked_state)) {
-        current_union_list_map[marked_state] = tecs->insert(
-          std::move(current_union_list_map[marked_state]), new_node);
-      } else {
-        UnionList new_ulist = tecs->new_ulist(new_node);
-        current_ordered_keys.push_back(marked_state);
-        cea.state_manager.pin_state(marked_state);
-        current_union_list_map[marked_state] = new_ulist;
-        if (marked_state->is_final) {
-          final_states.push_back(marked_state);
-        }
+    mpz_class empty_marked_variables = mpz_class(0);
+    for (auto& state : next_states) {
+      assert(state != nullptr);
+      if (state->is_empty) {
+        continue;
       }
-    }
-    if (!unmarked_state->is_empty) {
-      if (current_union_list_map.contains(unmarked_state)) {
-        Node* new_node = tecs->merge(ul);
-        current_union_list_map[unmarked_state] = tecs->insert(
-          std::move(current_union_list_map[unmarked_state]), new_node);
+      if (state->marked_variables != empty_marked_variables) {
+        Node* new_node = tecs->new_extend(tecs->merge(ul),
+                                          event,
+                                          current_time,
+                                          state->marked_variables);
+        if (current_union_list_map.contains(state)) {
+          current_union_list_map[state] = tecs->insert(std::move(
+                                                         current_union_list_map[state]),
+                                                       new_node);
+        } else {
+          UnionList new_ulist = tecs->new_ulist(new_node);
+          current_ordered_keys.push_back(state);
+          cea.state_manager.pin_state(state);
+          current_union_list_map[state] = new_ulist;
+          if (state->is_final) {
+            final_states.push_back(state);
+          }
+        }
       } else {
-        current_ordered_keys.push_back(unmarked_state);
-        cea.state_manager.pin_state(unmarked_state);
-        current_union_list_map[unmarked_state] = ul;
-        recycle_ulist = true;
-        if (unmarked_state->is_final) {
-          final_states.push_back(unmarked_state);
+        if (current_union_list_map.contains(state)) {
+          Node* new_node = tecs->merge(ul);
+          current_union_list_map[state] = tecs->insert(std::move(
+                                                         current_union_list_map[state]),
+                                                       new_node);
+        } else {
+          current_ordered_keys.push_back(state);
+          cea.state_manager.pin_state(state);
+          current_union_list_map[state] = ul;
+          recycle_ulist = true;
+          if (state->is_final) {
+            final_states.push_back(state);
+          }
         }
       }
     }
