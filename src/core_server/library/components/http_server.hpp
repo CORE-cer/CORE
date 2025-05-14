@@ -21,6 +21,7 @@
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/components/user_data.hpp"
+#include "glaze/json/read.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
