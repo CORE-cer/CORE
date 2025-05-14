@@ -133,28 +133,36 @@ TEST_CASE("Evaluation on the example stream of the papers") {
 
   REQUIRE(output.complex_events.size() == 4);
 
-  REQUIRE(output.complex_events[0].events.size() == 3);
   INFO(output.complex_events[0].to_string());
-  INFO(output.complex_events[1].to_string());
-  INFO(output.complex_events[2].to_string());
-  INFO(output.complex_events[3].to_string());
+  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[1].to_string());
   REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[2].to_string());
   REQUIRE(output.complex_events[2].events.size() == 3);
+  REQUIRE(output.complex_events[2].start == 1);
+  REQUIRE(output.complex_events[2].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[3].to_string());
   REQUIRE(output.complex_events[3].events.size() == 3);
+  REQUIRE(output.complex_events[3].start == 0);
+  REQUIRE(output.complex_events[3].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 81));
+  REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
 }
 
