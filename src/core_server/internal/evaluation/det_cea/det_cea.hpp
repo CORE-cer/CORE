@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <map>
+#include <ranges>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
@@ -122,7 +123,8 @@ class DetCEA {
     }
     std::vector<RawStates> computed_states;
     computed_states.reserve(computed_raw_states.size());
-    for (auto& [variables_to_mark, bitset] : computed_raw_states) {
+    // Reverse the order so that unmarked variables are at the end. This is important to mantain the expected order of results.
+    for (auto& [variables_to_mark, bitset] : computed_raw_states | std::views::reverse) {
       computed_states.push_back({bitset, variables_to_mark});
     }
     return computed_states;
