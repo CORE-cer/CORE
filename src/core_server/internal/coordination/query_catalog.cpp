@@ -49,9 +49,6 @@ QueryCatalog::QueryCatalog(const Catalog& catalog, CEQL::Query& query) : query(q
   assign_marking_ids_to_AS_variables();
   populate_default_attribute_projections();
   apply_user_attribute_projections();
-  // populate_attribute_projections_for_stream_events();
-  // populate_attribute_projections_for_events();
-  // populate_attribute_projections_for_as_variables();
 }
 
 void QueryCatalog::populate_default_attribute_projections() {
@@ -144,7 +141,7 @@ void QueryCatalog::apply_user_attribute_projections() {
        query.select.attribute_projection_variable) {
     std::optional<MarkingId> marking_id_opt = get_marking_id(variable_name);
     if (!marking_id_opt) {
-      throw new std::runtime_error("Marking ID not found for variable name: "
+      throw std::runtime_error("Marking ID not found for variable name: "
                                    + variable_name);
     }
     MarkingId marking_id = marking_id_opt.value();

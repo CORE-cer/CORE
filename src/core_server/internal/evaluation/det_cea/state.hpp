@@ -21,7 +21,7 @@ class State {
     std::vector<State*> states;
     std::vector<uint64_t> states_ids;
 
-    StatesData(std::vector<State*> states) : states(states) {
+    explicit StatesData(std::vector<State*> states) : states(states) {
       states_ids.reserve(states.size());
       for (auto& state : states) {
         assert(state != nullptr);

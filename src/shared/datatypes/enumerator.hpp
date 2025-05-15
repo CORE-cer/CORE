@@ -17,7 +17,7 @@ namespace CORE::Types {
 struct Enumerator {
   std::vector<ComplexEvent> complex_events{};  // TODO: Create it with tecs.
 
-  Enumerator() noexcept = default;
+  explicit Enumerator() noexcept = default;
 
   Enumerator(std::vector<ComplexEvent>&& events) noexcept
       : complex_events(std::move(events)) {}

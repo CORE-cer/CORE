@@ -48,6 +48,8 @@ struct Query {
 
   Query& operator=(Query&& other) noexcept = default;
 
+  ~Query() = default;
+
   std::string to_string() const {
     std::string out = select.to_string() + "\n" + from.to_string() + "\n"
                       + where.to_string() + "\n" + partition_by.to_string() + "\n"

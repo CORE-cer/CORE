@@ -3,7 +3,7 @@ from os import path
 
 from conan import ConanFile
 from conan.tools.build import check_min_cppstd
-from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 
 
 def create_script(grammar_name, antlr4_version):
@@ -54,20 +54,21 @@ def create_script(grammar_name, antlr4_version):
 
 def create_antlr_autogeneration_scripts(antlr4_version):
     parsing_dir = path.join("src", "core_server", "internal", "parsing")
+    script_name = "autogenerate_script.sh"
     with open(
-        path.join(parsing_dir, "ceql_query", "autogenerate_script.sh"),
+        path.join(parsing_dir, "ceql_query", script_name),
         "w",
         encoding="utf-8",
     ) as f:
         f.write(create_script("CEQLQuery", antlr4_version))
     with open(
-        path.join(parsing_dir, "stream_declaration", "autogenerate_script.sh"),
+        path.join(parsing_dir, "stream_declaration", script_name),
         "w",
         encoding="utf-8",
     ) as f:
         f.write(create_script("StreamDeclaration", antlr4_version))
     with open(
-        path.join(parsing_dir, "option_declaration", "autogenerate_script.sh"),
+        path.join(parsing_dir, "option_declaration", script_name),
         "w",
         encoding="utf-8",
     ) as f:

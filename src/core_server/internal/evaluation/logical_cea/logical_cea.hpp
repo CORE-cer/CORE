@@ -56,6 +56,8 @@ struct LogicalCEA {
         initial_states(other.initial_states),
         final_states(other.final_states) {}
 
+  ~LogicalCEA() = default;
+
   static LogicalCEA atomic_cea(const QueryCatalog& query_catalog,
                                const StreamName stream_name,
                                const EventName event_name) {

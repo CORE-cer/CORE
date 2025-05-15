@@ -18,7 +18,7 @@ namespace CORE::Internal::CEQL {
 struct GetAllASVariablesVisitor : public FormulaVisitor {
   std::set<std::string> as_variables;
 
-  GetAllASVariablesVisitor() {}
+  GetAllASVariablesVisitor() = default;
 
   ~GetAllASVariablesVisitor() override = default;
 
