@@ -141,8 +141,7 @@ void QueryCatalog::apply_user_attribute_projections() {
        query.select.attribute_projection_variable) {
     std::optional<MarkingId> marking_id_opt = get_marking_id(variable_name);
     if (!marking_id_opt) {
-      throw std::runtime_error("Marking ID not found for variable name: "
-                                   + variable_name);
+      throw std::runtime_error("Marking ID not found for variable name: " + variable_name);
     }
     MarkingId marking_id = marking_id_opt.value();
 
