@@ -37,9 +37,8 @@ class DirectOutputTestResultHandler : public Library::Components::ResultHandler 
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog  // NOLINT(bugprone-unchecked-optional-access)
-                     .value()
-                     .convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = get_query_catalog().convert_enumerator(
+        std::move(internal_enumerator.value()));
     }
     std::unique_lock lk(output_mutex);
 
@@ -90,9 +89,8 @@ class IndirectOutputTestResultHandler : public Library::Components::ResultHandle
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog  // NOLINT(bugprone-unchecked-optional-access)
-                     .value()
-                     .convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = get_query_catalog().convert_enumerator(
+        std::move(internal_enumerator.value()));
     }
     std::unique_lock lk(output_mutex);
 
