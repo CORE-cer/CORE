@@ -26,7 +26,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "18.1.8"
+          version: "19.1.7"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -95,7 +95,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "18.1.8"
+          version: "19.1.7"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -143,7 +143,7 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "18.1.8"
+          version: "19.1.7"
 
       - name: Install libtinfo5 for clang
         run: |

@@ -119,7 +119,7 @@ class CORE(ConanFile):
     PYBIND_VERSION = "2.13.5"
     ARGPARSE_VERSION = "3.1"
     NLOHMANN_JSON_VERSION = "3.12.0"
-    GLAZE_VERSION = "4.0.1"
+    GLAZE_VERSION = "5.0.2"
 
     def layout(self):
         cmake_layout(self)
