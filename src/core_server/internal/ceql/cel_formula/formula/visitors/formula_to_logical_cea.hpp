@@ -45,7 +45,8 @@ class FormulaToLogicalCEA : public FormulaVisitor {
  public:
   CEA::LogicalCEA current_cea{0};
 
-  FormulaToLogicalCEA(const QueryCatalog& query_catalog) : query_catalog(query_catalog) {}
+  explicit FormulaToLogicalCEA(const QueryCatalog& query_catalog)
+      : query_catalog(query_catalog) {}
 
   ~FormulaToLogicalCEA() override = default;
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
@@ -18,7 +17,7 @@ struct QueryInfo {
   // Marks if query if currently active in system
   bool active = true;
 
-  QueryInfo() {}
+  QueryInfo() = default;
 
   QueryInfo(std::string result_handler_identifier,
             Library::Components::ResultHandlerType result_handler_type,
@@ -49,7 +48,6 @@ struct QueryInfo {
     j["query_name"] = query_name;
     j["active"] = active;
 
-    std::cout << "QueryInfo to_json: " << j.dump() << std::endl;  // Debug
     return j.dump();
   }
 };

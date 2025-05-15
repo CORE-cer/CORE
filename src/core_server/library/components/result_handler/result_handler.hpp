@@ -32,22 +32,24 @@ namespace CORE::Library::Components {
 
 class ResultHandler {
   ResultHandlerType result_handler_type;
-
- protected:
   std::optional<const Internal::QueryCatalog> query_catalog;
 
  public:
-  ResultHandler(ResultHandlerType result_handler_type)
+  explicit ResultHandler(ResultHandlerType result_handler_type)
       : result_handler_type(result_handler_type) {}
 
   void set_query_catalog(const Internal::QueryCatalog& query_catalog) {
     this->query_catalog.emplace(query_catalog);
   }
 
-  void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
+  const Internal::QueryCatalog& get_query_catalog() {
     if (!query_catalog.has_value()) {
       throw std::runtime_error("Query catalog is not set");
     }
+    return query_catalog.value();
+  }
+
+  void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
     handle_complex_event(std::move(enumerator));
   }
 
@@ -89,7 +91,7 @@ class OnlineResultHandler : public ResultHandler {
   std::unique_ptr<Internal::ZMQMessageBroadcaster> broadcaster;
   Types::PortNumber port{};
 
-  OnlineResultHandler(Types::PortNumber assigned_port)
+  explicit OnlineResultHandler(Types::PortNumber assigned_port)
       : port(assigned_port),
         ResultHandler(ResultHandlerType::ONLINE),
         broadcaster{nullptr} {}
@@ -104,9 +106,8 @@ class OnlineResultHandler : public ResultHandler {
     std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
     Types::Enumerator enumerator;
     if (internal_enumerator.has_value()) {
-      enumerator = query_catalog  // NOLINT(bugprone-unchecked-optional-access)
-                     .value()
-                     .convert_enumerator(std::move(internal_enumerator.value()));
+      enumerator = get_query_catalog().convert_enumerator(
+        std::move(internal_enumerator.value()));
     }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};
@@ -125,7 +126,7 @@ class WebSocketResultHandler : public ResultHandler {
   uWS::Loop* uws_loop;
 
  public:
-  WebSocketResultHandler(
+  explicit WebSocketResultHandler(
     std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients,
     std::mutex& ws_clients_mutex,
     uWS::Loop* uws_loop,
@@ -146,8 +147,7 @@ class WebSocketResultHandler : public ResultHandler {
 
     std::string result_json = "[";
     for (const auto& complex_event : internal_enumerator.value()) {
-      result_json += complex_event.to_json(
-        query_catalog.value());  // NOLINT(bugprone-unchecked-optional-access)
+      result_json += complex_event.to_json(get_query_catalog());
       result_json += ",";
     }
     result_json = result_json.substr(0, result_json.size() - 1);
