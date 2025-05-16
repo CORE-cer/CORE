@@ -41,8 +41,8 @@ class DetCEA {
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
     mpz_class initial_marked_variables = mpz_class(0);
-    State* initial_state = state_manager.create_or_return_existing_state(
-      initial_bitset_1, cea, initial_marked_variables);
+    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
+                                                                         cea);
     this->initial_state = initial_state;
     state_manager.pin_state(this->initial_state);
   }
@@ -55,22 +55,23 @@ class DetCEA {
   //   this->initial_state->pin();
   // }
 
-  std::vector<State*>
+  State::TransitionTargetStatesWithMarkings
   next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
     ZoneScopedN("DetCEA::next");
     assert(state != nullptr);
     n_nexts++;
-    auto next_states = state->next(evaluation, n_hits);  // memoized
-    for (auto& state : next_states.value_or(std::vector<State*>())) {
-      assert(state != nullptr);
-    }
-    if (!next_states.has_value()) {
+    auto next_states_ref_wrapper = state->next(evaluation, n_hits);  // memoized
+    if (!next_states_ref_wrapper.has_value()) {
+      State::TransitionTargetStatesWithMarkings&
+        next_states = next_states_ref_wrapper.value().get();
+      assert(next_states.is_consistent());
       next_states = compute_next_states(state, evaluation, current_iteration);
-      state->add_transition(evaluation, next_states.value());
+      state->add_transition(evaluation, next_states);
+      next_states_ref_wrapper = next_states;
     }
 
-    assert(next_states.has_value());
-    return next_states.value();
+    assert(next_states_ref_wrapper.has_value());
+    return next_states_ref_wrapper.value();
   }
 
   std::string to_string() {
@@ -82,23 +83,25 @@ class DetCEA {
   }
 
  private:
-  std::vector<State*> compute_next_states(State* state,
-                                          mpz_class& evaluation,
-                                          const uint64_t& current_iteration) {
+  State::TransitionTargetStatesWithMarkings
+  compute_next_states(State* state,
+                      mpz_class& evaluation,
+                      const uint64_t& current_iteration) {
     std::vector<RawStates> computed_raw_states = std::move(
       compute_next_raw_states(state, evaluation));
     std::vector<State*> next_states;
+    std::vector<mpz_class> next_states_marked_variables;
     next_states.reserve(computed_raw_states.size());
+    next_states_marked_variables.reserve(computed_raw_states.size());
+
     for (auto& raw_state : computed_raw_states) {
       auto states_bitset = raw_state.states;
       auto marked_variables = raw_state.marked_variables;
-      State* state = state_manager.create_or_return_existing_state(states_bitset,
-                                                                   cea,
-                                                                   marked_variables);
+      State* state = state_manager.create_or_return_existing_state(states_bitset, cea);
       next_states.push_back(state);
     }
 
-    return next_states;
+    return {std::move(next_states), std::move(next_states_marked_variables)};
   }
 
   std::vector<RawStates> compute_next_raw_states(State* state, mpz_class evaluation) {
