@@ -4,24 +4,39 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <optional>
+#include <ranges>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
+#include "core_server/internal/evaluation/det_cea/StateWithMarkedVariables.hpp"
 
 namespace CORE::Internal::CEA::Det {
 
 class State {
   friend class StateManager;
 
- private:
-  struct StatesData {
-    std::vector<State*> states;
+ public:
+  struct TransitionTargetStatesWithMarkings {
+    std::vector<StateWithMarkedVariables> state_marked_variables_pair;
+
+   private:
     std::vector<uint64_t> states_ids;
 
-    explicit StatesData(std::vector<State*> states) : states(states) {
+   public:
+    TransitionTargetStatesWithMarkings(std::vector<State*>&& states,
+                                       std::vector<mpz_class>&& marked_variables) {
+      assert(states.size() == marked_variables.size());
+      auto ranges_state_marked_variables_pair = std::views::zip(std::move(states),
+                                                                std::move(marked_variables))
+                                                | std::views::transform(make_pair);
+      state_marked_variables_pair = std::vector(ranges_state_marked_variables_pair.begin(),
+                                                ranges_state_marked_variables_pair.end());
+
       states_ids.reserve(states.size());
       for (auto& state : states) {
         assert(state != nullptr);
@@ -30,16 +45,22 @@ class State {
     }
 
     bool is_consistent() {
-      for (size_t i = 0; i < states.size(); i++) {
-        if (states[i]->id != states_ids[i]) {
+      for (size_t i = 0; i < states_ids.size(); i++) {
+        State* state = state_marked_variables_pair[i].state;
+        assert(state != nullptr);
+        if (state->id != states_ids[i]) {
           return false;
         }
       }
       return true;
     }
+
+   private:
+    static StateWithMarkedVariables make_pair(std::tuple<State*, mpz_class>&& pair) {
+      return {std::get<0>(pair), std::get<1>(pair)};
+    }
   };
 
- public:
   uint64_t id;
   mpz_class states;
   // The id is stored in the transitions because in the future we might
@@ -47,7 +68,6 @@ class State {
   CEA& cea;
   bool is_final;
   bool is_empty;
-  mpz_class marked_variables;
 
   State* prev_evictable_state = nullptr;
   State* next_evictable_state = nullptr;
@@ -55,22 +75,20 @@ class State {
  private:
   inline static uint64_t IdCounter = 0;
   uint64_t ref_count = 0;
-  std::map<mpz_class, StatesData> transitions;
+  std::map<mpz_class, TransitionTargetStatesWithMarkings> transitions;
 
  public:
-  State(mpz_class states, CEA& cea, mpz_class marked_variables)
+  State(mpz_class states, CEA& cea)
       : id(IdCounter++),
         states(states),
         cea(cea),
-        marked_variables(marked_variables),
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
 
-  void reset(mpz_class states, CEA& cea, mpz_class marked_variables) {
+  void reset(mpz_class states, CEA& cea) {
     this->id = IdCounter++;
     this->states = states;
     this->cea = cea;
-    this->marked_variables = marked_variables;
     this->ref_count = 0;
     is_final = (states & cea.final_states) != 0;
     is_empty = states == 0;
@@ -84,24 +102,26 @@ class State {
     ref_count -= 1;
   }
 
-  std::optional<std::vector<State*>> next(mpz_class evaluation, uint64_t& n_hits) {
+  std::optional<std::reference_wrapper<TransitionTargetStatesWithMarkings>>
+  next(mpz_class evaluation, uint64_t& n_hits) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
-      StatesData states_data = it->second;
-      if (!states_data.is_consistent()) {
+      TransitionTargetStatesWithMarkings& transition_target = it->second;
+      if (!transition_target.is_consistent()) {
         transitions.erase(it);
       } else {
         n_hits++;
-        return states_data.states;
+        return transition_target;
       }
     }
     return {};
   }
 
-  void add_transition(mpz_class evaluation, std::vector<State*> next_states) {
+  void
+  add_transition(mpz_class evaluation, TransitionTargetStatesWithMarkings next_states) {
     assert(!transitions.contains(evaluation));
-    for (auto& state : next_states) {
+    for (auto& [state, marked_variables] : next_states.state_marked_variables_pair) {
       assert(state != nullptr);
     }
     transitions.insert(std::make_pair(evaluation, next_states));
@@ -125,4 +145,5 @@ class State {
     prev_evictable_state = nullptr;
   }
 };
+
 }  // namespace CORE::Internal::CEA::Det

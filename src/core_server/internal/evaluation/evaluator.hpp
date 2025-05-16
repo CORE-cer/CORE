@@ -228,19 +228,21 @@ class Evaluator {
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
                      event.get_primary_time().val);
     assert(p != nullptr);
-    std::vector<State*> next_states = cea.next(p, t, current_iteration);
+    State::TransitionTargetStatesWithMarkings
+      next_states_with_markings = cea.next(p, t, current_iteration);
     bool recycle_ulist = false;
     mpz_class empty_marked_variables = mpz_class(0);
-    for (auto& state : next_states) {
+    for (auto& [state, marked_variables] :
+         next_states_with_markings.state_marked_variables_pair) {
       assert(state != nullptr);
       if (state->is_empty) {
         continue;
       }
-      if (state->marked_variables != empty_marked_variables) {
+      if (marked_variables != empty_marked_variables) {
         Node* new_node = tecs->new_extend(tecs->merge(ul),
                                           event,
                                           current_time,
-                                          state->marked_variables);
+                                          marked_variables);
         if (current_union_list_map.contains(state)) {
           current_union_list_map[state] = tecs->insert(std::move(
                                                          current_union_list_map[state]),
