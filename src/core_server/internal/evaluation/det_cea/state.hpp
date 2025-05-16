@@ -31,17 +31,16 @@ class State {
     TransitionTargetStatesWithMarkings(std::vector<State*>&& states,
                                        std::vector<mpz_class>&& marked_variables) {
       assert(states.size() == marked_variables.size());
-      auto ranges_state_marked_variables_pair = std::views::zip(std::move(states),
-                                                                std::move(marked_variables))
-                                                | std::views::transform(make_pair);
-      state_marked_variables_pair = std::vector(ranges_state_marked_variables_pair.begin(),
-                                                ranges_state_marked_variables_pair.end());
-
       states_ids.reserve(states.size());
       for (auto& state : states) {
         assert(state != nullptr);
         states_ids.push_back(state->id);
       }
+      auto ranges_state_marked_variables_pair = std::views::zip(std::move(states),
+                                                                std::move(marked_variables))
+                                                | std::views::transform(make_pair);
+      state_marked_variables_pair = std::vector(ranges_state_marked_variables_pair.begin(),
+                                                ranges_state_marked_variables_pair.end());
     }
 
     bool is_consistent() {
@@ -118,13 +117,15 @@ class State {
     return {};
   }
 
-  void
+  std::reference_wrapper<TransitionTargetStatesWithMarkings>
   add_transition(mpz_class evaluation, TransitionTargetStatesWithMarkings next_states) {
     assert(!transitions.contains(evaluation));
     for (auto& [state, marked_variables] : next_states.state_marked_variables_pair) {
       assert(state != nullptr);
     }
-    transitions.insert(std::make_pair(evaluation, next_states));
+    auto it = transitions.insert(std::make_pair(evaluation, std::move(next_states)));
+    TransitionTargetStatesWithMarkings& transition_target = it.first->second;
+    return transition_target;
   }
 
   bool is_evictable() { return ref_count == 0; }
