@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -16,11 +15,12 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = CustomBitset;
   using EndNodeId = uint64_t;
   using StreamName = std::string;
   using EventName = std::string;
@@ -32,15 +32,15 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
 
  public:
   ApplyAtomicFilter(uint64_t variable_id_to_filter, CEQL::AtomicFilter& atomic_filter)
-      : variables_to_filter(mpz_class(1) << variable_id_to_filter),
+      : variables_to_filter(CustomBitset(1) << variable_id_to_filter),
         physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    predicate_set = PredicateSet(CustomBitset(1) << physical_predicate_id,
+                                 CustomBitset(1) << physical_predicate_id);
   }
 
   ApplyAtomicFilter(
@@ -58,14 +58,14 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
                                  : throw std::logic_error(
                                      "Stream/Event name combination not found");
 
-    VariablesToMark stream_event = mpz_class(1) << stream_event_id;
+    VariablesToMark stream_event = CustomBitset(1) << stream_event_id;
 
     variables_to_filter = stream_event;
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    predicate_set = PredicateSet(CustomBitset(1) << physical_predicate_id,
+                                 CustomBitset(1) << physical_predicate_id);
   }
 
   ApplyAtomicFilter(
@@ -80,15 +80,15 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
       query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
         event_name);
 
-    VariablesToMark event = mpz_class(1)
+    VariablesToMark event = CustomBitset(1)
                             << (stream_event_to_id.size() + query_event_name_id);
 
     variables_to_filter = event;
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    predicate_set = PredicateSet(CustomBitset(1) << physical_predicate_id,
+                                 CustomBitset(1) << physical_predicate_id);
   }
 
   LogicalCEA eval(LogicalCEA&& cea) {

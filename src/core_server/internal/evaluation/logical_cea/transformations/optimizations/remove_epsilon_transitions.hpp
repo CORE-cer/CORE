@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <stack>
@@ -8,6 +7,7 @@
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -62,9 +62,9 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
   void check_if_reached_node_is_accepting(NodeId reached_node,
                                           NodeId source_node,
                                           LogicalCEA& cea) {
-    mpz_class reached_binary = mpz_class(1) << reached_node;
+    CustomBitset reached_binary = CustomBitset(1) << reached_node;
     if ((reached_binary & cea.final_states) != 0) {
-      mpz_class binary_source_node = mpz_class(1) << source_node;
+      CustomBitset binary_source_node = CustomBitset(1) << source_node;
       cea.final_states |= binary_source_node;
     }
   }

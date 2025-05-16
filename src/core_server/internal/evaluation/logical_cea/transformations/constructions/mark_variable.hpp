@@ -1,16 +1,16 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cstdint>
 #include <tuple>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 class MarkVariable : public LogicalCEATransformer<MarkVariable> {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = CustomBitset;
   using EndNodeId = uint64_t;
 
  private:
@@ -18,7 +18,7 @@ class MarkVariable : public LogicalCEATransformer<MarkVariable> {
 
  public:
   MarkVariable(uint64_t variable_to_mark)
-      : variables_to_mark(mpz_class(1) << variable_to_mark) {}
+      : variables_to_mark(CustomBitset(1) << variable_to_mark) {}
 
   LogicalCEA eval(LogicalCEA&& cea) {
     for (int i = 0; i < cea.amount_of_states; i++) {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -17,6 +15,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 struct CEA {
@@ -24,7 +23,7 @@ struct CEA {
   using IsMarked = bool;
   using NodeId = uint64_t;
   using Transition = std::tuple<PredicateSet, IsMarked, NodeId>;
-  using States = mpz_class;
+  using States = CustomBitset;
 
   uint64_t amount_of_states;
   std::vector<std::set<Transition>> transitions;

@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -10,6 +9,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 #include "state.hpp"
 #include "state_manager.hpp"
 
@@ -31,7 +31,7 @@ class DetCEA {
   StateManager state_manager;
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
-    mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
+    CustomBitset initial_bitset_1 = CustomBitset(1) << cea.initial_state;
     State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
                                                                          cea);
     this->initial_state = initial_state;
@@ -39,14 +39,14 @@ class DetCEA {
   }
 
   // DetCEA(const DetCEA& other) : cea(other.cea), state_manager() {
-  //   mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
+  //   CustomBitset initial_bitset_1 = CustomBitset(1) << cea.initial_state;
   //   State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
   //                                                                        cea);
   //   this->initial_state = initial_state;
   //   this->initial_state->pin();
   // }
 
-  States next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
+  States next(State* state, CustomBitset evaluation, const uint64_t& current_iteration) {
     ZoneScopedN("DetCEA::next");
     assert(state != nullptr);
     n_nexts++;
@@ -68,11 +68,11 @@ class DetCEA {
 
  private:
   States compute_next_states(State* state,
-                             mpz_class& evaluation,
+                             CustomBitset& evaluation,
                              const uint64_t& current_iteration) {
     auto computed_bitsets = compute_next_bitsets(state, evaluation);
-    mpz_class marked_bitset = computed_bitsets.first;
-    mpz_class unmarked_bitset = computed_bitsets.second;
+    CustomBitset marked_bitset = computed_bitsets.first;
+    CustomBitset unmarked_bitset = computed_bitsets.second;
     State* marked_state = state_manager.create_or_return_existing_state(marked_bitset,
                                                                         cea);
     State* unmarked_state = state_manager.create_or_return_existing_state(unmarked_bitset,
@@ -80,14 +80,14 @@ class DetCEA {
     return {marked_state, unmarked_state};
   }
 
-  std::pair<mpz_class, mpz_class>
-  compute_next_bitsets(State* state, mpz_class evaluation) {
+  std::pair<CustomBitset, CustomBitset>
+  compute_next_bitsets(State* state, CustomBitset evaluation) {
     assert(state != nullptr);
     // TODO: State is not nullptr but is giving a segfault.
     auto states_bitset = state->states;
-    auto states_vector = get_states_from_mpz_class(state->states);
-    mpz_class new_marked_states = 0;
-    mpz_class new_unmarked_states = 0;
+    auto states_vector = get_states_from_CustomBitset(state->states);
+    CustomBitset new_marked_states = 0;
+    CustomBitset new_unmarked_states = 0;
     for (uint64_t state : states_vector) {
       for (auto transition : cea.transitions[state]) {
         PredicateSet& predicate = std::get<0>(transition);
@@ -95,9 +95,9 @@ class DetCEA {
           bool is_marked = std::get<1>(transition);
           uint64_t target_node = std::get<2>(transition);
           if (is_marked) {
-            new_marked_states |= mpz_class(1) << target_node;
+            new_marked_states |= CustomBitset(1) << target_node;
           } else {
-            new_unmarked_states |= mpz_class(1) << target_node;
+            new_unmarked_states |= CustomBitset(1) << target_node;
           }
         }
       }
@@ -105,7 +105,7 @@ class DetCEA {
     return {new_marked_states, new_unmarked_states};
   }
 
-  std::vector<uint64_t> get_states_from_mpz_class(mpz_class states) {
+  std::vector<uint64_t> get_states_from_CustomBitset(CustomBitset states) {
     std::vector<uint64_t> out;
     int64_t current_pos = 0;
     while (states != 0) {

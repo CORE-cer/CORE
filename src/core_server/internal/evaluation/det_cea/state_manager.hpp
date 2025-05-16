@@ -1,7 +1,6 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <gmpxx.h>
 #include <quill/Quill.h>  // NOLINT
 #include <quill/detail/LogMacros.h>
 
@@ -14,6 +13,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 #include "shared/logging/setup.hpp"
 #include "state.hpp"
 
@@ -38,7 +38,7 @@ class StateManager {
   State* evictable_state_head = nullptr;
   State* evictable_state_tail = nullptr;
   std::vector<State*> states;
-  std::map<mpz_class, uint64_t> states_bitset_to_index;
+  std::map<CustomBitset, uint64_t> states_bitset_to_index;
 
  public:
   StateManager()
@@ -84,7 +84,7 @@ class StateManager {
     return out;
   }
 
-  State* create_or_return_existing_state(mpz_class bitset, CEA& cea) {
+  State* create_or_return_existing_state(CustomBitset bitset, CEA& cea) {
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());
@@ -213,7 +213,7 @@ class StateManager {
 
   template <class... Args>
   void reset_state(State* const& state, Args&&... args) {
-    mpz_class old_states = state->states;
+    CustomBitset old_states = state->states;
     unset_evictable_state(state);
     state->reset(std::forward<Args>(args)...);
     states_bitset_to_index[state->states] = states_bitset_to_index[old_states];

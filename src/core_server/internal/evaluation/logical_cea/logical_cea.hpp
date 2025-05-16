@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -16,6 +14,7 @@
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 struct LogicalCEA {
@@ -30,10 +29,10 @@ struct LogicalCEA {
   using EventName = std::string;
 
  public:
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = CustomBitset;
   using NodeId = uint64_t;
   using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
-  using States = mpz_class;
+  using States = CustomBitset;
 
   // transitions[i] = all transitions of node i.
   std::vector<std::vector<Transition>> transitions;
@@ -70,12 +69,13 @@ struct LogicalCEA {
       query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
         event_name);
 
-    mpz_class stream_predicate_position = mpz_class(1) << query_stream_id;
-    mpz_class event_name_predicate_position = mpz_class(1)
-                                              << (number_of_streams + query_event_name_id);
+    CustomBitset stream_predicate_position = CustomBitset(1) << query_stream_id;
+    CustomBitset event_name_predicate_position = CustomBitset(1)
+                                                 << (number_of_streams
+                                                     + query_event_name_id);
 
-    mpz_class expected_eval = stream_predicate_position | event_name_predicate_position;
-    mpz_class predicate_mask = expected_eval;
+    CustomBitset expected_eval = stream_predicate_position | event_name_predicate_position;
+    CustomBitset predicate_mask = expected_eval;
 
     auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
     uint64_t stream_event_id = (stream_event_id_iter != stream_event_to_id.end())
@@ -83,8 +83,8 @@ struct LogicalCEA {
                                  : throw std::logic_error(
                                      "Stream/Event name combination not found");
 
-    VariablesToMark stream_event_mark = mpz_class(1) << stream_event_id;
-    VariablesToMark event_mark = mpz_class(1)
+    VariablesToMark stream_event_mark = CustomBitset(1) << stream_event_id;
+    VariablesToMark event_mark = CustomBitset(1)
                                  << (stream_event_to_id.size() + query_event_name_id);
 
     VariablesToMark mark = stream_event_mark | event_mark;
@@ -92,8 +92,8 @@ struct LogicalCEA {
     atomic_cea.transitions[0].push_back(
       std::make_tuple(PredicateSet(expected_eval, predicate_mask), mark, 1));
 
-    atomic_cea.initial_states = mpz_class(1) << 0;
-    atomic_cea.final_states = mpz_class(1) << 1;
+    atomic_cea.initial_states = CustomBitset(1) << 0;
+    atomic_cea.final_states = CustomBitset(1) << 1;
 
     return atomic_cea;
   }
@@ -108,13 +108,14 @@ struct LogicalCEA {
       query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
         event_name);
 
-    mpz_class event_name_predicate_position = mpz_class(1)
-                                              << (number_of_streams + query_event_name_id);
+    CustomBitset event_name_predicate_position = CustomBitset(1)
+                                                 << (number_of_streams
+                                                     + query_event_name_id);
 
-    mpz_class expected_eval = event_name_predicate_position;
-    mpz_class predicate_mask = expected_eval;
+    CustomBitset expected_eval = event_name_predicate_position;
+    CustomBitset predicate_mask = expected_eval;
 
-    VariablesToMark event_mark = mpz_class(1)
+    VariablesToMark event_mark = CustomBitset(1)
                                  << (stream_event_to_id.size() + query_event_name_id);
 
     for (auto&& [current_stream_event_name, current_stream_event_id] :
@@ -122,7 +123,7 @@ struct LogicalCEA {
       auto&& [current_stream_name, current_event_name] = current_stream_event_name;
       if (current_event_name == event_name) {
         // FIX: This doesn't make any sense, should fix
-        // VariablesToMark current_stream_event_mark = mpz_class(1)
+        // VariablesToMark current_stream_event_mark = CustomBitset(1)
         //                                             << current_stream_event_id;
         VariablesToMark mark = event_mark;
         atomic_cea.transitions[0].push_back(
@@ -130,8 +131,8 @@ struct LogicalCEA {
       }
     }
 
-    atomic_cea.initial_states = mpz_class(1) << 0;
-    atomic_cea.final_states = mpz_class(1) << 1;
+    atomic_cea.initial_states = CustomBitset(1) << 0;
+    atomic_cea.final_states = CustomBitset(1) << 1;
     return atomic_cea;
   }
 

@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -7,6 +6,7 @@
 #include <utility>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA::Det {
 
@@ -34,7 +34,7 @@ class State {
   };
 
   uint64_t id;
-  mpz_class states;
+  CustomBitset states;
   // The id is stored in the transitions because in the future we might
   // want to remove some states. And to remove them we can
   CEA& cea;
@@ -47,17 +47,17 @@ class State {
  private:
   inline static uint64_t IdCounter = 0;
   uint64_t ref_count = 0;
-  std::map<mpz_class, StatesData> transitions;
+  std::map<CustomBitset, StatesData> transitions;
 
  public:
-  State(mpz_class states, CEA& cea)
+  State(CustomBitset states, CEA& cea)
       : id(IdCounter++),
         states(states),
         cea(cea),
         is_final((states & cea.final_states) != 0),
         is_empty(states == 0) {}
 
-  void reset(mpz_class states, CEA& cea) {
+  void reset(CustomBitset states, CEA& cea) {
     this->id = IdCounter++;
     this->states = states;
     this->cea = cea;
@@ -74,7 +74,7 @@ class State {
     ref_count -= 1;
   }
 
-  States next(mpz_class evaluation, uint64_t& n_hits) {
+  States next(CustomBitset evaluation, uint64_t& n_hits) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
@@ -89,7 +89,7 @@ class State {
     return {nullptr, nullptr};
   }
 
-  void add_transition(mpz_class evaluation, States next_states) {
+  void add_transition(CustomBitset evaluation, States next_states) {
     assert(!transitions.contains(evaluation));
     assert(next_states.unmarked_state != nullptr && next_states.marked_state != nullptr);
     transitions.insert(std::make_pair(evaluation,

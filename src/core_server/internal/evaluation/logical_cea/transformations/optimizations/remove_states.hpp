@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -10,6 +9,7 @@
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -89,7 +89,7 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
   States map_states(States states, std::vector<int64_t> new_mapping) {
     States out = 0;
     NodeId current_node = 0;
-    mpz_class shifter = 1;
+    CustomBitset shifter = 1;
     while (states != 0) {
       if ((states & 1) == 1) {
         assert(current_node < new_mapping.size());

@@ -67,7 +67,7 @@ To understand the general data flow, we recommend to first read the description 
 
 5. With the newly created PhysicalPredicates, a PredicateEvaluator
    is created
-   that evaluates tuples and returns a mpz_class object, that is, a bitset that
+   that evaluates tuples and returns a CustomBitset object, that is, a bitset that
    represents what physical predicate is correctly evaluated.
     - NOTE: the first positions of the bitset represent predicates that
       just state whether a tuple is of the event type with the corresponding

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -11,6 +9,7 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Evaluation {
@@ -26,10 +25,10 @@ struct PredicateEvaluator {
     }
   }
 
-  mpz_class operator()(Types::EventWrapper& event) {
+  CustomBitset operator()(Types::EventWrapper& event) {
     ZoneScopedN("PredicateEvaluator::operator()");
-    mpz_class out_event = 0;
-    mpz_class one = 1;
+    CustomBitset out_event = 0;
+    CustomBitset one = 1;
     for (size_t i = 0; i < predicates.size(); i++) {
       if ((*predicates[i])(event)) {
         out_event |= one << i;

@@ -5,10 +5,10 @@
 #include <utility>
 
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <gmpxx.h>
 #include <quill/Quill.h>  // NOLINT
 #include <quill/detail/LogMacros.h>
 #include <quill/detail/misc/Common.h>
@@ -126,7 +126,7 @@ class Evaluator {
       should_reset.store(false);
     }
 
-    mpz_class predicates_satisfied = tuple_evaluator(event);
+    CustomBitset predicates_satisfied = tuple_evaluator(event);
     current_union_list_map = {};
     current_ordered_keys = {};
     final_states.clear();
@@ -221,7 +221,7 @@ class Evaluator {
   void exec_trans(Types::EventWrapper& event,
                   State* p,
                   UnionList&& ul,
-                  mpz_class& t,
+                  CustomBitset& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
 #include <cstdint>
 #include <iostream>
@@ -34,11 +32,12 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEQL {
 
 class FormulaToLogicalCEA : public FormulaVisitor {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = CustomBitset;
   using EndNodeId = int64_t;
   using StreamName = std::string;
   using EventName = std::string;
@@ -136,17 +135,17 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(ProjectionFormula& formula) override {
-    mpz_class variables_to_project = 0;
+    CustomBitset variables_to_project = 0;
     for (const std::string& var_name : formula.variables) {
       if (variables_to_id.contains(var_name)) {
         // As variable
-        variables_to_project |= mpz_class(1) << variables_to_id.find(var_name)->second;
+        variables_to_project |= CustomBitset(1) << variables_to_id.find(var_name)->second;
       } else {
         try {
           Types::EventNameTypeId
             query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
               var_name);
-          variables_to_project |= mpz_class(1)
+          variables_to_project |= CustomBitset(1)
                                   << (stream_event_to_id.size() + query_event_name_id);
         } catch (std::runtime_error e) {
           std::cout << "Projecting on unknown variable" << std::endl;
@@ -159,7 +158,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
         std::cout << "Projecting on unknown variable" << std::endl;
         continue;
       }
-      variables_to_project |= mpz_class(1) << (stream_event_id_iter->second);
+      variables_to_project |= CustomBitset(1) << (stream_event_id_iter->second);
     }
     current_cea = CEA::Project(variables_to_project)(std::move(current_cea));
   }

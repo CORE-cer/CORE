@@ -1,21 +1,22 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cstdint>
 #include <string>
+
+#include "shared/datatypes/custom_bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 struct PredicateSet {
   enum Type { Satisfiable, Contradiction, Tautology };
 
-  mpz_class mask;        // Specifies relevant bits
-  mpz_class predicates;  // expected evaluation
+  CustomBitset mask;        // Specifies relevant bits
+  CustomBitset predicates;  // expected evaluation
   Type type;
 
   PredicateSet(Type type = Contradiction) : mask(0), predicates(0), type(type) {}
 
-  PredicateSet(mpz_class mask, mpz_class predicates)
+  PredicateSet(CustomBitset mask, CustomBitset predicates)
       : mask(mask), predicates(predicates), type(Satisfiable) {}
 
   /**
@@ -29,13 +30,13 @@ struct PredicateSet {
       return PredicateSet(other);
     else if (other.type == Tautology)
       return PredicateSet(*this);
-    mpz_class conflict = (mask & other.mask) & (predicates ^ other.predicates);
+    CustomBitset conflict = (mask & other.mask) & (predicates ^ other.predicates);
     if (conflict != 0) {
       return PredicateSet(Contradiction);
     }
 
-    mpz_class combined_mask = mask | other.mask;
-    mpz_class combined_predicates = predicates | other.predicates;
+    CustomBitset combined_mask = mask | other.mask;
+    CustomBitset combined_predicates = predicates | other.predicates;
     PredicateSet combined(combined_mask, combined_predicates);
     return combined;
   }
@@ -47,21 +48,21 @@ struct PredicateSet {
       case Tautology:
         return PredicateSet(Contradiction);
       default:
-        mpz_class unselective_mask = (mpz_class(1) << (amount_of_bits + 1)) - 1;
-        mpz_class new_mask = unselective_mask ^ mask;
-        mpz_class new_predicates = ~predicates;
+        CustomBitset unselective_mask = ~(CustomBitset(1) << (amount_of_bits + 1));
+        CustomBitset new_mask = unselective_mask ^ mask;
+        CustomBitset new_predicates = ~predicates;
         return PredicateSet(new_mask, new_predicates);
     }
   }
 
-  bool is_satisfied_by(const mpz_class& predicate_evaluation) const {
+  bool is_satisfied_by(const CustomBitset& predicate_evaluation) const {
     switch (type) {
       case Contradiction:
         return false;
       case Tautology:
         return true;
       default:
-        mpz_class conflicts = (predicate_evaluation ^ predicates) & mask;
+        CustomBitset conflicts = (predicate_evaluation ^ predicates) & mask;
         return conflicts == 0;
     }
   }
@@ -69,7 +70,7 @@ struct PredicateSet {
   bool operator==(const PredicateSet other) const {
     if (type != other.type || mask != other.mask) return false;
     if (type == Contradiction || type == Tautology) return true;
-    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates)) & mask;
+    auto conflicts = static_cast<CustomBitset>((predicates ^ other.predicates)) & mask;
     return conflicts == 0;
   }
 
