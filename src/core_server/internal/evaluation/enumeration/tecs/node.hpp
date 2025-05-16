@@ -169,9 +169,9 @@ class Node {
       out += "    ";
     }
     if (is_bottom()) {
-      // out += "Bottom(" + std::to_string(tuple.id()) + ")";
+      out += "Bottom()";
     } else if (is_output()) {
-      // out += "Output(" + std::to_string(tuple.id()) + ")\n";
+      out += "Output()\n";
       out += left->to_string(depth + 1);
     } else {
       out += "Union\n";

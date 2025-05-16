@@ -62,15 +62,14 @@ class DetCEA {
     n_nexts++;
     auto next_states_ref_wrapper = state->next(evaluation, n_hits);  // memoized
     if (!next_states_ref_wrapper.has_value()) {
-      State::TransitionTargetStatesWithMarkings&
-        next_states = next_states_ref_wrapper.value().get();
-      assert(next_states.is_consistent());
-      next_states = compute_next_states(state, evaluation, current_iteration);
-      state->add_transition(evaluation, next_states);
-      next_states_ref_wrapper = next_states;
+      State::TransitionTargetStatesWithMarkings
+        next_states = compute_next_states(state, evaluation, current_iteration);
+
+      next_states_ref_wrapper = state->add_transition(evaluation, std::move(next_states));
     }
 
     assert(next_states_ref_wrapper.has_value());
+    assert(next_states_ref_wrapper.value().get().is_consistent());
     return next_states_ref_wrapper.value();
   }
 
@@ -99,6 +98,7 @@ class DetCEA {
       auto marked_variables = raw_state.marked_variables;
       State* state = state_manager.create_or_return_existing_state(states_bitset, cea);
       next_states.push_back(state);
+      next_states_marked_variables.push_back(marked_variables);
     }
 
     return {std::move(next_states), std::move(next_states_marked_variables)};
