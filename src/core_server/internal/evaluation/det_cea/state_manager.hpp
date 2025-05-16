@@ -240,7 +240,7 @@ class StateManager {
     StateBitset old_states = state->states;
     unset_evictable_state(state);
     state->reset(std::forward<Args>(args)...);
-    states_bitset_to_index[state->states] = states_bitset_to_index[old_states ];
+    states_bitset_to_index[state->states] = states_bitset_to_index[old_states];
     states_bitset_to_index.erase(old_states);
   }
 };
