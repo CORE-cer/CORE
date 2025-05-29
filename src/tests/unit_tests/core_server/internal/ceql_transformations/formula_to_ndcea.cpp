@@ -8,9 +8,6 @@
 #include <tuple>
 #include <utility>
 
-#include <iostream>
-using namespace std;
-
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
@@ -398,7 +395,6 @@ TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]")
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
-  //cout << cea.to_string();
   INFO(cea.to_string());
   REQUIRE(cea.amount_of_states == 10);
   REQUIRE(cea.transitions[0].size() == 1);
