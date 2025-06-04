@@ -139,6 +139,11 @@ class HTTPServer {
               res->onAborted(
                 []() { std::cout << "/add_query post request aborted" << std::endl; });
             })
+      .options("/add-query",
+               [this](auto* res, auto* req) {
+                 set_cors_headers(res);
+                 res->writeStatus("200 OK")->end();
+               })
       .del("/inactivate-query/:id",
            [this](auto* res, auto* req) {
              set_cors_headers(res);
