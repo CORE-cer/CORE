@@ -55,15 +55,6 @@ jobs:
       - name: "Setup conan"
         run: conan profile detect
 
-      - name: Checkout custom ConanCenter index
-        uses: actions/checkout@v4
-        with:
-          repository: CORE-cer/conan-center-index-custom
-          path: conan-center-index-custom
-
-      - name: Add custom ConanCenter index
-        run: conan remote add coreremote ./conan-center-index-custom --allowed-packages="gmpcustom/*"
-
       - name: update conan default remote
         run: conan remote update conancenter --url https://center2.conan.io
 
