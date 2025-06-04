@@ -6,7 +6,6 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <cstring>
 #include <iterator>
 #include <limits>
 #include <list>
@@ -198,7 +197,8 @@ class BasePolicy {
                    std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
-    QueryCatalog query_catalog(catalog, parsed_query.from.streams);
+    QueryCatalog query_catalog(catalog, parsed_query);
+
     query_catalogs.push_back(query_catalog);
 
     if (queries.size() > std::numeric_limits<std::ptrdiff_t>::max() - 1) {

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <glaze/core/common.hpp>
+#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
-#include "glaze/json/write.hpp"
 
 namespace CORE::Types {
 
@@ -17,11 +17,11 @@ struct QueryInfo {
   // Marks if query if currently active in system
   bool active = true;
 
-  QueryInfo() noexcept {}
+  QueryInfo() = default;
 
   QueryInfo(std::string result_handler_identifier,
             Library::Components::ResultHandlerType result_handler_type,
-            std::string query_string) noexcept
+            std::string query_string)
       : result_handler_identifier(result_handler_identifier),
         result_handler_type(result_handler_type),
         query_string(query_string) {}
@@ -29,7 +29,7 @@ struct QueryInfo {
   QueryInfo(std::string result_handler_identifier,
             Library::Components::ResultHandlerType result_handler_type,
             std::string query_string,
-            std::string query_name) noexcept
+            std::string query_name)
       : result_handler_identifier(result_handler_identifier),
         result_handler_type(result_handler_type),
         query_string(query_string),
@@ -40,16 +40,16 @@ struct QueryInfo {
     archive(result_handler_identifier, result_handler_type, query_string);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+  std::string to_json() const {
+    nlohmann::json j;
+    j["result_handler_identifier"] = result_handler_identifier;
+    j["result_handler_type"] = std::to_string(result_handler_type);
+    j["query_string"] = query_string;
+    j["query_name"] = query_name;
+    j["active"] = active;
 
-  struct glaze {
-    using T = CORE::Types::QueryInfo;
-    static constexpr auto value = glz::object(&T::result_handler_identifier,
-                                              &T::result_handler_type,
-                                              &T::query_string,
-                                              &T::query_name,
-                                              &T::active);
-  };
+    return j.dump();
+  }
 };
 
 }  // namespace CORE::Types

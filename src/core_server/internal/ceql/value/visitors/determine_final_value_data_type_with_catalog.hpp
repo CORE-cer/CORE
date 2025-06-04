@@ -30,10 +30,10 @@ class DetermineFinalValueDataTypeWithCatalog : public ValueVisitor {
   DataType final_value_datatype = Undetermined;
 
  private:
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
 
  public:
-  DetermineFinalValueDataTypeWithCatalog(QueryCatalog& query_catalog)
+  DetermineFinalValueDataTypeWithCatalog(const QueryCatalog& query_catalog)
       : query_catalog(query_catalog) {}
 
   DataType get_final_data_type() {

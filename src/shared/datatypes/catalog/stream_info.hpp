@@ -4,8 +4,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -130,10 +128,10 @@ struct StreamInfo {
 
   StreamInfo(StreamTypeId stream_type_id,
              std::string stream_name,
-             std::vector<EventInfo>&& events_info) noexcept
+             std::vector<EventInfo>&& events_info)
       : id(stream_type_id), name(stream_name), events_info(std::move(events_info)) {}
 
-  StreamInfo(std::initializer_list<EventInfo>&& events_info) noexcept
+  StreamInfo(std::initializer_list<EventInfo>&& events_info)
       : events_info(std::move(events_info)) {}
 
   ~StreamInfo() noexcept = default;
@@ -164,11 +162,22 @@ struct StreamInfo {
     archive(id, name, events_info);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"id\":" + std::to_string(id) + ",";
+    out += "\"name\":\"" + name + "\",";
+    out += "\"events_info\":[";
+    auto it = events_info.begin();
+    while (it != events_info.end()) {
+      out += it->to_json();
+      ++it;
+      if (it != events_info.end()) {
+        out += ",";
+      }
+    }
 
-  struct glaze {
-    using T = CORE::Types::StreamInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::id, &T::name, &T::events_info);
-  };
+    out += "]}";
+    return out;
+  }
 };
 }  // namespace CORE::Types

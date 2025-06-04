@@ -21,9 +21,9 @@
 namespace CORE::Internal::CEA {
 struct CEA {
  public:
-  using IsMarked = bool;
+  using VariablesToMark = mpz_class;
   using NodeId = uint64_t;
-  using Transition = std::tuple<PredicateSet, IsMarked, NodeId>;
+  using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
   using States = mpz_class;
 
   uint64_t amount_of_states;
@@ -81,9 +81,10 @@ struct CEA {
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
       if (transitions[i].size() != 0) out += "    Δ[" + std::to_string(i) + "]\n";
-      for (const std::tuple<PredicateSet, IsMarked, NodeId>& transition : transitions[i]) {
+      for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
+           transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ","
-               + (std::get<1>(transition) ? "Marked" : "Unmarked") + ","
+               + std::get<1>(transition).get_str(2) + ","
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }
@@ -97,7 +98,7 @@ struct CEA {
       transitions.push_back({});
       for (auto transition : logical_cea.transitions[node_pos]) {
         transitions[node_pos].insert(std::make_tuple(std::get<0>(transition),
-                                                     (std::get<1>(transition) != 0),
+                                                     (std::get<1>(transition)),
                                                      std::get<2>(transition)));
       }
     }

@@ -26,6 +26,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE\n"
     "LIMIT 1";
 
@@ -33,7 +34,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -142,6 +143,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE\n"
     "LIMIT 0";
 
@@ -149,7 +151,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));

@@ -51,13 +51,13 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
  private:
   // In the construction, we will determine the event types
   // that could satisfy all of the predicates that will be used.
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
   std::set<Types::UniqueEventTypeId> admissible_event_types;
   bool has_added_admissible_event_types = false;
   DetermineFinalValueDataTypeWithCatalog final_data_type_visitor;
 
  public:
-  CEQLWeaklyTypedPredicateToCEAPredicate(QueryCatalog& query_catalog)
+  CEQLWeaklyTypedPredicateToCEAPredicate(const QueryCatalog& query_catalog)
       : query_catalog(query_catalog), final_data_type_visitor(query_catalog) {}
 
   void visit(InPredicate& in_predicate) override {

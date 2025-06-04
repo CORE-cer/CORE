@@ -8,7 +8,6 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -22,6 +21,7 @@
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/components/user_data.hpp"
+#include "glaze/json/read.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
@@ -38,6 +38,7 @@ class HTTPServer {
   Types::PortNumber port_number;
   std::unique_ptr<WebSocketResultHandlerFactory>
     result_handler_factory = std::make_unique<WebSocketResultHandlerFactory>();
+  std::thread http_server_thread;
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
@@ -55,7 +56,7 @@ class HTTPServer {
 
  private:
   void start() {
-    std::jthread http_server_thread([this] {
+    http_server_thread = std::thread([this] {
       result_handler_factory->set_uws_loop(uWS::Loop::get());
       start_http_server();
     });
@@ -64,7 +65,7 @@ class HTTPServer {
     // spam_events_thread.detach();
   }
 
-  void stop() {}
+  void stop() { http_server_thread.join(); }
 
   void start_http_server() {
     uWS::App()
@@ -138,6 +139,11 @@ class HTTPServer {
               res->onAborted(
                 []() { std::cout << "/add_query post request aborted" << std::endl; });
             })
+      .options("/add-query",
+               [this](auto* res, auto* req) {
+                 set_cors_headers(res);
+                 res->writeStatus("200 OK")->end();
+               })
       .del("/inactivate-query/:id",
            [this](auto* res, auto* req) {
              set_cors_headers(res);
@@ -276,8 +282,7 @@ class HTTPServer {
     std::lock_guard<std::mutex> lock(backend_mutex);
     Internal::CEQL::Query query = backend.parse_sent_query(query_string);
 
-    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
-      backend.get_catalog_reference());
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
 
     backend.declare_query(std::move(query),
@@ -292,8 +297,7 @@ class HTTPServer {
     std::lock_guard<std::mutex> lock(backend_mutex);
     Internal::CEQL::Query query = backend.parse_sent_query(query_string);
 
-    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler(
-      backend.get_catalog_reference());
+    std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
 
     backend.declare_query(std::move(query), std::move(result_handler));

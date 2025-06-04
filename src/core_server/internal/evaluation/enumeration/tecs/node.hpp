@@ -1,4 +1,5 @@
 #pragma once
+#include <gmpxx.h>
 #include <stdint.h>
 
 #include <cassert>
@@ -69,16 +70,24 @@ class Node {
   }
 
   /* OUTPUT Node */
-  Node(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
+  Node(Node* node,
+       Types::EventWrapper&& event,
+       uint64_t timestamp,
+       mpz_class marked_variables) {
     assert(node != nullptr);
     reset(node,
           std::move(event),
-          timestamp);  //Se llama a reset para evitar repetir codigo
+          timestamp,
+          marked_variables);  //Se llama a reset para evitar repetir codigo
   }
 
-  void reset(Node* node, Types::EventWrapper&& event, uint64_t timestamp) {
+  void reset(Node* node,
+             Types::EventWrapper&& event,
+             uint64_t timestamp,
+             mpz_class marked_variables) {
     this->left = node;
     this->event = std::move(event);
+    this->event->marked_variables = marked_variables;
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);
@@ -160,9 +169,9 @@ class Node {
       out += "    ";
     }
     if (is_bottom()) {
-      // out += "Bottom(" + std::to_string(tuple.id()) + ")";
+      out += "Bottom()";
     } else if (is_output()) {
-      // out += "Output(" + std::to_string(tuple.id()) + ")\n";
+      out += "Output()\n";
       out += left->to_string(depth + 1);
     } else {
       out += "Union\n";

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -22,6 +23,7 @@ namespace CORE::Internal::Parsing {
 class SelectVisitor : public CEQLQueryParserBaseVisitor {
   using VariableName = std::string;
   using StreamName = std::string;
+  using AttributeName = std::string;
 
  private:
   CEQL::Select::Strategy strategy = CEQL::Select::Strategy::DEFAULT;
@@ -32,6 +34,11 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
   Catalog& catalog;
   std::map<std::string, std::vector<Types::EventInfo>>& streams_events_map;
   std::vector<std::string>& as_events;
+
+  // Attribute projection
+  std::map<VariableName, std::set<AttributeName>> attribute_projection_variable;
+  std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>
+    attribute_projection_stream_event;
 
   void check_if_events_exists_in_streams_or_as_events(std::string event_name) {
     bool as_formula_found = false;
@@ -53,7 +60,11 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
       : catalog(catalog), streams_events_map(streams_events), as_events(as_events) {}
 
   CEQL::Select get_parsed_select() {
-    return CEQL::Select(std::move(strategy), std::move(is_star), std::move(formula));
+    return CEQL::Select(std::move(strategy),
+                        std::move(is_star),
+                        std::move(formula),
+                        std::move(attribute_projection_variable),
+                        std::move(attribute_projection_stream_event));
   }
 
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext* ctx) override {
@@ -82,17 +93,51 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
     return {};
   }
 
+  virtual std::any visitS_event_name_with_projection(
+    CEQLQueryParser::S_event_name_with_projectionContext* ctx) override {
+    auto [stream_name, event_name] = std::any_cast<
+      std::pair<std::optional<StreamName>, std::string>>(visit(ctx->s_event_name()));
+
+    if (!ctx->list_of_attribute_names()) {
+      return {};
+    }
+    auto attribute_names = std::any_cast<std::set<AttributeName>>(
+      visit(ctx->list_of_attribute_names()));
+
+    if (stream_name) {
+      auto stream_event_pair = std::make_pair(stream_name.value(), event_name);
+      streams_events.emplace(stream_event_pair);
+      attribute_projection_stream_event.emplace(stream_event_pair, attribute_names);
+    } else {
+      variables.emplace(event_name);
+      attribute_projection_variable.emplace(event_name, attribute_names);
+    }
+
+    return {};
+  }
+
   virtual std::any visitS_event_name(CEQLQueryParser::S_event_nameContext* ctx) override {
     std::string event_name = ctx->event_name()->getText();
     if (ctx->stream_name()) {
       std::string stream_name = ctx->stream_name()->getText();
       check_event_in_specific_stream(stream_name, event_name, streams_events_map);
-      streams_events.insert({stream_name, event_name});
+      streams_events.emplace(stream_name, event_name);
+      return std::make_pair(std::optional<StreamName>(stream_name), event_name);
     } else {
       check_if_events_exists_in_streams_or_as_events(event_name);
-      variables.insert(ctx->event_name()->getText());
+      variables.emplace(event_name);
+      return std::make_pair(std::optional<StreamName>(), event_name);
     }
     return {};
+  }
+
+  virtual std::any visitList_of_attribute_names(
+    CEQLQueryParser::List_of_attribute_namesContext* ctx) override {
+    std::set<AttributeName> attribute_names;
+    for (auto& attr : ctx->attribute_name()) {
+      attribute_names.emplace(attr->getText());
+    }
+    return attribute_names;
   }
 
   virtual std::any visitSs_all(CEQLQueryParser::Ss_allContext* ctx) override {

@@ -1,5 +1,4 @@
 #pragma once
-#include <cwchar>
 #include <memory>
 #include <string>
 
@@ -16,7 +15,7 @@ struct LongLiteral final : public Value {
 
   ~LongLiteral() noexcept override {}
 
-  std::string to_string() const noexcept override { return std::to_string(value); }
+  std::string to_string() const override { return std::to_string(value); }
 
   bool operator==(const LongLiteral& other) const noexcept {
     return value == other.value;

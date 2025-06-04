@@ -14,6 +14,11 @@ namespace CORE::Internal::CEA {
  */
 template <class Derived>
 class LogicalCEATransformer {
+  friend Derived;
+
+ private:
+  LogicalCEATransformer() = default;
+
  public:
   LogicalCEA operator()(LogicalCEA&& cea) {
     return static_cast<Derived*>(this)->eval(std::move(cea));

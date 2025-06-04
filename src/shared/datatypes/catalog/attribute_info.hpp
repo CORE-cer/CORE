@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <string>
 
 #include "datatypes.hpp"
@@ -14,7 +12,7 @@ struct AttributeInfo {
 
   AttributeInfo() noexcept {}
 
-  AttributeInfo(std::string name, ValueTypes value_type) noexcept
+  AttributeInfo(std::string name, ValueTypes value_type)
       : name(name), value_type(value_type) {}
 
   bool operator==(const AttributeInfo& other) const {
@@ -26,11 +24,12 @@ struct AttributeInfo {
     archive(name, value_type);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
-
-  struct glaze {
-    using T = CORE::Types::AttributeInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::name, &T::value_type);
-  };
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"name\": \"" + name + "\", ";
+    out += "\"value_type\": " + std::to_string(value_type);
+    out += "}";
+    return out;
+  }
 };
 }  // namespace CORE::Types

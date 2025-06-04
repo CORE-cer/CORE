@@ -27,13 +27,14 @@ TEST_CASE("Evaluation on the example stream of the papers") {
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
     "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS\n"
     "CONSUME BY NONE";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -132,22 +133,34 @@ TEST_CASE("Evaluation on the example stream of the papers") {
 
   REQUIRE(output.complex_events.size() == 4);
 
+  INFO(output.complex_events[0].to_string());
   REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(output.complex_events[0].start == 1);
+  REQUIRE(output.complex_events[0].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[1].to_string());
   REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(output.complex_events[1].start == 0);
+  REQUIRE(output.complex_events[1].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 80));
   REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[2].to_string());
   REQUIRE(output.complex_events[2].events.size() == 3);
+  REQUIRE(output.complex_events[2].start == 1);
+  REQUIRE(output.complex_events[2].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[2].events[0], 0, "MSFT", 102));
   REQUIRE(is_the_same_as(output.complex_events[2].events[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(output.complex_events[2].events[2], 0, "AMZN", 1920));
 
+  INFO(output.complex_events[3].to_string());
   REQUIRE(output.complex_events[3].events.size() == 3);
+  REQUIRE(output.complex_events[3].start == 0);
+  REQUIRE(output.complex_events[3].end == 6);
   REQUIRE(is_the_same_as(output.complex_events[3].events[0], 0, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[3].events[1], 0, "INTL", 81));
   REQUIRE(is_the_same_as(output.complex_events[3].events[2], 0, "AMZN", 1920));
@@ -172,7 +185,7 @@ TEST_CASE(
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -296,13 +309,14 @@ TEST_CASE("Evaluation of a query with contiguous events") {
     "WHERE SELL as msft: SELL as intel: SELL as amzn\n"
     "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN'] AND amzn[price < 2000]";
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -437,13 +451,14 @@ TEST_CASE("Evaluation of long query") {
     "SELECT * FROM Stock\n"
     "WHERE SELL as msft: SELL as intel: SELL as amzn: SELL as msft: SELL "
     "as intel: SELL as amzn: SELL as msft: SELL as intel: SELL as amzn\n"
-    "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']";
+    "FILTER msft[name='MSFT'] AND intel[name='INTL'] AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -647,13 +662,14 @@ TEST_CASE("Evaluation of long query with continuous and OR") {
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL: (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
-    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY)\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -784,13 +800,14 @@ TEST_CASE("Evaluation of longer query with continuous and OR v2") {
     "WHERE (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
     "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR "
     "BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): (SELL OR BUY): "
-    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)";
+    "(SELL OR BUY): (SELL OR BUY): (SELL OR BUY)\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1015,13 +1032,14 @@ TEST_CASE(
     "WHERE (SELL):+ as msft; (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1250,13 +1268,14 @@ TEST_CASE(
     "WHERE (SELL):+ as msft: (SELL OR BUY) as intel; SELL as amzn\n"
     "FILTER msft[name='MSFT']\n"
     "    AND intel[name='INTL']\n"
-    "    AND amzn[name='AMZN']";
+    "    AND amzn[name='AMZN']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1344,13 +1363,14 @@ TEST_CASE(
 
   std::string string_query =
     "SELECT * FROM Stock\n"
-    "WHERE (SELL)+: BUY: SELL";
+    "WHERE (SELL)+: BUY: SELL\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1439,13 +1459,14 @@ TEST_CASE(
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL OR BUY)+ as msft\n"
-    "FILTER msft[name='MSFT']";
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1506,13 +1527,14 @@ TEST_CASE("Evaluation of a query with mix of non contiguous iteration, and AS") 
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE (SELL)+ as msft\n"
-    "FILTER msft[name='MSFT']";
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -1573,13 +1595,14 @@ TEST_CASE("Filter directly on event") {
   std::string string_query =
     "SELECT * FROM Stock\n"
     "WHERE SELL\n"
-    "FILTER SELL[name='MSFT']";
+    "FILTER SELL[name='MSFT']\n"
+    "WITHIN 1000 EVENTS";
 
   CEQL::Query parsed_query = backend.parse_sent_query(string_query);
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));

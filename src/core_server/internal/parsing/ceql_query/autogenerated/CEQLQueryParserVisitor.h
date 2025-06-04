@@ -41,7 +41,7 @@ public:
 
     virtual std::any visitS_none(CEQLQueryParser::S_noneContext *context) = 0;
 
-    virtual std::any visitS_list_of_variables(CEQLQueryParser::S_list_of_variablesContext *context) = 0;
+    virtual std::any visitS_event_name_with_projection_list(CEQLQueryParser::S_event_name_with_projection_listContext *context) = 0;
 
     virtual std::any visitFrom_clause(CEQLQueryParser::From_clauseContext *context) = 0;
 
@@ -149,6 +149,8 @@ public:
 
     virtual std::any visitNamed_event(CEQLQueryParser::Named_eventContext *context) = 0;
 
+    virtual std::any visitS_event_name_with_projection(CEQLQueryParser::S_event_name_with_projectionContext *context) = 0;
+
     virtual std::any visitS_event_name(CEQLQueryParser::S_event_nameContext *context) = 0;
 
     virtual std::any visitEvent_name(CEQLQueryParser::Event_nameContext *context) = 0;
@@ -158,6 +160,8 @@ public:
     virtual std::any visitAtomic_cel_formula_r(CEQLQueryParser::Atomic_cel_formula_rContext *context) = 0;
 
     virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext *context) = 0;
+
+    virtual std::any visitList_of_attribute_names(CEQLQueryParser::List_of_attribute_namesContext *context) = 0;
 
     virtual std::any visitAttribute_name(CEQLQueryParser::Attribute_nameContext *context) = 0;
 

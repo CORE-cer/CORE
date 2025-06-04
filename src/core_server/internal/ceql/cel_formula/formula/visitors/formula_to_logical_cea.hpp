@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
-#include <map>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -34,9 +33,6 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
 
 #include "formula_visitor.hpp"
-#include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/catalog/event_info.hpp"
-#include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Internal::CEQL {
 
@@ -49,29 +45,11 @@ class FormulaToLogicalCEA : public FormulaVisitor {
  private:
   const QueryCatalog& query_catalog;
 
-  std::map<std::pair<StreamName, EventName>, uint64_t> stream_event_to_id;
-  // Only stores variables declared on AS
-  std::map<std::string, uint64_t> variables_to_id;
-  uint64_t next_variable_id = query_catalog.number_of_events()
-                              + query_catalog.number_of_unique_event_names_query();
-
  public:
   CEA::LogicalCEA current_cea{0};
 
-  FormulaToLogicalCEA(const QueryCatalog& query_catalog) : query_catalog(query_catalog) {
-    uint64_t next_id = 0;
-    for (const Types::StreamInfo& stream : query_catalog.get_all_streams_info()) {
-      for (const Types::EventInfo& event : stream.events_info) {
-        if (stream_event_to_id.contains({stream.name, event.name})) {
-          throw std::logic_error(
-            "Stream name and Event name combination already processed");
-        }
-        stream_event_to_id.insert({{stream.name, event.name}, next_id++});
-      }
-    }
-    assert(next_id + query_catalog.number_of_unique_event_names_query()
-           == next_variable_id);
-  }
+  explicit FormulaToLogicalCEA(const QueryCatalog& query_catalog)
+      : query_catalog(query_catalog) {}
 
   ~FormulaToLogicalCEA() override = default;
 
@@ -85,22 +63,16 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     // }
     if (formula.stream_name.has_value()) {
       current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
-                                                stream_event_to_id,
                                                 formula.stream_name.value(),
                                                 formula.event_name);
     } else {
-      current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
-                                                stream_event_to_id,
-                                                formula.event_name);
+      current_cea = CEA::LogicalCEA::atomic_cea(query_catalog, formula.event_name);
     }
   }
 
   void visit(FilterFormula& formula) override {
     formula.formula->accept_visitor(*this);
-    ApplyFiltersToLogicalCEA visitor(current_cea,
-                                     stream_event_to_id,
-                                     variables_to_id,
-                                     query_catalog);
+    ApplyFiltersToLogicalCEA visitor(current_cea, query_catalog);
     formula.filter->accept_visitor(visitor);
   }
 
@@ -141,39 +113,34 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   void visit(ProjectionFormula& formula) override {
     mpz_class variables_to_project = 0;
     for (const std::string& var_name : formula.variables) {
-      if (variables_to_id.contains(var_name)) {
-        // As variable
-        variables_to_project |= mpz_class(1) << variables_to_id.find(var_name)->second;
+      auto marking_id = query_catalog.get_marking_id(var_name);
+      if (marking_id.has_value()) {
+        variables_to_project |= mpz_class(1) << marking_id.value();
+
       } else {
-        try {
-          Types::EventNameTypeId
-            query_event_name_id = query_catalog.get_query_event_name_id_from_event_name(
-              var_name);
-          variables_to_project |= mpz_class(1)
-                                  << (stream_event_to_id.size() + query_event_name_id);
-        } catch (std::runtime_error e) {
-          std::cout << "Projecting on unknown variable" << std::endl;
-        }
+        throw std::runtime_error("Projecting on unknown variable: " + var_name);
       }
     }
+
     for (auto&& [stream_name, event_name] : formula.streams_events) {
-      auto stream_event_id_iter = stream_event_to_id.find({stream_name, event_name});
-      if (stream_event_id_iter == stream_event_to_id.end()) {
+      auto marking_id = query_catalog.get_marking_id(stream_name, event_name);
+      if (marking_id.has_value()) {
+        variables_to_project |= mpz_class(1) << marking_id.value();
+      } else {
         std::cout << "Projecting on unknown variable" << std::endl;
         continue;
       }
-      variables_to_project |= mpz_class(1) << (stream_event_id_iter->second);
     }
     current_cea = CEA::Project(variables_to_project)(std::move(current_cea));
   }
 
   void visit(AsFormula& formula) override {
     formula.formula->accept_visitor(*this);
-    if (!variables_to_id.contains(formula.variable_name)) {
-      variables_to_id[formula.variable_name] = next_variable_id++;
+    auto marking_id = query_catalog.get_marking_id(formula.variable_name);
+    if (!marking_id.has_value()) {
+      throw std::runtime_error("AS variable not found in query catalog");
     }
-    uint64_t variable_id = variables_to_id[formula.variable_name];
-    current_cea = CEA::MarkVariable(variable_id)(std::move(current_cea));
+    current_cea = CEA::MarkVariable(marking_id.value())(std::move(current_cea));
   }
 
   void visit(NotEventTypeFormula& formula) override {

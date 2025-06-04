@@ -2,8 +2,6 @@
 
 #include <cstdint>
 #include <ctime>
-#include <glaze/core/common.hpp>
-#include <glaze/core/meta.hpp>
 #include <limits>
 #include <memory>
 #include <string>
@@ -13,6 +11,7 @@ struct Value {
   virtual ~Value() = default;
   virtual std::unique_ptr<Value> clone() const = 0;
   virtual std::string to_string() const = 0;
+  virtual std::string to_json() const = 0;
   virtual std::string get_type() const = 0;
 };
 
@@ -30,6 +29,8 @@ struct StringValue final : public Value {
   }
 
   std::string to_string() const override { return val; }
+
+  std::string to_json() const override { return "\"" + to_string() + "\""; }
 
   std::string get_type() const override { return "StringValue"; }
 
@@ -58,6 +59,8 @@ struct IntValue final : public Value {
 
   std::string to_string() const override { return std::to_string(val); }
 
+  std::string to_json() const override { return std::to_string(val); }
+
   std::string get_type() const override { return "IntValue"; }
 
   template <class Archive>
@@ -80,6 +83,8 @@ struct DoubleValue final : public Value {
   }
 
   std::string to_string() const override { return std::to_string(val); }
+
+  std::string to_json() const override { return std::to_string(val); }
 
   std::string get_type() const override { return "DoubleValue"; }
 
@@ -104,6 +109,8 @@ struct BoolValue final : public Value {
 
   std::string to_string() const override { return std::to_string(val); }
 
+  std::string to_json() const override { return std::to_string(val); }
+
   std::string get_type() const override { return "BoolValue"; }
 
   template <class Archive>
@@ -127,6 +134,8 @@ struct DateValue final : public Value {
 
   std::string to_string() const override { return std::to_string(val); }
 
+  std::string to_json() const override { return std::to_string(val); }
+
   std::string get_type() const override { return "DateValue"; }
 
   template <class Archive>
@@ -135,11 +144,3 @@ struct DateValue final : public Value {
   }
 };
 }  // namespace CORE::Types
-
-template <>
-struct glz::meta<CORE::Types::Value> {
-  using T = CORE::Types::Value;
-  static constexpr auto value = object("value", [](CORE::Types::Value& self) -> auto {
-    self.to_string();
-  });
-};

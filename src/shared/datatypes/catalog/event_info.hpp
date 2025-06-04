@@ -2,8 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -25,7 +23,7 @@ struct EventInfo {
 
   EventInfo(UniqueEventTypeId event_type_id,
             std::string name,
-            std::vector<AttributeInfo>&& attributes_info) noexcept
+            std::vector<AttributeInfo>&& attributes_info)
       : id(event_type_id), name(name), attributes_info(attributes_info) {
     for (size_t id = 0; id < attributes_info.size(); id++) {
       attribute_names_to_ids[attributes_info[id].name] = id;
@@ -53,12 +51,20 @@ struct EventInfo {
     archive(id, name, attributes_info);
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
-
-  struct glaze {
-    using T = CORE::Types::EventInfo;  // convenience alias
-    static constexpr auto value = glz::object(&T::id, &T::name, &T::attributes_info);
-  };
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"id\": " + std::to_string(id) + ", ";
+    out += "\"name\": \"" + name + "\", ";
+    out += "\"attributes_info\": [";
+    for (size_t i = 0; i < attributes_info.size(); i++) {
+      out += attributes_info[i].to_json();
+      if (i != attributes_info.size() - 1) {
+        out += ", ";
+      }
+    }
+    out += "]}";
+    return out;
+  }
 };
 
 }  // namespace CORE::Types

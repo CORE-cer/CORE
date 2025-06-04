@@ -37,7 +37,7 @@ selection_strategy
 list_of_variables
  : STAR                         # s_star
  | K_NONE                         # s_none
- | s_event_name ( COMMA s_event_name )*   # s_list_of_variables
+ | s_event_name_with_projection ( COMMA s_event_name_with_projection )* # s_event_name_with_projection_list
  ;
 
 from_clause
@@ -166,6 +166,10 @@ named_event
  : s_event_name ( K_AS event_name )?
  ;
 
+s_event_name_with_projection
+ : s_event_name (LEFT_SQUARE_BRACKET list_of_attribute_names RIGHT_SQUARE_BRACKET)?
+ ;
+
 s_event_name
  : ( stream_name '>' ) ? event_name
  ;
@@ -181,6 +185,10 @@ atomic_cel_formula
 
 stream_name
  : any_name
+ ;
+
+list_of_attribute_names
+ : attribute_name ( COMMA attribute_name )*
  ;
 
 attribute_name

@@ -17,5 +17,10 @@ struct Where {
     assert(formula != nullptr);
     return "Where " + formula->to_string();
   }
+
+  Where clone() const {
+    assert(formula != nullptr);
+    return {formula->clone()};
+  }
 };
 }  // namespace CORE::Internal::CEQL

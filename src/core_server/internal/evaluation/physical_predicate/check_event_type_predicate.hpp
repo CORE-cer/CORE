@@ -11,12 +11,12 @@
 namespace CORE::Internal::CEA {
 
 class CheckEventNamePredicate : public PhysicalPredicate {
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
   Types::EventNameTypeId event_name_type_id;
 
  public:
   CheckEventNamePredicate(Types::EventNameTypeId event_name_type_id,
-                          QueryCatalog& query_catalog)
+                          const QueryCatalog& query_catalog)
       : PhysicalPredicate(),
         event_name_type_id(event_name_type_id),
         query_catalog(query_catalog) {}

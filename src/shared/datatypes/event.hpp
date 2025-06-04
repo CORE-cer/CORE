@@ -1,7 +1,6 @@
 #pragma once
 
-#include <glaze/core/common.hpp>
-#include <glaze/core/meta.hpp>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -54,7 +53,7 @@ struct Event {
 
   Event(UniqueEventTypeId event_type_id,
         std::vector<std::shared_ptr<Types::Value>> attributes,
-        std::optional<Types::IntValue> primary_time = {}) noexcept
+        std::optional<Types::IntValue> primary_time = {})
       : event_type_id(event_type_id), primary_time(primary_time) {
     this->attributes.reserve(attributes.size());
     for (auto& attr : attributes) {
@@ -106,6 +105,43 @@ struct Event {
     return out + "])";
   }
 
+  std::string to_json() const {
+    std::string out = "{";
+    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"attributes\": [";
+    auto it = attributes.begin();
+    while (it != attributes.end()) {
+      out += (*it)->to_json();
+      ++it;
+      if (it != attributes.end()) {
+        out += ",";
+      }
+    }
+
+    out += "]}";
+
+    return out;
+  }
+
+  std::string
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+    std::string out = "{";
+    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"attributes\": [";
+    for (size_t i = 0; i < attributes.size(); ++i) {
+      if (attribute_projection[i]) {
+        out += attributes[i]->to_json() + ",";
+      }
+    }
+    if (out.back() == ',') {
+      out.pop_back();  // Remove the last comma
+    }
+
+    out += "]}";
+
+    return out;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(event_type_id, attributes);
@@ -113,18 +149,3 @@ struct Event {
 };
 
 }  // namespace CORE::Types
-
-template <>
-struct glz::meta<CORE::Types::Event> {
-  using T = CORE::Types::Event;
-  static constexpr auto value = object("event_type_id",
-                                       &T::event_type_id,
-                                       "attributes",
-                                       [](CORE::Types::Event& self) -> auto {
-                                         std::vector<std::string> out;
-                                         for (auto& val : self.attributes) {
-                                           out.push_back(val->to_string());
-                                         }
-                                         return out;
-                                       });
-};

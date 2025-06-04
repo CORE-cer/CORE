@@ -1,8 +1,7 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
-#include <glaze/core/common.hpp>
-#include <glaze/json/write.hpp>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
@@ -10,6 +9,10 @@
 
 #include "core_server/internal/evaluation/enumeration/tecs/eventEvent.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+
+namespace CORE::Internal {
+class QueryCatalog;
+}
 
 namespace CORE::Internal::tECS {
 
@@ -37,11 +40,6 @@ class ComplexEvent {
     return out + ")";
   }
 
-  std::string to_json() const { return glz::write_json(*this).value_or("error"); }
-
-  struct glaze {
-    using T = CORE::Internal::tECS::ComplexEvent;
-    static constexpr auto value = glz::object(&T::start, &T::end, &T::eventss);
-  };
+  std::string to_json(const QueryCatalog& query_catalog) const;
 };
 }  // namespace CORE::Internal::tECS

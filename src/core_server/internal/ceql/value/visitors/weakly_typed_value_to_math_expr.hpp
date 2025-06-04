@@ -31,10 +31,10 @@ namespace CORE::Internal::CEQL {
 template <typename Type>
 class WeaklyTypedValueToMathExpr : public ValueVisitor {
  private:
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
 
  public:
-  WeaklyTypedValueToMathExpr(QueryCatalog& query_catalog)
+  WeaklyTypedValueToMathExpr(const QueryCatalog& query_catalog)
       : query_catalog(query_catalog) {}
 
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;

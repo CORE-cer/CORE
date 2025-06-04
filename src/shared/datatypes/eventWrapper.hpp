@@ -1,16 +1,17 @@
 #pragma once
 
+#include <gmpxx.h>
 #include <quill/detail/misc/Common.h>
 
 #include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <ctime>
-#include <glaze/core/common.hpp>
-#include <glaze/core/meta.hpp>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -44,7 +45,14 @@ class EventWrapper {
 
  public:
   std::shared_ptr<const Event> event;
+  std::optional<mpz_class> marked_variables;
   EventWrapper() = default;
+
+  EventWrapper(std::shared_ptr<const Event> event,
+               std::optional<mpz_class> marked_variables)
+      : event(event), marked_variables(marked_variables) {
+    set_times();
+  }
 
   EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
 
@@ -53,7 +61,8 @@ class EventWrapper {
       : event(std::move(other.event)),
         primary_time(other.primary_time),
         received_time(other.received_time),
-        moved(false) {
+        moved(false),
+        marked_variables(other.marked_variables) {
     other.moved = true;
     LOG_TRACE_L3("Moved EventWrapper with id {} to id {}", other.id, id);
   }
@@ -63,6 +72,7 @@ class EventWrapper {
     primary_time = other.primary_time;
     received_time = other.received_time;
     moved = false;
+    marked_variables = other.marked_variables;
     other.moved = true;
     LOG_TRACE_L3("Moved EventWrapper with id {} to id {}", other.id, id);
     return *this;
@@ -105,7 +115,7 @@ class EventWrapper {
   EventWrapper clone() const {
     LOG_TRACE_L3("Cloning EventWrapper with id {}", id);
     assert(!moved);
-    return EventWrapper(event);
+    return EventWrapper(event, marked_variables);
   }
 
   const Event& get_event_reference() const {
@@ -123,6 +133,20 @@ class EventWrapper {
     LOG_TRACE_L3("Getting event from EventWrapper with id {}", id);
     assert(!moved);
     return *event;
+  }
+
+  std::string to_json() const {
+    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON", id);
+    assert(!moved);
+    return event->to_json();
+  }
+
+  std::string
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON with attribute projection",
+                 id);
+    assert(!moved);
+    return event->to_json_with_attribute_projection(attribute_projection);
   }
 
  private:
@@ -143,10 +167,3 @@ class EventWrapper {
 };
 
 }  // namespace CORE::Types
-
-//
-template <>
-struct glz::meta<CORE::Types::EventWrapper> {
-  using T = CORE::Types::EventWrapper;
-  static constexpr auto value = object("event", [](const T& t) { return t.get_event(); });
-};

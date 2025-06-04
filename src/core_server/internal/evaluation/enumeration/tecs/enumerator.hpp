@@ -157,6 +157,7 @@ class Enumerator {
                                       std::move(events));
           return true;
         } else if (current_node->is_output()) {
+          assert(current_node->get_event_clone().marked_variables.has_value());
           events.push_back(current_node->get_event_clone());
           current_node = current_node->next();
         } else if (current_node->is_union()) {

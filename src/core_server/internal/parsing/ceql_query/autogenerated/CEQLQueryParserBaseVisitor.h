@@ -59,7 +59,7 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitS_list_of_variables(CEQLQueryParser::S_list_of_variablesContext *ctx) override {
+  virtual std::any visitS_event_name_with_projection_list(CEQLQueryParser::S_event_name_with_projection_listContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -275,6 +275,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitS_event_name_with_projection(CEQLQueryParser::S_event_name_with_projectionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitS_event_name(CEQLQueryParser::S_event_nameContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -292,6 +296,10 @@ public:
   }
 
   virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitList_of_attribute_names(CEQLQueryParser::List_of_attribute_namesContext *ctx) override {
     return visitChildren(ctx);
   }
 

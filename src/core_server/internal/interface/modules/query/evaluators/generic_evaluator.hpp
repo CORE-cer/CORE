@@ -39,8 +39,8 @@ class GenericEvaluator {
     int64_t time;
     switch (time_window.mode) {
       case CEQL::Within::TimeWindowMode::NONE:
-        // time = event.get_primary_time().val;
-        // break;
+        time = event.get_primary_time().val;
+        break;
       case CEQL::Within::TimeWindowMode::EVENTS:
         time = current_stream_position++;
         break;

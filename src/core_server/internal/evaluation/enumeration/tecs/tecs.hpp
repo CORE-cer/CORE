@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gmpxx.h>
+
 #include <atomic>
 #include <cassert>
 #include <cstdint>
@@ -65,9 +67,12 @@ class tECS {
    * variables and the position in the document that this annotation is
    * referring to.
    */
-  [[nodiscard]] Node*
-  new_extend(Node* node, Types::EventWrapper& event, uint64_t timestamp) {
-    return node_manager.alloc(node, std::move(event.clone()), timestamp);
+  [[nodiscard]] Node* new_extend(Node* node,
+                                 Types::EventWrapper& event,
+                                 uint64_t timestamp,
+                                 mpz_class marked_variables) {
+    Types::EventWrapper event_copy = event.clone();
+    return node_manager.alloc(node, std::move(event.clone()), timestamp, marked_variables);
   }
 
   /**

@@ -12,11 +12,12 @@
 namespace CORE::Internal::CEA {
 
 class CheckStreamTypePredicate : public PhysicalPredicate {
-  QueryCatalog& query_catalog;
+  const QueryCatalog& query_catalog;
   Types::StreamTypeId stream_type_id;
 
  public:
-  CheckStreamTypePredicate(Types::StreamTypeId stream_type_id, QueryCatalog& query_catalog)
+  CheckStreamTypePredicate(Types::StreamTypeId stream_type_id,
+                           const QueryCatalog& query_catalog)
       : PhysicalPredicate(),
         stream_type_id(stream_type_id),
         query_catalog(query_catalog) {}
