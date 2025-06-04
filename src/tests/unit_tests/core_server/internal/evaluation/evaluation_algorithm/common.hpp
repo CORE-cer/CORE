@@ -141,4 +141,6 @@ bool is_the_same_as(Types::Event event,
                     int64_t value2);
 
 Types::StreamInfo basic_stock_declaration(Interface::Backend<>& backend);
+
+Types::StreamInfo primary_time_stock_declaration(Interface::Backend<>& backend);
 }  // namespace CORE::Internal::Evaluation::UnitTests
