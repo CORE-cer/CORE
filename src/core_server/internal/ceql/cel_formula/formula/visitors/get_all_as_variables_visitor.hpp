@@ -10,6 +10,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_visitor.hpp"
 
@@ -56,5 +57,9 @@ struct GetAllASVariablesVisitor : public FormulaVisitor {
   }
 
   void visit(FilterFormula& formula) override { formula.formula->accept_visitor(*this); }
+
+  void visit(NotEventTypeFormula& formula) override {
+    formula.not_formula->accept_visitor(*this);
+  }
 };
 }  // namespace CORE::Internal::CEQL
