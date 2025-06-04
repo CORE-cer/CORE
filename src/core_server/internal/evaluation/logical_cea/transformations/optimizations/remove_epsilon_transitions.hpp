@@ -11,7 +11,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTransitions> {
+class RemoveEpsilonTransitions final : public LogicalCEATransformer {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
 
@@ -21,7 +21,7 @@ class RemoveEpsilonTransitions : public LogicalCEATransformer<RemoveEpsilonTrans
   // May result in duplicate transitions, and that is OK
   // Duplicate transitions will be removed from LogicalCEA
   // to CEA.
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     LogicalCEA cea_copy = LogicalCEA(cea);
     for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
       cea_copy.transitions[source_node].clear();

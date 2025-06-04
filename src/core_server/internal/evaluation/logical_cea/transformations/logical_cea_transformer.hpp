@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdexcept>
 #include <utility>
 
@@ -6,13 +7,6 @@
 
 namespace CORE::Internal::CEA {
 
-/**
- * This type of polymorphism is called CRTP that allows for interfaces with
- * no overhead created due virtual methods. This allows for documentation
- * and the ability of adding helper functions on methods that implement
- * this inferface
- */
-template <class Derived>
 class LogicalCEATransformer {
   friend Derived;
 
@@ -20,20 +14,18 @@ class LogicalCEATransformer {
   LogicalCEATransformer() = default;
 
  public:
-  LogicalCEA operator()(LogicalCEA&& cea) {
-    return static_cast<Derived*>(this)->eval(std::move(cea));
-  }
+  LogicalCEA operator()(LogicalCEA&& cea) { return eval(std::move(cea)); }
 
   LogicalCEA operator()(LogicalCEA& left, LogicalCEA& right) {
-    return static_cast<Derived*>(this)->eval(left, right);
+    return eval(std::move(left), std::move(right));
   }
 
-  LogicalCEA eval(LogicalCEA&& query) {
-    throw std::logic_error("eval(query) not implemented");
+  virtual LogicalCEA eval(LogicalCEA&& query) {
+    throw std::runtime_error("eval(LogicalCEA&&) not implemented");
   }
 
-  LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) {
-    throw std::logic_error("eval(left, right) not implemented");
+  virtual LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) {
+    throw std::runtime_error("eval(LogicalCEA&&, LogicalCEA&&) not implemented");
   }
 };
 

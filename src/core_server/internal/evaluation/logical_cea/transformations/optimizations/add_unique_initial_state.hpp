@@ -9,13 +9,13 @@
 
 namespace CORE::Internal::CEA {
 
-class AddUniqueInitialState : public LogicalCEATransformer<AddUniqueInitialState> {
+class AddUniqueInitialState final : public LogicalCEATransformer {
   using NodeId = LogicalCEA::NodeId;
 
  public:
   AddUniqueInitialState() {}
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     cea.add_n_states(1);
     NodeId new_initial_state = cea.amount_of_states - 1;
     for (NodeId initial_state : cea.get_initial_states()) {

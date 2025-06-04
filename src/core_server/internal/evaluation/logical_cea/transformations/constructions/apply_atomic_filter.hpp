@@ -17,7 +17,7 @@
 
 namespace CORE::Internal::CEA {
 
-class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
+class ApplyAtomicFilter final : public LogicalCEATransformer {
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
   using StreamName = std::string;
@@ -84,7 +84,7 @@ class ApplyAtomicFilter : public LogicalCEATransformer<ApplyAtomicFilter> {
                                  mpz_class(1) << physical_predicate_id);
   }
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  virtual LogicalCEA eval(LogicalCEA&& cea) override {
     for (int i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
         if ((std::get<1>(transition) & variables_to_filter) != 0) {

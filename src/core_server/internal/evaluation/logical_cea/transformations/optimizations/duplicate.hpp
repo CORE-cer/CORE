@@ -16,7 +16,7 @@ namespace CORE::Internal::CEA {
  * any point of the execution the active states are either a subset of
  * {0...n-1} or a subset of {n...2n-1}.
  */
-class Duplicate : public LogicalCEATransformer<Duplicate> {
+class Duplicate final : public LogicalCEATransformer {
   using NodeId = LogicalCEA::NodeId;
   using Transition = LogicalCEA::Transition;
   using VariablesToMark = LogicalCEA::VariablesToMark;
@@ -24,7 +24,7 @@ class Duplicate : public LogicalCEATransformer<Duplicate> {
  public:
   Duplicate() {}
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     LogicalCEA new_cea(cea.amount_of_states * 2);
     for (NodeId id = 0; id < cea.amount_of_states; id++) {
       for (Transition trans : cea.transitions[id]) {

@@ -13,7 +13,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveStates : public LogicalCEATransformer<RemoveStates> {
+class RemoveStates final : public LogicalCEATransformer {
  private:
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
@@ -27,7 +27,7 @@ class RemoveStates : public LogicalCEATransformer<RemoveStates> {
  public:
   RemoveStates(std::set<NodeId> nodes_to_discard) : nodes_to_discard(nodes_to_discard) {}
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     assert(cea.amount_of_states >= nodes_to_discard.size());
     new_cea = LogicalCEA(cea.amount_of_states - nodes_to_discard.size());
     create_new_mapping(cea);

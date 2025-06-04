@@ -10,7 +10,7 @@
 
 namespace CORE::Internal::CEA {
 
-class ContiguousSequencing : public LogicalCEATransformer<ContiguousSequencing> {
+class ContiguousSequencing final : public LogicalCEATransformer {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
@@ -18,7 +18,7 @@ class ContiguousSequencing : public LogicalCEATransformer<ContiguousSequencing> 
   // Note, for this to work the implementation of union must offset the
   // right_states by the amount of states in the left_cea, and not make
   // another arbitrary permutation.
-  LogicalCEA eval(LogicalCEA& left, LogicalCEA& right) {
+  LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) override {
     LogicalCEA out = Union()(left, right);
     out.initial_states = left.initial_states;
     out.final_states = right.final_states << left.amount_of_states;

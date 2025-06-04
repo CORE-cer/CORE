@@ -11,13 +11,13 @@
 
 namespace CORE::Internal::CEA {
 
-class NegateExpected : public LogicalCEATransformer<NegateExpected> {
+class NegateExpected final : public LogicalCEATransformer {
  public:
   using VariablesToMark = mpz_class;
   using NodeId = uint64_t;
   using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     LogicalCEA out = LogicalCEA(cea);
     std::vector<std::vector<Transition>> new_transitions{};
     // Revisaremos cada una de las transiciones de salida de cada nodo

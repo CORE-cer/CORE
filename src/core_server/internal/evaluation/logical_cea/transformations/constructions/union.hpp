@@ -10,12 +10,12 @@
 
 namespace CORE::Internal::CEA {
 
-class Union : public LogicalCEATransformer<Union> {
+class Union final : public LogicalCEATransformer {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
 
-  LogicalCEA eval(LogicalCEA& left, LogicalCEA& right) {
+  LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) override {
     LogicalCEA out = LogicalCEA(left);
     out.add_n_states(right.amount_of_states);
     out.initial_states |= right.initial_states << left.amount_of_states;

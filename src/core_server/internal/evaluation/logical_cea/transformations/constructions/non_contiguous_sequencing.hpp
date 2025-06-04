@@ -11,14 +11,14 @@
 
 namespace CORE::Internal::CEA {
 
-class NonContiguousSequencing : public LogicalCEATransformer<NonContiguousSequencing> {
+class NonContiguousSequencing final : public LogicalCEATransformer {
  public:
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
 
   // The difference between sequencing and concat is that
   // In sequencing there is a wildcard loop on the destination states.
-  LogicalCEA eval(LogicalCEA& left, LogicalCEA& right) {
+  LogicalCEA eval(LogicalCEA&& left, LogicalCEA&& right) override {
     LogicalCEA out = Union()(left, right);
     out.initial_states = left.initial_states;
     out.final_states = right.final_states << left.amount_of_states;
