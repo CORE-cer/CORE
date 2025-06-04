@@ -39,7 +39,7 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(OrFormula& formula)         override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
   void visit(ContiguousIterationFormula& formula) override {formula.formula->accept_visitor(*this);}
-  void visit(NotEventTypeFormula& formula) override {formula.not_formula->accept_visitor(*this);}       // CAMBIAR ESTO
+  void visit(NotEventTypeFormula& formula) override {formula.not_formula->accept_visitor(*this);}
 
   // clang-format on
 };
