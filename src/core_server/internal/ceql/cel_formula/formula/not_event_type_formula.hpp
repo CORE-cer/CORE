@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_visitor.hpp"
 #include "formula.hpp"

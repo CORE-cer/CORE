@@ -55,6 +55,8 @@ class StaticMessageHandler {
 };
 
 class Printer : public StaticMessageHandler<Printer> {
+  friend class StaticMessageHandler<Printer>;
+
  public:
   Printer() = default;
 
@@ -80,6 +82,8 @@ class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
 std::function<void(const Types::Enumerator&)> CallbackHandler::event_handler = nullptr;
 
 class DummyHandler : public StaticMessageHandler<DummyHandler> {
+  friend class StaticMessageHandler<DummyHandler>;
+
  public:
   DummyHandler() = default;
 
@@ -87,6 +91,8 @@ class DummyHandler : public StaticMessageHandler<DummyHandler> {
 };
 
 class LimitedMessageStorer : public MessageHandler<LimitedMessageStorer> {
+  friend class MessageHandler<LimitedMessageStorer>;
+
  public:
   std::vector<Types::Enumerator> storage{};
 
