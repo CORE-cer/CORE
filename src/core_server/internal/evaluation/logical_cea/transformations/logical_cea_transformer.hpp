@@ -8,11 +8,6 @@
 namespace CORE::Internal::CEA {
 
 class LogicalCEATransformer {
-  friend Derived;
-
- private:
-  LogicalCEATransformer() = default;
-
  public:
   LogicalCEA operator()(LogicalCEA&& cea) { return eval(std::move(cea)); }
 

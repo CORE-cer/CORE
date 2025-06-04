@@ -221,7 +221,7 @@ TEST_CASE("Basic Not Event Type Formula", "[CEQL To LogicalCEA]") {
                                                              {"H", {}},
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("NOT (H)"), catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -249,7 +249,7 @@ TEST_CASE("Basic Not Event Type Filtered", "[CEQL To LogicalCEA]") {
   auto query = Parsing::QueryParser::parse_query(create_query("NOT (H FILTER H[Int > "
                                                               "2])"),
                                                  catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
   auto visitor = FormulaToLogicalCEA(query_catalog);
@@ -278,7 +278,7 @@ TEST_CASE("Basic Not Event Type Sequencing Formula", "[CEQL To LogicalCEA]") {
                                                            }});
   auto query = Parsing::QueryParser::parse_query(create_query("H; NOT (H)"),
                                                  catalog);  // H; NOT (H)
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
   CEA::LogicalCEA cea = visitor.current_cea;
@@ -309,7 +309,7 @@ TEST_CASE("Not event with sequence", "[CEQL To LogicalCEA]") {
   auto query = Parsing::QueryParser::parse_query(create_query(
                                                    "H; NOT(H); S"),  //"H; NOT(H); S"
                                                  catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
   auto visitor = FormulaToLogicalCEA(query_catalog);
@@ -351,7 +351,7 @@ TEST_CASE("Not event with sequence 2", "[CEQL To LogicalCEA]") {
   auto query = Parsing::QueryParser::parse_query(create_query(
                                                    "S; NOT(H); S"),  // "S; NOT(H); S"
                                                  catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
   auto visitor = FormulaToLogicalCEA(query_catalog);
@@ -393,7 +393,7 @@ TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]") {
   auto query = Parsing::QueryParser::parse_query(
     create_query("(H: NOT(S) :+: S) OR (H:S)"),  // (H: NOT(S) :+: S) OR (H:S)
     catalog);
-  QueryCatalog query_catalog(catalog);
+  QueryCatalog query_catalog(catalog, query);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
   auto visitor = FormulaToLogicalCEA(query_catalog);

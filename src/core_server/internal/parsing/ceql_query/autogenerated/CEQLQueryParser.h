@@ -43,16 +43,17 @@ public:
     RuleString_literal_or_regexp = 14, RuleMath_expr = 15, RuleValue_seq = 16, 
     RuleNumber_seq = 17, RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, 
     RuleTime_span = 21, RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, 
-    RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name = 27, RuleEvent_name = 28, 
-    RuleAtomic_cel_formula = 29, RuleStream_name = 30, RuleAttribute_name = 31, 
-    RuleInteger = 32, RuleDouble = 33, RuleNumber = 34, RuleString = 35, 
-    RuleAny_name = 36, RuleKeyword = 37, RuleRegexp = 38, RuleRegexp_alternation = 39, 
-    RuleRegexp_exp = 40, RuleRegexp_element = 41, RuleRegexp_group = 42, 
-    RuleParenthesis = 43, RuleQuantifier = 44, RuleQuantity = 45, RuleQuantExact = 46, 
-    RuleQuantRange = 47, RuleQuantMin = 48, RuleQuantMax = 49, RuleAtom = 50, 
-    RuleCharacterClass = 51, RuleCcAtom = 52, RuleCcRange = 53, RuleCcSingle = 54, 
-    RuleCcLiteral = 55, RuleCcEscapes = 56, RuleCcOther = 57, RuleLiteral = 58, 
-    RuleEscapes = 59, RuleOther = 60, RuleSharedAtom = 61, RuleRegexp_number = 62
+    RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name_with_projection = 27, 
+    RuleS_event_name = 28, RuleEvent_name = 29, RuleAtomic_cel_formula = 30, 
+    RuleStream_name = 31, RuleList_of_attribute_names = 32, RuleAttribute_name = 33, 
+    RuleInteger = 34, RuleDouble = 35, RuleNumber = 36, RuleString = 37, 
+    RuleAny_name = 38, RuleKeyword = 39, RuleRegexp = 40, RuleRegexp_alternation = 41, 
+    RuleRegexp_exp = 42, RuleRegexp_element = 43, RuleRegexp_group = 44, 
+    RuleParenthesis = 45, RuleQuantifier = 46, RuleQuantity = 47, RuleQuantExact = 48, 
+    RuleQuantRange = 49, RuleQuantMin = 50, RuleQuantMax = 51, RuleAtom = 52, 
+    RuleCharacterClass = 53, RuleCcAtom = 54, RuleCcRange = 55, RuleCcSingle = 56, 
+    RuleCcLiteral = 57, RuleCcEscapes = 58, RuleCcOther = 59, RuleLiteral = 60, 
+    RuleEscapes = 61, RuleOther = 62, RuleSharedAtom = 63, RuleRegexp_number = 64
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -99,10 +100,12 @@ public:
   class Second_spanContext;
   class Custom_spanContext;
   class Named_eventContext;
+  class S_event_name_with_projectionContext;
   class S_event_nameContext;
   class Event_nameContext;
   class Atomic_cel_formulaContext;
   class Stream_nameContext;
+  class List_of_attribute_namesContext;
   class Attribute_nameContext;
   class IntegerContext;
   class DoubleContext;
@@ -286,12 +289,12 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  S_list_of_variablesContext : public List_of_variablesContext {
+  class  S_event_name_with_projection_listContext : public List_of_variablesContext {
   public:
-    S_list_of_variablesContext(List_of_variablesContext *ctx);
+    S_event_name_with_projection_listContext(List_of_variablesContext *ctx);
 
-    std::vector<S_event_nameContext *> s_event_name();
-    S_event_nameContext* s_event_name(size_t i);
+    std::vector<S_event_name_with_projectionContext *> s_event_name_with_projection();
+    S_event_name_with_projectionContext* s_event_name_with_projection(size_t i);
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
@@ -1061,6 +1064,22 @@ public:
 
   Named_eventContext* named_event();
 
+  class  S_event_name_with_projectionContext : public antlr4::ParserRuleContext {
+  public:
+    S_event_name_with_projectionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    S_event_nameContext *s_event_name();
+    antlr4::tree::TerminalNode *LEFT_SQUARE_BRACKET();
+    List_of_attribute_namesContext *list_of_attribute_names();
+    antlr4::tree::TerminalNode *RIGHT_SQUARE_BRACKET();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  S_event_name_with_projectionContext* s_event_name_with_projection();
+
   class  S_event_nameContext : public antlr4::ParserRuleContext {
   public:
     S_event_nameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -1136,6 +1155,22 @@ public:
   };
 
   Stream_nameContext* stream_name();
+
+  class  List_of_attribute_namesContext : public antlr4::ParserRuleContext {
+  public:
+    List_of_attribute_namesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    std::vector<Attribute_nameContext *> attribute_name();
+    Attribute_nameContext* attribute_name(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  List_of_attribute_namesContext* list_of_attribute_names();
 
   class  Attribute_nameContext : public antlr4::ParserRuleContext {
   public:

@@ -30,7 +30,7 @@ TEST_CASE("Evaluation of NOT on the example stream of the papers") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -125,7 +125,7 @@ TEST_CASE("Evaluation of contiguos NOT query") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -205,7 +205,7 @@ TEST_CASE("Evaluation of NOT in a more complex query") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -314,7 +314,7 @@ TEST_CASE("Evaluation of sequencing NOT query") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -427,7 +427,7 @@ TEST_CASE("Evaluation of contiguos interspersed NOT query") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -517,7 +517,7 @@ TEST_CASE("Evaluation of NOT FILTER query") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
@@ -582,7 +582,7 @@ TEST_CASE("Evaluation of NOT query with +") {
 
   std::unique_ptr<DirectOutputTestResultHandler>
     result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
-      QueryCatalog(backend.get_catalog_reference()));
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
   DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
 
   backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
