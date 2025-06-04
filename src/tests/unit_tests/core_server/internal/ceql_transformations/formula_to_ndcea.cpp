@@ -236,6 +236,7 @@ TEST_CASE("Basic Not Event Type Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b10);
 }
+
 // //  R; NOT(R); S
 // // (R: NOT(S) :+: S) OR (R:S)
 // R:NOT(T):R
@@ -245,7 +246,8 @@ TEST_CASE("Basic Not Event Type Filtered", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::AttributeInfo Int("Int", Types::ValueTypes::INT64);
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("NOT (H FILTER H[Int > 2])"),
+  auto query = Parsing::QueryParser::parse_query(create_query("NOT (H FILTER H[Int > "
+                                                              "2])"),
                                                  catalog);
   QueryCatalog query_catalog(catalog);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
@@ -274,7 +276,8 @@ TEST_CASE("Basic Not Event Type Sequencing Formula", "[CEQL To LogicalCEA]") {
                                                            {
                                                              {"H", {}},
                                                            }});
-  auto query = Parsing::QueryParser::parse_query(create_query("H; NOT (H)"), catalog); // H; NOT (H)
+  auto query = Parsing::QueryParser::parse_query(create_query("H; NOT (H)"),
+                                                 catalog);  // H; NOT (H)
   QueryCatalog query_catalog(catalog);
   auto visitor = FormulaToLogicalCEA(query_catalog);
   query.where.formula->accept_visitor(visitor);
@@ -300,11 +303,11 @@ TEST_CASE("Basic Not Event Type Sequencing Formula", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.final_states == 0b1000);
 }
 
-TEST_CASE("Not event with sequence", "[CEQL To LogicalCEA]")
-{
+TEST_CASE("Not event with sequence", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("H; NOT(H); S"), //"H; NOT(H); S"
+  auto query = Parsing::QueryParser::parse_query(create_query(
+                                                   "H; NOT(H); S"),  //"H; NOT(H); S"
                                                  catalog);
   QueryCatalog query_catalog(catalog);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
@@ -335,18 +338,18 @@ TEST_CASE("Not event with sequence", "[CEQL To LogicalCEA]")
   REQUIRE(cea.transitions[2][1]
           == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 2));
   REQUIRE(cea.transitions[4][1]
-          == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 4));        
+          == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 4));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
   REQUIRE(cea.epsilon_transitions[3].contains(4));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b100000);
 }
 
-TEST_CASE("Not event with sequence 2", "[CEQL To LogicalCEA]")
-{
+TEST_CASE("Not event with sequence 2", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("S; NOT(H); S"), // "S; NOT(H); S"
+  auto query = Parsing::QueryParser::parse_query(create_query(
+                                                   "S; NOT(H); S"),  // "S; NOT(H); S"
                                                  catalog);
   QueryCatalog query_catalog(catalog);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
@@ -377,19 +380,19 @@ TEST_CASE("Not event with sequence 2", "[CEQL To LogicalCEA]")
   REQUIRE(cea.transitions[2][1]
           == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 2));
   REQUIRE(cea.transitions[4][1]
-          == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 4));        
+          == std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0, 4));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
   REQUIRE(cea.epsilon_transitions[3].contains(4));
   REQUIRE(cea.initial_states == 0b1);
   REQUIRE(cea.final_states == 0b100000);
 }
 
-TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]")
-{
+TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]") {
   Catalog catalog;
   Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"S", {}}}});
-  auto query = Parsing::QueryParser::parse_query(create_query("(H: NOT(S) :+: S) OR (H:S)"), // (H: NOT(S) :+: S) OR (H:S)
-                                                 catalog);
+  auto query = Parsing::QueryParser::parse_query(
+    create_query("(H: NOT(S) :+: S) OR (H:S)"),  // (H: NOT(S) :+: S) OR (H:S)
+    catalog);
   QueryCatalog query_catalog(catalog);
   AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
   query = transformer(std::move(query));
@@ -428,7 +431,7 @@ TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]")
   REQUIRE(cea.transitions[6][0]
           == std::make_tuple(CEA::PredicateSet(0b10, 0b10), 0b100, 7));
   REQUIRE(cea.transitions[8][0]
-          == std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 9));       
+          == std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 9));
   REQUIRE(cea.epsilon_transitions[1].contains(2));
   REQUIRE(cea.epsilon_transitions[3].contains(2));
   REQUIRE(cea.epsilon_transitions[3].contains(4));
@@ -437,4 +440,4 @@ TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]")
   REQUIRE(cea.final_states == 0b1000100000);
 
 }  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests
-}
+}  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests

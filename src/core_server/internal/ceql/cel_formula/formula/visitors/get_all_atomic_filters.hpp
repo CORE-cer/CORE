@@ -10,8 +10,8 @@
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
-#include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
 #include "formula_visitor.hpp"
 
 namespace CORE::Internal::CEQL {

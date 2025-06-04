@@ -30,6 +30,7 @@ class FormulaVisitor {
   virtual void visit(ProjectionFormula&) {throw std::logic_error("visit ProjectionFormula not implemented.");}
   virtual void visit(ContiguousIterationFormula&) {throw std::logic_error("visit ContiguousIterationFormula not implemented");}
   virtual void visit(NotEventTypeFormula&)  {throw std::logic_error("visit NotEventTypeFormula not implemented.");}
+
   // clang-format on
 };
 }  // namespace CORE::Internal::CEQL

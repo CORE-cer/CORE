@@ -14,12 +14,12 @@
 #include <utility>
 #include <vector>
 
-#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/and_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/atomic_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/or_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
 #include "core_server/internal/ceql/query/from.hpp"
 #include "core_server/internal/ceql/query/where.hpp"
@@ -196,15 +196,11 @@ TEST_CASE("not event filter", "[Where, Not, FILTER]") {
   auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
     std::make_unique<CEQL::FilterFormula>(
       make_unique<EventTypeFormula>("T"),
-        make_unique<AtomicFilter>("T",
-        make_unique<InequalityPredicate>(
-          make_unique<Attribute>("temp"),
-          InequalityPredicate::LogicalOperation::GREATER,
-          make_unique<IntegerLiteral>(2)
-        )
-      )
-    )
-  );
+      make_unique<AtomicFilter>(
+        "T",
+        make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                         InequalityPredicate::LogicalOperation::GREATER,
+                                         make_unique<IntegerLiteral>(2)))));
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());
   REQUIRE(formula->equals(expected_formula.get()));

@@ -3,16 +3,16 @@
 #include <string>
 #include <vector>
 
-
-#include "formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_visitor.hpp"
+#include "formula.hpp"
 
 namespace CORE::Internal::CEQL {
 
 struct NotEventTypeFormula : public Formula {
   std::unique_ptr<Formula> not_formula;
 
-  NotEventTypeFormula(std::unique_ptr<Formula>&& not_formula) : not_formula(std::move(not_formula)) {}
+  NotEventTypeFormula(std::unique_ptr<Formula>&& not_formula)
+      : not_formula(std::move(not_formula)) {}
 
   ~NotEventTypeFormula() override = default;
 
