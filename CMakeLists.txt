@@ -18,7 +18,7 @@ find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(cppzmq REQUIRED)
 find_package(libpqxx REQUIRED)
-find_package(gmpcustom REQUIRED)
+find_package(gmp REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
@@ -108,7 +108,7 @@ pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 # Add compiler and linker flags to pycore
 target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmpcustom::gmpcustom gmpcustom::gmpxx gmpcustom::libgmp)
+target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
@@ -119,7 +119,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmpcustom::gmpcustom gmpcustom::gmpxx gmpcustom::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp ${libpqxx_LIBRARIES} Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)

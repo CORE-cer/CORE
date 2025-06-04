@@ -143,7 +143,7 @@ class CORE(ConanFile):
         self.requires("cppzmq/" + CORE.CPPZMQ_VERSION)
         self.requires("cereal/" + CORE.CEREAL_VERSION)
         self.requires("libpqxx/" + CORE.LIBPQXX_VERSION)
-        self.requires("gmpcustom/" + CORE.GMP_VERSION)
+        self.requires("gmp/" + CORE.GMP_VERSION)
         self.requires("re2/" + CORE.RE2_VERSION)
         self.requires("quill/" + CORE.QUILL_VERSION)
         self.requires("readerwriterqueue/" + CORE.READERWRITERQUEUE_VERSION)
