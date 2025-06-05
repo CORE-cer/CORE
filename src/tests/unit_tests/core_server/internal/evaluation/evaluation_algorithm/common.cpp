@@ -53,4 +53,19 @@ Types::StreamInfo basic_stock_declaration(Interface::Backend<>& backend) {
 
   return stream_info;
 }
+
+Types::StreamInfo primary_time_stock_declaration(Interface::Backend<>& backend) {
+  Types::StreamInfo stream_info = backend.add_stream_type(
+    {"Stock",
+     {{"SELL",
+       {{"name", Types::ValueTypes::STRING_VIEW},
+        {"price", Types::ValueTypes::INT64},
+        {"time", Types::ValueTypes::PRIMARY_TIME}}},
+      {"BUY",
+       {{"name", Types::ValueTypes::STRING_VIEW},
+        {"price", Types::ValueTypes::INT64},
+        {"time", Types::ValueTypes::PRIMARY_TIME}}}}});
+
+  return stream_info;
+}
 }  // namespace CORE::Internal::Evaluation::UnitTests

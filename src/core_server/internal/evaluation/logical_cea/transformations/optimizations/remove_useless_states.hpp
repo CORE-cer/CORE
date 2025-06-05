@@ -14,7 +14,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveUselessStates : public LogicalCEATransformer<RemoveUselessStates> {
+class RemoveUselessStates final : public LogicalCEATransformer {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
   using Transition = LogicalCEA::Transition;
@@ -26,7 +26,7 @@ class RemoveUselessStates : public LogicalCEATransformer<RemoveUselessStates> {
    * Simply does a backwards DFS from the final states
    * and removes the states that are not reached.
    */
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     auto backward_transitions = invert_transitions(cea.transitions);
     auto backward_epsilons = invert_transitions(cea.epsilon_transitions);
 

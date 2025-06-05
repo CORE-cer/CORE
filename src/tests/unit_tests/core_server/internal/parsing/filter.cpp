@@ -19,6 +19,7 @@
 #include "core_server/internal/ceql/cel_formula/filters/or_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
 #include "core_server/internal/ceql/query/from.hpp"
 #include "core_server/internal/ceql/query/where.hpp"
@@ -49,6 +50,16 @@ std::string create_query(std::string filter_clause) {
   // clang-format on
 }
 
+// Agregue esto para hacer el test de FILTER NOT
+std::string create_not_query(std::string not_clause) {
+  // clang-format off
+  return "SELECT ALL * \n"
+         "FROM S3\n"
+         "WHERE NOT ( " + not_clause + ") \n"
+         "WITHIN 4 EVENTS\n";
+  // clang-format on
+}
+
 Where parse_where(std::string query) {
   Catalog catalog;
   Types::AttributeInfo temp("temp", Types::ValueTypes::INT64);
@@ -56,6 +67,8 @@ Where parse_where(std::string query) {
     {"S", {{"H", {}}, {"T", {temp}}}});
   stream_info = catalog.add_stream_type({"S1", {{"H", {}}, {"t2", {temp}}}});
   stream_info = catalog.add_stream_type({"S2", {{"H", {}}, {"S", {}}}});
+  // Agregue esto para hacer el test de FILTER NOT
+  stream_info = catalog.add_stream_type({"S3", {{"H", {}}, {"T", {temp}}}});
 
   antlr4::ANTLRInputStream input(query);
   CEQLQueryLexer lexer(&input);
@@ -73,6 +86,10 @@ Where parse_where(std::string query) {
   Parsing::WhereVisitor where_visitor(catalog, streams_events);
   where_visitor.visit(tree);
   return where_visitor.get_parsed_where();
+}
+
+std::unique_ptr<Formula> parse_formula(std::string query) {
+  return std::move(parse_where(query).formula);
 }
 
 template <typename T>
@@ -170,6 +187,23 @@ TEST_CASE("or filter works", "[Predicate, Inequality]") {
   INFO("Expected: " + expected_filter->to_string());
   INFO("Got: " + filter->to_string());
   REQUIRE(filter->equals(expected_filter.get()));
+}
+
+// Test de FILTER NOT
+TEST_CASE("not event filter", "[Where, Not, FILTER]") {
+  auto query = create_not_query("T FILTER T[temp>2]");
+  auto formula = parse_formula(query);
+  auto expected_formula = std::make_unique<CEQL::NotEventTypeFormula>(
+    std::make_unique<CEQL::FilterFormula>(
+      make_unique<EventTypeFormula>("T"),
+      make_unique<AtomicFilter>(
+        "T",
+        make_unique<InequalityPredicate>(make_unique<Attribute>("temp"),
+                                         InequalityPredicate::LogicalOperation::GREATER,
+                                         make_unique<IntegerLiteral>(2)))));
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests::FilterTests

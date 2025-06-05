@@ -18,6 +18,7 @@
 #include "core_server/internal/ceql/cel_formula/formula/filter_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/non_contiguous_sequencing_formula.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/not_event_type_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/or_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/projection_formula.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -25,6 +26,7 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_sequencing.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
@@ -138,6 +140,11 @@ class FormulaToLogicalCEA : public FormulaVisitor {
       throw std::runtime_error("AS variable not found in query catalog");
     }
     current_cea = CEA::MarkVariable(marking_id.value())(std::move(current_cea));
+  }
+
+  void visit(NotEventTypeFormula& formula) override {
+    formula.not_formula->accept_visitor(*this);
+    current_cea = CEA::NegateExpected()(std::move(current_cea));
   }
 };
 }  // namespace CORE::Internal::CEQL

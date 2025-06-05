@@ -12,9 +12,9 @@ namespace CORE::Internal::CEA {
  * to itself and then adds epsilon transitions from all the final states from
  * A to the new state and from the new state to all the initial states of A
  */
-class NonContiguousIteration : public LogicalCEATransformer<NonContiguousIteration> {
+class NonContiguousIteration final : public LogicalCEATransformer {
  public:
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     uint64_t new_state = cea.amount_of_states;
     cea.add_n_states(1);
     cea.transitions[new_state].emplace_back(PredicateSet(PredicateSet::Type::Tautology),

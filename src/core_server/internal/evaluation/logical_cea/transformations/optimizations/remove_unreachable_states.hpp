@@ -11,7 +11,7 @@
 
 namespace CORE::Internal::CEA {
 
-class RemoveUnreachableStates : public LogicalCEATransformer<RemoveUnreachableStates> {
+class RemoveUnreachableStates final : public LogicalCEATransformer {
   using VariablesToMark = LogicalCEA::VariablesToMark;
   using NodeId = LogicalCEA::NodeId;
 
@@ -22,7 +22,7 @@ class RemoveUnreachableStates : public LogicalCEATransformer<RemoveUnreachableSt
    * Simply does a DFS from the initial states
    * and removes the states that are not reached.
    */
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     std::vector<bool> reached_nodes(cea.amount_of_states, false);
     std::stack<NodeId> nodes_to_reach;
     for (NodeId node : cea.get_initial_states()) {

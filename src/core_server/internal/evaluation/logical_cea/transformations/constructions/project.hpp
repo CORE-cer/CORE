@@ -9,7 +9,7 @@
 
 namespace CORE::Internal::CEA {
 
-class Project : public LogicalCEATransformer<Project> {
+class Project final : public LogicalCEATransformer {
   using VariablesToMark = mpz_class;
   using EndNodeId = uint64_t;
 
@@ -20,7 +20,7 @@ class Project : public LogicalCEATransformer<Project> {
   Project(VariablesToMark variables_to_project)
       : variables_to_project(variables_to_project) {}
 
-  LogicalCEA eval(LogicalCEA&& cea) {
+  LogicalCEA eval(LogicalCEA&& cea) override {
     for (int i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
         transition = std::make_tuple(std::get<0>(transition),

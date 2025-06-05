@@ -44,16 +44,16 @@ public:
     RuleNumber_seq = 17, RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, 
     RuleTime_span = 21, RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, 
     RuleCustom_span = 25, RuleNamed_event = 26, RuleS_event_name_with_projection = 27, 
-    RuleS_event_name = 28, RuleEvent_name = 29, RuleStream_name = 30, RuleList_of_attribute_names = 31, 
-    RuleAttribute_name = 32, RuleInteger = 33, RuleDouble = 34, RuleNumber = 35, 
-    RuleString = 36, RuleAny_name = 37, RuleKeyword = 38, RuleRegexp = 39, 
-    RuleRegexp_alternation = 40, RuleRegexp_exp = 41, RuleRegexp_element = 42, 
-    RuleRegexp_group = 43, RuleParenthesis = 44, RuleQuantifier = 45, RuleQuantity = 46, 
-    RuleQuantExact = 47, RuleQuantRange = 48, RuleQuantMin = 49, RuleQuantMax = 50, 
-    RuleAtom = 51, RuleCharacterClass = 52, RuleCcAtom = 53, RuleCcRange = 54, 
-    RuleCcSingle = 55, RuleCcLiteral = 56, RuleCcEscapes = 57, RuleCcOther = 58, 
-    RuleLiteral = 59, RuleEscapes = 60, RuleOther = 61, RuleSharedAtom = 62, 
-    RuleRegexp_number = 63
+    RuleS_event_name = 28, RuleEvent_name = 29, RuleAtomic_cel_formula = 30, 
+    RuleStream_name = 31, RuleList_of_attribute_names = 32, RuleAttribute_name = 33, 
+    RuleInteger = 34, RuleDouble = 35, RuleNumber = 36, RuleString = 37, 
+    RuleAny_name = 38, RuleKeyword = 39, RuleRegexp = 40, RuleRegexp_alternation = 41, 
+    RuleRegexp_exp = 42, RuleRegexp_element = 43, RuleRegexp_group = 44, 
+    RuleParenthesis = 45, RuleQuantifier = 46, RuleQuantity = 47, RuleQuantExact = 48, 
+    RuleQuantRange = 49, RuleQuantMin = 50, RuleQuantMax = 51, RuleAtom = 52, 
+    RuleCharacterClass = 53, RuleCcAtom = 54, RuleCcRange = 55, RuleCcSingle = 56, 
+    RuleCcLiteral = 57, RuleCcEscapes = 58, RuleCcOther = 59, RuleLiteral = 60, 
+    RuleEscapes = 61, RuleOther = 62, RuleSharedAtom = 63, RuleRegexp_number = 64
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -103,6 +103,7 @@ public:
   class S_event_name_with_projectionContext;
   class S_event_nameContext;
   class Event_nameContext;
+  class Atomic_cel_formulaContext;
   class Stream_nameContext;
   class List_of_attribute_namesContext;
   class Attribute_nameContext;
@@ -142,8 +143,11 @@ public:
   public:
     ParseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    Core_queryContext *core_query();
     antlr4::tree::TerminalNode *EOF();
+    std::vector<Core_queryContext *> core_query();
+    Core_queryContext* core_query(size_t i);
+    std::vector<ErrorContext *> error();
+    ErrorContext* error(size_t i);
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -345,6 +349,19 @@ public:
     std::vector<Cel_formulaContext *> cel_formula();
     Cel_formulaContext* cel_formula(size_t i);
     antlr4::tree::TerminalNode *COLON();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Not_event_type_atomic_cel_formulaContext : public Cel_formulaContext {
+  public:
+    Not_event_type_atomic_cel_formulaContext(Cel_formulaContext *ctx);
+
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
+    Atomic_cel_formulaContext *atomic_cel_formula();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
+    antlr4::tree::TerminalNode *K_NOT();
+    antlr4::tree::TerminalNode *REGEX_EXCLAMAITON();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
@@ -1091,6 +1108,41 @@ public:
 
   Event_nameContext* event_name();
 
+  class  Atomic_cel_formulaContext : public antlr4::ParserRuleContext {
+  public:
+    Atomic_cel_formulaContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+   
+    Atomic_cel_formulaContext() = default;
+    void copyFrom(Atomic_cel_formulaContext *context);
+    using antlr4::ParserRuleContext::copyFrom;
+
+    virtual size_t getRuleIndex() const override;
+
+   
+  };
+
+  class  Atomic_cel_formula_filterContext : public Atomic_cel_formulaContext {
+  public:
+    Atomic_cel_formula_filterContext(Atomic_cel_formulaContext *ctx);
+
+    Atomic_cel_formulaContext *atomic_cel_formula();
+    antlr4::tree::TerminalNode *K_FILTER();
+    FilterContext *filter();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Atomic_cel_formula_rContext : public Atomic_cel_formulaContext {
+  public:
+    Atomic_cel_formula_rContext(Atomic_cel_formulaContext *ctx);
+
+    S_event_nameContext *s_event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  Atomic_cel_formulaContext* atomic_cel_formula();
+  Atomic_cel_formulaContext* atomic_cel_formula(int precedence);
   class  Stream_nameContext : public antlr4::ParserRuleContext {
   public:
     Stream_nameContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -1643,6 +1695,7 @@ public:
   bool filterSempred(FilterContext *_localctx, size_t predicateIndex);
   bool predicateSempred(PredicateContext *_localctx, size_t predicateIndex);
   bool math_exprSempred(Math_exprContext *_localctx, size_t predicateIndex);
+  bool atomic_cel_formulaSempred(Atomic_cel_formulaContext *_localctx, size_t predicateIndex);
 
   // By default the static state used to implement the parser is lazily initialized during the first
   // call to the constructor. You can call this function if you wish to initialize the static state
