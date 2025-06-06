@@ -66,6 +66,12 @@ jobs:
 
       - name: build with grammar
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        
+      - name: release build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+
+      - name: release build
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: add artifactory
         run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local

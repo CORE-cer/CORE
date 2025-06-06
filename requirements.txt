@@ -1,0 +1,2 @@
+conan==2.17.0
+websockets==15.0.1

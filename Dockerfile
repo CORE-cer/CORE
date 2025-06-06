@@ -39,6 +39,8 @@ RUN pip install conan
 
 RUN conan profile detect
 
+RUN conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
 RUN wget https://apt.llvm.org/llvm.sh
 
 RUN chmod +x llvm.sh
@@ -63,6 +65,7 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
+
 FROM ubuntu:24.04 AS final
 
 # Install minimal runtime dependencies
@@ -72,6 +75,20 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /CORE
+
+RUN apt-get update
+
+RUN apt-get -y upgrade
+
+RUN apt install -y python3 python3-pip python3.12-venv
+
+RUN python3 -m venv py
+
+ENV PATH="/CORE/py/bin:$PATH"
+
+COPY --from=build /CORE/requirements.txt /CORE/requirements.txt
+
+run pip install -r requirements.txt
 
 COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
