@@ -1,5 +1,8 @@
 services:
   core-terminal:
     image: crivero1/cer-core
-    volumes:
-      - .:/CORE
+    build:
+      context: .
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
