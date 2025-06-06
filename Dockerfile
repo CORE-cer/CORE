@@ -65,6 +65,9 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
+RUN cp main.py /CORE/build/Debug/main.py
+RUN cp main.py /CORE/build/Release/main.py
+
 
 FROM ubuntu:24.04 AS final
 
@@ -73,6 +76,8 @@ RUN apt-get update && apt-get install -y \
     bash \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+USER root
 
 WORKDIR /CORE
 
@@ -88,7 +93,7 @@ ENV PATH="/CORE/py/bin:$PATH"
 
 COPY --from=build /CORE/requirements.txt /CORE/requirements.txt
 
-run pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release

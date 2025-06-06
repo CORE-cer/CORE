@@ -58,6 +58,9 @@ jobs:
       - name: update conan default remote
         run: conan remote update conancenter --url https://center2.conan.io
 
+      - name: add artifactory
+        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+
       - name: install dependencies conan
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
@@ -67,14 +70,11 @@ jobs:
       - name: build with grammar
         run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
         
-      - name: release build
+      - name: debug build
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
 
       - name: release build
         run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
-
-      - name: add artifactory
-        run: conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
       - name: login artifactory
         run: conan remote login artifactory admin -p ${{ secrets.CONAN_PASSWORD }}
