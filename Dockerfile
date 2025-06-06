@@ -6,8 +6,6 @@ USER root
 
 WORKDIR /CORE
 
-COPY . .
-
 RUN apt-get update
 
 RUN apt-get -y upgrade
@@ -56,6 +54,8 @@ RUN which clang-19
 
 # ADD clang to PATH
 ENV PATH="/clang:$PATH"
+
+COPY . .
 
 RUN chmod +x /CORE/scripts/*.sh
 
