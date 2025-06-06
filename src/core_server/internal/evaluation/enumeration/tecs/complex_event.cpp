@@ -85,8 +85,8 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
     }
   }
 
-  out += "]";                                                 // End of "events" array
-  out += "}";                                                 // End of main JSON object
+  out += "]";  // End of "events" array
+  out += "}";  // End of main JSON object
 
   return out;
 }
