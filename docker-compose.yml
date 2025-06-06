@@ -1,6 +1,6 @@
 services:
   core-terminal:
-    image: crivero1/cer-core
+    # image: crivero1/cer-core
     build:
       context: .
       dockerfile: Dockerfile

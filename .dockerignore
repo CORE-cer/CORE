@@ -2,3 +2,6 @@ Dockerfile
 docker-compose.yml
 py/
 build/
+.github/
+.git
+.dockerignore
