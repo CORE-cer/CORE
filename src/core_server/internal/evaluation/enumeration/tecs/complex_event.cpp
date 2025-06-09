@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <tracy/Tracy.hpp>
