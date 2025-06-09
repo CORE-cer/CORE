@@ -16,6 +16,12 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          create-symlink: true
+
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
@@ -82,6 +88,12 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          create-symlink: true
+
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
@@ -129,6 +141,12 @@ jobs:
 
       - name: Check out repository code
         uses: actions/checkout@v3
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          create-symlink: true
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2

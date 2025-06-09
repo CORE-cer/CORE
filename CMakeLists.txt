@@ -31,7 +31,10 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+endif()
 
 # Profiler
 message("Fetching Tracy")
