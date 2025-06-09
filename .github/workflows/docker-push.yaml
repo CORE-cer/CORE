@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-docker-build-check:
+  run-docker-build-push:
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
