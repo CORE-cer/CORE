@@ -76,6 +76,8 @@ async def handle_responses(
 
         except KeyboardInterrupt as e:
             raise e
+        except websockets.exceptions.WebSocketException as e:
+            raise e
         except Exception as e:
             print("Error parsing message, skipping.. ", e)
             continue
@@ -94,11 +96,8 @@ async def subscribe_and_handle(
 
         except KeyboardInterrupt as e:
             raise e
-        except (
-            websockets.exceptions.ConnectionClosedError,
-            websockets.exceptions.ConnectionClosedOK,
-        ):
-            print("Connection closed, retrying..")
+        except websockets.exceptions.WebSocketException as e:
+            print("Connection exception, retrying..: ", e)
             await asyncio.sleep(1)
 
 
