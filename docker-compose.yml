@@ -6,3 +6,5 @@ services:
       dockerfile: Dockerfile
     stdin_open: true
     tty: true
+    ports:
+      - 3002:3002
