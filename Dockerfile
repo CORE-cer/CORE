@@ -65,8 +65,8 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
-RUN cp main.py /CORE/build/Debug/main.py
-RUN cp main.py /CORE/build/Release/main.py
+RUN cp -r python_streamer/coinbase/* /CORE/build/Debug
+RUN cp -r python_streamer/coinbase/* /CORE/build/Release
 
 
 FROM ubuntu:24.04 AS final
