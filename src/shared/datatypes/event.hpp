@@ -144,7 +144,7 @@ struct Event {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(event_type_id, attributes);
+    archive(event_type_id, attributes, primary_time);
   }
 };
 

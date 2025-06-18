@@ -35,7 +35,8 @@ def create_ticker_attributes(ticker_event: ticker.Ticker) -> list:
     best_ask = _pycore.PyDoubleValue(ticker_event.best_ask)
     best_ask_size = _pycore.PyDoubleValue(ticker_event.best_ask_size)
     last_size = _pycore.PyDoubleValue(ticker_event.last_size)
-    time = _pycore.PyDateValue(int(ticker_event.time.timestamp() * 1e9))
+    time = _pycore.PyIntValue(int(ticker_event.time.timestamp() * 1e9))
+    print(f"Time: {int(ticker_event.time.timestamp() * 1e9)}")
     attributes = [
         product_id,
         price,
@@ -70,7 +71,7 @@ async def handle_responses(
                 attributes = create_ticker_attributes(ticker_event_model)
                 stream_id = 0
                 event_id = event_dict[ticker_event_model.side.lower()]
-                event = _pycore.PyEvent(event_id, attributes)
+                event = _pycore.PyEvent(event_id, attributes, attributes[-1])
                 streamer.send_stream(stream_id, event)
                 print("Sent event to streamer")
 
@@ -150,10 +151,9 @@ if __name__ == "__main__":
             try:
                 run_websocket(server_port + 1)
 
-            except KeyboardInterrupt:
+            except KeyboardInterrupt as e:
                 print("Exiting WebSocket..")
-                print(f"Total time: {time.time() - start_time_total}")
-                exit()
+                raise e
 
     except Exception as e:
         print("Exited unexpectedly with error when declaring with error:", e)
