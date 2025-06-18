@@ -130,23 +130,6 @@ if __name__ == "__main__":
 
         client.declare_option(options)
 
-        # client.add_query(query_1)
-        # client.add_query(query_2)
-
-        # initial_port_number = 5003
-        # final_port_number = 5005
-        #
-        # handlers = _pycore.subscribe_to_queries(
-        #     client, initial_port_number, final_port_number
-        # )
-
-        # def my_handler(enumerator):
-        #     for complex_event in enumerator:
-        #         print(f"Data query: {complex_event.to_string()}")
-        #
-        # for i in range(len(handlers)):
-        #     handlers[i].set_event_handler(my_handler)
-
         while True:
             try:
                 run_websocket(server_port + 1)
