@@ -103,7 +103,8 @@ PYBIND11_MODULE(_pycore, m) {
             .def_readonly("value_type", &Types::AttributeInfo::value_type);
 
         py::class_<Types::Event, std::shared_ptr<Types::Event>>(m, "PyEvent")
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>());
+            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
+            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>());
  
         py::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
             .def(py::init<std::string, std::vector<Types::AttributeInfo>>())
