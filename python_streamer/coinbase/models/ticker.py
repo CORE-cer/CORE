@@ -708,7 +708,7 @@ subscription_message = {
 }
 
 
-class Ticker(BaseModel):
+class TickerModel(BaseModel):
     type: Literal["ticker"]
     sequence: int
     product_id: str
