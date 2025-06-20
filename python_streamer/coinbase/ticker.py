@@ -2,12 +2,12 @@ import json
 from typing import Optional, final
 
 import _pycore
-from abstract_streamer import AbstractStreamer
+from abstract_streamer_websocket import AbstractStreamerWebsocket
 from coinbase.models.ticker import TickerModel, subscription_message
 
 
 @final
-class TickerStreamer(AbstractStreamer[TickerModel]):
+class TickerStreamer(AbstractStreamerWebsocket[TickerModel]):
     @property
     def name(self) -> str:
         return "TickerStreamer"
