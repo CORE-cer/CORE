@@ -22,7 +22,7 @@ options = """CREATE QUARANTINE { \n
             }"""
 
 
-def create_ticker_attributes(ticker_event: ticker.Ticker) -> list:
+def create_ticker_attributes(ticker_event: ticker.TickerModel) -> list:
     product_id = _pycore.PyStringValue(ticker_event.product_id)
     price = _pycore.PyDoubleValue(ticker_event.price)
     open_24h = _pycore.PyDoubleValue(ticker_event.open_24h)
@@ -67,7 +67,7 @@ async def handle_responses(
     while True:
         try:
             async for message in websocket:
-                ticker_event_model = ticker.Ticker.model_validate_json(message)
+                ticker_event_model = ticker.TickerModel.model_validate_json(message)
                 attributes = create_ticker_attributes(ticker_event_model)
                 stream_id = 0
                 event_id = event_dict[ticker_event_model.side.lower()]
