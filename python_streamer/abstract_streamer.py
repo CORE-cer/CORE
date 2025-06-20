@@ -87,8 +87,6 @@ class AbstractStreamer(ABC, Generic[T]):
         print(f"Processing message in {self.name}: {message}")
         event_id = self.get_event_id_from_model(model)
         print(f"Event ID: {event_id}, Model: {model}")
-        if model.product_id != "ETH-USD":
-            return
         event = self.create_event(model)
         self.py_streamer.send_stream(stream_id, event)
         print("Sent event to streamer")
