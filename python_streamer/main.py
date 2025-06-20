@@ -2,6 +2,7 @@ import asyncio
 
 import _pycore
 from coinbase.ticker import TickerStreamer
+from coinbase.ticker_offline import TickerStreamerOffline
 
 
 async def do():
@@ -10,6 +11,7 @@ async def do():
     streamer = _pycore.PyStreamer("tcp://localhost", 5002)
 
     ticker_streamer = TickerStreamer(client, streamer)
+    # ticker_streamer = TickerStreamerOffline(client, streamer)
 
     tasks = []
     tasks.append(ticker_streamer.start())

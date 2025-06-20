@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -111,6 +112,10 @@ class Evaluator {
     LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
                      event.get_primary_time().val);
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+    LOG_TRACE_L2("Event type ID: {}", event.get_event_reference().event_type_id);
+    for (const auto& attr : event.get_event_reference().attributes) {
+      LOG_TRACE_L2("Attribute: {}", attr->to_string());
+    }
     auto start_time = std::chrono::steady_clock::now();
 #endif
 // If in debug, check tuples are being sent in ascending order.
@@ -120,6 +125,8 @@ class Evaluator {
 #endif
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
+    LOG_TRACE_L2("Event time of expiration set to {}", event_time_of_expiration.load());
+    LOG_TRACE_L2("Time window is set to {}", time_window);
 
     if (should_reset.load()) {
       reset();
