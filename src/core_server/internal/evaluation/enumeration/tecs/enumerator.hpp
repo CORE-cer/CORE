@@ -1,13 +1,21 @@
 #pragma once
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
 #include <stack>
+#include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
+
+#define QUILL_ROOT_LOGGER_ONLY
+#include <gmpxx.h>
+#include <quill/Quill.h>  // NOLINT
+#include <quill/detail/LogMacros.h>
+#include <quill/detail/misc/Common.h>
 
 #include "complex_event.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
@@ -180,7 +188,12 @@ class Enumerator {
   ComplexEvent next() {
     ZoneScopedN("Internal::Enumerator::next");
     std::reverse(next_value.second.begin(), next_value.second.end());
-    return ComplexEvent(std::move(next_value));
+    auto complex_event = ComplexEvent(std::move(next_value));
+#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+    std::string complex_event_string = complex_event.to_string<true>();
+    LOG_TRACE_L2("Returning complex event: {}", complex_event_string);
+#endif
+    return complex_event;
   }
 
   inline void cleanup() {

@@ -1648,6 +1648,126 @@ TEST_CASE("Filter directly on event") {
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
 }
 
+TEST_CASE("Evaluation with strongly typed filter continuous sequencing") {
+  Internal::Interface::Backend<> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string string_query =
+    "SELECT * FROM Stock\n"
+    "WHERE (SELL:BUY) OR (BUY:SELL)\n"
+    "FILTER SELL[name='MSFT'] AND BUY[name='INTL']\n"
+    "WITHIN 5 Seconds";
+
+  CEQL::Query parsed_query = backend.parse_sent_query(string_query);
+
+  std::unique_ptr<DirectOutputTestResultHandler>
+    result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+  Types::Enumerator output;
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("BUY MSFT 101");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("NVIDIA"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("BUY NVIDIA 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL MSFT 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  REQUIRE(output.complex_events[0].events.size() == 2);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 1, "INTL", 80));
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("NVIDIA"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("BUY NVIDIA 102");
+  
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("BUY INTL 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("BUY INTL 102");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 0);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL MSFT 80");
+
+  backend.send_event_to_queries(0, event);
+
+  output = result_handler.get_enumerator();
+
+  REQUIRE(output.complex_events.size() == 1);
+
+  REQUIRE(output.complex_events[0].events.size() == 2);
+  REQUIRE(is_the_same_as(output.complex_events[0].events[0], 1, "INTL", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "MSFT", 80));
+}
+
 }  // namespace CORE::Internal::Evaluation::UnitTests
 
 // NOLINTEND(bugprone-chained-comparison)

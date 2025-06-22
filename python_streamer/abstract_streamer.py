@@ -84,8 +84,10 @@ class AbstractStreamer(ABC, Generic[T]):
         to implement specific message processing logic.
         """
         model = self.parse_message_json(message)
-        print(f"Processing message in {self.name}: {message}")
         event_id = self.get_event_id_from_model(model)
+        if model.product_id != "ETH-USD":
+            return
+        print(f"Processing message in {self.name}: {message}")
         print(f"Event ID: {event_id}, Model: {model}")
         event = self.create_event(model)
         self.py_streamer.send_stream(stream_id, event)
@@ -98,8 +100,8 @@ class AbstractStreamer(ABC, Generic[T]):
     async def start(self):
         try:
             stream_info = self.py_client.declare_stream(self.stream_declaration)
-            if self.option_declaration:
-                self.py_client.declare_option(self.option_declaration)
+            # if self.option_declaration:
+            #     self.py_client.declare_option(self.option_declaration)
             stream_id = stream_info.id
         except _pycore.PyStreamNameAlreadyDeclaredException:
             stream_id = 0
