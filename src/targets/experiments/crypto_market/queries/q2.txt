@@ -1,0 +1,5 @@
+SELECT *
+FROM TICKER
+WHERE (Buy AS X:Sell AS X) OR (Sell AS X:Buy AS X)
+FILTER X[product_id='ETH-USD']
+WITHIN 5000000000 [time]
