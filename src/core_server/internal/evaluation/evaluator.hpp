@@ -166,7 +166,7 @@ class Evaluator {
     bool has_output = !final_states.empty();
 
     if (has_output) {
-      LOG_L3_BACKTRACE("Outputting in Evaluator");
+      LOG_TRACE_L2("Outputting in Evaluator");
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
