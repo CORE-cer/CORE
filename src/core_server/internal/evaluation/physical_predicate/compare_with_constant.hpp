@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
 #include <type_traits>
 
@@ -20,19 +21,30 @@ class CompareWithConstant : public PhysicalPredicate {
  private:
   size_t pos_to_compare;
   ValueType constant_val;
+  std::string underlying_string;
 
  public:
   CompareWithConstant(uint64_t event_type_id, size_t pos_to_compare, ValueType constant_val)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
-        constant_val(constant_val) {}
+        constant_val(constant_val) {
+    if constexpr (std::is_same_v<ValueType, std::string_view>) {
+      underlying_string = std::string(constant_val);
+      this->constant_val = underlying_string;
+    }
+  }
 
   CompareWithConstant(std::set<uint64_t> admissible_event_types,
                       size_t pos_to_compare,
                       ValueType constant_val)
       : PhysicalPredicate(admissible_event_types),
         pos_to_compare(pos_to_compare),
-        constant_val(constant_val) {}
+        constant_val(constant_val) {
+    if constexpr (std::is_same_v<ValueType, std::string_view>) {
+      underlying_string = std::string(constant_val);
+      this->constant_val = underlying_string;
+    }
+  }
 
   ~CompareWithConstant() override = default;
 
