@@ -11,9 +11,7 @@
 #include <vector>
 
 #define QUILL_ROOT_LOGGER_ONLY
-#include <gmpxx.h>
 #include <quill/Quill.h>  // NOLINT
-#include <quill/detail/LogMacros.h>
 #include <quill/detail/misc/Common.h>
 
 #include "complex_event.hpp"
