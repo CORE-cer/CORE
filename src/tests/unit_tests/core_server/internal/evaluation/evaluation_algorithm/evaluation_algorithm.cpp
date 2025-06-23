@@ -1723,7 +1723,7 @@ TEST_CASE("Evaluation with strongly typed filter continuous sequencing") {
            {std::make_shared<Types::StringValue>("NVIDIA"),
             std::make_shared<Types::IntValue>(102)}};
   INFO("BUY NVIDIA 102");
-  
+
   backend.send_event_to_queries(0, event);
 
   output = result_handler.get_enumerator();
