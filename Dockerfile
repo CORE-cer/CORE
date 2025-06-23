@@ -65,8 +65,7 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
-RUN cp -r python_streamer/coinbase/* /CORE/build/Debug
-RUN cp -r python_streamer/coinbase/* /CORE/build/Release
+RUN cp build/Debug/_pycore.cpython-312-x86_64-linux-gnu.so python_streamer/_pycore.cpython-313-x86_64-linux-gnu.so
 
 
 FROM ubuntu:24.04 AS final
@@ -87,16 +86,18 @@ RUN apt-get -y upgrade
 
 RUN apt install -y python3 python3-pip python3.12-venv
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 RUN python3 -m venv py
-
-ENV PATH="/CORE/py/bin:$PATH"
-
-COPY --from=build /CORE/requirements.txt /CORE/requirements.txt
-
-RUN pip install -r requirements.txt
 
 COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
+COPY --from=build /CORE/python_streamer /CORE/python_streamer
+
+RUN cd /CORE/python_streamer && uv sync
+
+ENV PATH="/CORE/python_streamer/.venv:$PATH"
+
 
 # Set default command to bash for interactive terminal
 CMD ["/bin/bash"]

@@ -5,3 +5,8 @@ build/
 .github/
 .git
 .dockerignore
+**/.venv/
+**/__pycache__/
+**/*.egg-info
+python_streamer/*.so
+
