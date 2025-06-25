@@ -57,6 +57,7 @@ LOGGING=info
 J="all-1"
 PROFILING=off
 export TSAN_OPTIONS="suppressions=tsan_suppressions.txt"
+export ASAN_OPTIONS="suppressions=asan_suppressions.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

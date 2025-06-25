@@ -35,7 +35,6 @@
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
-#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -137,22 +136,22 @@ class BasePolicy {
 
   void send_events_to_queries() {
     ZoneScopedN("BasePolicy::send_events_to_queries");
-    LOG_L3_BACKTRACE("Sending events to queries in BasePolicy::send_events_to_queries");
+    LOG_TRACE_L3("Sending events to queries in BasePolicy::send_events_to_queries");
+    LOG_TRACE_L3("Current send_event_queue size: {}", send_event_queue.size_approx());
 
     Types::EventWrapper event;
     while (send_event_queue.try_dequeue(event)) {
-      LOG_L3_BACKTRACE(
-        "Sending event with id {} and time to queries in "
-        "BasePolicy::send_events_to_queries",
-        event.get_unique_event_type_id(),
-        event.get_primary_time().val);
-
       send_event_to_queries(std::move(event));
     }
   }
 
   void send_event_to_queries(Types::EventWrapper&& event) {
     ZoneScopedN("BasePolicy::send_event_to_queries");
+    LOG_TRACE_L2(
+      "Sending event with id {} and time to queries in "
+      "BasePolicy::send_events_to_queries",
+      event.get_unique_event_type_id(),
+      event.get_primary_time().val);
     std::lock_guard<std::mutex> lock(queries_lock);
     int i = 0;
     for (auto& blocking_event_queue : blocking_event_queues) {
