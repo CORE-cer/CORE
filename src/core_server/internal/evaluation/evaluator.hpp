@@ -1,7 +1,10 @@
 #pragma once
 
+#include <chrono> // NOLINT
 #include <memory>
 #include <optional>
+#include <string>
+#include <thread>
 #include <utility>
 
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
@@ -119,7 +122,16 @@ class Evaluator {
 #endif
 // If in debug, check tuples are being sent in ascending order.
 #ifdef CORE_DEBUG
-    assert(current_time >= last_tuple_time);
+    if (current_time < last_tuple_time) {
+      std::string attributes = event.get_event_reference().to_string();
+      LOG_CRITICAL("Received tuple with timestamp {} in Evaluator::next, "
+            "but the last tuple time was {}. Attributes: {}",
+            current_time,
+            last_tuple_time,
+            attributes);
+      std::this_thread::sleep_for(std::chrono::nanoseconds(500000000));
+      assert(false && "Received tuple out of order in Evaluator::next");
+    }
     last_tuple_time = current_time;
 #endif
     // current_time is j in the algorithm.

@@ -19,7 +19,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
-#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
@@ -42,7 +41,7 @@ class WaitFixedTimePolicy : public BasePolicy {
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
   void receive_event(Types::EventWrapper&& event) override {
-    LOG_L3_BACKTRACE(
+    LOG_TRACE_L1(
       "Received event with id {} and time {} in "
       "WaitFixedTimePolicy::receive_event",
       event.get_unique_event_type_id(),
@@ -51,7 +50,7 @@ class WaitFixedTimePolicy : public BasePolicy {
     std::lock_guard<std::mutex> lock(events_lock);
 
     if (event.get_primary_time().val < last_time_sent.val) {
-      LOG_L3_BACKTRACE(
+      LOG_WARNING(
         "Dropping event with id {} and time {} in "
         "WaitFixedTimePolicy::receive_event due to time being before last time sent",
         event.get_unique_event_type_id(),
@@ -71,7 +70,7 @@ class WaitFixedTimePolicy : public BasePolicy {
    * Tries to add received tuples to send queue according to specific policy
    */
   void try_add_tuples_to_send_queue() override {
-    LOG_L3_BACKTRACE(
+    LOG_TRACE_L3(
       "Trying to add tuples to send queue in "
       "WaitFixedTimePolicy::try_add_tuples_to_send");
 
@@ -82,7 +81,7 @@ class WaitFixedTimePolicy : public BasePolicy {
       const Types::EventWrapper& event = *iter;
       auto duration = now - event.get_received_time();
       if (duration > time_to_wait) {
-        LOG_L3_BACKTRACE(
+        LOG_TRACE_L1(
           "Adding event with id {} and time {} to send queue in "
           "WaitFixedTimePolicy::try_add_tuples_to_send",
           event.get_unique_event_type_id(),

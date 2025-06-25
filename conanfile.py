@@ -83,7 +83,7 @@ class CORE(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "sanitizer": ["address", "thread", "none"],
-        "logging": ["critical", "info", "debug", "trace_l2", "trace_l3"],
+        "logging": ["critical", "info", "debug", "trace_l1", "trace_l2", "trace_l3"],
         "j": ["all-1"] + list(range(1, 64)),
         "profiling": ["on", "off"],
     }
