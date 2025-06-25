@@ -15,7 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # Install the latest version of cmake:
 RUN apt remove --purge --auto-remove cmake
 
-RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git
+RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev
 
 RUN pipx ensurepath
 
@@ -65,7 +65,7 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
-RUN cp build/Debug/_pycore.cpython-312-x86_64-linux-gnu.so python_streamer/_pycore.cpython-313-x86_64-linux-gnu.so
+RUN cp build/Debug/_pycore.cpython-312-x86_64-linux-gnu.so python_streamer/_pycore.cpython-312-x86_64-linux-gnu.so
 
 
 FROM ubuntu:24.04 AS final
@@ -96,7 +96,7 @@ COPY --from=build /CORE/python_streamer /CORE/python_streamer
 
 RUN cd /CORE/python_streamer && uv sync
 
-ENV PATH="/CORE/python_streamer/.venv:$PATH"
+ENV PATH="/CORE/python_streamer/.venv/bin:$PATH"
 
 
 # Set default command to bash for interactive terminal
