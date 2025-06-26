@@ -62,31 +62,6 @@ struct Select {
       }
       this->attribute_projection_stream_event_set[stream_var] = std::move(unique_attrs);
     }
-
-    std::cout << "Size of vector projection: " << this->attribute_projection_variable.size()
-              << std::endl;
-    std::cout << "Size of stream event projection: "
-              << this->attribute_projection_stream_event.size() << std::endl;
-
-    std::cout << "Size of set projection: "
-            << this->attribute_projection_variable_set.size() << std::endl;
-    std::cout << "Size of stream event set projection: "
-            << this->attribute_projection_stream_event_set.size() << std::endl;
-
-    for (const auto& [var, attrs] : this->attribute_projection_variable_set) {
-      std::cout << "Variable: " << var << " Attributes: " << std::endl;
-      for (const auto& attr : attrs) {
-        std::cout << "  " << attr << std::endl;
-      }
-    }
-
-    for (const auto& [stream_var, attrs] : this->attribute_projection_stream_event_set) {
-      std::cout << "Stream: " << stream_var.first << " Event: " << stream_var.second
-                << " Attributes: " << std::endl;
-      for (const auto& attr : attrs) {
-        std::cout << "  " << attr << std::endl;
-      }
-    }
   }
 
   std::string to_string() const {
