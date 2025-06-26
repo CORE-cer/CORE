@@ -36,8 +36,8 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
   std::vector<std::string>& as_events;
 
   // Attribute projection
-  std::map<VariableName, std::set<AttributeName>> attribute_projection_variable;
-  std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>
+  std::map<VariableName, std::vector<AttributeName>> attribute_projection_variable;
+  std::map<std::pair<StreamName, VariableName>, std::vector<AttributeName>>
     attribute_projection_stream_event;
 
   void check_if_events_exists_in_streams_or_as_events(std::string event_name) {
@@ -101,7 +101,7 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
     if (!ctx->list_of_attribute_names()) {
       return {};
     }
-    auto attribute_names = std::any_cast<std::set<AttributeName>>(
+    auto attribute_names = std::any_cast<std::vector<AttributeName>>(
       visit(ctx->list_of_attribute_names()));
 
     if (stream_name) {
@@ -133,9 +133,9 @@ class SelectVisitor : public CEQLQueryParserBaseVisitor {
 
   virtual std::any visitList_of_attribute_names(
     CEQLQueryParser::List_of_attribute_namesContext* ctx) override {
-    std::set<AttributeName> attribute_names;
+    std::vector<AttributeName> attribute_names;
     for (auto& attr : ctx->attribute_name()) {
-      attribute_names.emplace(attr->getText());
+      attribute_names.emplace_back(attr->getText());
     }
     return attribute_names;
   }
