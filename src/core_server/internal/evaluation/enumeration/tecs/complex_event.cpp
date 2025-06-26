@@ -55,7 +55,7 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
               current_marking_id);
             if (stream_event_name_opt.has_value()) {
               const auto& [stream_name, event_name] = stream_event_name_opt.value();
-              variable_key_name = stream_name + "->" + event_name;
+              variable_key_name = stream_name + ">" + event_name;
             } else {
               throw std::runtime_error(
                 "Marked variable name not found in query catalog for marking_id: "
