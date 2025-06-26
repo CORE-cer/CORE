@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chrono> // NOLINT
+#include <chrono>  // NOLINT
 #include <memory>
 #include <optional>
 #include <string>
@@ -124,11 +124,12 @@ class Evaluator {
 #ifdef CORE_DEBUG
     if (current_time < last_tuple_time) {
       std::string attributes = event.get_event_reference().to_string();
-      LOG_CRITICAL("Received tuple with timestamp {} in Evaluator::next, "
-            "but the last tuple time was {}. Attributes: {}",
-            current_time,
-            last_tuple_time,
-            attributes);
+      LOG_CRITICAL(
+        "Received tuple with timestamp {} in Evaluator::next, "
+        "but the last tuple time was {}. Attributes: {}",
+        current_time,
+        last_tuple_time,
+        attributes);
       std::this_thread::sleep_for(std::chrono::nanoseconds(500000000));
       assert(false && "Received tuple out of order in Evaluator::next");
     }
