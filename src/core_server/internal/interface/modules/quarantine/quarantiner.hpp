@@ -60,7 +60,9 @@ class QuarantineManager {
         {result_handler->get_identifier(),
          result_handler->get_result_handler_type(),
          parsed_query.to_string(),
-         query_name});
+         query_name,
+         parsed_query.select.attribute_projection_variable,
+         parsed_query.select.attribute_projection_stream_event});
       query_policy.declare_query(std::move(parsed_query),
                                  std::move(query_id),
                                  std::move(result_handler));

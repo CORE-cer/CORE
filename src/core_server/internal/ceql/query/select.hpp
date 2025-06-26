@@ -1,10 +1,14 @@
 #pragma once
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "core_server/internal/ceql/cel_formula/formula/formula.hpp"
 
@@ -22,21 +26,68 @@ struct Select {
   bool is_star;
 
   // Attribute projection
-  std::map<VariableName, std::set<AttributeName>> attribute_projection_variable;
-  std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>
+  std::map<VariableName, std::vector<AttributeName>> attribute_projection_variable;
+  std::map<std::pair<StreamName, VariableName>, std::vector<AttributeName>>
     attribute_projection_stream_event;
+  std::map<VariableName, std::set<AttributeName>> attribute_projection_variable_set = {};
+  std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>
+    attribute_projection_stream_event_set = {};
 
   Select(Strategy&& strategy,
          bool is_star,
          std::unique_ptr<Formula>&& formula,
-         std::map<VariableName, std::set<AttributeName>>&& attribute_projection_variable,
-         std::map<std::pair<StreamName, VariableName>, std::set<AttributeName>>&&
+         std::map<VariableName, std::vector<AttributeName>>&& attribute_projection_variable,
+         std::map<std::pair<StreamName, VariableName>, std::vector<AttributeName>>&&
            attribute_projection_stream_event)
       : strategy(std::move(strategy)),
         is_star(is_star),
         formula(std::move(formula)),
         attribute_projection_variable(std::move(attribute_projection_variable)),
-        attribute_projection_stream_event(std::move(attribute_projection_stream_event)) {}
+        attribute_projection_stream_event(std::move(attribute_projection_stream_event)) {
+    // Check that there are no repeated attribute names in the projections
+    for (const auto& [var, attrs] : this->attribute_projection_variable) {
+      std::set<AttributeName> unique_attrs(attrs.begin(), attrs.end());
+      if (unique_attrs.size() != attrs.size()) {
+        throw std::runtime_error("Repeated attribute names in variable projection: "
+                                 + var);
+      }
+      this->attribute_projection_variable_set[var] = std::move(unique_attrs);
+    }
+
+    for (const auto& [stream_var, attrs] : this->attribute_projection_stream_event) {
+      std::set<AttributeName> unique_attrs(attrs.begin(), attrs.end());
+      if (unique_attrs.size() != attrs.size()) {
+        throw std::runtime_error("Repeated attribute names in stream event projection: "
+                                 + stream_var.first + "." + stream_var.second);
+      }
+      this->attribute_projection_stream_event_set[stream_var] = std::move(unique_attrs);
+    }
+
+    std::cout << "Size of vector projection: " << this->attribute_projection_variable.size()
+              << std::endl;
+    std::cout << "Size of stream event projection: "
+              << this->attribute_projection_stream_event.size() << std::endl;
+
+    std::cout << "Size of set projection: "
+            << this->attribute_projection_variable_set.size() << std::endl;
+    std::cout << "Size of stream event set projection: "
+            << this->attribute_projection_stream_event_set.size() << std::endl;
+
+    for (const auto& [var, attrs] : this->attribute_projection_variable_set) {
+      std::cout << "Variable: " << var << " Attributes: " << std::endl;
+      for (const auto& attr : attrs) {
+        std::cout << "  " << attr << std::endl;
+      }
+    }
+
+    for (const auto& [stream_var, attrs] : this->attribute_projection_stream_event_set) {
+      std::cout << "Stream: " << stream_var.first << " Event: " << stream_var.second
+                << " Attributes: " << std::endl;
+      for (const auto& attr : attrs) {
+        std::cout << "  " << attr << std::endl;
+      }
+    }
+  }
 
   std::string to_string() const {
     std::string out = "Select " + strategy_to_string(strategy);
