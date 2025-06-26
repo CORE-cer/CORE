@@ -1,9 +1,7 @@
 #pragma once
 #include <cassert>
-#include <iostream>
 #include <map>
 #include <memory>
-#include <ostream>
 #include <set>
 #include <stdexcept>
 #include <string>
