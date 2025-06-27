@@ -1,8 +1,12 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: pycore
 Version: 1.0.0
+Summary: Python bindings for CORE, an engine designed for the efficient evaluation of complex event queries over large data streams in real time.
 Home-page: https://rematch.cl/
+Author: Kyle Bossonney, Nicolás Buzeta, Vicente Calisto, Juan-Eduardo López, Cristian Riveros, Stijn Vansummeren
+Author-email: kyle@bossonney.com, nicolas.buzeta@uc.cl, vecalisto@uc.cl, juan.lpez@uc.cl, cristian.riveros@uc.cl, stijn.vansummeren@uhasselt.be
 License: MIT
+Keywords: complex events,core,streams,automaton,query evaluation
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: MIT License
@@ -10,3 +14,16 @@ Classifier: Programming Language :: Python :: 3
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE.txt
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: requires-python
+Dynamic: summary
+
+# PyCORE: CORE bindings for Python

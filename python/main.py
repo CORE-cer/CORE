@@ -1,14 +1,12 @@
 import asyncio
 import base64
-import csv
-import datetime
 import hashlib
 import hmac
 import json
 import os
 import time
 
-import _pycore
+import pycore
 import websockets
 from dateutil.parser import isoparse
 
@@ -101,19 +99,19 @@ ticker = {
 
 ## Attributes creators with stream declarations
 def create_ticker_attributes(json_response):
-    product_id = _pycore.PyStringValue(json_response["product_id"])
-    price = _pycore.PyDoubleValue(float(json_response["price"]))
-    open_24h = _pycore.PyDoubleValue(float(json_response["open_24h"]))
-    volume_24h = _pycore.PyDoubleValue(float(json_response["volume_24h"]))
-    low_24h = _pycore.PyDoubleValue(float(json_response["low_24h"]))
-    high_24h = _pycore.PyDoubleValue(float(json_response["high_24h"]))
-    volume_30d = _pycore.PyDoubleValue(float(json_response["volume_30d"]))
-    best_bid = _pycore.PyDoubleValue(float(json_response["best_bid"]))
-    best_bid_size = _pycore.PyDoubleValue(float(json_response["best_bid_size"]))
-    best_ask = _pycore.PyDoubleValue(float(json_response["best_ask"]))
-    best_ask_size = _pycore.PyDoubleValue(float(json_response["best_ask_size"]))
-    last_size = _pycore.PyDoubleValue(float(json_response["last_size"]))
-    time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
+    product_id = pycore.PyStringValue(json_response["product_id"])
+    price = pycore.PyDoubleValue(float(json_response["price"]))
+    open_24h = pycore.PyDoubleValue(float(json_response["open_24h"]))
+    volume_24h = pycore.PyDoubleValue(float(json_response["volume_24h"]))
+    low_24h = pycore.PyDoubleValue(float(json_response["low_24h"]))
+    high_24h = pycore.PyDoubleValue(float(json_response["high_24h"]))
+    volume_30d = pycore.PyDoubleValue(float(json_response["volume_30d"]))
+    best_bid = pycore.PyDoubleValue(float(json_response["best_bid"]))
+    best_bid_size = pycore.PyDoubleValue(float(json_response["best_bid_size"]))
+    best_ask = pycore.PyDoubleValue(float(json_response["best_ask"]))
+    best_ask_size = pycore.PyDoubleValue(float(json_response["best_ask_size"]))
+    last_size = pycore.PyDoubleValue(float(json_response["last_size"]))
+    time = pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
     attributes = [
         product_id,
         price,
@@ -145,14 +143,14 @@ ticker_stream_declaration = """CREATE STREAM TICKER { \n
 
 
 def create_matches_attributes(json_response):
-    trade_id = _pycore.PyIntValue(json_response["trade_id"])
-    sequence = _pycore.PyIntValue(json_response["sequence"])
-    maker_order_id = _pycore.PyStringValue(json_response["maker_order_id"])
-    taker_order_id = _pycore.PyStringValue(json_response["taker_order_id"])
-    time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
-    product_id = _pycore.PyStringValue(json_response["product_id"])
-    size = _pycore.PyDoubleValue(float(json_response["size"]))
-    price = _pycore.PyDoubleValue(float(json_response["price"]))
+    trade_id = pycore.PyIntValue(json_response["trade_id"])
+    sequence = pycore.PyIntValue(json_response["sequence"])
+    maker_order_id = pycore.PyStringValue(json_response["maker_order_id"])
+    taker_order_id = pycore.PyStringValue(json_response["taker_order_id"])
+    time = pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
+    product_id = pycore.PyStringValue(json_response["product_id"])
+    size = pycore.PyDoubleValue(float(json_response["size"]))
+    price = pycore.PyDoubleValue(float(json_response["price"]))
 
     attributes = [
         trade_id,
@@ -178,13 +176,13 @@ matches_stream_declaration = """CREATE STREAM Matches { \n
 
 
 def create_rfq_attributes(json_response):
-    maker_order_id = _pycore.PyStringValue(json_response["maker_order_id"])
-    taker_order_id = _pycore.PyStringValue(json_response["taker_order_id"])
-    time = _pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
-    trade_id = _pycore.PyIntValue(json_response["trade_id"])
-    product_id = _pycore.PyStringValue(json_response["product_id"])
-    size = _pycore.PyDoubleValue(float(json_response["size"]))
-    price = _pycore.PyDoubleValue(float(json_response["price"]))
+    maker_order_id = pycore.PyStringValue(json_response["maker_order_id"])
+    taker_order_id = pycore.PyStringValue(json_response["taker_order_id"])
+    time = pycore.PyDateValue(int(isoparse(json_response["time"]).timestamp() * 1e9))
+    trade_id = pycore.PyIntValue(json_response["trade_id"])
+    product_id = pycore.PyStringValue(json_response["product_id"])
+    size = pycore.PyDoubleValue(float(json_response["size"]))
+    price = pycore.PyDoubleValue(float(json_response["price"]))
 
     attributes = [
         maker_order_id,
@@ -213,10 +211,15 @@ options = """CREATE QUARANTINE { \n
             }"""
 
 # ## Queries
-# query_1 = """SELECT * FROM S\n
-#                 WHERE (SELL as T1; BUY as T2; BUY as T3)\n
-#                 FILTER T1[product_id = 'at-USD'] AND T2[product_id = 'BTC-USD'] AND T3[product_id = 'LTC-USD'] \n
+# query_1 = """SELECT * FROM Matches\n
+#                 WHERE (Sell as T1; Buy as T2; Buy as T3)\n
+#                 FILTER T1[product_id = 'ETH-USD'] AND T2[product_id = 'BTC-USD'] AND T3[product_id = 'LTC-USD'] \n
 #                 WITHIN 50 EVENTS"""
+
+query_1 = """SELECT * FROM Matches\n
+                WHERE (Sell as T1)\n
+                FILTER T1[trade_id > 0]\n
+                WITHIN 50 EVENTS"""
 #
 # query_2 = """SELECT * FROM S2\n
 #                 WHERE (BUY as T1)\n
@@ -248,7 +251,7 @@ async def websocket_listener(json_input, streamer):
                             event_type_id = event_dict.get(
                                 (json_response["side"]).lower()
                             )
-                            event = _pycore.PyEvent(event_type_id, attributes)
+                            event = pycore.PyEvent(event_type_id, attributes)
                             streamer.send_stream(stream_id, event)
                         elif json_response["type"] == "match":
                             attributes = create_matches_attributes(json_response)
@@ -256,8 +259,8 @@ async def websocket_listener(json_input, streamer):
                             event_type_id = (
                                 event_dict.get((json_response["side"]).lower()) + 2
                             )
-                            event = _pycore.PyEvent(event_type_id, attributes)
-                            print("Sending event")
+                            event = pycore.PyEvent(event_type_id, attributes)
+                            # print(json_response)
                             streamer.send_stream(stream_id, event)
 
                     not_first_message = True
@@ -292,7 +295,7 @@ if __name__ == "__main__":
         # Aca van las configuraciones iniciales
         server_port = 5000
 
-        client = _pycore.PyClient("tcp://localhost", server_port)
+        client = pycore.PyClient("tcp://localhost", server_port)
 
         stream_info = client.declare_stream(ticker_stream_declaration)
 
@@ -308,25 +311,25 @@ if __name__ == "__main__":
 
         client.declare_option(options)
 
-        # client.add_query(query_1)
+        client.add_query(query_1)
         # client.add_query(query_2)
 
-        # initial_port_number = 5003
-        # final_port_number = 5005
+        initial_port_number = 5002
+        final_port_number = 5003
         #
-        # handlers = _pycore.subscribe_to_queries(
-        #     client, initial_port_number, final_port_number
-        # )
+        handlers = pycore.subscribe_to_queries(
+            client, initial_port_number, final_port_number
+        )
 
-        # def my_handler(enumerator):
-        #     for complex_event in enumerator:
-        #         print(f"Data query: {complex_event.to_string()}")
-        #
-        # for i in range(len(handlers)):
-        #     handlers[i].set_event_handler(my_handler)
+        def my_handler(enumerator):
+            for complex_event in enumerator:
+                print(f"Data query: {complex_event.to_string()}")
+        
+        for i in range(len(handlers)):
+            handlers[i].set_event_handler(my_handler)
 
         streamer_port = 5001
-        streamer = _pycore.PyStreamer("tcp://localhost", streamer_port)
+        streamer = pycore.PyStreamer("tcp://localhost", streamer_port)
 
         # Comienza la conexión
         start_time_total = time.time()

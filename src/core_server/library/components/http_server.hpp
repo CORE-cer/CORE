@@ -33,6 +33,11 @@ class HTTPServer {
   using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
+  struct Data {
+    std::string query;
+    std::string query_name;
+  };
+
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber port_number;
@@ -116,10 +121,6 @@ class HTTPServer {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
                   try {
-                    struct Data {
-                      std::string query;
-                      std::string query_name;
-                    };
                     auto s = glz::read_json<Data>(data);
                     if (s.has_value()) {
                       std::string response_add_query = add_query(s->query, s->query_name);

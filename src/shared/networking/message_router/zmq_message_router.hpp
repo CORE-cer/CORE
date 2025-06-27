@@ -18,6 +18,8 @@ namespace CORE::Internal {
 template <typename TransformFunc>
 class ZMQMessageRouter : MessageRouter {
  private:
+  struct UserData {};
+
   zmq::context_t context;
   zmq::socket_t socket;
   TransformFunc transformer;
@@ -88,7 +90,6 @@ class ZMQMessageRouter : MessageRouter {
   }
 
   void start_http_server() {
-    struct UserData {};
 
     uWS::App()
       .get("/*", [](auto* res, auto* req) { res->end("Hello world!"); })
