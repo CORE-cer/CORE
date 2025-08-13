@@ -55,7 +55,7 @@ class AbstractStreamer(ABC, Generic[T]):
         return None
 
     @abstractmethod
-    def parse_message_json(self, message: str) -> T:
+    def parse_message_json(self, message: str) -> Optional[T]:
         """
         Abstract method to parse a message.
         Must be implemented by subclasses.
@@ -83,10 +83,12 @@ class AbstractStreamer(ABC, Generic[T]):
         Process a message. This method can be overridden by subclasses
         to implement specific message processing logic.
         """
+        print(message)
+        return
         model = self.parse_message_json(message)
+        if not model:
+            return
         event_id = self.get_event_id_from_model(model)
-        # if model.product_id != "ETH-USD":
-        #     return
         print(f"Processing message in {self.name}: {message}")
         print(f"Event ID: {event_id}, Model: {model}")
         event = self.create_event(model)
