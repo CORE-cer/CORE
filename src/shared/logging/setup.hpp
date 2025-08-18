@@ -1,7 +1,7 @@
 #pragma once
 
 #define QUILL_ROOT_LOGGER_ONLY
-static char const* filename = "logfile.log";
+static char const* filename = "logs/logfile.log";
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)
 #define LOG_L3_BACKTRACE(...)   \
