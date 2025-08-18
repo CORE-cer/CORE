@@ -87,7 +87,7 @@ class EventWrapper {
   UniqueEventTypeId get_unique_event_type_id() const {
     LOG_TRACE_L3("Getting unique event type id from EventWrapper with id {}", id);
     assert(!moved);
-    return event->event_type_id;
+    return event->get_event_type_id();
   }
 
   template <DerivedFromValue T>

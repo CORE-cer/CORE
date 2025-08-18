@@ -33,11 +33,10 @@ class Catalog {
 
   Types::UniqueQueryId query_id_counter = 0;
   std::map<Types::UniqueQueryId, Types::QueryInfo> unique_query_id_to_queries_info;
-  Types::EventInfo em = {};
 
  public:
   // Events
-  const Types::EventInfo&
+  std::optional<const Types::EventInfo>
   get_event_info(const Types::UniqueEventTypeId event_type_id) const noexcept;
   // Types::EventInfo get_event_info(std::string event_name) const noexcept;
   const std::vector<Types::EventInfo>& get_all_events_info() const noexcept;

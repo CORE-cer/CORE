@@ -52,7 +52,7 @@ class Backend {
 
   const Catalog& get_catalog_reference() const { return catalog; }
 
-  Types::EventInfo get_event_info(Types::UniqueEventTypeId event_type_id) {
+  std::optional<Types::EventInfo> get_event_info(Types::UniqueEventTypeId event_type_id) {
     return catalog.get_event_info(event_type_id);
   }
 

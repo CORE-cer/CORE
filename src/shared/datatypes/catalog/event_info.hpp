@@ -19,7 +19,7 @@ struct EventInfo {
   // In tested circumstances faster then unordered_map
   std::map<std::string, size_t> attribute_names_to_ids;
 
-  EventInfo() noexcept {}
+  EventInfo() = default;
 
   EventInfo(UniqueEventTypeId event_type_id,
             std::string name,

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <stdexcept>
 #include "core_server/internal/ceql/value/attribute.hpp"
 #include "core_server/internal/ceql/value/boolean_literal.hpp"
 #include "core_server/internal/ceql/value/double_literal.hpp"
@@ -21,10 +23,14 @@
 namespace CORE::Internal::CEQL {
 class DetermineValueType : public ValueVisitor {
  private:
-  ValueTypes value_type;
+  std::optional<ValueTypes> value_type;
 
  public:
-  ValueTypes get_value_type() { return value_type; }
+  ValueTypes get_value_type() { if (!value_type.has_value()){
+    throw std::logic_error("Value type has not been set yet.");
+  }
+    return value_type.value();
+  }
 
   // clang-format off
   void visit(Attribute&)      override {value_type = ValueTypes::Attribute;}
