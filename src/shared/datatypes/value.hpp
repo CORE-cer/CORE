@@ -142,7 +142,9 @@ struct StringValue final : public Value {
 
   std::string to_string() const override { return val; }
 
-  std::string to_json() const override { return "\"" + escape_string(to_string()) + "\""; }
+  std::string to_json() const override {
+    return "\"" + escape_string(to_string()) + "\"";
+  }
 
   std::string get_type() const override { return "StringValue"; }
 
