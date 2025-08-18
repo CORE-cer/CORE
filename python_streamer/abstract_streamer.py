@@ -98,13 +98,10 @@ class AbstractStreamer(ABC, Generic[T]):
         pass
 
     async def start(self):
-        try:
-            stream_info = self.py_client.declare_stream(self.stream_declaration)
-            if self.option_declaration:
-                self.py_client.declare_option(self.option_declaration)
-            stream_id = stream_info.id
-        except _pycore.PyStreamNameAlreadyDeclaredException:
-            stream_id = 0
+        stream_info = self.py_client.declare_stream(self.stream_declaration)
+        if self.option_declaration:
+            self.py_client.declare_option(self.option_declaration)
+        stream_id = stream_info.id
 
         print(f"Starting streamer: {self.name}")
         await self.setup_and_receive(stream_id)
