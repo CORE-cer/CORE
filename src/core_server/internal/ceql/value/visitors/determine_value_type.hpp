@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <stdexcept>
+
 #include "core_server/internal/ceql/value/attribute.hpp"
 #include "core_server/internal/ceql/value/boolean_literal.hpp"
 #include "core_server/internal/ceql/value/double_literal.hpp"
@@ -26,9 +27,10 @@ class DetermineValueType : public ValueVisitor {
   std::optional<ValueTypes> value_type;
 
  public:
-  ValueTypes get_value_type() { if (!value_type.has_value()){
-    throw std::logic_error("Value type has not been set yet.");
-  }
+  ValueTypes get_value_type() {
+    if (!value_type.has_value()) {
+      throw std::logic_error("Value type has not been set yet.");
+    }
     return value_type.value();
   }
 

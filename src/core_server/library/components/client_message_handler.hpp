@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 #include "core_server/internal/parsing/option_declaration/parser.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
@@ -151,12 +152,12 @@ class ClientMessageHandler {
       "ClientMessageHandler::event_info_from_id",
       event_id);
     std::optional<Types::EventInfo> info = backend.get_event_info(event_id);
-    if (!info.has_value())
-    {
-      throw std::runtime_error(
-        "Event with id " + std::to_string(event_id) + " not found in backend.");
+    if (!info.has_value()) {
+      throw std::runtime_error("Event with id " + std::to_string(event_id)
+                               + " not found in backend.");
     }
-    return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(info.value()),
+    return Types::ServerResponse(CerealSerializer<Types::EventInfo>::serialize(
+                                   info.value()),
                                  Types::ServerResponseType::EventInfo);
   }
 
