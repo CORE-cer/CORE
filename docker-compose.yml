@@ -8,3 +8,5 @@ services:
     tty: true
     ports:
       - 3002:3002
+    volumes:
+      - ./logs:/CORE/logs
