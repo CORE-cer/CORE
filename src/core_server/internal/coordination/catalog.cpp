@@ -35,14 +35,14 @@ namespace CORE::Internal {
        ___)( )(___
       (((__) (__)))       */
 
-const Types::EventInfo&
+std::optional<const Types::EventInfo>
 Catalog::get_event_info(const Types::UniqueEventTypeId event_type_id) const noexcept {
   if (event_type_id < events_info.size()) {
-    return events_info[event_type_id];
+    return {events_info[event_type_id]};
   } else {
     // EventTypeId not found. Return an empty vector
     // maybe in the future, we will want to raise an exception.
-    return em;
+    return {};
   }
 }
 

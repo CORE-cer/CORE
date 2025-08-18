@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,7 +30,6 @@ struct Event {
    * attributes vector represent. To obtain this, it needs to be requested
    * to the Schema
    */
-  UniqueEventTypeId event_type_id;
   /**
    * Shared pointers are used because it can be exploited in serialization,
    * officially from cereal (our current serialization provider):
@@ -49,6 +49,10 @@ struct Event {
    */
   std::optional<Types::IntValue> primary_time;
 
+ private:
+  std::optional<UniqueEventTypeId> event_type_id;
+
+ public:
   Event() noexcept {}
 
   Event(UniqueEventTypeId event_type_id,
@@ -97,8 +101,15 @@ struct Event {
     return *this;
   }
 
+  UniqueEventTypeId get_event_type_id() const {
+    if (!event_type_id.has_value()) {
+      throw std::runtime_error("Event does not have an event_type_id set.");
+    }
+    return event_type_id.value();
+  }
+
   std::string to_string() const {
-    std::string out = "(id: " + std::to_string(event_type_id) + " attributes: [";
+    std::string out = "(id: " + std::to_string(get_event_type_id()) + " attributes: [";
     for (auto& val : attributes) {
       out += val->to_string() + " ";
     }
@@ -107,7 +118,7 @@ struct Event {
 
   std::string to_json() const {
     std::string out = "{";
-    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"event_type_id\": " + std::to_string(get_event_type_id()) + ", ";
     out += "\"attributes\": [";
     auto it = attributes.begin();
     while (it != attributes.end()) {
@@ -126,7 +137,7 @@ struct Event {
   std::string
   to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
     std::string out = "{";
-    out += "\"event_type_id\": " + std::to_string(event_type_id) + ", ";
+    out += "\"event_type_id\": " + std::to_string(get_event_type_id()) + ", ";
     out += "\"attributes\": [";
     for (size_t i = 0; i < attributes.size(); ++i) {
       if (attribute_projection[i]) {

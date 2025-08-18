@@ -13,7 +13,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 bool is_the_same_as(Types::Event event, uint64_t event_type_id, std::string name) {
-  if (event.event_type_id != event_type_id) {
+  if (event.get_event_type_id() != event_type_id) {
     return false;
   }
   return event.attributes[0]->to_string() == name;
@@ -23,7 +23,7 @@ bool is_the_same_as(Types::Event event,
                     uint64_t event_type_id,
                     std::string name,
                     int64_t value) {
-  if (event.event_type_id != event_type_id) {
+  if (event.get_event_type_id() != event_type_id) {
     return false;
   }
   return (event.attributes[0]->to_string() == name
@@ -35,7 +35,7 @@ bool is_the_same_as(Types::Event event,
                     std::string name,
                     int64_t value1,
                     int64_t value2) {
-  if (event.event_type_id != event_type_id) {
+  if (event.get_event_type_id() != event_type_id) {
     return false;
   }
   return (event.attributes[0]->to_string() == name
