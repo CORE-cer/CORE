@@ -10,4 +10,4 @@ dependencies = [
 ]
 
 [tool.uv]
-package = true
+package = false
