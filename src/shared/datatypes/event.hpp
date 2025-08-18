@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cereal/access.hpp>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -50,6 +51,7 @@ struct Event {
   std::optional<Types::IntValue> primary_time;
 
  private:
+  friend class cereal::access;
   std::optional<UniqueEventTypeId> event_type_id;
 
  public:
