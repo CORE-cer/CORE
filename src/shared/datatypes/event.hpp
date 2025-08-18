@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -138,8 +139,10 @@ struct Event {
     return out;
   }
 
-  std::string
-  to_json_with_attribute_projection(std::vector<bool> attribute_projection, std::function<Types::StreamTypeId(Types::UniqueEventTypeId)> stream_id_from_unique_event_id) const {
+  std::string to_json_with_attribute_projection(
+    std::vector<bool> attribute_projection,
+    std::function<Types::StreamTypeId(Types::UniqueEventTypeId)>
+      stream_id_from_unique_event_id) const {
     std::string out = "{";
     out += "\"event_type_id\": " + std::to_string(get_event_type_id()) + ", ";
     Types::StreamTypeId stream_id = stream_id_from_unique_event_id(get_event_type_id());
