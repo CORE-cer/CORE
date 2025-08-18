@@ -38,7 +38,7 @@ class QueryCatalog {
   std::unordered_set<Types::UniqueEventTypeId> relevant_unique_event_ids;
   std::map<std::string, Types::EventNameTypeId> event_name_to_event_name_id;
   std::map<std::string, Types::StreamTypeId> stream_name_to_id;
-  std::map<Types::StreamTypeId, Types::EventNameTypeId>
+  std::map<Types::EventNameTypeId, Types::StreamTypeId>
     unique_event_type_id_to_stream_event_type_id;
   std::map<std::string, std::set<Types::UniqueEventTypeId>>
     event_name_to_possible_unique_event_id;

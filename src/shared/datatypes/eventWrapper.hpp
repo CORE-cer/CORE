@@ -7,11 +7,13 @@
 #include <chrono>
 #include <cstddef>
 #include <ctime>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -142,11 +144,11 @@ class EventWrapper {
   }
 
   std::string
-  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection, std::function<Types::StreamTypeId(Types::UniqueEventTypeId)> stream_id_from_unique_event_id) const {
     LOG_TRACE_L3("Converting EventWrapper with id {} to JSON with attribute projection",
                  id);
     assert(!moved);
-    return event->to_json_with_attribute_projection(attribute_projection);
+    return event->to_json_with_attribute_projection(attribute_projection, stream_id_from_unique_event_id);
   }
 
  private:

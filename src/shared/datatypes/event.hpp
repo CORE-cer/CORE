@@ -2,12 +2,14 @@
 
 #include <cereal/access.hpp>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 
 #define QUILL_ROOT_LOGGER_ONLY
 #include <quill/Quill.h>             // NOLINT
@@ -137,9 +139,11 @@ struct Event {
   }
 
   std::string
-  to_json_with_attribute_projection(std::vector<bool> attribute_projection) const {
+  to_json_with_attribute_projection(std::vector<bool> attribute_projection, std::function<Types::StreamTypeId(Types::UniqueEventTypeId)> stream_id_from_unique_event_id) const {
     std::string out = "{";
     out += "\"event_type_id\": " + std::to_string(get_event_type_id()) + ", ";
+    Types::StreamTypeId stream_id = stream_id_from_unique_event_id(get_event_type_id());
+    out += "\"stream_type_id\": " + std::to_string(stream_id) + ", ";
     out += "\"attributes\": [";
     for (size_t i = 0; i < attributes.size(); ++i) {
       if (attribute_projection[i]) {
