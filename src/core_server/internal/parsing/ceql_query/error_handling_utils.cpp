@@ -127,8 +127,8 @@ Types::EventInfo get_event_info_from_specific_stream(
       }
     }
   }
-  throw std::runtime_error(
-    "Event: " + event_name + " not found in stream: " + stream_name);
+  throw std::runtime_error("Event: " + event_name
+                           + " not found in stream: " + stream_name);
 }
 
 Types::EventInfo get_event_info_from_stream(
@@ -141,8 +141,7 @@ Types::EventInfo get_event_info_from_stream(
       }
     }
   }
-  throw std::runtime_error(
-    "Event: " + event_name + " not found in any stream");
+  throw std::runtime_error("Event: " + event_name + " not found in any stream");
 }
 
 bool check_if_attribute_exist_in_as_events(
