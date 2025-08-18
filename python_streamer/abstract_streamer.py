@@ -83,8 +83,6 @@ class AbstractStreamer(ABC, Generic[T]):
         Process a message. This method can be overridden by subclasses
         to implement specific message processing logic.
         """
-        print(message)
-        return
         model = self.parse_message_json(message)
         if not model:
             return

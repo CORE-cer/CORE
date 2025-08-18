@@ -32,10 +32,9 @@ class AbstractStreamerWebsocket(AbstractStreamer[T]):
     async def setup_and_receive(self, stream_id: int):
         while True:
             try:
-                async with websockets.connect(
-                    self.URI, ping_interval=None
-                ) as websocket:
-                    await websocket.send(self.subscribe_message_json)
+                async with websockets.connect(self.URI) as websocket:
+                    if self.subscribe_message_json:
+                        await websocket.send(self.subscribe_message_json)
                     await self.receive_loop(websocket, stream_id)
 
             except KeyboardInterrupt as e:
