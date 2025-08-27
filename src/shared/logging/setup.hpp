@@ -1,7 +1,7 @@
 #pragma once
 
 #include <quill/Logger.h>
-static char const* filename = "logfile.log";
+static char const* filename = "logs/logfile.log";
 
 namespace CORE::Internal::Logging {
 quill::Logger* enable_logging_rotating();

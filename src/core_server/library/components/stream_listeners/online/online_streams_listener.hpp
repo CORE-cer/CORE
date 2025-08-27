@@ -71,7 +71,7 @@ class OnlineStreamsListener {
                      "Stream with id {} and event {} in OnlineStreamsListener",
                      stream.id,
                      event->to_string());
-        backend.send_event_to_queries(stream.id, {std::move(event)});
+        backend.send_event_to_queries(stream.id, {std::move(event), logger});
       }
     }
   }

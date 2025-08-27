@@ -108,7 +108,7 @@ class Evaluator {
   next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
 
-    LOGJ_TRACE_L3(logger,
+    LOG_TRACE_L3(logger,
                   "Received tuple with timestamp {} in Evaluator::next",
                   event.get_primary_time().val);
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
