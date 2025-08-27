@@ -50,7 +50,12 @@ class StateManager {
   StateManager(StateManager&& other) noexcept
       : amount_of_used_states(other.amount_of_used_states),
         amount_of_allowed_states(other.amount_of_allowed_states),
-        minipool_head(other.minipool_head) {
+        minipool_head(other.minipool_head),
+        evictable_state_head(other.evictable_state_head),
+        evictable_state_tail(other.evictable_state_tail),
+        states(std::move(other.states)),
+        states_bitset_to_index(std::move(other.states_bitset_to_index)),
+        logger(other.logger) {
     other.minipool_head = nullptr;
   }
 
