@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <tracy/Tracy.hpp>
 #include <utility>
 
 #include "base_policy.hpp"
@@ -21,6 +22,7 @@ class DirectPolicy : public BasePolicy {
   ~DirectPolicy() { this->handle_destruction(); }
 
   void receive_event(Types::EventWrapper&& event) override {
+    ZoneScopedN("DirectPolicy::receive_event");
     this->send_event_queue.enqueue(std::move(event));
   }
 
