@@ -2,13 +2,13 @@
 
 #include <gmpxx.h>
 
-#include <atomic> // NOLINT
+#include <atomic>  // NOLINT
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <cstdint> // NOLINT
+#include <cstdint>  // NOLINT
 #include <ctime>
-#include <functional> 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
