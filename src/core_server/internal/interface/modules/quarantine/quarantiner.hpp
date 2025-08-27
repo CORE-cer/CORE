@@ -11,6 +11,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
 
@@ -88,6 +89,7 @@ class QuarantineManager {
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
+    ZoneScopedN("QuarantineManager::send_event_to_queries");
     LOG_TRACE_L3(logger,
                  "Received event with id {} from stream with id {} in "
                  "QuarantineManager::send_event_to_queries",

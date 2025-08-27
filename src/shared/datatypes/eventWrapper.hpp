@@ -101,6 +101,13 @@ class EventWrapper {
     }
   }
 
+  // Define less than operator for ordering EventWrappers by primary time
+  bool operator<(const EventWrapper& other) const {
+    assert(!moved);
+    assert(!other.moved);
+    return primary_time.val < other.primary_time.val;
+  }
+
   UniqueEventTypeId get_unique_event_type_id() const {
     LOG_TRACE_L3(logger, "Getting unique event type id from EventWrapper with id {}", id);
     assert(!moved);

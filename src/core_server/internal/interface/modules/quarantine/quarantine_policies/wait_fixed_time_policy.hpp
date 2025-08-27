@@ -1,16 +1,16 @@
 #pragma once
 
-#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <mutex>
 #include <ratio>
+#include <set>
 #include <string>
+#include <tracy/Tracy.hpp>
 #include <utility>
 
 #include "base_policy.hpp"
@@ -24,7 +24,7 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 
 class WaitFixedTimePolicy : public BasePolicy {
   std::mutex events_lock;
-  std::list<Types::EventWrapper> events;
+  std::set<Types::EventWrapper> events;
   std::chrono::duration<int64_t, std::nano> time_to_wait;
   std::chrono::time_point<std::chrono::system_clock>
     last_save = std::chrono::system_clock::now();
@@ -57,7 +57,7 @@ class WaitFixedTimePolicy : public BasePolicy {
     std::string filename = "events_"
                            + std::to_string(last_save.time_since_epoch().count()) + "_"
                            + std::to_string(
-                             events.front().get_event_reference().get_event_type_id())
+                             events.begin()->get_event_reference().get_event_type_id())
                            + ".json";
 
     std::ofstream myfile(filename);
@@ -68,6 +68,7 @@ class WaitFixedTimePolicy : public BasePolicy {
   }
 
   void receive_event(Types::EventWrapper&& event) override {
+    ZoneScopedN("WaitFixedTimePolicy::receive_event");
     LOG_TRACE_L1(logger,
                  "Received event with id {} and time {} in "
                  "WaitFixedTimePolicy::receive_event",
@@ -96,12 +97,7 @@ class WaitFixedTimePolicy : public BasePolicy {
                   event.get_primary_time().val);
       return;
     }
-
-    events.insert(std::lower_bound(events.begin(),
-                                   events.end(),
-                                   event.get_primary_time().val,
-                                   is_nanoseconds_after_existing_event),
-                  std::move(event));
+    events.insert(std::move(event));
   }
 
  protected:
@@ -127,9 +123,8 @@ class WaitFixedTimePolicy : public BasePolicy {
                      event.get_primary_time().val);
         assert(event.get_primary_time().val >= last_time_sent.val
                && "Event time is not after last time sent");
-        last_time_sent = event.get_primary_time();
-        this->send_event_queue.enqueue(std::move(*iter));
-        iter = events.erase(iter);
+        auto internal_node = events.extract(iter++);
+        this->send_event_queue.enqueue(std::move(internal_node.value()));
       } else {
         // If we couldn't remove the first event, stop trying
         return;
@@ -140,15 +135,10 @@ class WaitFixedTimePolicy : public BasePolicy {
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(events_lock);
     for (auto iter = events.begin(); iter != events.end();) {
-      this->send_event_queue.enqueue(std::move(*iter));
-      iter = events.erase(iter);
+      auto internal_node = events.extract(iter++);
+      this->send_event_queue.enqueue(std::move(internal_node.value()));
     }
   }
 
- private:
-  bool static is_nanoseconds_after_existing_event(const Types::EventWrapper& event_in_list,
-                                                  int64_t event_to_insert_time_nanoseconds) {
-    return event_to_insert_time_nanoseconds >= event_in_list.get_primary_time().val;
-  }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

@@ -27,7 +27,7 @@ class AbstractStreamerOffline(AbstractStreamer[T]):
                 ]
                 del model["commit"]["record"]["record_type"]
                 self.process_message(model, stream_id)
-                await asyncio.sleep(0.0001)
+                # await asyncio.sleep(0.0001)
             # for line in f.readlines():
             #     self.process_message(line, stream_id)
             #     await asyncio.sleep(0.10)

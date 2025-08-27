@@ -66,11 +66,20 @@ class CreatePostStreamerOffline(AbstractStreamerOffline[CommitWrapperEventModel]
     @property
     def option_declaration(self) -> Optional[str]:
         return """
-                    CREATE QUARANTINE 
+                    CREATE QUARANTINE
                     { \n
-                    FIXED_TIME 20 seconds {Bluesky} \n
+                    FIXED_TIME 1 seconds {Bluesky} \n
                     }
                     """
+
+    # @property
+    # def option_declaration(self) -> Optional[str]:
+    #     return """
+    #                 CREATE QUARANTINE
+    #                 { \n
+    #                 DIRECT {Bluesky} \n
+    #                 }
+    #                 """
 
     @property
     def text_file_path(self) -> pathlib.Path:
