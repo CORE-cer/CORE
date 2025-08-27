@@ -60,22 +60,22 @@ class EventWrapper {
   EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
 
   // Add move
-  EventWrapper(EventWrapper&& other)
+  EventWrapper(EventWrapper&& other) noexcept(false)
       : event(std::move(other.event)),
         primary_time(other.primary_time),
         received_time(other.received_time),
         moved(false),
-        marked_variables(other.marked_variables) {
+        marked_variables(std::move(other.marked_variables)) {
     other.moved = true;
     LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
   }
 
-  EventWrapper& operator=(EventWrapper&& other) {
+  EventWrapper& operator=(EventWrapper&& other) noexcept(false) {
     event = std::move(other.event);
     primary_time = other.primary_time;
     received_time = other.received_time;
     moved = false;
-    marked_variables = other.marked_variables;
+    marked_variables = std::move(other.marked_variables);
     other.moved = true;
     LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
     return *this;
@@ -85,7 +85,9 @@ class EventWrapper {
   EventWrapper(const EventWrapper&) = delete;
   EventWrapper& operator=(const EventWrapper&) = delete;
 
-  ~EventWrapper() { LOG_TRACE_L3(logger, "Destroying EventWrapper with id {}", id); }
+  ~EventWrapper() noexcept(false) {
+    LOG_TRACE_L3(logger, "Destroying EventWrapper with id {}", id);
+  }
 
   UniqueEventTypeId get_unique_event_type_id() const {
     LOG_TRACE_L3(logger, "Getting unique event type id from EventWrapper with id {}", id);

@@ -93,7 +93,7 @@ class Enumerator {
   Enumerator& operator=(const Enumerator&) = delete;
 
   // Allow move constructor
-  Enumerator(Enumerator&& other) noexcept
+  Enumerator(Enumerator&& other) noexcept(false)
       : stack(std::move(other.stack)),
         original_pos(other.original_pos),
         last_time_to_consider(other.last_time_to_consider),
@@ -109,7 +109,7 @@ class Enumerator {
   }
 
   // Allow move assignment
-  Enumerator& operator=(Enumerator&& other) noexcept {
+  Enumerator& operator=(Enumerator&& other) noexcept(false) {
     if (this != &other) {
       // cleanup();
       stack = std::move(other.stack);

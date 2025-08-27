@@ -64,10 +64,7 @@ class ClientMessageHandler {
 
   ClientMessageHandler& operator=(const ClientMessageHandler& other) = delete;
 
-  ClientMessageHandler(ClientMessageHandler&& other)
-      : backend(other.backend),
-        backend_mutex(other.backend_mutex),
-        result_handler_factory(std::move(other.result_handler_factory)) {}
+  ClientMessageHandler(ClientMessageHandler&& other) = default;
 
   ClientMessageHandler& operator=(ClientMessageHandler&& other) = delete;
 

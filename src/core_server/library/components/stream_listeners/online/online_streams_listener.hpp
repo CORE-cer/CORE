@@ -54,24 +54,26 @@ class OnlineStreamsListener {
  private:
   void start() {
     stop_condition = false;
-    worker_thread = std::thread([&]() {
-      while (!stop_condition) {
-        std::string s_message = receiver.receive();
-        Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
-          s_message);
+    worker_thread = std::thread(&OnlineStreamsListener::worker, this);
+  }
+
+  void worker() {
+    while (!stop_condition) {
+      std::string s_message = receiver.receive();
+      Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
+        s_message);
+      LOG_TRACE_L3(logger,
+                   "Received stream with id {} and {} events in OnlineStreamsListener",
+                   stream.id,
+                   stream.events.size());
+      for (auto& event : stream.events) {
         LOG_TRACE_L3(logger,
-                     "Received stream with id {} and {} events in OnlineStreamsListener",
+                     "Stream with id {} and event {} in OnlineStreamsListener",
                      stream.id,
-                     stream.events.size());
-        for (auto& event : stream.events) {
-          LOG_TRACE_L3(logger,
-                       "Stream with id {} and event {} in OnlineStreamsListener",
-                       stream.id,
-                       event->to_string());
-          backend.send_event_to_queries(stream.id, {std::move(event)});
-        }
+                     event->to_string());
+        backend.send_event_to_queries(stream.id, {std::move(event)});
       }
-    });
+    }
   }
 
   void stop() {
