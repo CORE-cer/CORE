@@ -139,6 +139,5 @@ class WaitFixedTimePolicy : public BasePolicy {
       this->send_event_queue.enqueue(std::move(internal_node.value()));
     }
   }
-
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine
