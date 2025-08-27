@@ -5,7 +5,6 @@
 #include <chrono>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
 #include <mutex>
 #include <ratio>
 #include <set>
@@ -80,13 +79,13 @@ class WaitFixedTimePolicy : public BasePolicy {
     std::chrono::time_point<std::chrono::system_clock>
       now = std::chrono::system_clock::now();
 
-    std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
-    if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
-        >= 15) {
-      std::cout << "Saving events to disk in WaitFixedTimePolicy" << std::endl;
-      save_events_to_disk();
-      last_save = now;
-    }
+    // std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
+    // if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
+    //     >= 15) {
+    //   std::cout << "Saving events to disk in WaitFixedTimePolicy" << std::endl;
+    //   save_events_to_disk();
+    //   last_save = now;
+    // }
 
     if (event.get_primary_time().val < last_time_sent.val) {
       LOG_WARNING(logger,
@@ -124,6 +123,7 @@ class WaitFixedTimePolicy : public BasePolicy {
         assert(event.get_primary_time().val >= last_time_sent.val
                && "Event time is not after last time sent");
         auto internal_node = events.extract(iter++);
+        last_time_sent = internal_node.value().get_primary_time();
         this->send_event_queue.enqueue(std::move(internal_node.value()));
       } else {
         // If we couldn't remove the first event, stop trying
