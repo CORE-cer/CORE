@@ -3,15 +3,15 @@
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
-#include <mutex>
-#include <utility>
 
 #include <atomic>
 #include <exception>
 #include <iostream>
+#include <mutex>
 #include <ostream>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
@@ -60,13 +60,14 @@ class OnlineStreamsListener {
         Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
           s_message);
         LOG_TRACE_L3(logger,
-          "Received stream with id {} and {} events in OnlineStreamsListener",
-          stream.id,
-          stream.events.size());
+                     "Received stream with id {} and {} events in OnlineStreamsListener",
+                     stream.id,
+                     stream.events.size());
         for (auto& event : stream.events) {
-          LOG_TRACE_L3(logger,"Stream with id {} and event {} in OnlineStreamsListener",
-                           stream.id,
-                           event->to_string());
+          LOG_TRACE_L3(logger,
+                       "Stream with id {} and event {} in OnlineStreamsListener",
+                       stream.id,
+                       event->to_string());
           backend.send_event_to_queries(stream.id, {std::move(event)});
         }
       }

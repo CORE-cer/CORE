@@ -6,13 +6,13 @@
 #include <cstdlib>
 #include <sstream>
 #include <string>
-#include "quill/Frontend.h"
-#include "quill/LogMacros.h"
-#include "quill/Logger.h"
 
 #include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
 #include "node.hpp"
+#include "quill/Frontend.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
 #include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
@@ -58,9 +58,10 @@ class NodeManager {
   template <class... Args>
   Node* alloc(Args&&... args) {
     LOG_BACKTRACE(logger,
-      "Adding node to node_manager, currently at {} nodes used with {} nodes recycled",
-      amount_of_nodes_used,
-      amount_of_recycled_nodes);
+                  "Adding node to node_manager, currently at {} nodes used with {} nodes "
+                  "recycled",
+                  amount_of_nodes_used,
+                  amount_of_recycled_nodes);
     Node* out = get_node_to_recycle_or_increase_mempool_size_if_necessary();
     if (out != nullptr) {
       out->reset(std::forward<Args>(args)...);
@@ -121,7 +122,7 @@ class NodeManager {
           return get_node_to_recycle();
         }
       };
-      LOG_DEBUG(logger,"Not enough memory to allocate node for TECS");
+      LOG_DEBUG(logger, "Not enough memory to allocate node for TECS");
       increase_mempool_size();
       return nullptr;
     }

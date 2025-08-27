@@ -22,10 +22,6 @@
 #include <variant>
 #include <vector>
 
-#include "shared/datatypes/aliases/query_info_id.hpp"
-
-#include "quill/Frontend.h"
-
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
@@ -33,7 +29,9 @@
 #include "core_server/internal/interface/modules/query/query_types/partition_by_query.hpp"
 #include "core_server/internal/interface/modules/query/query_types/simple_query.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
+#include "quill/Frontend.h"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
@@ -97,7 +95,9 @@ class BasePolicy {
 
   void inactivate_query(Types::UniqueQueryId query_id) {
     ZoneScopedN("BasePolicy::inactivate_query");
-    LOG_INFO(logger,"Inactivating query with id {} in BasePolicy::inactivate_query", query_id);
+    LOG_INFO(logger,
+             "Inactivating query with id {} in BasePolicy::inactivate_query",
+             query_id);
     std::lock_guard<std::mutex> lock(queries_lock);
     auto query_index_it = query_id_to_query_index.find(query_id);
 
@@ -127,7 +127,9 @@ class BasePolicy {
       }
     }
 
-    LOG_INFO(logger,"Query with id {} inactivated in BasePolicy::inactivate_query", query_id);
+    LOG_INFO(logger,
+             "Query with id {} inactivated in BasePolicy::inactivate_query",
+             query_id);
   }
 
  protected:
@@ -137,8 +139,11 @@ class BasePolicy {
 
   void send_events_to_queries() {
     ZoneScopedN("BasePolicy::send_events_to_queries");
-    LOG_TRACE_L3(logger,"Sending events to queries in BasePolicy::send_events_to_queries");
-    LOG_TRACE_L3(logger,"Current send_event_queue size: {}", send_event_queue.size_approx());
+    LOG_TRACE_L3(logger,
+                 "Sending events to queries in BasePolicy::send_events_to_queries");
+    LOG_TRACE_L3(logger,
+                 "Current send_event_queue size: {}",
+                 send_event_queue.size_approx());
 
     Types::EventWrapper event;
     while (send_event_queue.try_dequeue(event)) {
@@ -149,10 +154,10 @@ class BasePolicy {
   void send_event_to_queries(Types::EventWrapper&& event) {
     ZoneScopedN("BasePolicy::send_event_to_queries");
     LOG_TRACE_L2(logger,
-      "Sending event with id {} and time to queries in "
-      "BasePolicy::send_events_to_queries",
-      event.get_unique_event_type_id(),
-      event.get_primary_time().val);
+                 "Sending event with id {} and time to queries in "
+                 "BasePolicy::send_events_to_queries",
+                 event.get_unique_event_type_id(),
+                 event.get_primary_time().val);
     std::lock_guard<std::mutex> lock(queries_lock);
     int i = 0;
     for (auto& blocking_event_queue : blocking_event_queues) {

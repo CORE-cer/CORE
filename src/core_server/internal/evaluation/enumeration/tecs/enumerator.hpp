@@ -51,7 +51,7 @@ class Enumerator {
     }
   };
 
-    quill::Logger* logger = quill::Frontend::get_logger("root");
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   std::stack<std::pair<Node*, std::vector<Types::EventWrapper>>> stack;
   uint64_t original_pos;
   uint64_t last_time_to_consider;

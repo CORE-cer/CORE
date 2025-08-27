@@ -3,6 +3,7 @@
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
+
 #include <mutex>
 #include <utility>
 
@@ -28,14 +29,16 @@ class OfflineStreamsListener {
   OfflineStreamsListener& operator=(const OfflineStreamsListener&) = delete;
 
   void receive_stream(Types::Stream&& stream) {
-    LOG_TRACE_L3(logger,"Received stream with id {} and {} events in OfflineStreamsListener",
-                     stream.id,
-                     stream.events.size());
+    LOG_TRACE_L3(logger,
+                 "Received stream with id {} and {} events in OfflineStreamsListener",
+                 stream.id,
+                 stream.events.size());
     std::lock_guard lock(backend_mutex);
     for (const auto& event : stream.events) {
-      LOG_TRACE_L3(logger,"Stream with id {} and event {} in OfflineStreamsListener",
-                       stream.id,
-                       event->to_string());
+      LOG_TRACE_L3(logger,
+                   "Stream with id {} and event {} in OfflineStreamsListener",
+                   stream.id,
+                   event->to_string());
       backend.send_event_to_queries(stream.id, {std::move(event)});
     }
   }

@@ -43,7 +43,6 @@ class HTTPServer {
   std::thread http_server_thread;
   std::atomic<us_listen_socket_t*> listen_socket = nullptr;
 
-
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
              std::mutex& backend_mutex,
