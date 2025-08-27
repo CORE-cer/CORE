@@ -149,32 +149,32 @@ endif()
 
 if (LOGGING MATCHES "critical")
   message("Logging set to critical")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_CRITICAL)
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_CRITICAL)
 endif()
 
 if (LOGGING MATCHES "info")
   message("Logging set to info")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_INFO)
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_INFO)
 endif()
 
 if (LOGGING MATCHES "debug")
   message("Logging set to debug")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_DEBUG)
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_DEBUG)
 endif()
 
 if (LOGGING MATCHES "trace_l1")
   message("Logging set to trace_l1")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L1)
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L1)
 endif()
 
 if (LOGGING MATCHES "trace_l2")
   message("Logging set to trace_l2")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L2)
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L2)
 endif()
 
 if (LOGGING MATCHES "trace_l3")
+  target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L3)
   message("Logging set to trace_l3")
-  target_compile_options(core PUBLIC -DQUILL_ACTIVE_LOG_LEVEL=QUILL_LOG_LEVEL_TRACE_L3)
 endif()
 # executable target
 # Main Offline

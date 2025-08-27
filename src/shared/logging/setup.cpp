@@ -7,6 +7,7 @@
 #include <quill/sinks/RotatingSink.h>
 #include <quill/sinks/StreamSink.h>
 
+#include <iostream>
 #include <memory>
 #include <utility>
 
@@ -18,6 +19,7 @@
 
 namespace CORE::Internal::Logging {
 quill::Logger* enable_logging_rotating() {
+  std::cerr << "Logging to file: " << filename << std::endl;
   quill::Backend::start();
 
   // Frontend
@@ -36,7 +38,7 @@ quill::Logger* enable_logging_rotating() {
 
       cfg.set_rotation_time_daily("18:30");
 
-      cfg.set_rotation_max_file_size(65536);
+      cfg.set_rotation_max_file_size(2<<24);
 
       return cfg;
     }(),

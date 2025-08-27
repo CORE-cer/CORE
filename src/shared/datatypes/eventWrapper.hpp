@@ -44,7 +44,7 @@ class EventWrapper {
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
   uint64_t id = id_counter++;
 #endif
-  quill::Logger* logger = quill::Frontend::get_logger("root");
+  quill::Logger* logger = nullptr;
 
  public:
   std::shared_ptr<const Event> event;
@@ -53,11 +53,19 @@ class EventWrapper {
 
   EventWrapper(std::shared_ptr<const Event> event,
                std::optional<mpz_class> marked_variables)
-      : event(event), marked_variables(marked_variables) {
+      : logger(quill::Frontend::get_logger("root")),
+        event(event),
+        marked_variables(marked_variables) {
     set_times();
   }
 
-  EventWrapper(std::shared_ptr<const Event> event) : event(event) { set_times(); }
+  EventWrapper(std::shared_ptr<const Event> event, quill::Logger* logger = nullptr)
+      : event(event), logger(logger) {
+    if (logger == nullptr) {
+      logger = quill::Frontend::get_logger("root");
+    }
+    set_times();
+  }
 
   // Add move
   EventWrapper(EventWrapper&& other) noexcept(false)
@@ -65,7 +73,8 @@ class EventWrapper {
         primary_time(other.primary_time),
         received_time(other.received_time),
         moved(false),
-        marked_variables(std::move(other.marked_variables)) {
+        marked_variables(std::move(other.marked_variables)),
+        logger(other.logger) {
     other.moved = true;
     LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
   }
@@ -76,6 +85,7 @@ class EventWrapper {
     received_time = other.received_time;
     moved = false;
     marked_variables = std::move(other.marked_variables);
+    logger = other.logger;
     other.moved = true;
     LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
     return *this;
@@ -86,7 +96,9 @@ class EventWrapper {
   EventWrapper& operator=(const EventWrapper&) = delete;
 
   ~EventWrapper() noexcept(false) {
-    LOG_TRACE_L3(logger, "Destroying EventWrapper with id {}", id);
+    if (logger != nullptr) {
+      LOG_TRACE_L3(logger, "Destroying EventWrapper with id {}", id);
+    }
   }
 
   UniqueEventTypeId get_unique_event_type_id() const {
