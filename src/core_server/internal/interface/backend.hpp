@@ -3,19 +3,12 @@
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
-#include <optional>
-#include <string>
-#include <tracy/Tracy.hpp>
-
-#include "core_server/library/components/result_handler/result_handler.hpp"
-#include "core_server/library/components/result_handler/result_handler_types.hpp"
-#include "shared/datatypes/aliases/query_info_id.hpp"
-#include "shared/datatypes/catalog/query_info.hpp"
-#include "shared/datatypes/eventWrapper.hpp"
-
 
 #include <cassert>
 #include <memory>
+#include <optional>
+#include <string>
+#include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
 
@@ -25,11 +18,16 @@
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
+#include "core_server/library/components/result_handler/result_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
+#include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/parsing/stream_info_parsed.hpp"
 #include "shared/logging/setup.hpp"
 
@@ -37,18 +35,22 @@ namespace CORE::Internal::Interface {
 
 template <bool NoLogging = true>
 class Backend {
-  quill::Logger* logger = quill::Frontend::get_logger("root");
+  quill::Logger* logger;
   Internal::Catalog catalog = {};
 
   // Modules
   Module::Quarantine::QuarantineManager quarantine_manager;
 
- public:
-  Backend() : quarantine_manager(catalog) {
+  quill::Logger* get_logger() {
     if constexpr (NoLogging) {
-      Logging::enable_logging_stdout_critical();
+      return Logging::enable_logging_stdout();
+    } else {
+      return quill::Frontend::get_logger("root");
     }
   }
+
+ public:
+  Backend() : logger(get_logger()), quarantine_manager(catalog) {}
 
   const Catalog& get_catalog_reference() const { return catalog; }
 
@@ -80,12 +82,12 @@ class Backend {
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
-    LOG_INFO(logger,"Parsing stream info:\n {}", stream_info);
+    LOG_INFO(logger, "Parsing stream info:\n {}", stream_info);
     return Parsing::StreamParser::parse_stream(stream_info, catalog);
   }
 
   Internal::CEQL::Query parse_sent_query(std::string query_info) {
-    LOG_INFO(logger,"Parsing query info:\n {}", query_info);
+    LOG_INFO(logger, "Parsing query info:\n {}", query_info);
     return Parsing::QueryParser::parse_query(query_info, catalog);
   }
 
@@ -106,7 +108,9 @@ class Backend {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
-    LOG_INFO(logger,"Inactivating query with id {} in Backend::inactivate_query", query_id);
+    LOG_INFO(logger,
+             "Inactivating query with id {} in Backend::inactivate_query",
+             query_id);
     quarantine_manager.inactivate_query(query_id);
   }
 
@@ -118,10 +122,10 @@ class Backend {
                              const Types::EventWrapper&& event) {
     ZoneScopedN("Backend::send_event_to_queries");
     LOG_TRACE_L3(logger,
-      "Received event with id {} from stream with id {} in "
-      "Backend::send_event_to_queries",
-      event.get_unique_event_type_id(),
-      stream_id);
+                 "Received event with id {} from stream with id {} in "
+                 "Backend::send_event_to_queries",
+                 event.get_unique_event_type_id(),
+                 stream_id);
     quarantine_manager.send_event_to_queries(stream_id, std::move(event));
   }
 
