@@ -44,7 +44,6 @@ std::string ComplexEvent::to_json(const QueryCatalog& query_catalog) const {
             bit_pos_from_lsb);
           Types::UniqueEventTypeId current_event_type_id = current_event_wrapper.event
                                                              ->get_event_type_id();
-
           std::string variable_key_name;
           auto event_or_as_var_name_opt = query_catalog.get_event_or_as_variable_name(
             current_marking_id);
