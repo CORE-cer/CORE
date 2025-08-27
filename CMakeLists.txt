@@ -47,7 +47,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-  GIT_TAG 075395620a504c0cdcaf9bab3d196db16a043de7
+  GIT_TAG c556831ddc6fe26d2fce01c14c97205a9dad46d5
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
