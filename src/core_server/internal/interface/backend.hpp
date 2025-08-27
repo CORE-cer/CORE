@@ -1,8 +1,10 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <tracy/Tracy.hpp>
 
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -11,9 +13,6 @@
 #include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <cassert>
 #include <memory>
@@ -38,6 +37,7 @@ namespace CORE::Internal::Interface {
 
 template <bool NoLogging = true>
 class Backend {
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   Internal::Catalog catalog = {};
 
   // Modules
@@ -80,12 +80,12 @@ class Backend {
   }
 
   CORE::Types::StreamInfoParsed parse_stream(std::string stream_info) {
-    LOG_INFO("Parsing stream info:\n {}", stream_info);
+    LOG_INFO(logger,"Parsing stream info:\n {}", stream_info);
     return Parsing::StreamParser::parse_stream(stream_info, catalog);
   }
 
   Internal::CEQL::Query parse_sent_query(std::string query_info) {
-    LOG_INFO("Parsing query info:\n {}", query_info);
+    LOG_INFO(logger,"Parsing query info:\n {}", query_info);
     return Parsing::QueryParser::parse_query(query_info, catalog);
   }
 
@@ -106,7 +106,7 @@ class Backend {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
-    LOG_INFO("Inactivating query with id {} in Backend::inactivate_query", query_id);
+    LOG_INFO(logger,"Inactivating query with id {} in Backend::inactivate_query", query_id);
     quarantine_manager.inactivate_query(query_id);
   }
 
@@ -117,7 +117,7 @@ class Backend {
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
     ZoneScopedN("Backend::send_event_to_queries");
-    LOG_L3_BACKTRACE(
+    LOG_TRACE_L3(logger,
       "Received event with id {} from stream with id {} in "
       "Backend::send_event_to_queries",
       event.get_unique_event_type_id(),

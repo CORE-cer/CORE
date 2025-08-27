@@ -12,10 +12,6 @@
 
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
-
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "value.hpp"
 

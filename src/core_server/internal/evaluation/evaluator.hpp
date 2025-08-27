@@ -10,11 +10,7 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
-#define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
-#include <quill/Quill.h>  // NOLINT
-#include <quill/detail/LogMacros.h>
-#include <quill/detail/misc/Common.h>
 
 #include <atomic>
 #include <cassert>
@@ -29,8 +25,10 @@
 #include "det_cea/state.hpp"
 #include "enumeration/tecs/tecs.hpp"
 #include "predicate_evaluator.hpp"
-#include "shared/logging/setup.hpp"
 #include "tracy/Tracy.hpp"
+#include "quill/Frontend.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
 
 namespace CORE::Internal::Evaluation {
 class Evaluator {
@@ -38,6 +36,7 @@ class Evaluator {
   using UnionList = std::vector<tECS::Node*>;
   using State = CEA::Det::State;
   using Node = tECS::Node;
+  quill::Logger* logger = quill::Frontend::get_logger("root");
 
   //                                   // Name in paper
   CEA::DetCEA& cea;                    // A
@@ -111,12 +110,12 @@ class Evaluator {
   next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
 
-    LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::next",
+    LOGJ_TRACE_L3(logger,"Received tuple with timestamp {} in Evaluator::next",
                      event.get_primary_time().val);
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
-    LOG_TRACE_L2("Event type ID: {}", event.get_event_reference().event_type_id);
+    LOG_TRACE_L2(logger,"Event type ID: {}", event.get_event_reference().get_event_type_id());
     for (const auto& attr : event.get_event_reference().attributes) {
-      LOG_TRACE_L2("Attribute: {}", attr->to_string());
+      LOG_TRACE_L2(logger,"Attribute: {}", attr->to_string());
     }
     auto start_time = std::chrono::steady_clock::now();
 #endif
@@ -124,7 +123,7 @@ class Evaluator {
 #ifdef CORE_DEBUG
     if (current_time < last_tuple_time) {
       std::string attributes = event.get_event_reference().to_string();
-      LOG_CRITICAL(
+      LOG_CRITICAL(logger,
         "Received tuple with timestamp {} in Evaluator::next, "
         "but the last tuple time was {}. Attributes: {}",
         current_time,
@@ -137,8 +136,8 @@ class Evaluator {
 #endif
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
-    LOG_TRACE_L2("Event time of expiration set to {}", event_time_of_expiration.load());
-    LOG_TRACE_L2("Time window is set to {}", time_window);
+    LOG_TRACE_L2(logger,"Event time of expiration set to {}", event_time_of_expiration.load());
+    LOG_TRACE_L2(logger,"Time window is set to {}", time_window);
 
     if (should_reset.load()) {
       reset();
@@ -178,31 +177,31 @@ class Evaluator {
     bool has_output = !final_states.empty();
 
     if (has_output) {
-      LOG_TRACE_L2("Outputting in Evaluator");
+      LOG_TRACE_L2(logger,"Outputting in Evaluator");
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
              || (enumerator.begin() != enumerator.end() && (enumerator.reset(), true)));
       if (consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY
           || consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::PARTITION) {
-        LOG_L3_BACKTRACE(
+        LOG_TRACE_L3(logger,
           "Setting should_reset to true due to consumption policy in Evaluator");
         should_reset.store(true);
       }
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
       auto end_time = std::chrono::steady_clock::now();
 #endif
-      LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
+      LOG_TRACE_L2(logger,"Took {} seconds to process tuple with timestamp {}",
                    std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
-                                                                        - start_time),
+                                                                        - start_time).count(),
                    event.get_primary_time().val);
       return std::move(enumerator);
     }
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto end_time = std::chrono::steady_clock::now();
 #endif
-    LOG_TRACE_L2("Took {} seconds to process tuple with timestamp {}",
+    LOG_TRACE_L2(logger,"Took {} seconds to process tuple with timestamp {}",
                  std::chrono::duration_cast<std::chrono::nanoseconds>(end_time
-                                                                      - start_time),
+                                                                      - start_time).count(),
                  event.get_primary_time().val);
     return {};
   }
@@ -211,7 +210,7 @@ class Evaluator {
   State* get_initial_state() { return cea.initial_state; }
 
   void reset() {
-    LOG_L3_BACKTRACE("Resetting historic states in Evaluator");
+    LOG_TRACE_L3(logger,"Resetting historic states in Evaluator");
     cea.state_manager.unpin_states(historic_ordered_keys);
     historic_ordered_keys.clear();
     for (auto& [state, ul] : historic_union_list_map) {
@@ -244,7 +243,7 @@ class Evaluator {
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
-    LOG_L3_BACKTRACE("Received tuple with timestamp {} in Evaluator::exec_trans",
+    LOG_TRACE_L3(logger,"Received tuple with timestamp {} in Evaluator::exec_trans",
                      event.get_primary_time().val);
     assert(p != nullptr);
     State::TransitionTargetStatesWithMarkings

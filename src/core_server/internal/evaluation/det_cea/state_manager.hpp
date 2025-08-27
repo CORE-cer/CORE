@@ -1,22 +1,20 @@
 #pragma once
 
-#include <utility>
-
-#define QUILL_ROOT_LOGGER_ONLY
 #include <gmpxx.h>
-#include <quill/Quill.h>  // NOLINT
-#include <quill/detail/LogMacros.h>
 
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/minipool/minipool.hpp"
-#include "shared/logging/setup.hpp"
+#include "quill/Frontend.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
 #include "state.hpp"
 
 namespace CORE::Internal::CEA::Det {
@@ -42,6 +40,7 @@ class StateManager {
   State* evictable_state_tail = nullptr;
   std::vector<State*> states;
   std::map<StateBitset, uint64_t> states_bitset_to_index;
+  quill::Logger* logger = quill::Frontend::get_logger("root");
 
  public:
   StateManager()
@@ -101,7 +100,7 @@ class StateManager {
  private:
   template <class... Args>
   State* alloc(Args&&... args) {
-    LOG_L3_BACKTRACE(
+    LOG_BACKTRACE(logger,
       "Adding state to state_manager, currently at {} states used with {} states "
       "allocated",
       amount_of_used_states,
@@ -120,7 +119,7 @@ class StateManager {
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
-        LOG_DEBUG("Not enough memory to allocate DetCEA state, force increasing size");
+        LOG_DEBUG(logger,"Not enough memory to allocate DetCEA state, force increasing size");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);
@@ -171,7 +170,7 @@ class StateManager {
    * @return The new size of the memory pool.
    */
   size_t increase_mempool_size() {
-    LOG_DEBUG("Increasing size of memory pool");
+    LOG_DEBUG(logger, "Increasing size of memory pool");
     size_t new_size = minipool_head->size() * 2;
     StatePool* new_minipool = new StatePool(new_size);
     minipool_head->set_next(new_minipool);

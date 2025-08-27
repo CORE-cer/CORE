@@ -1,14 +1,14 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <optional>
 
 #include "core_server/internal/parsing/option_declaration/parser.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <memory>
 #include <mutex>
@@ -48,6 +48,7 @@ class ClientMessageHandler {
   using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   Backend& backend;
   std::mutex& backend_mutex;
   std::shared_ptr<ResultHandlerFactory> result_handler_factory;
@@ -147,7 +148,7 @@ class ClientMessageHandler {
 
   Types::ServerResponse event_info_from_id(std::string s_event_id) {
     auto event_id = CerealSerializer<Types::UniqueEventTypeId>::deserialize(s_event_id);
-    LOG_INFO(
+    LOG_INFO(logger,
       "Received request for event info with id {} in "
       "ClientMessageHandler::event_info_from_id",
       event_id);
@@ -180,7 +181,7 @@ class ClientMessageHandler {
     auto stream_declaration = CerealSerializer<std::string>::deserialize(
       s_parsed_stream_declaration);
     Types::StreamInfoParsed parsed_stream_info = backend.parse_stream(stream_declaration);
-    LOG_INFO(
+    LOG_INFO(logger,
       "Received request for declaring stream {} in "
       "ClientMessageHandler::stream_declaration_from_string",
       parsed_stream_info.name);
@@ -195,7 +196,7 @@ class ClientMessageHandler {
     Types::StreamInfoParsed
       parsed_stream_info = CerealSerializer<Types::StreamInfoParsed>::deserialize(
         s_parsed_stream_declaration);
-    LOG_INFO(
+    LOG_INFO(logger,
       "Received request for declaring stream {} in "
       "ClientMessageHandler::stream_declaration",
       parsed_stream_info.name);
@@ -208,7 +209,7 @@ class ClientMessageHandler {
 
   Types::ServerResponse stream_info_from_id(std::string s_stream_id) {
     auto stream_id = CerealSerializer<Types::StreamTypeId>::deserialize(s_stream_id);
-    LOG_INFO(
+    LOG_INFO(logger,
       "Received request for stream id {} in ClientMessageHandler::stream_info_from_id",
       stream_id);
     Types::StreamInfo info = backend.get_stream_info(stream_id);
@@ -224,7 +225,7 @@ class ClientMessageHandler {
   // }
 
   Types::ServerResponse list_all_streams() {
-    LOG_INFO("Received request in ClientMessageHandler::list_all_streams");
+    LOG_INFO(logger,"Received request in ClientMessageHandler::list_all_streams");
     std::vector<Types::StreamInfo> info = backend.get_all_streams_info();
     return Types::ServerResponse(
       CerealSerializer<std::vector<Types::StreamInfo>>::serialize(info),
@@ -232,7 +233,7 @@ class ClientMessageHandler {
   }
 
   Types::ServerResponse list_all_queries() {
-    LOG_INFO("Received request in ClientMessageHandler::list_all_queries");
+    LOG_INFO(logger,"Received request in ClientMessageHandler::list_all_queries");
     std::vector<Types::QueryInfo> info = backend.get_all_query_infos();
 
     return Types::ServerResponse(CerealSerializer<std::vector<Types::QueryInfo>>::serialize(
@@ -244,7 +245,7 @@ class ClientMessageHandler {
     // TODO: Change this to a CEA. Right now it's a query string that might
     // Not be correct.
     // TODO: Check if it is possible to parse it.
-    LOG_INFO("Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
+    LOG_INFO(logger,"Received query \n'{}' in ClientMessageHandler::add_query", s_query_info);
     Internal::CEQL::Query parsed_query = backend.parse_sent_query(s_query_info);
     std::unique_ptr<ResultHandler> result_handler = result_handler_factory->create_handler();
     std::string identifier = result_handler->get_identifier();
@@ -255,7 +256,7 @@ class ClientMessageHandler {
 
   Types::ServerResponse set_option(std::string s_option) {
     std::string option_declaration = CerealSerializer<std::string>::deserialize(s_option);
-    LOG_INFO("Received option \n'{}' in ClientMessageHandler::set_option",
+    LOG_INFO(logger,"Received option \n'{}' in ClientMessageHandler::set_option",
              option_declaration);
     Parsing::Option::OptionsParser::parse_option(option_declaration, backend);
     return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);

@@ -1,14 +1,13 @@
 #pragma once
 
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <memory>
 #include <mutex>
 #include <utility>
 
 #include "core_server/library/server_config.hpp"
 
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/http_server.hpp"
@@ -78,6 +77,7 @@ class OfflineServer {
  **/
 class OnlineServer {
   using ResultHandlerFactoryT = Components::OnlineResultHandlerFactory;
+  quill::Logger* logger = Internal::Logging::enable_logging_rotating();
 
   ServerConfig server_config;
 
@@ -103,8 +103,7 @@ class OnlineServer {
         stream_listener{backend,
                         backend_mutex,
                         this->server_config.get_fixed_ports().stream_listener} {
-    Internal::Logging::enable_logging_rotating();
-    LOG_INFO("Server started");
+    LOG_INFO(logger,"Server started");
   }
 
   void receive_stream(const Types::Stream& stream) {

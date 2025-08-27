@@ -1,18 +1,19 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
 #include <stack>
+#include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
-
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>  // NOLINT
-#include <quill/detail/misc/Common.h>
 
 #include "complex_event.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/time_reservator.hpp"
@@ -50,6 +51,7 @@ class Enumerator {
     }
   };
 
+    quill::Logger* logger = quill::Frontend::get_logger("root");
   std::stack<std::pair<Node*, std::vector<Types::EventWrapper>>> stack;
   uint64_t original_pos;
   uint64_t last_time_to_consider;
@@ -188,7 +190,7 @@ class Enumerator {
     auto complex_event = ComplexEvent(std::move(next_value));
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     std::string complex_event_string = complex_event.to_string<true>();
-    LOG_TRACE_L2("Returning complex event: {}", complex_event_string);
+    LOG_TRACE_L2(logger, "Returning complex event: {}", complex_event_string);
 #endif
     return complex_event;
   }

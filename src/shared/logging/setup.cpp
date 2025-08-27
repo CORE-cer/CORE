@@ -1,84 +1,111 @@
 #include "setup.hpp"
 
-#include <quill/Config.h>
-#include <quill/LogLevel.h>
-#include <quill/Quill.h>
-#include <quill/handlers/RotatingFileHandler.h>
+#include <quill/core/Common.h>
+#include <quill/core/LogLevel.h>
+#include <quill/core/PatternFormatterOptions.h>
+#include <quill/sinks/FileSink.h>
+#include <quill/sinks/RotatingSink.h>
+#include <quill/sinks/StreamSink.h>
 
 #include <memory>
+#include <utility>
+
+#include "quill/Backend.h"
+#include "quill/Frontend.h"
+#include "quill/Logger.h"
+#include "quill/sinks/ConsoleSink.h"
+#include "quill/sinks/RotatingFileSink.h"
 
 namespace CORE::Internal::Logging {
-void enable_logging_rotating() {
-  // std::shared_ptr<quill::Handler> handler = quill::stdout_handler(); /** for stdout **/
-  // std::shared_ptr<quill::Handler> handler = quill::file_handler("quickstart.log", "w");  /** for writing to file **/
-  std::shared_ptr<quill::Handler> handler = quill::rotating_file_handler(filename, []() {
-    quill::RotatingFileHandlerConfig cfg;
-    cfg.set_rotation_time_daily("18:30");
-    cfg.set_rotation_max_file_size(1'000'000'000);
-    cfg.set_max_backup_files(3);
-    return cfg;
-  }());
-  handler->set_pattern(
-    "%(ascii_time) [%(thread)] %(fileline:<28) LOG_%(level_name) %(message)");
+quill::Logger* enable_logging_rotating() {
+  quill::Backend::start();
 
-  // set configuration
-  quill::Config cfg;
-  cfg.default_handlers.push_back(handler);
+  // Frontend
+  auto file_sink = quill::Frontend::create_or_get_sink<quill::RotatingFileSink>(
 
-  // Apply configuration and start the backend worker thread
-  quill::configure(cfg);
-  quill::start();
+    filename,
 
-  auto logger = quill::get_root_logger();
+    []()
+
+    {
+      quill::RotatingFileSinkConfig cfg;
+
+      cfg.set_open_mode('w');
+
+      cfg.set_filename_append_option(quill::FilenameAppendOption::StartDateTime);
+
+      cfg.set_rotation_time_daily("18:30");
+
+      cfg.set_rotation_max_file_size(65536);
+
+      return cfg;
+    }(),
+
+    quill::FileEventNotifier{});
+
+  quill::Logger* logger = quill::Frontend::create_or_get_logger(
+    "root",
+    std::move(file_sink),
+
+    quill::PatternFormatterOptions{"%(time) [%(thread_id)] %(short_source_location:<28) "
+
+                                   "LOG_%(log_level:<9) %(logger:<12) %(message)",
+
+                                   "%H:%M:%S.%Qns",
+                                   quill::Timezone::GmtTime});
+
+  // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::TraceL3);
-  int size_backtrace = 1000;
-  logger->init_backtrace(size_backtrace, quill::LogLevel::Critical);
+
+  return logger;
 }
 
-void enable_logging_stdout() {
-  if (quill::_g_root_logger != nullptr) {
-    return;
-  }
-  std::shared_ptr<quill::Handler> handler = quill::stdout_handler();
-  // std::shared_ptr<quill::Handler> handler = quill::file_handler("quickstart.log", "w");  /** for writing to file **/
-  handler->set_pattern(
-    "%(ascii_time) [%(thread)] %(fileline:<28) LOG_%(level_name) %(message)");
+quill::Logger* enable_logging_stdout() {
+  quill::Backend::start();
 
-  // set configuration
-  quill::Config cfg;
-  cfg.default_handlers.push_back(handler);
+  // Frontend
+  auto console_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(
+    "sink_id_1");
 
-  // Apply configuration and start the backend worker thread
-  quill::configure(cfg);
-  quill::start();
+  quill::Logger* logger = quill::Frontend::create_or_get_logger(
+    "root",
+    std::move(console_sink),
 
-  auto logger = quill::get_root_logger();
+    quill::PatternFormatterOptions{"%(time) [%(thread_id)] %(short_source_location:<28) "
+
+                                   "LOG_%(log_level:<9) %(logger:<12) %(message)",
+
+                                   "%H:%M:%S.%Qns",
+                                   quill::Timezone::GmtTime});
+
+  // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::Debug);
-  int size_backtrace = 10;
-  logger->init_backtrace(size_backtrace, quill::LogLevel::Critical);
+
+  return logger;
 }
 
-void enable_logging_stdout_critical() {
-  if (quill::_g_root_logger != nullptr) {
-    return;
-  }
-  std::shared_ptr<quill::Handler> handler = quill::stdout_handler();
-  // std::shared_ptr<quill::Handler> handler = quill::file_handler("quickstart.log", "w");  /** for writing to file **/
-  handler->set_pattern(
-    "%(ascii_time) [%(thread)] %(fileline:<28) LOG_%(level_name) %(message)");
+quill::Logger* enable_logging_stdout_critical() {
+  quill::Backend::start();
 
-  // set configuration
-  quill::Config cfg;
-  cfg.default_handlers.push_back(handler);
+  // Frontend
+  auto console_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(
+    "sink_id_1");
 
-  // Apply configuration and start the backend worker thread
-  quill::configure(cfg);
-  quill::start();
+  quill::Logger* logger = quill::Frontend::create_or_get_logger(
+    "root",
+    std::move(console_sink),
 
-  auto logger = quill::get_root_logger();
+    quill::PatternFormatterOptions{"%(time) [%(thread_id)] %(short_source_location:<28) "
+
+                                   "LOG_%(log_level:<9) %(logger:<12) %(message)",
+
+                                   "%H:%M:%S.%Qns",
+                                   quill::Timezone::GmtTime});
+
+  // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::TraceL3);
-  int size_backtrace = 10;
-  logger->init_backtrace(size_backtrace, quill::LogLevel::Critical);
+
+  return logger;
 }
 
 }  // namespace CORE::Internal::Logging
