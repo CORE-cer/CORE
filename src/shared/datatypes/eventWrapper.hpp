@@ -2,13 +2,13 @@
 
 #include <gmpxx.h>
 
-#include <atomic>
+#include <atomic> // NOLINT
 #include <cassert>
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
+#include <cstdint> // NOLINT
 #include <ctime>
-#include <functional>
+#include <functional> 
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,7 +28,7 @@ class EventManager;
 }
 
 namespace CORE::Types {
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
 static std::atomic<int> id_counter = 0;
 #endif
 using ClockType = std::chrono::system_clock;
@@ -41,7 +41,7 @@ class EventWrapper {
   Types::IntValue primary_time;
   std::chrono::time_point<ClockType> received_time;
   bool moved = false;
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
   uint64_t id = id_counter++;
 #endif
   quill::Logger* logger = nullptr;
@@ -62,7 +62,7 @@ class EventWrapper {
   EventWrapper(std::shared_ptr<const Event> event, quill::Logger* logger = nullptr)
       : event(event), logger(logger) {
     if (logger == nullptr) {
-      logger = quill::Frontend::get_logger("root");
+      this->logger = quill::Frontend::get_logger("root");
     }
     set_times();
   }
