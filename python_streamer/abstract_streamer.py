@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Dict, Generic, Optional, TypeVar
 
 from pydantic import BaseModel
-
-import _pycore
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -12,6 +10,8 @@ class AbstractStreamer(ABC, Generic[T]):
     """
     Base class for all streamers.
     """
+
+    event_name_to_unique_id: Dict[str, int] = {}
 
     def __init__(self, py_client, py_streamer):
         self.py_client = py_client
@@ -86,12 +86,12 @@ class AbstractStreamer(ABC, Generic[T]):
         model = self.parse_message_json(message)
         if not model:
             return
-        event_id = self.get_event_id_from_model(model)
-        print(f"Processing message in {self.name}: {message}")
-        print(f"Event ID: {event_id}, Model: {model}")
+        # event_id = self.get_event_id_from_model(model)
+        # print(f"Processing message in {self.name}: {message}")
+        # print(f"Event ID: {event_id}, Model: {model}")
         event = self.create_event(model)
         self.py_streamer.send_stream(stream_id, event)
-        print("Sent event to streamer")
+        # print("Sent event to streamer")
 
     @abstractmethod
     async def setup_and_receive(self, stream_id: int):
@@ -102,6 +102,9 @@ class AbstractStreamer(ABC, Generic[T]):
         if self.option_declaration:
             self.py_client.declare_option(self.option_declaration)
         stream_id = stream_info.id
+        events_info = stream_info.events_info
+        for event_info in events_info:
+            self.event_name_to_unique_id[event_info.name] = event_info.id
 
         print(f"Starting streamer: {self.name}")
         await self.setup_and_receive(stream_id)

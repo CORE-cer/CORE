@@ -1,19 +1,14 @@
 import json
-from typing import List, Optional, final
-
-from tqdm import tqdm
+import pathlib
+from typing import Optional, final
 
 import _pycore
-from abstract_streamer_websocket import AbstractStreamerWebsocket
+from abstract_streamer_offline import AbstractStreamerOffline
 from bluesky.models.commit import CommitWrapperEventModel
 
 
 @final
-class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
-    N_CACHED = 200_000
-    cached_models: List[CommitWrapperEventModel] = []
-    pbar: tqdm = tqdm(total=N_CACHED)
-
+class CreatePostStreamerOffline(AbstractStreamerOffline[CommitWrapperEventModel]):
     @property
     def name(self) -> str:
         return "CreatePostStreamer"
@@ -78,19 +73,17 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
                     """
 
     @property
-    def URI(self) -> str:
-        return "wss://jetstream2.us-west.bsky.network/subscribe"
-
-    @property
-    def subscribe_message_json(self) -> str:
-        return ""
+    def text_file_path(self) -> pathlib.Path:
+        current_path = pathlib.Path(__file__).parent
+        print(current_path / "bluesky_cached_models.json")
+        return current_path / "bluesky_cached_models.json"
 
     def parse_message_json(self, message: str) -> Optional[CommitWrapperEventModel]:
         try:
-            message_json = json.loads(message)
-            model = CommitWrapperEventModel.model_validate(message_json)
+            model = CommitWrapperEventModel.model_validate(message)
             return model
-        except Exception:
+        except Exception as e:
+            print(f"Error parsing message to CommitWrapperEventModel: {e}")
             return None
 
     def get_event_id_from_model(self, model: CommitWrapperEventModel) -> int:
@@ -204,19 +197,5 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
         time = _pycore.PyIntValue(int(model.commit.record.createdAt.timestamp() * 1e9))
 
         event = _pycore.PyEvent(event_id, attributes, time)
-
-        self.cached_models.append(model)
-
-        self.pbar.update(1)
-        if len(self.cached_models) % self.N_CACHED == 0:
-            print("Clearing cached models")
-            model_jsons = [
-                cached_model.model_dump_json() for cached_model in self.cached_models
-            ]
-            with open("bluesky_cached_models.json", "w") as f:
-                f.write("[\n")
-                f.write(",\n".join(model_jsons))
-                f.write("\n]")
-            self.pbar.reset()
 
         return event

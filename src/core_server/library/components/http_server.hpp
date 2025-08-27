@@ -3,7 +3,9 @@
 #include <App.h>
 #include <Loop.h>
 #include <WebSocketProtocol.h>
+#include <libusockets.h>
 
+#include <atomic>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -39,6 +41,8 @@ class HTTPServer {
   std::unique_ptr<WebSocketResultHandlerFactory>
     result_handler_factory = std::make_unique<WebSocketResultHandlerFactory>();
   std::thread http_server_thread;
+  std::atomic<us_listen_socket_t*> listen_socket = nullptr;
+
 
  public:
   HTTPServer(Internal::Interface::Backend<false>& backend,
@@ -52,7 +56,12 @@ class HTTPServer {
     start();
   };
 
-  ~HTTPServer() { stop(); }
+  ~HTTPServer() {
+    if (listen_socket.load() != nullptr) {
+      us_listen_socket_close(0, listen_socket.load());
+    }
+    http_server_thread.join();
+  }
 
  private:
   void start() {
@@ -60,12 +69,7 @@ class HTTPServer {
       result_handler_factory->set_uws_loop(uWS::Loop::get());
       start_http_server();
     });
-    http_server_thread.detach();
-    // std::thread spam_events_thread([this] { spam_events(); });
-    // spam_events_thread.detach();
   }
-
-  void stop() { http_server_thread.join(); }
 
   void start_http_server() {
     uWS::App()

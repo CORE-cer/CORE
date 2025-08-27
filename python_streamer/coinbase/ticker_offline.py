@@ -30,7 +30,7 @@ class TickerStreamerOffline(AbstractStreamerOffline[TickerModel]):
         return """
                     CREATE QUARANTINE 
                     { \n
-                    FIXED_TIME 2 seconds {TICKER} \n
+                    FIXED_TIME 10 seconds {TICKER} \n
                     }
                     """
 
@@ -44,8 +44,10 @@ class TickerStreamerOffline(AbstractStreamerOffline[TickerModel]):
         return TickerModel.model_validate_json(message)
 
     def get_event_id_from_model(self, model: TickerModel) -> int:
-        event_dict = {"buy": 0, "sell": 1}
-        event_id = event_dict[model.side.lower()]
+        event_id = self.event_name_to_unique_id.get(model.side.capitalize())
+
+        assert event_id is not None, f"Unknown side: {model.side}"
+
         return event_id
 
     def create_event(self, model: TickerModel):

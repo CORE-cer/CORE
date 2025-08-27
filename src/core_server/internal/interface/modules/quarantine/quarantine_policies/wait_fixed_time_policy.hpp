@@ -5,9 +5,12 @@
 #include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <fstream>
+#include <iostream>
 #include <list>
 #include <mutex>
 #include <ratio>
+#include <string>
 #include <utility>
 
 #define QUILL_ROOT_LOGGER_ONLY
@@ -26,6 +29,8 @@ class WaitFixedTimePolicy : public BasePolicy {
   std::mutex events_lock;
   std::list<Types::EventWrapper> events;
   std::chrono::duration<int64_t, std::nano> time_to_wait;
+  std::chrono::time_point<std::chrono::system_clock>
+    last_save = std::chrono::system_clock::now();
 
   // Corresponds to the last time an event was sent
   Types::IntValue last_time_sent = Types::IntValue::create_lower_bound();
@@ -40,6 +45,31 @@ class WaitFixedTimePolicy : public BasePolicy {
 
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
+  void save_events_to_disk() {
+    std::string out = "[";
+
+    for (auto& event : events) {
+      out += event.to_json() + ",\n";
+    }
+
+    // Remove the last comma and newline
+    out = out.substr(0, out.size() - 2);
+
+    out += "]";
+
+    std::string filename = "events_"
+                           + std::to_string(last_save.time_since_epoch().count()) + "_"
+                           + std::to_string(
+                             events.front().get_event_reference().get_event_type_id())
+                           + ".json";
+
+    std::ofstream myfile(filename);
+
+    myfile << out;
+
+    myfile.close();
+  }
+
   void receive_event(Types::EventWrapper&& event) override {
     LOG_TRACE_L1(
       "Received event with id {} and time {} in "
@@ -48,6 +78,17 @@ class WaitFixedTimePolicy : public BasePolicy {
       event.get_primary_time().val);
 
     std::lock_guard<std::mutex> lock(events_lock);
+
+    std::chrono::time_point<std::chrono::system_clock>
+      now = std::chrono::system_clock::now();
+
+    std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
+    if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
+        >= 15) {
+      std::cout << "Saving events to disk in WaitFixedTimePolicy" << std::endl;
+      save_events_to_disk();
+      last_save = now;
+    }
 
     if (event.get_primary_time().val < last_time_sent.val) {
       LOG_WARNING(
