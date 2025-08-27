@@ -111,7 +111,7 @@ class Evaluator {
     LOG_TRACE_L3(logger,
                  "Received tuple with timestamp {} in Evaluator::next",
                  event.get_primary_time().val);
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     LOG_TRACE_L2(logger,
                  "Event type ID: {}",
                  event.get_event_reference().get_event_type_id());
@@ -191,7 +191,7 @@ class Evaluator {
                      "Evaluator");
         should_reset.store(true);
       }
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
       auto end_time = std::chrono::steady_clock::now();
 #endif
       LOG_TRACE_L2(logger,
@@ -202,7 +202,7 @@ class Evaluator {
                    event.get_primary_time().val);
       return std::move(enumerator);
     }
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     auto end_time = std::chrono::steady_clock::now();
 #endif
     LOG_TRACE_L2(

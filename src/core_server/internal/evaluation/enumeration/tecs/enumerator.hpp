@@ -1,7 +1,6 @@
 #pragma once
 
 #include <quill/Frontend.h>
-#include <quill/LogMacros.h>
 #include <quill/Logger.h>
 
 #include <algorithm>
@@ -188,7 +187,7 @@ class Enumerator {
     ZoneScopedN("Internal::Enumerator::next");
     std::reverse(next_value.second.begin(), next_value.second.end());
     auto complex_event = ComplexEvent(std::move(next_value));
-#if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
     std::string complex_event_string = complex_event.to_string<true>();
     LOG_TRACE_L2(logger, "Returning complex event: {}", complex_event_string);
 #endif
