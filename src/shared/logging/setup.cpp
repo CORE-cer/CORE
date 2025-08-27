@@ -56,6 +56,7 @@ quill::Logger* enable_logging_rotating() {
 
   // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::TraceL3);
+  logger->init_backtrace(65536);
 
   return logger;
 }
@@ -78,8 +79,8 @@ quill::Logger* enable_logging_stdout() {
                                    "%H:%M:%S.%Qns",
                                    quill::Timezone::GmtTime});
 
-  // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::Debug);
+  logger->init_backtrace(65536);
 
   return logger;
 }
@@ -104,6 +105,7 @@ quill::Logger* enable_logging_stdout_critical() {
 
   // Change the LogLevel to print everything
   logger->set_log_level(quill::LogLevel::TraceL3);
+  logger->init_backtrace(65536);
 
   return logger;
 }
