@@ -38,7 +38,7 @@ quill::Logger* enable_logging_rotating() {
 
       cfg.set_rotation_time_daily("18:30");
 
-      cfg.set_rotation_max_file_size(2<<24);
+      cfg.set_rotation_max_file_size(2 << 24);
 
       return cfg;
     }(),
