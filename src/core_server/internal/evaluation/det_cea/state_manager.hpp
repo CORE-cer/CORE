@@ -101,10 +101,11 @@ class StateManager {
   template <class... Args>
   State* alloc(Args&&... args) {
     LOG_BACKTRACE(logger,
-      "Adding state to state_manager, currently at {} states used with {} states "
-      "allocated",
-      amount_of_used_states,
-      amount_of_allowed_states);
+                  "Adding state to state_manager, currently at {} states used with {} "
+                  "states "
+                  "allocated",
+                  amount_of_used_states,
+                  amount_of_allowed_states);
     State* new_state;
     bool is_allocatable = check_can_allocate_state();
     if (is_allocatable) {
@@ -119,7 +120,8 @@ class StateManager {
         reset_state(new_state, std::forward<Args>(args)...);
       } else {
         // Not enough memory, force increase the memory pool.
-        LOG_DEBUG(logger,"Not enough memory to allocate DetCEA state, force increasing size");
+        LOG_DEBUG(logger,
+                  "Not enough memory to allocate DetCEA state, force increasing size");
         size_t amount_force_added_states = increase_mempool_size();
         amount_of_allowed_states += amount_force_added_states;
         new_state = allocate_state(std::forward<Args>(args)...);

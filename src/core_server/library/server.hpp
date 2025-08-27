@@ -2,12 +2,10 @@
 
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
+
 #include <memory>
 #include <mutex>
 #include <utility>
-
-#include "core_server/library/server_config.hpp"
-
 
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/library/components/http_server.hpp"
@@ -15,6 +13,7 @@
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
 #include "core_server/library/components/stream_listeners/online/online_streams_listener.hpp"
+#include "core_server/library/server_config.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/logging/setup.hpp"
 
@@ -103,7 +102,7 @@ class OnlineServer {
         stream_listener{backend,
                         backend_mutex,
                         this->server_config.get_fixed_ports().stream_listener} {
-    LOG_INFO(logger,"Server started");
+    LOG_INFO(logger, "Server started");
   }
 
   void receive_stream(const Types::Stream& stream) {

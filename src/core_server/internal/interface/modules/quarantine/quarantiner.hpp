@@ -3,6 +3,7 @@
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
+
 #include <atomic>
 #include <functional>
 #include <map>
@@ -13,9 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include "shared/datatypes/aliases/query_info_id.hpp"
-
-
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
@@ -24,6 +22,7 @@
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -77,7 +76,8 @@ class QuarantineManager {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
-    LOG_INFO(logger,"Inactivating query with id {} in QuarantineManager::inactivate_query",
+    LOG_INFO(logger,
+             "Inactivating query with id {} in QuarantineManager::inactivate_query",
              query_id);
     for (auto& [stream_type_ids, query_policy] : query_policies) {
       query_policy->inactivate_query(query_id);
@@ -89,10 +89,10 @@ class QuarantineManager {
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
     LOG_TRACE_L3(logger,
-      "Received event with id {} from stream with id {} in "
-      "QuarantineManager::send_event_to_queries",
-      event.get_unique_event_type_id(),
-      stream_id);
+                 "Received event with id {} from stream with id {} in "
+                 "QuarantineManager::send_event_to_queries",
+                 event.get_unique_event_type_id(),
+                 stream_id);
     std::vector<std::reference_wrapper<BasePolicy>>&
       relevant_policies = stream_type_id_to_relevant_policies[stream_id];
 

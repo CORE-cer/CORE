@@ -13,10 +13,9 @@
 #include <string>
 #include <utility>
 
-#include "quill/LogMacros.h"
-
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "quill/LogMacros.h"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
@@ -70,10 +69,10 @@ class WaitFixedTimePolicy : public BasePolicy {
 
   void receive_event(Types::EventWrapper&& event) override {
     LOG_TRACE_L1(logger,
-      "Received event with id {} and time {} in "
-      "WaitFixedTimePolicy::receive_event",
-      event.get_unique_event_type_id(),
-      event.get_primary_time().val);
+                 "Received event with id {} and time {} in "
+                 "WaitFixedTimePolicy::receive_event",
+                 event.get_unique_event_type_id(),
+                 event.get_primary_time().val);
 
     std::lock_guard<std::mutex> lock(events_lock);
 
@@ -90,10 +89,11 @@ class WaitFixedTimePolicy : public BasePolicy {
 
     if (event.get_primary_time().val < last_time_sent.val) {
       LOG_WARNING(logger,
-        "Dropping event with id {} and time {} in "
-        "WaitFixedTimePolicy::receive_event due to time being before last time sent",
-        event.get_unique_event_type_id(),
-        event.get_primary_time().val);
+                  "Dropping event with id {} and time {} in "
+                  "WaitFixedTimePolicy::receive_event due to time being before last time "
+                  "sent",
+                  event.get_unique_event_type_id(),
+                  event.get_primary_time().val);
       return;
     }
 
@@ -110,8 +110,8 @@ class WaitFixedTimePolicy : public BasePolicy {
    */
   void try_add_tuples_to_send_queue() override {
     LOG_TRACE_L3(logger,
-      "Trying to add tuples to send queue in "
-      "WaitFixedTimePolicy::try_add_tuples_to_send");
+                 "Trying to add tuples to send queue in "
+                 "WaitFixedTimePolicy::try_add_tuples_to_send");
 
     std::lock_guard<std::mutex> lock(events_lock);
     auto now = std::chrono::system_clock::now();
@@ -121,10 +121,10 @@ class WaitFixedTimePolicy : public BasePolicy {
       auto duration = now - event.get_received_time();
       if (duration > time_to_wait) {
         LOG_TRACE_L1(logger,
-          "Adding event with id {} and time {} to send queue in "
-          "WaitFixedTimePolicy::try_add_tuples_to_send",
-          event.get_unique_event_type_id(),
-          event.get_primary_time().val);
+                     "Adding event with id {} and time {} to send queue in "
+                     "WaitFixedTimePolicy::try_add_tuples_to_send",
+                     event.get_unique_event_type_id(),
+                     event.get_primary_time().val);
         assert(event.get_primary_time().val >= last_time_sent.val
                && "Event time is not after last time sent");
         last_time_sent = event.get_primary_time();

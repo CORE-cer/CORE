@@ -1,11 +1,6 @@
 #pragma once
 
 #include <Loop.h>
-
-#include <list>
-#include <stdexcept>
-
-#include "core_server/library/components/user_data.hpp"
 #include <WebSocket.h>
 #include <WebSocketProtocol.h>
 #include <quill/Frontend.h>
@@ -13,15 +8,18 @@
 #include <quill/Logger.h>
 
 #include <iostream>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/library/components/user_data.hpp"
 #include "result_handler_types.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -33,9 +31,9 @@ namespace CORE::Library::Components {
 class ResultHandler {
   ResultHandlerType result_handler_type;
   std::optional<const Internal::QueryCatalog> query_catalog;
-protected:
-  quill::Logger* logger = quill::Frontend::get_logger("root");
 
+ protected:
+  quill::Logger* logger = quill::Frontend::get_logger("root");
 
  public:
   explicit ResultHandler(ResultHandlerType result_handler_type)
@@ -102,7 +100,7 @@ class OnlineResultHandler : public ResultHandler {
   void start() override {
     broadcaster = std::make_unique<Internal::ZMQMessageBroadcaster>(
       "tcp://*:" + std::to_string(port));
-    LOG_INFO(logger,"Starting broadcaster at port {}", port);
+    LOG_INFO(logger, "Starting broadcaster at port {}", port);
   }
 
   void handle_complex_event(

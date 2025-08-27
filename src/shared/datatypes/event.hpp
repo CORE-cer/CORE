@@ -10,9 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "shared/datatypes/aliases/stream_type_id.hpp"
-
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "value.hpp"
 
 namespace CORE::Types {
