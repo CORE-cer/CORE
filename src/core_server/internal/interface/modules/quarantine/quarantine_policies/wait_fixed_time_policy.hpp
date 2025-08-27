@@ -76,9 +76,9 @@ class WaitFixedTimePolicy : public BasePolicy {
 
     std::lock_guard<std::mutex> lock(events_lock);
 
-    std::chrono::time_point<std::chrono::system_clock>
-      now = std::chrono::system_clock::now();
-
+    // std::chrono::time_point<std::chrono::system_clock>
+    //   now = std::chrono::system_clock::now();
+    //
     // std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
     // if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
     //     >= 15) {
