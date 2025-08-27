@@ -1,5 +1,8 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <atomic>
 #include <functional>
 #include <map>
@@ -12,9 +15,6 @@
 
 #include "shared/datatypes/aliases/query_info_id.hpp"
 
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
@@ -27,11 +27,11 @@
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
-#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Interface::Module::Quarantine {
 
 class QuarantineManager {
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   Catalog& catalog;
 
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
@@ -77,7 +77,7 @@ class QuarantineManager {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
-    LOG_INFO("Inactivating query with id {} in QuarantineManager::inactivate_query",
+    LOG_INFO(logger,"Inactivating query with id {} in QuarantineManager::inactivate_query",
              query_id);
     for (auto& [stream_type_ids, query_policy] : query_policies) {
       query_policy->inactivate_query(query_id);
@@ -88,7 +88,7 @@ class QuarantineManager {
 
   void send_event_to_queries(Types::StreamTypeId stream_id,
                              const Types::EventWrapper&& event) {
-    LOG_L3_BACKTRACE(
+    LOG_TRACE_L3(logger,
       "Received event with id {} from stream with id {} in "
       "QuarantineManager::send_event_to_queries",
       event.get_unique_event_type_id(),

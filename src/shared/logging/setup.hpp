@@ -1,22 +1,12 @@
 #pragma once
 
-#define QUILL_ROOT_LOGGER_ONLY
-static char const* filename = "logs/logfile.log";
-
-#if defined(__cplusplus) && (__cplusplus >= 201103L)
-#define LOG_L3_BACKTRACE(...)   \
-  do {                          \
-    LOG_BACKTRACE(__VA_ARGS__); \
-    LOG_TRACE_L3(__VA_ARGS__);  \
-  } while (0)
-#else
-#error "C++11 or later is required for variadic macro support."
-#endif
+#include <quill/Logger.h>
+static char const* filename = "logfile.log";
 
 namespace CORE::Internal::Logging {
-void enable_logging_rotating();
+quill::Logger* enable_logging_rotating();
 
-void enable_logging_stdout();
+quill::Logger* enable_logging_stdout();
 
-void enable_logging_stdout_critical();
+quill::Logger* enable_logging_stdout_critical();
 }  // namespace CORE::Internal::Logging

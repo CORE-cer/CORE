@@ -1,11 +1,12 @@
 #pragma once
 
 #include <gmpxx.h>
-#include <quill/detail/misc/Common.h>
 
+#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <functional>
 #include <memory>
@@ -14,13 +15,11 @@
 #include <utility>
 #include <vector>
 
-#include "shared/datatypes/aliases/stream_type_id.hpp"
-
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
-
+#include "quill/Frontend.h"
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -45,6 +44,7 @@ class EventWrapper {
 #if QUILL_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L3
   uint64_t id = id_counter++;
 #endif
+  quill::Logger* logger = quill::Frontend::get_logger("root");
 
  public:
   std::shared_ptr<const Event> event;
@@ -67,7 +67,7 @@ class EventWrapper {
         moved(false),
         marked_variables(other.marked_variables) {
     other.moved = true;
-    LOG_TRACE_L3("Moved EventWrapper with id {} to id {}", other.id, id);
+    LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
   }
 
   EventWrapper& operator=(EventWrapper&& other) {
@@ -77,7 +77,7 @@ class EventWrapper {
     moved = false;
     marked_variables = other.marked_variables;
     other.moved = true;
-    LOG_TRACE_L3("Moved EventWrapper with id {} to id {}", other.id, id);
+    LOG_TRACE_L3(logger, "Moved EventWrapper with id {} to id {}", other.id, id);
     return *this;
   }
 
@@ -85,17 +85,18 @@ class EventWrapper {
   EventWrapper(const EventWrapper&) = delete;
   EventWrapper& operator=(const EventWrapper&) = delete;
 
-  ~EventWrapper() { LOG_TRACE_L3("Destroying EventWrapper with id {}", id); }
+  ~EventWrapper() { LOG_TRACE_L3(logger, "Destroying EventWrapper with id {}", id); }
 
   UniqueEventTypeId get_unique_event_type_id() const {
-    LOG_TRACE_L3("Getting unique event type id from EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Getting unique event type id from EventWrapper with id {}", id);
     assert(!moved);
     return event->get_event_type_id();
   }
 
   template <DerivedFromValue T>
   const T& get_attribute_at_index(std::size_t attribute_index) {
-    LOG_TRACE_L3("Getting attribute at index {} from EventWrapper with id {}",
+    LOG_TRACE_L3(logger,
+                 "Getting attribute at index {} from EventWrapper with id {}",
                  attribute_index,
                  id);
     assert(!moved);
@@ -104,25 +105,25 @@ class EventWrapper {
   }
 
   std::chrono::time_point<ClockType> get_received_time() const {
-    LOG_TRACE_L3("Getting received time from EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Getting received time from EventWrapper with id {}", id);
     assert(!moved);
     return received_time;
   }
 
   Types::IntValue get_primary_time() const {
-    LOG_TRACE_L3("Getting primary time from EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Getting primary time from EventWrapper with id {}", id);
     assert(!moved);
     return primary_time;
   }
 
   EventWrapper clone() const {
-    LOG_TRACE_L3("Cloning EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Cloning EventWrapper with id {}", id);
     assert(!moved);
     return EventWrapper(event, marked_variables);
   }
 
   const Event& get_event_reference() const {
-    LOG_TRACE_L3("Getting event reference from EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Getting event reference from EventWrapper with id {}", id);
     assert(!moved);
     return *event;
   }
@@ -133,13 +134,13 @@ class EventWrapper {
   }
 
   const Event& get_event() const {
-    LOG_TRACE_L3("Getting event from EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Getting event from EventWrapper with id {}", id);
     assert(!moved);
     return *event;
   }
 
   std::string to_json() const {
-    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON", id);
+    LOG_TRACE_L3(logger, "Converting EventWrapper with id {} to JSON", id);
     assert(!moved);
     return event->to_json();
   }
@@ -148,7 +149,8 @@ class EventWrapper {
     std::vector<bool> attribute_projection,
     std::function<Types::StreamTypeId(Types::UniqueEventTypeId)>
       stream_id_from_unique_event_id) const {
-    LOG_TRACE_L3("Converting EventWrapper with id {} to JSON with attribute projection",
+    LOG_TRACE_L3(logger,
+                 "Converting EventWrapper with id {} to JSON with attribute projection",
                  id);
     assert(!moved);
     return event->to_json_with_attribute_projection(attribute_projection,
@@ -157,7 +159,7 @@ class EventWrapper {
 
  private:
   void set_times() {
-    LOG_TRACE_L3("Setting times for EventWrapper with id {}", id);
+    LOG_TRACE_L3(logger, "Setting times for EventWrapper with id {}", id);
     assert(!moved);
     std::chrono::time_point<ClockType> system_time = ClockType::now();
     received_time = system_time;

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <mutex>
 #include <utility>
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include <atomic>
 #include <exception>
@@ -16,7 +16,6 @@
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
-#include "shared/logging/setup.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
@@ -27,6 +26,7 @@ class OnlineStreamsListener {
   using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   Backend& backend;
   std::mutex& backend_mutex;
   Types::PortNumber receiver_port;
@@ -59,12 +59,12 @@ class OnlineStreamsListener {
         std::string s_message = receiver.receive();
         Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
           s_message);
-        LOG_L3_BACKTRACE(
+        LOG_TRACE_L3(logger,
           "Received stream with id {} and {} events in OnlineStreamsListener",
           stream.id,
           stream.events.size());
         for (auto& event : stream.events) {
-          LOG_L3_BACKTRACE("Stream with id {} and event {} in OnlineStreamsListener",
+          LOG_TRACE_L3(logger,"Stream with id {} and event {} in OnlineStreamsListener",
                            stream.id,
                            event->to_string());
           backend.send_event_to_queries(stream.id, {std::move(event)});

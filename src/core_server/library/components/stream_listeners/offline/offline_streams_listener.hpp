@@ -1,13 +1,13 @@
 #pragma once
 
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 #include <mutex>
 #include <utility>
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/detail/LogMacros.h>  // NOLINT
 
 #include "core_server/internal/interface/backend.hpp"
 #include "shared/datatypes/stream.hpp"
-#include "shared/logging/setup.hpp"
 
 namespace CORE::Library::Components {
 
@@ -15,6 +15,7 @@ class OfflineStreamsListener {
   using Backend = CORE::Internal::Interface::Backend<false>;
 
  private:
+  quill::Logger* logger = quill::Frontend::get_logger("root");
   Backend& backend;
   std::mutex& backend_mutex;
 
@@ -27,12 +28,12 @@ class OfflineStreamsListener {
   OfflineStreamsListener& operator=(const OfflineStreamsListener&) = delete;
 
   void receive_stream(Types::Stream&& stream) {
-    LOG_L3_BACKTRACE("Received stream with id {} and {} events in OfflineStreamsListener",
+    LOG_TRACE_L3(logger,"Received stream with id {} and {} events in OfflineStreamsListener",
                      stream.id,
                      stream.events.size());
     std::lock_guard lock(backend_mutex);
     for (const auto& event : stream.events) {
-      LOG_L3_BACKTRACE("Stream with id {} and event {} in OfflineStreamsListener",
+      LOG_TRACE_L3(logger,"Stream with id {} and event {} in OfflineStreamsListener",
                        stream.id,
                        event->to_string());
       backend.send_event_to_queries(stream.id, {std::move(event)});

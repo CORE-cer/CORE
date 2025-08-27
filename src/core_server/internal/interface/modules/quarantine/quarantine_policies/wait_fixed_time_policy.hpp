@@ -13,9 +13,7 @@
 #include <string>
 #include <utility>
 
-#define QUILL_ROOT_LOGGER_ONLY
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
+#include "quill/LogMacros.h"
 
 #include "base_policy.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
@@ -71,7 +69,7 @@ class WaitFixedTimePolicy : public BasePolicy {
   }
 
   void receive_event(Types::EventWrapper&& event) override {
-    LOG_TRACE_L1(
+    LOG_TRACE_L1(logger,
       "Received event with id {} and time {} in "
       "WaitFixedTimePolicy::receive_event",
       event.get_unique_event_type_id(),
@@ -91,7 +89,7 @@ class WaitFixedTimePolicy : public BasePolicy {
     }
 
     if (event.get_primary_time().val < last_time_sent.val) {
-      LOG_WARNING(
+      LOG_WARNING(logger,
         "Dropping event with id {} and time {} in "
         "WaitFixedTimePolicy::receive_event due to time being before last time sent",
         event.get_unique_event_type_id(),
@@ -111,7 +109,7 @@ class WaitFixedTimePolicy : public BasePolicy {
    * Tries to add received tuples to send queue according to specific policy
    */
   void try_add_tuples_to_send_queue() override {
-    LOG_TRACE_L3(
+    LOG_TRACE_L3(logger,
       "Trying to add tuples to send queue in "
       "WaitFixedTimePolicy::try_add_tuples_to_send");
 
@@ -122,7 +120,7 @@ class WaitFixedTimePolicy : public BasePolicy {
       const Types::EventWrapper& event = *iter;
       auto duration = now - event.get_received_time();
       if (duration > time_to_wait) {
-        LOG_TRACE_L1(
+        LOG_TRACE_L1(logger,
           "Adding event with id {} and time {} to send queue in "
           "WaitFixedTimePolicy::try_add_tuples_to_send",
           event.get_unique_event_type_id(),

@@ -6,11 +6,11 @@
 #include <stdexcept>
 
 #include "core_server/library/components/user_data.hpp"
-#define QUILL_ROOT_LOGGER_ONLY
 #include <WebSocket.h>
 #include <WebSocketProtocol.h>
-#include <quill/Quill.h>             // NOLINT
-#include <quill/detail/LogMacros.h>  // NOLINT
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/Logger.h>
 
 #include <iostream>
 #include <memory>
@@ -33,6 +33,9 @@ namespace CORE::Library::Components {
 class ResultHandler {
   ResultHandlerType result_handler_type;
   std::optional<const Internal::QueryCatalog> query_catalog;
+protected:
+  quill::Logger* logger = quill::Frontend::get_logger("root");
+
 
  public:
   explicit ResultHandler(ResultHandlerType result_handler_type)
@@ -99,7 +102,7 @@ class OnlineResultHandler : public ResultHandler {
   void start() override {
     broadcaster = std::make_unique<Internal::ZMQMessageBroadcaster>(
       "tcp://*:" + std::to_string(port));
-    LOG_INFO("Starting broadcaster at port {}", port);
+    LOG_INFO(logger,"Starting broadcaster at port {}", port);
   }
 
   void handle_complex_event(
