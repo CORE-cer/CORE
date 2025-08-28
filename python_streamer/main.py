@@ -7,9 +7,9 @@ from coinbase.ticker import TickerStreamer
 
 
 async def do():
-    client = _pycore.PyClient("tcp://localhost", 5001)
+    client = _pycore.PyClient("tcp://localhost", 5000)
 
-    streamer = _pycore.PyStreamer("tcp://localhost", 5002)
+    streamer = _pycore.PyStreamer("tcp://localhost", 5001)
 
     ticker_streamer = TickerStreamer(client, streamer)
     # ticker_streamer = TickerStreamerOffline(client, streamer)
