@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <mutex>
 #include <ratio>
 #include <set>
@@ -76,16 +77,16 @@ class WaitFixedTimePolicy : public BasePolicy {
 
     std::lock_guard<std::mutex> lock(events_lock);
 
-    // std::chrono::time_point<std::chrono::system_clock>
-    //   now = std::chrono::system_clock::now();
-    //
-    // std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
-    // if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
-    //     >= 15) {
-    //   std::cout << "Saving events to disk in WaitFixedTimePolicy" << std::endl;
-    //   save_events_to_disk();
-    //   last_save = now;
-    // }
+    std::chrono::time_point<std::chrono::system_clock>
+      now = std::chrono::system_clock::now();
+
+    std::chrono::duration<int64_t, std::nano> duration_since_last_save = now - last_save;
+    if (std::chrono::duration_cast<std::chrono::minutes>(duration_since_last_save).count()
+        >= 15) {
+      std::cout << "Saving events to disk in WaitFixedTimePolicy" << std::endl;
+      save_events_to_disk();
+      last_save = now;
+    }
 
     if (event.get_primary_time().val < last_time_sent.val) {
       LOG_WARNING(logger,
