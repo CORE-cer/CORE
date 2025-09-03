@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -58,34 +59,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
 
   ~BoundedWaitTimePolicy() { this->handle_destruction(); }
 
-  // void save_events_to_disk() {
-  //   if (events.empty()) {
-  //     return;
-  //   }
-  //   std::string out = "[";
-  //
-  //   for (auto& event : events) {
-  //     out += event.to_json() + ",\n";
-  //   }
-  //
-  //   // Remove the last comma and newline
-  //   out = out.substr(0, out.size() - 2);
-  //
-  //   out += "]";
-  //
-  //   std::string filename = "events_"
-  //                          + std::to_string(last_save.time_since_epoch().count()) + "_"
-  //                          + std::to_string(
-  //                            events.begin()->get_event_reference().get_event_type_id())
-  //                          + ".json";
-  //
-  //   std::ofstream myfile(filename);
-  //
-  //   myfile << out;
-  //
-  //   myfile.close();
-  // }
-
   void receive_event(Types::EventWrapper&& event) override {
     ZoneScopedN("BoundedWaitTimePolicy::receive_event");
     LOG_TRACE_L1(logger,
@@ -103,16 +76,15 @@ class BoundedWaitTimePolicy : public BasePolicy {
           event.get_received_time().time_since_epoch()));
 
       if (take_n_events_average == measured_time_deltas.size()) {
-        int64_t total_delta = 0;
-        for (const auto& delta : measured_time_deltas) {
-          total_delta += delta.count();
-        }
-        time_received_system_clock_delta = std::chrono::nanoseconds(
-          total_delta / take_n_events_average);
+        int64_t midpoint = take_n_events_average / 2;
+        std::nth_element(measured_time_deltas.begin(), measured_time_deltas.begin() + midpoint, measured_time_deltas.end());
+
+
+        time_received_system_clock_delta = measured_time_deltas[midpoint];
         LOG_INFO(logger,
-                 "Calculated time_received_system_clock_delta as {} nanoseconds in "
-                 "BoundedWaitTimePolicy::receive_event",
-                 time_received_system_clock_delta.value().count());
+               "Calculated time_received_system_clock_delta as {} nanoseconds in "
+               "BoundedWaitTimePolicy::receive_event",
+               time_received_system_clock_delta.value().count());
       }
 
       return;
