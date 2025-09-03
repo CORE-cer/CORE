@@ -36,7 +36,8 @@ class BoundedWaitTimePolicy : public BasePolicy {
   std::vector<std::chrono::duration<int64_t, std::nano>> measured_time_deltas;
 
   // Time difference between received time and system clock
-  std::optional<std::chrono::duration<int64_t, std::nano>> time_received_system_clock_delta = {};
+  std::optional<std::chrono::duration<int64_t, std::nano>>
+    time_received_system_clock_delta = {};
 
   // std::chrono::time_point<std::chrono::system_clock>
   //   last_save = std::chrono::system_clock::now();
@@ -117,25 +118,26 @@ class BoundedWaitTimePolicy : public BasePolicy {
       return;
     }
 
-    assert(time_received_system_clock_delta.has_value()
-           && "time_received_system_clock_delta must be calculated before receiving events");
+    assert(
+      time_received_system_clock_delta
+      && "time_received_system_clock_delta must be calculated before receiving events");
 
     std::lock_guard<std::mutex> lock(events_lock);
 
     std::chrono::time_point<std::chrono::system_clock>
       now = std::chrono::system_clock::now();
 
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> adjusted_event_time =
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>(
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+      adjusted_event_time = std::chrono::time_point<std::chrono::system_clock,
+                                                    std::chrono::nanoseconds>(
         std::chrono::nanoseconds(event.get_primary_time().val)
         - time_received_system_clock_delta.value());
 
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> adjusted_event_time_system_clock =
-      std::chrono::time_point_cast<std::chrono::nanoseconds>(adjusted_event_time);
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+      upper_acceptable_bound = now + allowed_time_delta;
 
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> upper_acceptable_bound = now + allowed_time_delta;
-
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> lower_acceptable_bound = now - allowed_time_delta;
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+      lower_acceptable_bound = now - allowed_time_delta;
 
     bool inside_bounds = (adjusted_event_time <= upper_acceptable_bound
                           && adjusted_event_time >= lower_acceptable_bound);
@@ -143,7 +145,8 @@ class BoundedWaitTimePolicy : public BasePolicy {
     if (!inside_bounds) {
       LOG_WARNING(logger,
                   "Dropping event with id {} and time {} in "
-                  "BoundedWaitTimePolicy::receive_event due to time being outside allowed "
+                  "BoundedWaitTimePolicy::receive_event due to time being outside "
+                  "allowed "
                   "delta",
                   event.get_unique_event_type_id(),
                   event.get_primary_time().val);
@@ -160,23 +163,25 @@ class BoundedWaitTimePolicy : public BasePolicy {
     LOG_TRACE_L3(logger,
                  "Trying to add tuples to send queue in "
                  "BoundedWaitTimePolicy::try_add_tuples_to_send");
-
     std::lock_guard<std::mutex> lock(events_lock);
     auto now = std::chrono::system_clock::now();
 
     for (auto iter = events.begin(); iter != events.end();) {
+      assert(
+        time_received_system_clock_delta
+        && "time_received_system_clock_delta must be calculated before receiving events");
       const Types::EventWrapper& event = *iter;
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> adjusted_event_time =
-        std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>(
+      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+        adjusted_event_time = std::chrono::time_point<std::chrono::system_clock,
+                                                      std::chrono::nanoseconds>(
           std::chrono::nanoseconds(event.get_primary_time().val)
           - time_received_system_clock_delta.value());
 
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> adjusted_event_time_system_clock =
-        std::chrono::time_point_cast<std::chrono::nanoseconds>(adjusted_event_time);
+      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+        upper_acceptable_bound = now + allowed_time_delta;
 
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> upper_acceptable_bound = now + allowed_time_delta;
-
-      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds> lower_acceptable_bound = now - allowed_time_delta;
+      std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>
+        lower_acceptable_bound = now - allowed_time_delta;
 
       bool inside_bounds = (adjusted_event_time <= upper_acceptable_bound
                             && adjusted_event_time >= lower_acceptable_bound);

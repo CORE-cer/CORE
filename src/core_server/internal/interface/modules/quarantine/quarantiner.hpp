@@ -18,10 +18,10 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
+#include "core_server/internal/interface/modules/quarantine/quarantine_policies/bounded_wait_time_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/wait_fixed_time_policy.hpp"
-#include "core_server/internal/interface/modules/quarantine/quarantine_policies/bounded_wait_time_policy.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/query_info_id.hpp"
@@ -139,9 +139,8 @@ class QuarantineManager {
           throw std::runtime_error(
             "Time window must be specified for BoundedWaitTimePolicy");
         }
-        return std::make_unique<BoundedWaitTimePolicy>(catalog,
-                                                     next_available_inproc_port,
-                                                     quarantine_policy.time_window.value());
+        return std::make_unique<BoundedWaitTimePolicy>(
+          catalog, next_available_inproc_port, quarantine_policy.time_window.value());
       default:
         throw std::runtime_error("Invalid policy type");
     }
