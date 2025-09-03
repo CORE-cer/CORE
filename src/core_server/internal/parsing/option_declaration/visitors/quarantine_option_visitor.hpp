@@ -18,8 +18,8 @@ class QuarantineOptionVisitor : public OptionDeclarationParserBaseVisitor {
   std::optional<std::chrono::nanoseconds> time_window;
   std::set<std::string> streams;
 
-  std::any
-  visitBounded_time_policy(OptionDeclarationParser::Bounded_time_policyContext* ctx) override {
+  std::any visitBounded_time_policy(
+    OptionDeclarationParser::Bounded_time_policyContext* ctx) override {
     policy_type = Interface::Module::Quarantine::QuarantinePolicy::QuarantinePolicyType::
       BoundedWaitTimePolicy;
     visitChildren(ctx);
