@@ -105,8 +105,6 @@ public:
 
     virtual std::any visitString_literal(CEQLQueryParser::String_literalContext *context) = 0;
 
-    virtual std::any visitString_literal_or_regexp(CEQLQueryParser::String_literal_or_regexpContext *context) = 0;
-
     virtual std::any visitMul_math_expr(CEQLQueryParser::Mul_math_exprContext *context) = 0;
 
     virtual std::any visitSum_math_expr(CEQLQueryParser::Sum_math_exprContext *context) = 0;
@@ -176,56 +174,6 @@ public:
     virtual std::any visitAny_name(CEQLQueryParser::Any_nameContext *context) = 0;
 
     virtual std::any visitKeyword(CEQLQueryParser::KeywordContext *context) = 0;
-
-    virtual std::any visitRegexp(CEQLQueryParser::RegexpContext *context) = 0;
-
-    virtual std::any visitRegexp_alternation(CEQLQueryParser::Regexp_alternationContext *context) = 0;
-
-    virtual std::any visitRegexp_exp(CEQLQueryParser::Regexp_expContext *context) = 0;
-
-    virtual std::any visitRegexp_element(CEQLQueryParser::Regexp_elementContext *context) = 0;
-
-    virtual std::any visitRegexp_group(CEQLQueryParser::Regexp_groupContext *context) = 0;
-
-    virtual std::any visitParenthesis(CEQLQueryParser::ParenthesisContext *context) = 0;
-
-    virtual std::any visitQuantifier(CEQLQueryParser::QuantifierContext *context) = 0;
-
-    virtual std::any visitQuantity(CEQLQueryParser::QuantityContext *context) = 0;
-
-    virtual std::any visitQuantExact(CEQLQueryParser::QuantExactContext *context) = 0;
-
-    virtual std::any visitQuantRange(CEQLQueryParser::QuantRangeContext *context) = 0;
-
-    virtual std::any visitQuantMin(CEQLQueryParser::QuantMinContext *context) = 0;
-
-    virtual std::any visitQuantMax(CEQLQueryParser::QuantMaxContext *context) = 0;
-
-    virtual std::any visitAtom(CEQLQueryParser::AtomContext *context) = 0;
-
-    virtual std::any visitCharacterClass(CEQLQueryParser::CharacterClassContext *context) = 0;
-
-    virtual std::any visitCcAtom(CEQLQueryParser::CcAtomContext *context) = 0;
-
-    virtual std::any visitCcRange(CEQLQueryParser::CcRangeContext *context) = 0;
-
-    virtual std::any visitCcSingle(CEQLQueryParser::CcSingleContext *context) = 0;
-
-    virtual std::any visitCcLiteral(CEQLQueryParser::CcLiteralContext *context) = 0;
-
-    virtual std::any visitCcEscapes(CEQLQueryParser::CcEscapesContext *context) = 0;
-
-    virtual std::any visitCcOther(CEQLQueryParser::CcOtherContext *context) = 0;
-
-    virtual std::any visitLiteral(CEQLQueryParser::LiteralContext *context) = 0;
-
-    virtual std::any visitEscapes(CEQLQueryParser::EscapesContext *context) = 0;
-
-    virtual std::any visitOther(CEQLQueryParser::OtherContext *context) = 0;
-
-    virtual std::any visitSharedAtom(CEQLQueryParser::SharedAtomContext *context) = 0;
-
-    virtual std::any visitRegexp_number(CEQLQueryParser::Regexp_numberContext *context) = 0;
 
 
 };

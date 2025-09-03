@@ -187,10 +187,6 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitString_literal_or_regexp(CEQLQueryParser::String_literal_or_regexpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitMul_math_expr(CEQLQueryParser::Mul_math_exprContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -328,106 +324,6 @@ public:
   }
 
   virtual std::any visitKeyword(CEQLQueryParser::KeywordContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp(CEQLQueryParser::RegexpContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp_alternation(CEQLQueryParser::Regexp_alternationContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp_exp(CEQLQueryParser::Regexp_expContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp_element(CEQLQueryParser::Regexp_elementContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp_group(CEQLQueryParser::Regexp_groupContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitParenthesis(CEQLQueryParser::ParenthesisContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantifier(CEQLQueryParser::QuantifierContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantity(CEQLQueryParser::QuantityContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantExact(CEQLQueryParser::QuantExactContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantRange(CEQLQueryParser::QuantRangeContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantMin(CEQLQueryParser::QuantMinContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitQuantMax(CEQLQueryParser::QuantMaxContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitAtom(CEQLQueryParser::AtomContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCharacterClass(CEQLQueryParser::CharacterClassContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcAtom(CEQLQueryParser::CcAtomContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcRange(CEQLQueryParser::CcRangeContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcSingle(CEQLQueryParser::CcSingleContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcLiteral(CEQLQueryParser::CcLiteralContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcEscapes(CEQLQueryParser::CcEscapesContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitCcOther(CEQLQueryParser::CcOtherContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitLiteral(CEQLQueryParser::LiteralContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitEscapes(CEQLQueryParser::EscapesContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitOther(CEQLQueryParser::OtherContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitSharedAtom(CEQLQueryParser::SharedAtomContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitRegexp_number(CEQLQueryParser::Regexp_numberContext *ctx) override {
     return visitChildren(ctx);
   }
 

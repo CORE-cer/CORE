@@ -31,7 +31,7 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
   bool eval(Types::EventWrapper& event) override {
     const Types::StringValue
       attribute_val = event.get_attribute_at_index<Types::StringValue>(pos_to_compare);
-    return re2::RE2::FullMatch(attribute_val.val, regex_compiled);
+    return re2::RE2::PartialMatch(attribute_val.val, regex_compiled);
   }
 
   std::string to_string() const override {
