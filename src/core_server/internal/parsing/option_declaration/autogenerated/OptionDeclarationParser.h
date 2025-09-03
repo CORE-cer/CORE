@@ -12,10 +12,10 @@
 class  OptionDeclarationParser : public antlr4::Parser {
 public:
   enum {
-    WS = 1, K_CREATE = 2, K_QUARANTINE = 3, K_FIXED_TIME = 4, K_DIRECT = 5, 
-    K_HOURS = 6, K_MINUTES = 7, K_SECONDS = 8, LEFT_CURLY_BRACKET = 9, RIGHT_CURLY_BRACKET = 10, 
-    COMMA = 11, DOUBLE_LITERAL = 12, INTEGER_LITERAL = 13, NUMERICAL_EXPONENT = 14, 
-    IDENTIFIER = 15, UNEXPECTED_CHAR = 16
+    WS = 1, K_CREATE = 2, K_QUARANTINE = 3, K_FIXED_TIME = 4, K_BOUNDED_TIME = 5, 
+    K_DIRECT = 6, K_HOURS = 7, K_MINUTES = 8, K_SECONDS = 9, LEFT_CURLY_BRACKET = 10, 
+    RIGHT_CURLY_BRACKET = 11, COMMA = 12, DOUBLE_LITERAL = 13, INTEGER_LITERAL = 14, 
+    NUMERICAL_EXPONENT = 15, IDENTIFIER = 16, UNEXPECTED_CHAR = 17
   };
 
   enum {
@@ -117,6 +117,19 @@ public:
     virtual size_t getRuleIndex() const override;
 
    
+  };
+
+  class  Bounded_time_policyContext : public Quarantine_policyContext {
+  public:
+    Bounded_time_policyContext(Quarantine_policyContext *ctx);
+
+    antlr4::tree::TerminalNode *K_BOUNDED_TIME();
+    Time_spanContext *time_span();
+    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
+    Stream_namesContext *stream_names();
+    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
   class  Direct_policyContext : public Quarantine_policyContext {
