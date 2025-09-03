@@ -45,6 +45,19 @@ message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 Set(FETCHCONTENT_QUIET FALSE)
 
 FetchContent_Declare (
+  rematch
+  GIT_REPOSITORY https://github.com/nicobuzeta/REmatch
+  GIT_TAG 129e46e203cf1b1735cedf331e6bcbb5c9549bd1
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+  CMAKE_ARGS
+  -DREMATCH_USE_BUNDLED_DEPS=OFF
+)
+set(REMATCH_USE_BUNDLED_DEPS OFF CACHE BOOL "Force rematch to use external antlr4-runtime from Conan" FORCE)
+
+FetchContent_MakeAvailable (rematch)
+
+FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
   GIT_TAG c556831ddc6fe26d2fce01c14c97205a9dad46d5
@@ -121,7 +134,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze REmatch)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
