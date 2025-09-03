@@ -77,14 +77,15 @@ class BoundedWaitTimePolicy : public BasePolicy {
 
       if (take_n_events_average == measured_time_deltas.size()) {
         int64_t midpoint = take_n_events_average / 2;
-        std::nth_element(measured_time_deltas.begin(), measured_time_deltas.begin() + midpoint, measured_time_deltas.end());
-
+        std::nth_element(measured_time_deltas.begin(),
+                         measured_time_deltas.begin() + midpoint,
+                         measured_time_deltas.end());
 
         time_received_system_clock_delta = measured_time_deltas[midpoint];
         LOG_INFO(logger,
-               "Calculated time_received_system_clock_delta as {} nanoseconds in "
-               "BoundedWaitTimePolicy::receive_event",
-               time_received_system_clock_delta.value().count());
+                 "Calculated time_received_system_clock_delta as {} nanoseconds in "
+                 "BoundedWaitTimePolicy::receive_event",
+                 time_received_system_clock_delta.value().count());
       }
 
       return;
