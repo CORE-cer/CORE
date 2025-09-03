@@ -73,7 +73,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
         return """
                     CREATE QUARANTINE 
                     { \n
-                    FIXED_TIME 20 seconds {Bluesky} \n
+                    BOUNDED_TIME 10 seconds {Bluesky} \n
                     }
                     """
 

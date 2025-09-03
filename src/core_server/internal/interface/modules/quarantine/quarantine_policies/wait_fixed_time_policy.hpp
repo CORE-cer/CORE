@@ -43,6 +43,9 @@ class WaitFixedTimePolicy : public BasePolicy {
   ~WaitFixedTimePolicy() { this->handle_destruction(); }
 
   void save_events_to_disk() {
+    if (events.empty()) {
+      return;
+    }
     std::string out = "[";
 
     for (auto& event : events) {

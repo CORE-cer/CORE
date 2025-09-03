@@ -31,6 +31,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitBounded_time_policy(OptionDeclarationParser::Bounded_time_policyContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitDirect_policy(OptionDeclarationParser::Direct_policyContext *ctx) override {
     return visitChildren(ctx);
   }
