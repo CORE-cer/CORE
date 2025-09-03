@@ -14,7 +14,6 @@
 #include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/ceql/value/operations/negation.hpp"
 #include "core_server/internal/ceql/value/operations/subtraction.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
 #include "core_server/internal/ceql/value/sequence.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/undefined.hpp"
@@ -69,7 +68,6 @@ class DetermineFinalValueDataType : public ValueVisitor {
   void visit(IntegerLiteral&) override { update_final_data_type(Integer); }
   void visit(LongLiteral&)    override { update_final_data_type(Integer); }
   void visit(StringLiteral&)  override { update_final_data_type(String); }
-  void visit(RegexLiteral&)   override { update_final_data_type(String); }
   void visit(Undefined&)      override { final_value_datatype = Invalid; }
 
   // clang-format on

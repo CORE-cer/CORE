@@ -19,7 +19,6 @@
 #include "core_server/internal/ceql/value/boolean_literal.hpp"
 #include "core_server/internal/ceql/value/double_literal.hpp"
 #include "core_server/internal/ceql/value/integer_literal.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/value.hpp"
 #include "core_server/internal/ceql/value/value_types.hpp"
@@ -139,7 +138,7 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final : public PredicateVisito
     auto second_val_type = value_type_visitor.get_value_type();
 
     if (first_val_type != ValueTypes::Attribute
-        || second_val_type != ValueTypes::RegexLiteral) {
+        || second_val_type != ValueTypes::StringLiteral) {
       throw std::logic_error(
         "Like predicate only supports attribute and string literal.");
     }
@@ -359,9 +358,6 @@ class CEQLStrongTypedPredicateToPhysicalPredicate final : public PredicateVisito
         case ValueTypes::StringLiteral:
           assert(dynamic_cast<CEQL::StringLiteral*>(ptr.get()) != nullptr);
           return static_cast<CEQL::StringLiteral*>(ptr.get())->value;
-        case ValueTypes::RegexLiteral:
-          assert(dynamic_cast<CEQL::RegexLiteral*>(ptr.get()) != nullptr);
-          return static_cast<CEQL::RegexLiteral*>(ptr.get())->value;
         default:
           throw std::runtime_error("Invalid mix of types in value");
       }
