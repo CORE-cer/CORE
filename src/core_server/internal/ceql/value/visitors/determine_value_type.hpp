@@ -14,7 +14,6 @@
 #include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/ceql/value/operations/negation.hpp"
 #include "core_server/internal/ceql/value/operations/subtraction.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
 #include "core_server/internal/ceql/value/sequence.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/undefined.hpp"
@@ -41,7 +40,6 @@ class DetermineValueType : public ValueVisitor {
   void visit(IntegerLiteral&) override {value_type = ValueTypes::IntegerLiteral;}
   void visit(LongLiteral&)    override {value_type = ValueTypes::LongLiteral;}
   void visit(StringLiteral&)  override {value_type = ValueTypes::StringLiteral;}
-  void visit(RegexLiteral&)   override {value_type = ValueTypes::RegexLiteral;}
   void visit(Sequence&)       override {value_type = ValueTypes::Sequence;}
   void visit(Undefined&)      override {value_type = ValueTypes::Undefined;}
   void visit(Addition&)       override {value_type = ValueTypes::Addition;}

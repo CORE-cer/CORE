@@ -17,7 +17,7 @@
 #include "core_server/internal/ceql/cel_formula/predicate/like_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/or_predicate.hpp"
 #include "core_server/internal/ceql/value/attribute.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
+#include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/value.hpp"
 #include "core_server/internal/ceql/value/visitors/determine_final_value_data_type_with_catalog.hpp"
 #include "core_server/internal/ceql/value/visitors/obtain_compatible_event_types.hpp"
@@ -307,8 +307,8 @@ class CEQLWeaklyTypedPredicateToCEAPredicate final : public PredicateVisitor {
     auto left_expr_attr = std::make_unique<CEA::NonStronglyTypedAttribute<std::string_view>>(
       left_value_attr->value, query_catalog);
 
-    assert(dynamic_cast<CEQL::RegexLiteral*>(right.get()) != nullptr);
-    auto right_value_string = static_cast<CEQL::RegexLiteral*>(right.get());
+    assert(dynamic_cast<CEQL::StringLiteral*>(right.get()) != nullptr);
+    auto right_value_string = static_cast<CEQL::StringLiteral*>(right.get());
     std::string_view value = right_value_string->value;
     auto right_expr_string = std::make_unique<CEA::Literal<std::string_view>>(value);
 

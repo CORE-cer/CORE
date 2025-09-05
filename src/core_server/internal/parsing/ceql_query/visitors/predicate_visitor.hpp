@@ -73,9 +73,9 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
 
   virtual std::any visitEquality_string_predicate(
     CEQLQueryParser::Equality_string_predicateContext* ctx) override {
-    value_visitor.visit(ctx->string_literal());
+    value_visitor.visit(ctx->string_literal()[0]);
     auto left = value_visitor.get_parsed_value();
-    value_visitor.visit(ctx->string_literal_or_regexp());
+    value_visitor.visit(ctx->string_literal()[1]);
     auto right = value_visitor.get_parsed_value();
 
     CEQL::InequalityPredicate::LogicalOperation operation;
@@ -116,7 +116,7 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
   visitRegex_predicate(CEQLQueryParser::Regex_predicateContext* ctx) override {
     value_visitor.visit(ctx->attribute_name());
     auto left = value_visitor.get_parsed_value();
-    value_visitor.visit(ctx->regexp());
+    value_visitor.visit(ctx->string_literal());
     auto right = value_visitor.get_parsed_value();
     predicate = std::make_unique<CEQL::LikePredicate>(std::move(left), std::move(right));
     return {};

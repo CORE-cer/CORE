@@ -17,7 +17,6 @@
 #include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/ceql/value/operations/negation.hpp"
 #include "core_server/internal/ceql/value/operations/subtraction.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
 #include "core_server/internal/ceql/value/sequence.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/value.hpp"
@@ -104,11 +103,6 @@ class ValueVisitor : public CEQLQueryParserBaseVisitor {
                                                                   string_with_quotes.size()
                                                                     - 2);
     value = std::make_unique<CEQL::StringLiteral>(string_without_quotes);
-    return {};
-  }
-
-  virtual std::any visitRegexp(CEQLQueryParser::RegexpContext* ctx) override {
-    value = std::make_unique<CEQL::RegexLiteral>(ctx->regexp_alternation()->getText());
     return {};
   }
 

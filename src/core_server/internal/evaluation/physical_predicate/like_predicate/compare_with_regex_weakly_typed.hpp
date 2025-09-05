@@ -33,7 +33,7 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
   ~CompareWithRegexWeaklyTyped() override = default;
 
   bool eval(Types::EventWrapper& event) override {
-    return re2::RE2::FullMatch(left->eval(event), regex_compiled);
+    return re2::RE2::PartialMatch(left->eval(event), regex_compiled);
   }
 
   std::string to_string() const override {

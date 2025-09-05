@@ -248,7 +248,7 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.*>>]"), catalog);
+    CEQL::Query query = parse_query(create_query("event1[String LIKE '.*']"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -260,7 +260,7 @@ TEST_CASE(
   }
 
   SECTION("StronglyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(create_query("event1[String LIKE <<.>>]"), catalog);
+    CEQL::Query query = parse_query(create_query("event1[String LIKE 'another']"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -272,7 +272,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate matching") {
-    CEQL::Query query = parse_query(create_query("X[String LIKE <<.*>>]"), catalog);
+    CEQL::Query query = parse_query(create_query("X[String LIKE '.*']"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
@@ -284,7 +284,7 @@ TEST_CASE(
   }
 
   SECTION("WeaklyTyped LIKE predicate not matching") {
-    CEQL::Query query = parse_query(create_query("X[String LIKE <<.>>]"), catalog);
+    CEQL::Query query = parse_query(create_query("X[String LIKE 'another']"), catalog);
     QueryCatalog query_catalog(catalog, query);
     auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
     auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);

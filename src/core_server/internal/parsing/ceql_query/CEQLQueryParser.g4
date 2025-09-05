@@ -48,7 +48,7 @@ from_clause
 cel_formula
  : LEFT_PARENTHESIS cel_formula RIGHT_PARENTHESIS     # par_cel_formula
  | s_event_name                                       # event_type_cel_formula
- | (K_NOT | REGEX_EXCLAMAITON) LEFT_PARENTHESIS atomic_cel_formula RIGHT_PARENTHESIS   # not_event_type_atomic_cel_formula
+ | K_NOT LEFT_PARENTHESIS atomic_cel_formula RIGHT_PARENTHESIS   # not_event_type_atomic_cel_formula
  | cel_formula K_AS event_name                        # as_cel_formula
  | cel_formula PLUS                                   # non_contiguous_iteration_cel_formula
  | cel_formula COLON_PLUS                             # contiguous_iteration_cel_formula
@@ -87,10 +87,10 @@ predicate
  : LEFT_PARENTHESIS predicate RIGHT_PARENTHESIS                                             # par_predicate
  | K_NOT predicate                                                                          # not_predicate
  | math_expr ( LE | LEQ | GE | GEQ | EQ | NEQ) math_expr                                    # inequality_predicate
- | string_literal ( EQ | NEQ ) string_literal_or_regexp                                     # equality_string_predicate
+ | string_literal ( EQ | NEQ ) string_literal                                               # equality_string_predicate
  | predicate K_AND predicate                                                                # and_predicate
  | predicate K_OR predicate                                                                 # or_predicate
- | attribute_name K_LIKE regexp                                                             # regex_predicate
+ | attribute_name K_LIKE string_literal                                                     # regex_predicate
  | attribute_name ( K_IN | K_NOT K_IN ) value_seq                                           # in_predicate
  | math_expr K_IN K_RANGE LEFT_PARENTHESIS math_expr COMMA math_expr RIGHT_PARENTHESIS      # in_range_predicate
  ;
@@ -98,12 +98,6 @@ predicate
 string_literal
  : string
  | attribute_name
- ;
-
-string_literal_or_regexp
- : string
- | attribute_name
- | regexp
  ;
 
 math_expr
@@ -248,103 +242,3 @@ keyword
  | K_WHERE
  | K_WITHIN
  ;
-
-// regexp parser
-regexp
- : '<<' regexp_alternation '>>'
- ;
- 
-regexp_alternation
- : regexp_exp ( '|' regexp_exp )*
- ;
- 
-regexp_exp
- : regexp_element+
- ;
- 
-regexp_element
- : regexp_group quantifier?
- ;
- 
-regexp_group
- : parenthesis
- | atom
- ;
- 
-parenthesis
- : REGEX_L_PAR regexp_alternation REGEX_R_PAR
- ;
- 
-quantifier: REGEX_QUESTION | REGEX_PLUS | REGEX_STAR | REGEX_L_CURLY quantity REGEX_R_CURLY;
-quantity: quantExact | quantRange | quantMin | quantMax;
-quantExact: regexp_number;
-quantRange: regexp_number REGEX_COMMA regexp_number;
-quantMin: regexp_number REGEX_COMMA;
-quantMax: REGEX_COMMA regexp_number;
- 
-atom: characterClass | sharedAtom | literal;
- 
-characterClass: REGEX_L_BRACK '^'? ccAtom+ REGEX_R_BRACK;
- 
-ccAtom
- : ccRange
- | sharedAtom
- | ccSingle;
- 
-ccRange: ccLiteral REGEX_HYPHEN ccLiteral;
- 
-ccSingle: ccLiteral;
- 
-ccLiteral
- : ccEscapes
- | ccOther;
- 
-ccEscapes: '\\' (REGEX_HAT | REGEX_HYPHEN | REGEX_R_BRACK | '\\');
- 
-ccOther: ~(REGEX_HAT | REGEX_HYPHEN | REGEX_R_BRACK | '\\');
- 
-literal: escapes | REGEX_DOT | other;
- 
-escapes:
-  '\\' (
-    REGEX_L_BRACK
-    | REGEX_R_BRACK
-    | REGEX_L_PAR
-    | REGEX_R_PAR
-    | REGEX_L_CURLY
-    | REGEX_R_CURLY
-    | REGEX_STAR
-    | REGEX_PLUS
-    | REGEX_QUESTION
-    | '|'
-    | '.'
-    | '\\'
-  );
- 
- other:
-  ~(
-    REGEX_L_BRACK
-    | REGEX_R_BRACK
-    | REGEX_L_PAR
-    | REGEX_R_PAR
-    | REGEX_L_CURLY
-    | REGEX_R_CURLY
-    | REGEX_STAR
-    | REGEX_PLUS
-    | REGEX_QUESTION
-    | '|'
-    | '\\'
-  );
- 
-sharedAtom
- : REGEX_DECIMAL_DIGIT
- | REGEX_NOT_DECIMAL_DIGIT
- | REGEX_WHITESPACE
- | REGEX_NOT_WHITESPACE
- | REGEX_ALPHANUMERIC
- | REGEX_NOT_ALPHANUMERIC
- ;
- 
-regexp_number
- : REGEX_DIGIT+
- ; 

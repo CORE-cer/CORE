@@ -14,7 +14,6 @@
 #include "core_server/internal/ceql/value/operations/modulo.hpp"
 #include "core_server/internal/ceql/value/operations/multiplication.hpp"
 #include "core_server/internal/ceql/value/operations/subtraction.hpp"
-#include "core_server/internal/ceql/value/regex_literal.hpp"
 #include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/addition.hpp"
@@ -46,15 +45,6 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
   }
 
   void visit(StringLiteral& literal) override {
-    if constexpr (std::is_same_v<Type, std::string_view>) {
-      std::string_view value = literal.value;
-      math_expr = std::make_unique<CEA::Literal<std::string_view>>(value);
-    } else {
-      assert(false && "Type is not string view");
-    }
-  }
-
-  void visit(RegexLiteral& literal) override {
     if constexpr (std::is_same_v<Type, std::string_view>) {
       std::string_view value = literal.value;
       math_expr = std::make_unique<CEA::Literal<std::string_view>>(value);

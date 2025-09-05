@@ -48,7 +48,8 @@ class AbstractStreamerWebsocket(AbstractStreamer[T]):
     ):
         while True:
             try:
-                async for message in websocket:
+                async with asyncio.timeout(10):
+                    message = await websocket.recv()
                     if not isinstance(message, str):
                         raise ValueError("Received message is not a string")
                     self.process_message(message, stream_id)
