@@ -1,11 +1,13 @@
 #pragma once
 
-#include <re2/re2.h>
+#include "REmatch/REmatch.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
+#include "REmatch/query.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
@@ -15,7 +17,7 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
  private:
   size_t pos_to_compare;
   std::string regex_string;
-  re2::RE2 regex_compiled;
+  REmatch::Query regex_compiled;
 
  public:
   CompareWithRegexStronglyTyped(uint64_t event_type_id,
@@ -24,14 +26,14 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
         regex_string(regex),
-        regex_compiled(regex) {}
+        regex_compiled(std::move(REmatch::reql(regex))) {}
 
   ~CompareWithRegexStronglyTyped() override = default;
 
   bool eval(Types::EventWrapper& event) override {
     const Types::StringValue
       attribute_val = event.get_attribute_at_index<Types::StringValue>(pos_to_compare);
-    return re2::RE2::PartialMatch(attribute_val.val, regex_compiled);
+    return regex_compiled.check(std::string(attribute_val.val));
   }
 
   std::string to_string() const override {
