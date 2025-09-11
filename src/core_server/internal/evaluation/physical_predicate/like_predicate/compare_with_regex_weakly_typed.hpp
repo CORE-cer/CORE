@@ -1,7 +1,5 @@
 #pragma once
 
-#include "REmatch/REmatch.hpp"
-
 #include <cstdint>
 #include <memory>
 #include <set>
@@ -9,6 +7,7 @@
 #include <string_view>
 #include <utility>
 
+#include "REmatch/REmatch.hpp"
 #include "REmatch/query.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
