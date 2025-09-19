@@ -29,11 +29,11 @@ class BoundedWaitTimePolicy : public BasePolicy {
   // Alowed time delta to receive events in the past and future
   std::chrono::duration<int64_t, std::nano> allowed_time_delta;
 
-  // How many events to take the average over when calculating
+  // How many events to take the median over when calculating
   // the delta between time received and system clock
-  int64_t take_n_events_average;
+  int64_t take_n_events_median;
 
-  // Store time deltas while taking the average
+  // Store time deltas while taking the median
   std::vector<std::chrono::duration<int64_t, std::nano>> measured_time_deltas;
 
   // Time difference between received time and system clock
@@ -50,10 +50,10 @@ class BoundedWaitTimePolicy : public BasePolicy {
   BoundedWaitTimePolicy(Catalog& catalog,
                         std::atomic<Types::PortNumber>& next_available_inproc_port,
                         std::chrono::duration<int64_t, std::nano> allowed_time_delta,
-                        int64_t take_n_events_average = 1000)
+                        int64_t take_n_events_median = 1000)
       : BasePolicy(catalog, next_available_inproc_port),
         allowed_time_delta(allowed_time_delta),
-        take_n_events_average(take_n_events_average) {
+        take_n_events_median(take_n_events_median) {
     this->start();
   }
 
@@ -67,7 +67,7 @@ class BoundedWaitTimePolicy : public BasePolicy {
                  event.get_unique_event_type_id(),
                  event.get_primary_time().val);
 
-    if (measured_time_deltas.size() < take_n_events_average) {
+    if (measured_time_deltas.size() < take_n_events_median) {
       int64_t primary_time = event.get_primary_time().val;
 
       measured_time_deltas.push_back(
@@ -75,8 +75,8 @@ class BoundedWaitTimePolicy : public BasePolicy {
         - std::chrono::duration_cast<std::chrono::nanoseconds>(
           event.get_received_time().time_since_epoch()));
 
-      if (take_n_events_average == measured_time_deltas.size()) {
-        int64_t midpoint = take_n_events_average / 2;
+      if (take_n_events_median == measured_time_deltas.size()) {
+        int64_t midpoint = take_n_events_median / 2;
         std::nth_element(measured_time_deltas.begin(),
                          measured_time_deltas.begin() + midpoint,
                          measured_time_deltas.end());
