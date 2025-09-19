@@ -1,42 +1,14 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
+project (core CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
-
-include(FetchContent)
-
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-
-project (core CXX)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-include_directories(src/)
-
-find_package(antlr4-runtime REQUIRED)
-find_package(cereal REQUIRED)
-find_package(cppzmq REQUIRED)
-find_package(gmp REQUIRED)
-find_package(re2 REQUIRED)
-find_package(quill REQUIRED)
-find_package(readerwriterqueue REQUIRED)
-find_package(uwebsockets REQUIRED)
-find_package(pybind11 REQUIRED)
-find_package(argparse REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(glaze REQUIRED)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-endif()
-
-# Profiler
-message("Fetching Tracy")
+include(FetchContent)
 
 # Output what compiler we are using
 message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
@@ -47,12 +19,14 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare (
   rematch
   GIT_REPOSITORY https://github.com/nicobuzeta/REmatch
-  GIT_TAG 129e46e203cf1b1735cedf331e6bcbb5c9549bd1
+  GIT_TAG 1dec5d6d6f4893ae75b91aaa1581d2086a881001
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
+  EXCLUDE_FROM_ALL TRUE
   CMAKE_ARGS
   -DREMATCH_USE_BUNDLED_DEPS=OFF
 )
+
 set(REMATCH_USE_BUNDLED_DEPS OFF CACHE BOOL "Force rematch to use external antlr4-runtime from Conan" FORCE)
 
 FetchContent_MakeAvailable (rematch)
@@ -81,6 +55,20 @@ if (PROFILING)
 else()
   set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
 endif()
+
+find_package(antlr4-runtime REQUIRED)
+find_package(cereal REQUIRED)
+find_package(cppzmq REQUIRED)
+find_package(gmp REQUIRED)
+find_package(re2 REQUIRED)
+find_package(quill REQUIRED)
+find_package(readerwriterqueue REQUIRED)
+find_package(uwebsockets REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(argparse REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(glaze REQUIRED)
+find_package(Threads REQUIRED)
 
 # Target in Makefile for generation of grammar from .g4 file.
 add_custom_target(
@@ -116,25 +104,18 @@ file(GLOB_RECURSE PYBIND_FILES
 # target_link_libraries(pycore PRIVATE pybind11::module)
 
 
-message(STATUS "Building python target")
-# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
-pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
-
-# Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
-
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
-# target_link_libraries(_pycore PRIVATE ${project_LIB})
-install(TARGETS _pycore DESTINATION .)
-
-
 add_library(core STATIC
             ${SHARED_FILES}
             ${CLIENT_FILES}
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze REmatch)
+target_include_directories(core PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze REmatch)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
@@ -231,3 +212,16 @@ target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
 # These tests need their own main (None at the moment)
 #add_executable(custom-main-tests test.cpp test-main.cpp)
 #target_link_libraries(custom-main-tests PRIVATE Catch2::Catch2)
+
+message(STATUS "Building python target")
+# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
+pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+
+# Add compiler and linker flags to pycore
+target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+
+target_link_libraries(_pycore PRIVATE core cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
+# target_link_libraries(_pycore PRIVATE ${project_LIB})
+install(TARGETS _pycore DESTINATION .)
+
+
