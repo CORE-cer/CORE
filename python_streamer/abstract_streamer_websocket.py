@@ -46,13 +46,19 @@ class AbstractStreamerWebsocket(AbstractStreamer[T]):
     async def receive_loop(
         self, websocket: websockets.ClientConnection, stream_id: int
     ):
+        process_message_tasks = set()
         while True:
             try:
                 async with asyncio.timeout(10):
                     message = await websocket.recv()
                     if not isinstance(message, str):
                         raise ValueError("Received message is not a string")
-                    self.process_message(message, stream_id)
+                    task = asyncio.create_task(
+                        self.process_message_no_error(message, stream_id)
+                    )
+                    process_message_tasks.add(task)
+                    task.add_done_callback(process_message_tasks.discard)
+                    print(len(process_message_tasks), " messages being processed")
 
             except KeyboardInterrupt as e:
                 raise e
@@ -61,3 +67,10 @@ class AbstractStreamerWebsocket(AbstractStreamer[T]):
             except Exception as e:
                 print("Error parsing message, skipping.. ", e)
                 continue
+
+    async def process_message_no_error(self, message: str, stream_id: int):
+        try:
+            await self.process_message(message, stream_id)
+        except Exception as e:
+            print(f"Error processing message, skipping.. {e}. This should not happen.")
+            return

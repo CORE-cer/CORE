@@ -52,7 +52,7 @@ class TickerStreamer(AbstractStreamerWebsocket[TickerModel]):
 
         return event_id
 
-    def create_event(self, model: TickerModel):
+    async def create_event(self, model: TickerModel):
         product_id = _pycore.PyStringValue(model.product_id)
         price = _pycore.PyDoubleValue(model.price)
         open_24h = _pycore.PyDoubleValue(model.open_24h)

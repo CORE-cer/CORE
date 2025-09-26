@@ -72,13 +72,13 @@ class AbstractStreamer(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def create_event(self, model: T) -> Any:
+    async def create_event(self, model: T) -> Any:
         """
         Abstract method to create PyEvent from a model.
         """
         pass
 
-    def process_message(self, message: str, stream_id: int) -> None:
+    async def process_message(self, message: str, stream_id: int) -> None:
         """
         Process a message. This method can be overridden by subclasses
         to implement specific message processing logic.
@@ -89,7 +89,7 @@ class AbstractStreamer(ABC, Generic[T]):
         # event_id = self.get_event_id_from_model(model)
         # print(f"Processing message in {self.name}: {message}")
         # print(f"Event ID: {event_id}, Model: {model}")
-        event = self.create_event(model)
+        event = await self.create_event(model)
         self.py_streamer.send_stream(stream_id, event)
         # print("Sent event to streamer")
 

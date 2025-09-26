@@ -194,7 +194,7 @@ class CreatePostStreamerOffline(AbstractStreamerOffline[CommitWrapperEventModel]
 
         return attributes(model)
 
-    def create_event(self, model: CommitWrapperEventModel):
+    async def create_event(self, model: CommitWrapperEventModel):
         attributes = self.common_event_attributes(model)
 
         event_attributes = self.get_event_attributes(model)

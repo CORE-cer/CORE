@@ -1,9 +1,35 @@
 import json
 from typing import Optional, final
 
+import aiohttp
+from aiolimiter import AsyncLimiter
+from async_lru import alru_cache
+
 import _pycore
 from abstract_streamer_websocket import AbstractStreamerWebsocket
 from bluesky.models.commit import CommitWrapperEventModel
+
+rate_limit = AsyncLimiter(100, 10)
+
+
+@alru_cache(maxsize=None)
+async def get_user_handle(did: str):
+    url = f"https://bsky.social/xrpc/com.atproto.repo.describeRepo?repo={did}"
+
+    user_handle: str
+
+    async with rate_limit:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    user_handle = data.get("handle", "unknown")
+                else:
+                    print(response.status, await response.text())
+                    print(response.headers)
+                    user_handle = "unknown"
+
+    return user_handle
 
 
 @final
@@ -11,6 +37,9 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
     # N_CACHED = 200_000
     # cached_models: List[CommitWrapperEventModel] = []
     # pbar: tqdm = tqdm(total=N_CACHED)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def name(self) -> str:
@@ -28,6 +57,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
                 cid: string,
                 operation: string,
                 record_type: string,
+                user_handle: string,
                 langs: string,
                 text: string
             },
@@ -39,6 +69,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
                 cid: string,
                 operation: string,
                 record_type: string,
+                user_handle: string,
                 subject: string
             },
             EVENT CreateLike {
@@ -49,6 +80,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
                 cid: string,
                 operation: string,
                 record_type: string,
+                user_handle: string,
                 subject_cid: string,
                 subject_uri: string
             },
@@ -60,6 +92,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
                 cid: string,
                 operation: string,
                 record_type: string,
+                user_handle: string,
                 subject_cid: string,
                 subject_uri: string
             }
@@ -190,8 +223,20 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
 
         return attributes(model)
 
-    def create_event(self, model: CommitWrapperEventModel):
+    async def get_user_handle_attribute(self, did: str):
+        user_handle = await get_user_handle(did)
+        print(get_user_handle.cache_info())
+        # user_handle = "unknown"
+        print("User handle for DID", did, "is", user_handle)
+        return _pycore.PyStringValue(user_handle)
+
+    async def create_event(self, model: CommitWrapperEventModel):
+        # print("Creating event for model:", model)
         attributes = self.common_event_attributes(model)
+
+        user_handle = await self.get_user_handle_attribute(model.did)
+
+        attributes.append(user_handle)
 
         event_attributes = self.get_event_attributes(model)
 
