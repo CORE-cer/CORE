@@ -39,7 +39,7 @@ class AbstractStreamerWebsocket(AbstractStreamer[T]):
 
             except KeyboardInterrupt as e:
                 raise e
-            except websockets.exceptions.WebSocketException as e:
+            except (websockets.exceptions.WebSocketException, TimeoutError) as e:
                 print("Connection exception, retrying..: ", e)
                 await asyncio.sleep(1)
 
