@@ -125,7 +125,8 @@ class EventWrapper {
     return static_cast<const T&>(*(event->attributes)[attribute_index]);
   }
 
-  const std::unique_ptr<Types::Value> get_attribute_clone_at_index(std::size_t attribute_index) {
+  const std::unique_ptr<Types::Value>
+  get_attribute_clone_at_index(std::size_t attribute_index) {
     LOG_TRACE_L3(logger,
                  "Getting attribute clone at index {} from EventWrapper with id {}",
                  attribute_index,

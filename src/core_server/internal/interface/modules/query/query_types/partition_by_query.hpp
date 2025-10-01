@@ -34,16 +34,16 @@
 namespace CORE::Internal::Interface::Module::Query {
 class PartitionByQuery : public GenericQuery {
   struct TupleValuesKey {
-    std::vector<std::unique_ptr<const Types::Value>> attribute_values {};
+    std::vector<std::unique_ptr<const Types::Value>> attribute_values{};
 
     TupleValuesKey(std::vector<std::unique_ptr<const Types::Value>>&& attribute_values)
         : attribute_values(std::move(attribute_values)) {}
 
-    TupleValuesKey(std::vector<std::unique_ptr<const Types::Value>>& attribute_values)
-    {
+    TupleValuesKey(std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
       attribute_values.reserve(attribute_values.size());
       for (const auto& val : attribute_values) {
-        this->attribute_values.push_back(std::unique_ptr<const Types::Value>(val->clone()));
+        this->attribute_values.push_back(
+          std::unique_ptr<const Types::Value>(val->clone()));
       }
     }
 
@@ -58,8 +58,7 @@ class PartitionByQuery : public GenericQuery {
 
   // https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key/12996028#12996028
   struct ValueVectorHash {
-    std::size_t
-    operator()(const TupleValuesKey& tuple_values_key) const {
+    std::size_t operator()(const TupleValuesKey& tuple_values_key) const {
       std::size_t seed = tuple_values_key.attribute_values.size();
       for (const auto& val : tuple_values_key.attribute_values) {
         // Combine the hash of the current attribute value with the seed
