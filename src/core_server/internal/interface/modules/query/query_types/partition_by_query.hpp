@@ -41,15 +41,6 @@ class PartitionByQuery : public GenericQuery {
       std::vector<std::unique_ptr<const Types::Value>>&& attribute_values)
         : attribute_values(std::move(attribute_values)) {}
 
-    explicit TupleValuesKey(
-      const std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
-      this->attribute_values.reserve(attribute_values.size());
-      for (const auto& val : attribute_values) {
-        this->attribute_values.push_back(
-          std::unique_ptr<const Types::Value>(val->clone()));
-      }
-    }
-
     bool operator==(const TupleValuesKey& other) const {
       if (attribute_values.size() != other.attribute_values.size()) return false;
       for (size_t i = 0; i < attribute_values.size(); i++) {
@@ -184,14 +175,14 @@ class PartitionByQuery : public GenericQuery {
       tuple_values.emplace_back(std::move(value));
     }
 
-    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(
-          TupleValuesKey{tuple_values});
+    TupleValuesKey tuple_values_key(std::move(tuple_values));
+    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values_key);
         evaluator_it != partition_by_attrs_to_evaluator_idx.end()) [[likely]] {
       return evaluator_it->second;
     } else {
       return partition_by_attrs_to_evaluator_idx
         .emplace(std::piecewise_construct,
-                 std::forward_as_tuple(std::move(tuple_values)),
+                 std::forward_as_tuple(std::move(tuple_values_key)),
                  std::forward_as_tuple(partition_by_attrs_to_evaluator_idx.size()))
         .first->second;
     }
