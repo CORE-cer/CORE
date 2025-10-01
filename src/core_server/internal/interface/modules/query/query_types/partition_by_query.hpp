@@ -34,12 +34,15 @@
 namespace CORE::Internal::Interface::Module::Query {
 class PartitionByQuery : public GenericQuery {
   struct TupleValuesKey {
+    // TODO: optimize memory usage here
     std::vector<std::unique_ptr<const Types::Value>> attribute_values{};
 
-    TupleValuesKey(std::vector<std::unique_ptr<const Types::Value>>&& attribute_values)
+    explicit TupleValuesKey(
+      std::vector<std::unique_ptr<const Types::Value>>&& attribute_values)
         : attribute_values(std::move(attribute_values)) {}
 
-    TupleValuesKey(std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
+    explicit TupleValuesKey(
+      std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
       attribute_values.reserve(attribute_values.size());
       for (const auto& val : attribute_values) {
         this->attribute_values.push_back(
@@ -56,13 +59,15 @@ class PartitionByQuery : public GenericQuery {
     }
   };
 
-  // https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key/12996028#12996028
   struct ValueVectorHash {
-    std::size_t operator()(const TupleValuesKey& tuple_values_key) const {
+    std::size_t operator()(const TupleValuesKey& tuple_values_key) const noexcept {
       std::size_t seed = tuple_values_key.attribute_values.size();
       for (const auto& val : tuple_values_key.attribute_values) {
-        // Combine the hash of the current attribute value with the seed
-        seed ^= std::hash<std::string>()(val->to_string()) + 0x9e3779b9 + (seed << 6)
+        // Mix type id
+        seed ^= std::hash<std::string>{}(val->get_type()) + 0x9e3779b9 + (seed << 6)
+                + (seed >> 2);
+        // Mix textual form
+        seed ^= std::hash<std::string>{}(val->to_string()) + 0x9e3779b9 + (seed << 6)
                 + (seed >> 2);
       }
       return seed;
@@ -179,7 +184,8 @@ class PartitionByQuery : public GenericQuery {
       tuple_values.emplace_back(std::move(value));
     }
 
-    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values);
+    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(
+          TupleValuesKey{tuple_values});
         evaluator_it != partition_by_attrs_to_evaluator_idx.end()) [[likely]] {
       return evaluator_it->second;
     } else {
