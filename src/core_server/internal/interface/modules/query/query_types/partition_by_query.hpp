@@ -43,7 +43,7 @@ class PartitionByQuery : public GenericQuery {
 
     explicit TupleValuesKey(
       std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
-      attribute_values.reserve(attribute_values.size());
+      this->attribute_values.reserve(attribute_values.size());
       for (const auto& val : attribute_values) {
         this->attribute_values.push_back(
           std::unique_ptr<const Types::Value>(val->clone()));
