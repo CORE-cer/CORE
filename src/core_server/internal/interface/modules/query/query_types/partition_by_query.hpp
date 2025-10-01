@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,21 +33,35 @@
 
 namespace CORE::Internal::Interface::Module::Query {
 class PartitionByQuery : public GenericQuery {
-  // https://stackoverflow.com/questions/664014/what-integer-hash-function-are-good-that-accepts-an-integer-hash-key/12996028#12996028
-  struct VectorHash {
-    std::size_t operator()(const std::vector<uint64_t> vec) const noexcept {
-      std::size_t seed = vec.size();
-      for (const auto& x : vec) {
-        seed ^= hash(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  struct TupleValuesKey {
+    // TODO: optimize memory usage here
+    std::vector<std::unique_ptr<const Types::Value>> attribute_values{};
+
+    explicit TupleValuesKey(
+      std::vector<std::unique_ptr<const Types::Value>>&& attribute_values)
+        : attribute_values(std::move(attribute_values)) {}
+
+    bool operator==(const TupleValuesKey& other) const {
+      if (attribute_values.size() != other.attribute_values.size()) return false;
+      for (size_t i = 0; i < attribute_values.size(); i++) {
+        if (*(attribute_values[i]) != *(other.attribute_values[i])) return false;
+      }
+      return true;
+    }
+  };
+
+  struct ValueVectorHash {
+    std::size_t operator()(const TupleValuesKey& tuple_values_key) const noexcept {
+      std::size_t seed = tuple_values_key.attribute_values.size();
+      for (const auto& val : tuple_values_key.attribute_values) {
+        // Mix type id
+        seed ^= std::hash<std::string>{}(val->get_type()) + 0x9e3779b9 + (seed << 6)
+                + (seed >> 2);
+        // Mix textual form
+        seed ^= std::hash<std::string>{}(val->to_string()) + 0x9e3779b9 + (seed << 6)
+                + (seed >> 2);
       }
       return seed;
-    }
-
-    uint64_t hash(uint64_t x) const noexcept {
-      x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
-      x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
-      x = x ^ (x >> 31);
-      return x;
     }
   };
 
@@ -54,7 +69,7 @@ class PartitionByQuery : public GenericQuery {
 
   std::optional<CEQL::Query> query;
   std::unique_ptr<DynamicEvaluator> evaluator;
-  std::unordered_map<std::vector<uint64_t>, size_t, VectorHash>
+  std::unordered_map<TupleValuesKey, size_t, ValueVectorHash>
     partition_by_attrs_to_evaluator_idx;
 
   // Use optional to show that event type has already been processed and should not be consumed by any evaluator
@@ -152,21 +167,22 @@ class PartitionByQuery : public GenericQuery {
   size_t
   find_or_create_evaluator_index_from_tuple_indexes(Types::EventWrapper& event,
                                                     std::vector<uint64_t>& tuple_indexes) {
-    std::vector<uint64_t> tuple_values = {};
+    std::vector<std::unique_ptr<const Types::Value>> tuple_values = {};
     tuple_values.reserve(tuple_indexes.size());
 
     for (const auto& tuple_index : tuple_indexes) {
-      auto value = event.get_attribute_at_index<Types::IntValue>(tuple_index);
-      tuple_values.emplace_back(value.val);
+      auto value = event.get_attribute_clone_at_index(tuple_index);
+      tuple_values.emplace_back(std::move(value));
     }
 
-    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values);
+    TupleValuesKey tuple_values_key(std::move(tuple_values));
+    if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values_key);
         evaluator_it != partition_by_attrs_to_evaluator_idx.end()) [[likely]] {
       return evaluator_it->second;
     } else {
       return partition_by_attrs_to_evaluator_idx
         .emplace(std::piecewise_construct,
-                 std::forward_as_tuple(tuple_values),
+                 std::forward_as_tuple(std::move(tuple_values_key)),
                  std::forward_as_tuple(partition_by_attrs_to_evaluator_idx.size()))
         .first->second;
     }
