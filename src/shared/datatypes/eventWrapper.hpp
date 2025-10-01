@@ -125,6 +125,18 @@ class EventWrapper {
     return static_cast<const T&>(*(event->attributes)[attribute_index]);
   }
 
+  const std::unique_ptr<Types::Value> get_attribute_clone_at_index(std::size_t attribute_index) {
+    LOG_TRACE_L3(logger,
+                 "Getting attribute clone at index {} from EventWrapper with id {}",
+                 attribute_index,
+                 id);
+    assert(!moved);
+    assert(attribute_index < event->attributes.size());
+    const Types::Value& val = *(event->attributes)[attribute_index];
+
+    return val.clone();
+  }
+
   std::chrono::time_point<ClockType> get_received_time() const {
     LOG_TRACE_L3(logger, "Getting received time from EventWrapper with id {}", id);
     assert(!moved);
