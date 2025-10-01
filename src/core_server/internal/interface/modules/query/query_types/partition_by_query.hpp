@@ -42,7 +42,7 @@ class PartitionByQuery : public GenericQuery {
         : attribute_values(std::move(attribute_values)) {}
 
     explicit TupleValuesKey(
-      std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
+      const std::vector<std::unique_ptr<const Types::Value>>& attribute_values) {
       this->attribute_values.reserve(attribute_values.size());
       for (const auto& val : attribute_values) {
         this->attribute_values.push_back(
