@@ -6,7 +6,6 @@
 #include <cassert>
 #include <chrono>  // NOLINT
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -89,9 +88,7 @@ class Evaluator {
         event_time_of_expiration(event_time_of_expiration),
         tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
-        enumeration_limit(enumeration_limit) {
-    std::cout << "Making evaluator with time window " << time_window << std::endl;
-  }
+        enumeration_limit(enumeration_limit) {}
 
   Evaluator(CEA::DetCEA& cea,
             const PredicateEvaluator& tuple_evaluator,
@@ -105,9 +102,7 @@ class Evaluator {
         event_time_of_expiration(event_time_of_expiration),
         tecs(std::make_shared<tECS::tECS>(event_time_of_expiration)),
         consumption_policy(consumption_policy),
-        enumeration_limit(enumeration_limit) {
-    std::cout << "Making evaluator with time window " << time_window << std::endl;
-  }
+        enumeration_limit(enumeration_limit) {}
 
   std::optional<tECS::Enumerator>
   next(Types::EventWrapper&& event, uint64_t current_time) {
