@@ -15,6 +15,10 @@ struct Value {
   virtual std::string to_string() const = 0;
   virtual std::string to_json() const = 0;
   virtual std::string get_type() const = 0;
+
+  virtual bool operator==(const Value& other) const {
+    return this->get_type() == other.get_type() && this->to_string() == other.to_string();
+  }
 };
 
 struct StringValue final : public Value {
