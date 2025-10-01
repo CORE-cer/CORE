@@ -16,9 +16,7 @@ struct Value {
   virtual std::string to_json() const = 0;
   virtual std::string get_type() const = 0;
 
-  virtual bool operator==(const Value& other) const {
-    return this->get_type() == other.get_type() && this->to_string() == other.to_string();
-  }
+  virtual bool operator==(const Value& other) const = 0;
 };
 
 struct StringValue final : public Value {
@@ -152,6 +150,11 @@ struct StringValue final : public Value {
 
   std::string get_type() const override { return "StringValue"; }
 
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const StringValue*>(&other);
+    return other_ptr != nullptr && this->val == other_ptr->val;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(val);
@@ -181,6 +184,11 @@ struct IntValue final : public Value {
 
   std::string get_type() const override { return "IntValue"; }
 
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const IntValue*>(&other);
+    return other_ptr != nullptr && this->val == other_ptr->val;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(val);
@@ -205,6 +213,11 @@ struct DoubleValue final : public Value {
   std::string to_json() const override { return std::to_string(val); }
 
   std::string get_type() const override { return "DoubleValue"; }
+
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const DoubleValue*>(&other);
+    return other_ptr != nullptr && this->val == other_ptr->val;
+  }
 
   template <class Archive>
   void serialize(Archive& archive) {
@@ -231,6 +244,11 @@ struct BoolValue final : public Value {
 
   std::string get_type() const override { return "BoolValue"; }
 
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const BoolValue*>(&other);
+    return other_ptr != nullptr && this->val == other_ptr->val;
+  }
+
   template <class Archive>
   void serialize(Archive& archive) {
     archive(val);
@@ -255,6 +273,11 @@ struct DateValue final : public Value {
   std::string to_json() const override { return std::to_string(val); }
 
   std::string get_type() const override { return "DateValue"; }
+
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const DateValue*>(&other);
+    return other_ptr != nullptr && this->val == other_ptr->val;
+  }
 
   template <class Archive>
   void serialize(Archive& archive) {
