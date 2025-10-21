@@ -1,5 +1,7 @@
 import json
-from typing import Optional, final
+from typing import List, Optional, final
+
+from tqdm import tqdm
 
 import _pycore
 from abstract_streamer_websocket import AbstractStreamerWebsocket
@@ -8,9 +10,9 @@ from bluesky.models.commit import CommitWrapperEventModel
 
 @final
 class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
-    # N_CACHED = 200_000
-    # cached_models: List[CommitWrapperEventModel] = []
-    # pbar: tqdm = tqdm(total=N_CACHED)
+    N_CACHED = 20_000
+    cached_models: List[CommitWrapperEventModel] = []
+    pbar: tqdm = tqdm(total=N_CACHED)
 
     @property
     def name(self) -> str:
@@ -203,18 +205,18 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
 
         event = _pycore.PyEvent(event_id, attributes, time)
 
-        # self.cached_models.append(model)
+        self.cached_models.append(model)
 
-        # self.pbar.update(1)
-        # if len(self.cached_models) % self.N_CACHED == 0:
-        #     print("Clearing cached models")
-        #     model_jsons = [
-        #         cached_model.model_dump_json() for cached_model in self.cached_models
-        #     ]
-        #     with open("bluesky_cached_models.json", "w") as f:
-        #         f.write("[\n")
-        #         f.write(",\n".join(model_jsons))
-        #         f.write("\n]")
-        #     self.pbar.reset()
+        self.pbar.update(1)
+        if len(self.cached_models) % self.N_CACHED == 0:
+            print("Clearing cached models")
+            model_jsons = [
+                cached_model.model_dump_json() for cached_model in self.cached_models
+            ]
+            with open("bluesky_cached_models.json", "w") as f:
+                f.write("[\n")
+                f.write(",\n".join(model_jsons))
+                f.write("\n]")
+            self.pbar.reset()
 
         return event
