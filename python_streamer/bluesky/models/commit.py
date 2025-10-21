@@ -63,3 +63,6 @@ class CommitWrapperEventModel(BaseModel):
     kind: Literal["commit"]
     time_us: int
     commit: CommitEventModel
+    received_time: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
+    )
