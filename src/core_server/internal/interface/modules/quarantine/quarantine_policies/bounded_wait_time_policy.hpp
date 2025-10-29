@@ -34,8 +34,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
   // the delta between time received and system clock
   int64_t take_n_events_median;
   int64_t events_received = 0;
-  int64_t events_accepted = 0;
-  int64_t events_added_to_send_queue = 0;
 
   // Store time deltas while taking the median
   std::vector<std::chrono::duration<int64_t, std::nano>> measured_time_deltas;
@@ -93,6 +91,13 @@ class BoundedWaitTimePolicy : public BasePolicy {
                  time_received_system_clock_delta.value().count());
       }
 
+      LOG_TRACE_L3(logger,
+                   "Dropping event with id {} and time {} in "
+                   "BoundedWaitTimePolicy::receive_event due to median calculation. "
+                   "Event id within quarantiner {}",
+                   event.get_unique_event_type_id(),
+                   event.get_primary_time().val,
+                   events_received - 1);
       return;
     }
 
@@ -120,25 +125,25 @@ class BoundedWaitTimePolicy : public BasePolicy {
 
     if (!inside_bounds) {
       LOG_DEBUG(logger,
-                  "Dropping event with id {} and time {} in "
-                  "BoundedWaitTimePolicy::receive_event due to time being outside "
-                  "allowed "
-                  "delta"
-                  " unique_id {}",
-                  event.get_unique_event_type_id(),
-                  event.get_primary_time().val,
-                  events_received - 1);
-      return;
-    }
-    LOG_TRACE_L3(logger,
-                "Not dropping event with id {} and time {} in "
+                "Dropping event with id {} and time {} in "
                 "BoundedWaitTimePolicy::receive_event due to time being outside "
                 "allowed "
-                "delta"
-                " unique_id {}",
+                "delta. "
+                "Event id within quarantiner {}",
                 event.get_unique_event_type_id(),
                 event.get_primary_time().val,
                 events_received - 1);
+      return;
+    }
+    LOG_TRACE_L3(logger,
+                 "Not dropping event with id {} and time {} in "
+                 "BoundedWaitTimePolicy::receive_event due to time being outside "
+                 "allowed "
+                 "delta. "
+                 "Event id within quarantiner {}",
+                 event.get_unique_event_type_id(),
+                 event.get_primary_time().val,
+                 events_received - 1);
 
     std::lock_guard<std::mutex> lock(events_lock);
     [[maybe_unused]] std::size_t events_size_before = events.size();
@@ -146,7 +151,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
     [[maybe_unused]] std::size_t events_size_after = events.size();
     assert(events_size_after == events_size_before + 1
            && "Event was not added to events in BoundedWaitTimePolicy::receive_event");
-    events_accepted++;
   }
 
  protected:
@@ -191,9 +195,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
         auto internal_node = events.extract(iter++);
         last_time_sent = internal_node.value().get_primary_time();
         this->send_event_queue.enqueue(std::move(internal_node.value()));
-        LOG_WARNING(logger,
-                    "After this event, total events added to send queue is {}",
-                    ++events_added_to_send_queue);
       } else {
         // If we couldn't remove the first event, stop trying
         return;
@@ -203,13 +204,9 @@ class BoundedWaitTimePolicy : public BasePolicy {
 
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(events_lock);
-    LOG_WARNING(logger, "force adding tuples");
     for (auto iter = events.begin(); iter != events.end();) {
       auto internal_node = events.extract(iter++);
       this->send_event_queue.enqueue(std::move(internal_node.value()));
-      LOG_WARNING(logger,
-                  "After this event, total events added to send queue is {}",
-                  ++events_added_to_send_queue);
     }
   }
 };
