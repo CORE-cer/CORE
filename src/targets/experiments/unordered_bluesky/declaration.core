@@ -1,0 +1,45 @@
+CREATE STREAM Bluesky {
+    EVENT CreatePost {
+        did: string,
+        kind: string,
+        time: primary_time,
+        time_str: string,
+        cid: string,
+        operation: string,
+        record_type: string,
+        langs: string,
+        text: string
+    },
+    EVENT CreateFollow {
+        did: string,
+        kind: string,
+        time: primary_time,
+        time_str: string,
+        cid: string,
+        operation: string,
+        record_type: string,
+        subject: string
+    },
+    EVENT CreateLike {
+        did: string,
+        kind: string,
+        time: primary_time,
+        time_str: string,
+        cid: string,
+        operation: string,
+        record_type: string,
+        subject_cid: string,
+        subject_uri: string
+    },
+    EVENT CreateRepost {
+        did: string,
+        kind: string,
+        time: primary_time,
+        time_str: string,
+        cid: string,
+        operation: string,
+        record_type: string,
+        subject_cid: string,
+        subject_uri: string
+    }
+}

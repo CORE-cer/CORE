@@ -1,8 +1,11 @@
+#include <chrono>
+#include <cstddef>
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <thread>
 #include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
@@ -38,8 +41,11 @@ int main(int argc, char** argv) {
     std::cout << "Query: " << query_string << std::endl;
 
     client.add_query(std::move(query_string));
-    std::vector<Types::Event> events = std::move(
-      stream_info.get_events_from_csv(server.get_server_config().get_csv_data_path()));
+    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>> events_and_times = stream_info.get_events_and_times_from_csv(
+     server.get_server_config().get_csv_data_path());
+    std::vector<Types::Event> events = std::move(events_and_times.first);
+    std::vector<std::chrono::nanoseconds> times = std::move(events_and_times.second);
+
     std::vector<std::shared_ptr<Types::Event>> events_to_send;
     for (Types::Event event : events) {
       events_to_send.push_back(std::make_shared<Types::Event>(event));
@@ -47,12 +53,14 @@ int main(int argc, char** argv) {
 
     std::cout << "Read events " << events.size() << std::endl;
     FrameMark;
-
-    // for (Types::Event event_to_send : reader.events) {
-    //   ZoneScopedN("main::send_event");
-    //   server.receive_stream({0, {event_to_send}});
-    // }
-    server.receive_stream({0, std::move(events_to_send)});
+    
+    for (size_t i = 0; i < events_to_send.size(); i++) {
+      ZoneScopedN("main::send_event");
+      if (i < times.size() && times[i].count() > 0) {
+        std::this_thread::sleep_for(times[i]);
+      }
+      server.receive_stream({0, {events_to_send[i]}});
+    }
 
     return 0;
   }
