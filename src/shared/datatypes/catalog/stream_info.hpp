@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -31,6 +32,7 @@ struct StreamInfo {
 
    public:
     std::vector<Types::Event> events;
+    std::vector<std::chrono::nanoseconds> times;
 
     DataReader(std::string csv_path, std::vector<EventInfo>& events_info)
         : csv_path(csv_path), events_info(events_info) {
@@ -43,6 +45,7 @@ struct StreamInfo {
         event_names_to_index[event_info.name] = event_info.id;
         double number_lines = static_cast<double>(number_of_lines());
         events.reserve(static_cast<std::size_t>(number_lines * 1.2));
+        times.reserve(static_cast<std::size_t>(number_lines * 1.2));
       }
     }
 
@@ -89,15 +92,30 @@ struct StreamInfo {
       std::ifstream file(csv_path);
       std::string line;
       std::getline(file, line);  // Skip header.
+      int64_t line_number = 1;
       while (std::getline(file, line)) {
         ZoneScopedN("DataReader::read_csv::getline");
         std::stringstream ss(line);
+
+        if (line_number % 2 == 1) {
+          line_number++;
+          if (line.find(',') == std::string::npos) {
+            // Sleep for the specified time.
+            uint64_t wait_time = std::stoull(line);
+            times.emplace_back(wait_time);
+            continue;
+          } else {
+            times.emplace_back(0);
+          }
+        }
+
         std::string token;
         std::vector<std::string> tokens;
         while (std::getline(ss, token, ',')) {
           tokens.push_back(token);
         }
         to_events(tokens);
+        line_number++;
       }
     }
 
@@ -148,13 +166,18 @@ struct StreamInfo {
     return true;
   }
 
-  std::vector<Types::Event> get_events_from_csv(std::string csv_path) {
+  std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>>
+  get_events_and_times_from_csv(std::string csv_path) {
     ZoneScopedN("StreamInfo::get_events_from_csv");
     DataReader data_reader(csv_path, events_info);
     data_reader.read_csv();
     std::vector<Event> events = std::move(data_reader.events);
+    std::vector<std::chrono::nanoseconds> times = std::move(data_reader.times);
     data_reader.events.clear();
-    return std::move(events);
+    data_reader.times.clear();
+    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>>
+      result = std::make_pair(std::move(events), std::move(times));
+    return std::move(result);
   }
 
   template <class Archive>
