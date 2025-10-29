@@ -105,6 +105,7 @@ class ServerConfig {
     query_path = std::move(other.query_path);
     declaration_path = std::move(other.declaration_path);
     csv_data_path = std::move(other.csv_data_path);
+    options_path = std::move(other.options_path);
   }
 
   static ServerConfig from_args(int argc, char** argv) {
