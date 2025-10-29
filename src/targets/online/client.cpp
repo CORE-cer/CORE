@@ -37,8 +37,10 @@ int main(int argc, char** argv) {
 
     Types::PortNumber query_port = client.add_query(std::move(query_string));
 
-    std::vector<Types::Event> events = stream_info.get_events_from_csv(
+    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>> events_and_times = stream_info.get_events_and_times_from_csv(
       server_config.get_csv_data_path());
+
+    std::vector<Types::Event> events = std::move(events_and_times.first);
 
     std::cout << "Read events " << events.size() << std::endl;
 

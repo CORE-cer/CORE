@@ -39,3 +39,4 @@ src/targets/experiments/taxis/benchmark.csv
 events_*
 
 __pycache__
+logs
