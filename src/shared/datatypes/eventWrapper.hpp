@@ -105,6 +105,9 @@ class EventWrapper {
   bool operator<(const EventWrapper& other) const {
     assert(!moved);
     assert(!other.moved);
+    if (primary_time.val == other.primary_time.val) {
+      return received_time < other.received_time;
+    }
     return primary_time.val < other.primary_time.val;
   }
 

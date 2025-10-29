@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -32,6 +33,9 @@ class BoundedWaitTimePolicy : public BasePolicy {
   // How many events to take the median over when calculating
   // the delta between time received and system clock
   int64_t take_n_events_median;
+  int64_t events_received = 0;
+  int64_t events_accepted = 0;
+  int64_t events_added_to_send_queue = 0;
 
   // Store time deltas while taking the median
   std::vector<std::chrono::duration<int64_t, std::nano>> measured_time_deltas;
@@ -60,6 +64,7 @@ class BoundedWaitTimePolicy : public BasePolicy {
   ~BoundedWaitTimePolicy() { this->handle_destruction(); }
 
   void receive_event(Types::EventWrapper&& event) override {
+    events_received++;
     ZoneScopedN("BoundedWaitTimePolicy::receive_event");
     LOG_TRACE_L1(logger,
                  "Received event with id {} and time {} in "
@@ -95,8 +100,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
       time_received_system_clock_delta
       && "time_received_system_clock_delta must be calculated before receiving events");
 
-    std::lock_guard<std::mutex> lock(events_lock);
-
     std::chrono::time_point<std::chrono::system_clock>
       now = std::chrono::system_clock::now();
 
@@ -116,16 +119,34 @@ class BoundedWaitTimePolicy : public BasePolicy {
                           && adjusted_event_time >= lower_acceptable_bound);
 
     if (!inside_bounds) {
-      LOG_WARNING(logger,
+      LOG_DEBUG(logger,
                   "Dropping event with id {} and time {} in "
                   "BoundedWaitTimePolicy::receive_event due to time being outside "
                   "allowed "
-                  "delta",
+                  "delta"
+                  " unique_id {}",
                   event.get_unique_event_type_id(),
-                  event.get_primary_time().val);
+                  event.get_primary_time().val,
+                  events_received - 1);
       return;
     }
+    LOG_TRACE_L3(logger,
+                "Not dropping event with id {} and time {} in "
+                "BoundedWaitTimePolicy::receive_event due to time being outside "
+                "allowed "
+                "delta"
+                " unique_id {}",
+                event.get_unique_event_type_id(),
+                event.get_primary_time().val,
+                events_received - 1);
+
+    std::lock_guard<std::mutex> lock(events_lock);
+    [[maybe_unused]] std::size_t events_size_before = events.size();
     events.insert(std::move(event));
+    [[maybe_unused]] std::size_t events_size_after = events.size();
+    assert(events_size_after == events_size_before + 1
+           && "Event was not added to events in BoundedWaitTimePolicy::receive_event");
+    events_accepted++;
   }
 
  protected:
@@ -136,9 +157,9 @@ class BoundedWaitTimePolicy : public BasePolicy {
     LOG_TRACE_L3(logger,
                  "Trying to add tuples to send queue in "
                  "BoundedWaitTimePolicy::try_add_tuples_to_send");
-    std::lock_guard<std::mutex> lock(events_lock);
     auto now = std::chrono::system_clock::now();
 
+    std::lock_guard<std::mutex> lock(events_lock);
     for (auto iter = events.begin(); iter != events.end();) {
       assert(
         time_received_system_clock_delta
@@ -170,6 +191,9 @@ class BoundedWaitTimePolicy : public BasePolicy {
         auto internal_node = events.extract(iter++);
         last_time_sent = internal_node.value().get_primary_time();
         this->send_event_queue.enqueue(std::move(internal_node.value()));
+        LOG_WARNING(logger,
+                    "After this event, total events added to send queue is {}",
+                    ++events_added_to_send_queue);
       } else {
         // If we couldn't remove the first event, stop trying
         return;
@@ -179,9 +203,13 @@ class BoundedWaitTimePolicy : public BasePolicy {
 
   void force_add_tuples_to_send_queue() override {
     std::lock_guard<std::mutex> lock(events_lock);
+    LOG_WARNING(logger, "force adding tuples");
     for (auto iter = events.begin(); iter != events.end();) {
       auto internal_node = events.extract(iter++);
       this->send_event_queue.enqueue(std::move(internal_node.value()));
+      LOG_WARNING(logger,
+                  "After this event, total events added to send queue is {}",
+                  ++events_added_to_send_queue);
     }
   }
 };
