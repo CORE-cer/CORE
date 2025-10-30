@@ -92,30 +92,31 @@ struct StreamInfo {
       std::ifstream file(csv_path);
       std::string line;
       std::getline(file, line);  // Skip header.
-      int64_t line_number = 1;
+      bool expect_time_line = true;
       while (std::getline(file, line)) {
         ZoneScopedN("DataReader::read_csv::getline");
-        std::stringstream ss(line);
 
-        if (line_number % 2 == 1) {
-          line_number++;
+        if (expect_time_line) {
           if (line.find(',') == std::string::npos) {
             // Sleep for the specified time.
             uint64_t wait_time = std::stoull(line);
             times.emplace_back(wait_time);
+            expect_time_line = false;
             continue;
           } else {
             times.emplace_back(0);
+            expect_time_line = false;
           }
         }
 
+        std::stringstream ss(line);
         std::string token;
         std::vector<std::string> tokens;
         while (std::getline(ss, token, ',')) {
           tokens.push_back(token);
         }
         to_events(tokens);
-        line_number++;
+        expect_time_line = true;
       }
     }
 
@@ -175,9 +176,7 @@ struct StreamInfo {
     std::vector<std::chrono::nanoseconds> times = std::move(data_reader.times);
     data_reader.events.clear();
     data_reader.times.clear();
-    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>>
-      result = std::make_pair(std::move(events), std::move(times));
-    return std::move(result);
+    return std::make_pair(std::move(events), std::move(times));
   }
 
   template <class Archive>

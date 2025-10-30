@@ -21,13 +21,14 @@ declaration=$3
 csv=$4
 expected_output_file=$5
 shift 5
-optional_args="$@"
+optional_args=("$@")
 
 temp_output_file=$(mktemp)
 trap 'rm -f -- "$temp_output_file"' EXIT
 
 # Run the executable with the arguments
-$executable -q "$query_file" -d "$declaration" -c "$csv" $optional_args > $temp_output_file
+$executable -q "$query_file" -d "$declaration" -c "$csv" "${optional_args[@]}" > "$temp_output_file"
+
 executable_result=$?
 
 if [ $executable_result -ne 0 ]; then
@@ -37,11 +38,13 @@ if [ $executable_result -ne 0 ]; then
 fi
 
 # Compare the actual output with the expected output
-if diff $temp_output_file $expected_output_file > /dev/null; then
-    echo -e "${GREEN}Output matches expected for $(basename $query_file)${NORMAL_OUTPUT}"
+if diff -q "$temp_output_file" "$expected_output_file" >/dev/null; then
+    echo -e "${GREEN}SUCCESS: $(basename "$query_file") output matches expected output.${NORMAL_OUTPUT}"
     rm -f -- "$temp_output_file"
+    exit 0
 else
-    echo -e "${RED}Output does not match expected for $(basename $query_file)${NORMAL_OUTPUT}"
+    echo -e "${RED}FAILURE: $(basename "$query_file") output does not match expected output.${NORMAL_OUTPUT}"
+    diff "$temp_output_file" "$expected_output_file"
     rm -f -- "$temp_output_file"
     exit 1
 fi

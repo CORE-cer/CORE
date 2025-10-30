@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Work at the root directory
-cd "$(dirname "$0")"
-cd ../../..
+cd "$(dirname "$0")" || exit
+cd ../../.. || exit
 
 export BENCHMARK_BASE_DIR="src/targets/experiments/smart_homes"
 export BENCHMARK_CSV="smart_homes_data.csv"

@@ -62,13 +62,14 @@ class BoundedWaitTimePolicy : public BasePolicy {
   ~BoundedWaitTimePolicy() { this->handle_destruction(); }
 
   void receive_event(Types::EventWrapper&& event) override {
-    events_received++;
+    std::lock_guard<std::mutex> lock(events_lock);
     ZoneScopedN("BoundedWaitTimePolicy::receive_event");
     LOG_TRACE_L1(logger,
                  "Received event with id {} and time {} in "
                  "BoundedWaitTimePolicy::receive_event",
                  event.get_unique_event_type_id(),
                  event.get_primary_time().val);
+    events_received++;
 
     if (measured_time_deltas.size() < take_n_events_median) {
       int64_t primary_time = event.get_primary_time().val;
@@ -137,7 +138,7 @@ class BoundedWaitTimePolicy : public BasePolicy {
     }
     LOG_TRACE_L3(logger,
                  "Not dropping event with id {} and time {} in "
-                 "BoundedWaitTimePolicy::receive_event due to time being outside "
+                 "BoundedWaitTimePolicy::receive_event due to time being inside "
                  "allowed "
                  "delta. "
                  "Event id within quarantiner {}",
@@ -145,7 +146,6 @@ class BoundedWaitTimePolicy : public BasePolicy {
                  event.get_primary_time().val,
                  events_received - 1);
 
-    std::lock_guard<std::mutex> lock(events_lock);
     [[maybe_unused]] std::size_t events_size_before = events.size();
     events.insert(std::move(event));
     [[maybe_unused]] std::size_t events_size_after = events.size();

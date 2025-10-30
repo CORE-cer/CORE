@@ -28,7 +28,7 @@ class EventManager;
 }
 
 namespace CORE::Types {
-[[maybe_unused]] static std::atomic<int> id_counter = 0;
+inline std::atomic<uint64_t> id_counter = 0;
 using ClockType = std::chrono::system_clock;
 template <typename T>
 concept DerivedFromValue = std::is_base_of_v<Types::Value, T>;
