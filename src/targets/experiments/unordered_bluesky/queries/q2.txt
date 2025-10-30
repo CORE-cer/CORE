@@ -1,0 +1,5 @@
+SELECT *
+FROM Bluesky
+WHERE CreatePost : CreatePost : CreatePost
+PARTITION BY [did]
+WITHIN 10 SECONDS

@@ -37,3 +37,7 @@ src/targets/experiments/taxis/benchmark.csv
 .direnv
 
 events_*
+
+__pycache__
+logs
+expected_results/

@@ -8,7 +8,7 @@ from bluesky.models.commit import CommitWrapperEventModel
 
 @final
 class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
-    # N_CACHED = 200_000
+    # N_CACHED = 20_000
     # cached_models: List[CommitWrapperEventModel] = []
     # pbar: tqdm = tqdm(total=N_CACHED)
 
@@ -204,7 +204,7 @@ class CreatePostStreamer(AbstractStreamerWebsocket[CommitWrapperEventModel]):
         event = _pycore.PyEvent(event_id, attributes, time)
 
         # self.cached_models.append(model)
-
+        #
         # self.pbar.update(1)
         # if len(self.cached_models) % self.N_CACHED == 0:
         #     print("Clearing cached models")

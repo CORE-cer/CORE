@@ -2,8 +2,8 @@
 
 # Work at the root directory
 # Should have conanfile.py present there.
-cd "$(dirname "$0")"
-cd ..
+cd "$(dirname "$0")" || exit
+cd .. || exit
 
 for buildType in "Debug" "Release"; do
 
