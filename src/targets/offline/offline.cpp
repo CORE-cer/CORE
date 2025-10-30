@@ -42,8 +42,9 @@ int main(int argc, char** argv) {
     std::cout << "Query: " << query_string << std::endl;
 
     client.add_query(std::move(query_string));
-    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>> events_and_times = stream_info.get_events_and_times_from_csv(
-     server.get_server_config().get_csv_data_path());
+    std::pair<std::vector<Types::Event>, std::vector<std::chrono::nanoseconds>>
+      events_and_times = stream_info.get_events_and_times_from_csv(
+        server.get_server_config().get_csv_data_path());
     std::vector<Types::Event> events = std::move(events_and_times.first);
     std::vector<std::chrono::nanoseconds> times = std::move(events_and_times.second);
 
@@ -53,9 +54,10 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Read events " << events.size() << std::endl;
-    assert(events.size() == times.size() && "Events and times vectors must have the same size");
+    assert(events.size() == times.size()
+           && "Events and times vectors must have the same size");
     FrameMark;
-    
+
     for (size_t i = 0; i < events_to_send.size(); i++) {
       ZoneScopedN("main::send_event");
       if (i < times.size() && times[i].count() > 0) {
