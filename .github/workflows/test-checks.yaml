@@ -354,6 +354,12 @@ jobs:
       - name: run taxi query tests
         run: chmod +x ./scripts/queries/base_queries/build_and_test_taxi_queries.sh && ./scripts/queries/base_queries/build_and_test_taxi_queries.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
 
+      - name: run ordered bluesky query tests
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+
+      - name: run unordered bluesky query tests
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+
       # - name: run tests with address sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
 
