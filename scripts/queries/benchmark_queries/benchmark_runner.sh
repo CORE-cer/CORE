@@ -15,8 +15,8 @@
 # BENCHMARK_CLEANUP_CSV: Clean up CSV after (optional, default: false)
 # BENCHMARK_COMPRESSED_RESULTS: Compressed expected_results to extract (optional)
 
-cd "$(dirname "$0")"
-cd ../../..
+cd "$(dirname "$0")" || exit
+cd ../../.. || exit
 
 source scripts/common.sh
 _setArgs "$@"
@@ -50,6 +50,13 @@ fi
 if [ -n "$BENCHMARK_COMPRESSED_RESULTS" ] && [ ! -d "$BENCHMARK_BASE_DIR/expected_results" ]; then
     echo "Extracting expected results..."
     tar -xf "$BENCHMARK_BASE_DIR/$BENCHMARK_COMPRESSED_RESULTS" --directory "$BENCHMARK_BASE_DIR"
+fi
+
+# Find all queries
+# Validate queries directory exists
+if [ ! -d "$BENCHMARK_BASE_DIR/queries" ]; then
+    echo -e "${RED}Error: Queries directory not found at $BENCHMARK_BASE_DIR/queries${NORMAL_OUTPUT}"
+    exit 1
 fi
 
 # Find all queries
@@ -93,7 +100,11 @@ for query in $queries; do
         fi
 
         time_taken=$(cat "$temp_time_file")
-        total_time=$(echo "$total_time + $time_taken" | bc -l)
+        total_time=$(echo "$total_time + $time_taken" | bc -l) || {
+            echo -e "${RED}Error: Arithmetic calculation failed${NORMAL_OUTPUT}"
+            rm -f -- "$temp_time_file"
+            exit 1
+        }
     done
 
     # Calculate average and write to CSV immediately

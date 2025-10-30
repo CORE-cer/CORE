@@ -1,3 +1,4 @@
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <exception>
@@ -52,6 +53,7 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Read events " << events.size() << std::endl;
+    assert(events.size() == times.size() && "Events and times vectors must have the same size");
     FrameMark;
     
     for (size_t i = 0; i < events_to_send.size(); i++) {

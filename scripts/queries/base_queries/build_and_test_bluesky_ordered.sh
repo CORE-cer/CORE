@@ -2,8 +2,8 @@
 
 # Work at the root directory
 # Should have conanfile.py present there.
-cd "$(dirname "$0")"
-cd ../../..
+cd "$(dirname "$0")" || exit
+cd ../../.. || exit
 
 source scripts/common.sh
 _setArgs "$@"
@@ -30,12 +30,20 @@ for query in $queries; do
     query_file=$(basename "$query")
     scripts/run_single_query_and_check.sh "$executable" "$query" "$base_dir/$declaration" "$base_dir/$csv" "$base_dir/expected_results/$query_file" "-o" "$base_dir/$quarantine_declaration"
     if [ $? -ne 0 ]; then
-        rm -rf $base_dir/expected_results
+        if [ -n "$base_dir" ] && [[ "$base_dir" == "src/targets/experiments/ordered_bluesky" ]]; then
+            rm -rf "$base_dir/expected_results"
+        else
+            echo "Aborting rm -rf: base_dir is not set or is outside the expected directory."
+        fi
         echo -e "${RED}One or more queries did not match the expected results.${NORMAL_OUTPUT}"
         echo -e "${RED}Check if expected_results folder is up-to-date with tar.xz${NORMAL_OUTPUT}"
         exit 1
     fi
 done
 
-rm -rf $base_dir/expected_results
+if [ -n "$base_dir" ] && [[ "$base_dir" == "src/targets/experiments/ordered_bluesky" ]]; then
+    rm -rf "$base_dir/expected_results"
+else
+    echo "Aborting rm -rf: base_dir is not set or is outside the expected directory."
+fi
 echo -e "${GREEN}All queries matched the expected results.${NORMAL_OUTPUT}"

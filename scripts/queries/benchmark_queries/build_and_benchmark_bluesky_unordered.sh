@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Work at the root directory
-cd "$(dirname "$0")"
-cd ../../..
+cd "$(dirname "$0")" || exit
+cd ../../.. || exit
 
 export BENCHMARK_BASE_DIR="src/targets/experiments/unordered_bluesky"
 export BENCHMARK_CSV="bluesky_unordered.corecsv"
