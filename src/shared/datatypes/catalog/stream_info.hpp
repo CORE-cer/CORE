@@ -97,15 +97,14 @@ struct StreamInfo {
         ZoneScopedN("DataReader::read_csv::getline");
 
         if (expect_time_line) {
+          expect_time_line = false;
           if (line.find(',') == std::string::npos) {
             // Sleep for the specified time.
             uint64_t wait_time = std::stoull(line);
             times.emplace_back(wait_time);
-            expect_time_line = false;
             continue;
           } else {
             times.emplace_back(0);
-            expect_time_line = false;
           }
         }
 
