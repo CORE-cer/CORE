@@ -81,23 +81,23 @@ jobs:
         run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
 
       - name: Read CSV
-        id: csv_2
+        id: csv_1
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./src/targets/experiments/stocks/benchmark.csv
+          path: ./src/targets/experiments/stocks/benchmark_Release.csv
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
-        id: csv-table-output_2
+        id: csv-table-output_1
         with:
-          csvinput: ${{ steps.csv_2.outputs.content }}
+          csvinput: ${{ steps.csv_1.outputs.content }}
 
       - uses: mshick/add-pr-comment@v2
         with:
-          message-id: 2
+          message-id: 1
           message: |
             Stocks:
-            ${{steps.csv-table-output_2.outputs.markdown-table}}
+            ${{steps.csv-table-output_1.outputs.markdown-table}}
 
       - name: benchmark unordered stock query
         run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh -b Release
@@ -106,7 +106,7 @@ jobs:
         id: csv_2
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./src/targets/experiments/unordered_stocks/benchmark.csv
+          path: ./src/targets/experiments/unordered_stocks/benchmark_Release.csv
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
@@ -128,7 +128,7 @@ jobs:
         id: csv_3
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./src/targets/experiments/smart_homes/benchmark.csv
+          path: ./src/targets/experiments/smart_homes/benchmark_Release.csv
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
@@ -150,7 +150,7 @@ jobs:
         id: csv_4
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./src/targets/experiments/taxis/benchmark.csv
+          path: ./src/targets/experiments/taxis/benchmark_Release.csv
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
@@ -187,7 +187,7 @@ jobs:
             Ordered Bluesky:
             ${{steps.csv-table-output_5.outputs.markdown-table}}
 
-      - name: benchmark nordered bluesky
+      - name: benchmark unordered bluesky
         run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh -b Release
 
       - name: Read CSV
@@ -198,19 +198,19 @@ jobs:
 
       - name: Create MD
         uses: petems/csv-to-md-table-action@master
-        id: csv-table-output_5
+        id: csv-table-output_6
         with:
-          csvinput: ${{ steps.csv_5.outputs.content }}
+          csvinput: ${{ steps.csv_6.outputs.content }}
 
       - uses: mshick/add-pr-comment@v2
         with:
-          message-id: 5
+          message-id: 6
           message: |
             Unordered Bluesky:
-            ${{steps.csv-table-output_5.outputs.markdown-table}}
+            ${{steps.csv-table-output_6.outputs.markdown-table}}
 
       - uses: actions/upload-artifact@v4
         with:
           name: benchmarks
           path: |
-            src/targets/experiments/*/benchmark.csv
+            src/targets/experiments/*/benchmark_Release.csv
