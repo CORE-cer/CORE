@@ -165,6 +165,50 @@ jobs:
             Taxis:
             ${{steps.csv-table-output_4.outputs.markdown-table}}
 
+      - name: benchmark ordered bluesky
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_ordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_ordered.sh -b Release
+
+      - name: Read CSV
+        id: csv_5
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/ordered_bluesky/benchmark_Release.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output_5
+        with:
+          csvinput: ${{ steps.csv_5.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 5
+          message: |
+            Ordered Bluesky:
+            ${{steps.csv-table-output_5.outputs.markdown-table}}
+
+      - name: benchmark nordered bluesky
+        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh -b Release
+
+      - name: Read CSV
+        id: csv_6
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/targets/experiments/unordered_bluesky/benchmark_Release.csv
+
+      - name: Create MD
+        uses: petems/csv-to-md-table-action@master
+        id: csv-table-output_5
+        with:
+          csvinput: ${{ steps.csv_5.outputs.content }}
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message-id: 5
+          message: |
+            Unordered Bluesky:
+            ${{steps.csv-table-output_5.outputs.markdown-table}}
+
       - uses: actions/upload-artifact@v4
         with:
           name: benchmarks
