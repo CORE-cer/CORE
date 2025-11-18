@@ -333,6 +333,10 @@ class Evaluator {
               enumeration_limit.result_limit};
     }
   }
+
+  bool is_empty() const {
+    return historic_union_list_map.empty() && current_union_list_map.empty();
+  }
 };
 
 }  // namespace CORE::Internal::Evaluation
