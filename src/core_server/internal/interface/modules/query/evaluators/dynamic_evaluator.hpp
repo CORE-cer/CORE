@@ -68,6 +68,18 @@ class DynamicEvaluator : public GenericEvaluator {
     }
   }
 
+  /**
+   * Processes an event through the evaluator at the given index.
+   *
+   * This method manages the lifecycle of evaluators by creating new ones when needed,
+   * cleaning up expired evaluators when the limit is exceeded, and routing events to
+   * the appropriate evaluator instance. When a match is found under ANY consumption
+   * policy, all evaluators are flagged for reset.
+   *
+   * @param event The event to process
+   * @param evaluator_idx Index of the evaluator to use for processing
+   * @return Enumerator if a match is found, otherwise nullopt
+   */
   std::optional<tECS::Enumerator>
   process_event(Types::EventWrapper&& event, size_t evaluator_idx) {
     ZoneScopedN("Interface::DynamicEvaluator::process_event");
@@ -101,6 +113,9 @@ class DynamicEvaluator : public GenericEvaluator {
     return enumerator;
   }
 
+  /**
+   * Cleans up evaluators if the storage exceeds the maximum limit.
+   */
   void cleanup_evaluators_if_necessary(uint64_t current_time) {
     ZoneScopedN("Interface::DynamicEvaluator::cleanup_evaluators_if_necessary");
     std::size_t current_size = evaluators_storage.size();
@@ -157,6 +172,9 @@ class DynamicEvaluator : public GenericEvaluator {
     }
   }
 
+  /**
+   * Routes to the appropriate evaluator creation method based on index state.
+   */
   void create_evaluator_expired_or_new(size_t evaluator_idx) {
     ZoneScopedN("Interface::DynamicEvaluator::create_evaluator");
     if (evaluator_idx < evaluator_idx_to_evaluator.size()) {
@@ -200,7 +218,7 @@ class DynamicEvaluator : public GenericEvaluator {
   }
 
   /**
-   * Creates a new evaluator
+   * Creates a new evaluator instance with the configured parameters.
    */
   std::unique_ptr<Evaluation::Evaluator> create_evaluator(size_t evaluator_idx) {
     std::unique_ptr<Evaluation::Evaluator> evaluator = std::make_unique<
