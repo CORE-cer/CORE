@@ -109,6 +109,9 @@ class DynamicEvaluator : public GenericEvaluator {
       cleanup_out_of_time_window_evaluators(current_time);
     }
 
+    // Update current size after cleanup
+    current_size = evaluators_storage.size();
+
     if (current_size > max_evaluators) {
       LOG_WARNING(this->logger,
                   "Number of evaluators ({}) exceeded maximum allowed ({}). "
