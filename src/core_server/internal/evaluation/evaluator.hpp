@@ -104,6 +104,19 @@ class Evaluator {
         consumption_policy(consumption_policy),
         enumeration_limit(enumeration_limit) {}
 
+  bool is_empty() const {
+    return historic_union_list_map.empty() && current_union_list_map.empty();
+  }
+
+  bool is_time_window_empty(uint64_t current_time) const {
+    assert(current_time >= last_tuple_time);
+    uint64_t expiration_time = current_time < time_window ? 0 : current_time - time_window;
+    if (last_tuple_time < expiration_time) {
+      return true;
+    }
+    return false;
+  }
+
   std::optional<tECS::Enumerator>
   next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
@@ -120,9 +133,8 @@ class Evaluator {
     }
     auto start_time = std::chrono::steady_clock::now();
 #endif
-// If in debug, check tuples are being sent in ascending order.
-#ifdef CORE_DEBUG
-    if (current_time < last_tuple_time) {
+    // Check tuples are being sent in ascending order.
+    if (current_time < last_tuple_time) [[unlikely]] {
       std::string attributes = event.get_event_reference().to_string();
       LOG_CRITICAL(logger,
                    "Received tuple with timestamp {} in Evaluator::next, "
@@ -134,7 +146,6 @@ class Evaluator {
       assert(false && "Received tuple out of order in Evaluator::next");
     }
     last_tuple_time = current_time;
-#endif
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
     LOG_TRACE_L2(logger,
@@ -332,10 +343,6 @@ class Evaluator {
               tecs->time_reservator,
               enumeration_limit.result_limit};
     }
-  }
-
-  bool is_empty() const {
-    return historic_union_list_map.empty() && current_union_list_map.empty();
   }
 };
 
