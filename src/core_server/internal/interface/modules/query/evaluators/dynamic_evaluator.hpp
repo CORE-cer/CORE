@@ -197,8 +197,8 @@ class DynamicEvaluator : public GenericEvaluator {
   }
 
   /**
-  * Creates a new evaluator
-  */
+   * Creates a new evaluator
+   */
   std::unique_ptr<Evaluation::Evaluator> create_evaluator(size_t evaluator_idx) {
     std::unique_ptr<Evaluation::Evaluator> evaluator = std::make_unique<
       Evaluation::Evaluator>(this->cea,
