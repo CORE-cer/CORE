@@ -41,12 +41,17 @@ class DynamicEvaluator : public GenericEvaluator {
                   CEQL::Limit limit)
         : tuple_evaluator(std::move(tuple_evaluator)),
           event_time_of_expiration(event_time_of_expiration),
-          consumption_policy(consumption_policy) {}
+          consumption_policy(consumption_policy),
+          limit(std::move(limit)) {}
   };
 
   EvaluatorArgs evaluator_args;
+
+  // Holds weak pointers to evaluators by their index, these can expire but are recreated on demand
   std::vector<std::weak_ptr<Evaluation::Evaluator>> evaluator_idx_to_evaluator = {};
+  // Holds current active evaluators to manage their lifecycle
   std::list<std::shared_ptr<Evaluation::Evaluator>> evaluators_storage = {};
+
   std::size_t max_evaluators = 1000;
   quill::Logger* logger = nullptr;
 
@@ -63,9 +68,7 @@ class DynamicEvaluator : public GenericEvaluator {
                        event_time_of_expiration,
                        consumption_policy,
                        limit) {
-    if (logger == nullptr) {
-      this->logger = quill::Frontend::get_logger("root");
-    }
+    this->logger = quill::Frontend::get_logger("root");
   }
 
   /**
@@ -196,7 +199,7 @@ class DynamicEvaluator : public GenericEvaluator {
 
     std::unique_ptr<Evaluation::Evaluator> evaluator = create_evaluator(evaluator_idx);
 
-    evaluators_storage.push_back(std::move(evaluator));
+    evaluators_storage.emplace_back(std::move(evaluator));
     evaluator_idx_to_evaluator[evaluator_idx] = evaluators_storage.back();
   }
 
@@ -210,7 +213,7 @@ class DynamicEvaluator : public GenericEvaluator {
 
     std::unique_ptr<Evaluation::Evaluator> evaluator = create_evaluator(evaluator_idx);
 
-    evaluators_storage.push_back(std::move(evaluator));
+    evaluators_storage.emplace_back(std::move(evaluator));
     evaluator_idx_to_evaluator.push_back(evaluators_storage.back());
 
     assert((evaluator_idx_to_evaluator.size() == evaluator_idx + 1)
