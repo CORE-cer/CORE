@@ -138,12 +138,15 @@ class Evaluator {
       std::string attributes = event.get_event_reference().to_string();
       LOG_CRITICAL(logger,
                    "Received tuple with timestamp {} in Evaluator::next, "
-                   "but the last tuple time was {}. Attributes: {}",
+                   "but the last tuple time was {}. Attributes: {}. Ignoring event.",
                    current_time,
                    last_tuple_time,
                    attributes);
+#ifdef CORE_DEBUG
       std::this_thread::sleep_for(std::chrono::nanoseconds(500000000));
       assert(false && "Received tuple out of order in Evaluator::next");
+#endif
+      return {};
     }
     last_tuple_time = current_time;
     // current_time is j in the algorithm.
