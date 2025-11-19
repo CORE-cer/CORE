@@ -68,10 +68,8 @@ class Evaluator {
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
   CEQL::Limit enumeration_limit;
 
-// Only in debug, check tuples are being sent in ascending order.
-#ifdef CORE_DEBUG
+  // Last tuple time seen by the evaluator.
   uint64_t last_tuple_time = 0;
-#endif
 
  public:
   std::atomic<bool> should_reset = false;
