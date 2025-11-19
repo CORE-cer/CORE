@@ -121,7 +121,8 @@ class PartitionByQuery : public GenericQuery {
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
     query.where.formula->accept_visitor(visitor);  // Process WHERE clause
     if (!query.select.is_star) {
-      query.select.formula->accept_visitor(visitor);  // Process SELECT clause if not SELECT *
+      query.select.formula->accept_visitor(
+        visitor);  // Process SELECT clause if not SELECT *
     }
 
     // Stage 4: Determinize the CEA for efficient runtime evaluation
