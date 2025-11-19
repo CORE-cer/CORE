@@ -115,7 +115,7 @@ class DynamicEvaluator : public GenericEvaluator {
                   "Doubling current size to {}",
                   current_size,
                   max_evaluators,
-                  current_size * 2);
+                  max_evaluators * 2);
       max_evaluators *= 2;
     }
     assert(evaluators_storage.size() <= max_evaluators
