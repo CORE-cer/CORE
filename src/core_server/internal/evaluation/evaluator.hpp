@@ -103,7 +103,9 @@ class Evaluator {
         enumeration_limit(enumeration_limit) {}
 
   bool is_empty() const {
-    return historic_union_list_map.empty() && current_union_list_map.empty();
+    assert(historic_ordered_keys.size() == historic_union_list_map.size()
+           && "historic_ordered_keys and historic_union_list_map should be in sync");
+    return historic_ordered_keys.empty();
   }
 
   bool is_time_window_empty(uint64_t current_time) const {

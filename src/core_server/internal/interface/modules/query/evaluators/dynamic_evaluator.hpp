@@ -8,12 +8,13 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <list>
 #include <memory>
 #include <optional>
 #include <tracy/Tracy.hpp>
+#include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "core_server/internal/ceql/query/consume_by.hpp"
 #include "core_server/internal/ceql/query/limit.hpp"
@@ -28,6 +29,42 @@
 
 namespace CORE::Internal::Interface::Module::Query {
 
+struct EvaluatorIndexWrapper {
+  size_t evaluator_idx;
+  std::shared_ptr<Evaluation::Evaluator> evaluator;
+};
+
+struct EvaluatorStorageWrapper {
+  // If newly created evaluator, shared_ptr is non-nullptr and list_position is nullopt
+  std::optional<EvaluatorIndexWrapper> evaluator;
+
+  // If existing evaluator, shared_ptr is nullptr and list_position is non-nullopt
+  std::optional<std::list<EvaluatorIndexWrapper>::iterator> list_position;
+
+  EvaluatorStorageWrapper(EvaluatorIndexWrapper&& evaluator)
+      : evaluator(std::move(evaluator)), list_position(std::nullopt) {}
+
+  EvaluatorStorageWrapper(std::list<EvaluatorIndexWrapper>::iterator list_it)
+      : evaluator(), list_position(list_it) {}
+
+  EvaluatorIndexWrapper& get_evaluator() {
+    if (evaluator.has_value()) {
+      return evaluator.value();
+    } else {
+      assert(list_position.has_value() && "Either evaluator or list position must be set");
+      return *(list_position.value());
+    }
+  }
+};
+
+/**
+ * DynamicEvaluator manages multiple evaluator instances using an LRU cache.
+ *
+ * Thread Safety: This class is NOT thread-safe. All methods must be called from
+ * a single thread. Concurrent access to process_event() or other methods will
+ * result in undefined behavior due to unsynchronized access to internal data
+ * structures (evaluators_storage and value_to_evaluator_list_pos).
+ */
 class DynamicEvaluator : public GenericEvaluator {
   struct EvaluatorArgs {
     Evaluation::PredicateEvaluator tuple_evaluator;
@@ -47,10 +84,11 @@ class DynamicEvaluator : public GenericEvaluator {
 
   EvaluatorArgs evaluator_args;
 
-  // Holds weak pointers to evaluators by their index, these can expire but are recreated on demand
-  std::vector<std::weak_ptr<Evaluation::Evaluator>> evaluator_idx_to_evaluator = {};
-  // Holds current active evaluators to manage their lifecycle
-  std::list<std::shared_ptr<Evaluation::Evaluator>> evaluators_storage = {};
+  // Holds current active evaluators
+  std::unordered_map<std::size_t, std::list<EvaluatorIndexWrapper>::iterator>
+    value_to_evaluator_list_pos = {};
+  // Doubly linked list to maintain LRU order of evaluators
+  std::list<EvaluatorIndexWrapper> evaluators_storage = {};
 
   std::size_t max_evaluators = 1000;
   quill::Logger* logger = nullptr;
@@ -88,152 +126,120 @@ class DynamicEvaluator : public GenericEvaluator {
     ZoneScopedN("Interface::DynamicEvaluator::process_event");
     uint64_t time = event_time(event);
 
-    cleanup_evaluators_if_necessary(time);
+    // Automatically move evaluator to front of LRU list if it exists
+    EvaluatorStorageWrapper evaluator_wrapper = get_or_create_evaluator(evaluator_idx,
+                                                                        time);
 
-    // If evaluator does not exist yet or it has been destroyed, create it
-    if (evaluator_idx >= evaluator_idx_to_evaluator.size()
-        || evaluator_idx_to_evaluator[evaluator_idx].expired()) {
-      create_evaluator_expired_or_new(evaluator_idx);
+    std::optional<tECS::Enumerator> enumerator = evaluator_wrapper.get_evaluator()
+                                                   .evaluator->next(std::move(event),
+                                                                    time);
+
+    // Only if not empty and new, we save it
+    if (evaluator_wrapper.evaluator.has_value()) {
+      // Automatically move to front of LRU list
+      evaluator_wrapper = save_evaluator(time,
+                                         std::move(evaluator_wrapper.evaluator.value()));
     }
-    assert(evaluator_idx < evaluator_idx_to_evaluator.size()
-           && "Evaluator index out of bounds after creation check");
 
-    // Get shared pointer to evaluator
-    std::shared_ptr<Evaluation::Evaluator>
-      evaluator = evaluator_idx_to_evaluator[evaluator_idx].lock();
-
-    // From previous check it should never be null
-    assert(evaluator != nullptr && "Evaluator pointer should not be null");
-
-    std::optional<tECS::Enumerator> enumerator = evaluator->next(std::move(event), time);
     if (enumerator.has_value()
         && evaluator_args.consumption_policy == CEQL::ConsumeBy::ConsumptionPolicy::ANY) {
       // Set should_reset to true for all evaluators that exist
-      for (const auto& evaluator : evaluators_storage) {
-        evaluator->should_reset.store(true);
+      for (const auto& evaluator_index_wrapper : evaluators_storage) {
+        evaluator_index_wrapper.evaluator->should_reset.store(true);
       }
     }
-    return enumerator;
+    return std::move(enumerator);
   }
 
   /**
-   * Cleans up evaluators if the storage exceeds the maximum limit.
+   * Tries to get the evaluator from created evaluators. In case it doesn't exist, create a new one
    */
-  void cleanup_evaluators_if_necessary(uint64_t current_time) {
-    ZoneScopedN("Interface::DynamicEvaluator::cleanup_evaluators_if_necessary");
-    std::size_t current_size = evaluators_storage.size();
-    if (current_size > max_evaluators) {
-      cleanup_empty_evaluators();
-      cleanup_out_of_time_window_evaluators(current_time);
+  EvaluatorStorageWrapper
+  get_or_create_evaluator(size_t evaluator_idx, uint64_t current_time) {
+    ZoneScopedN("Interface::DynamicEvaluator::get_or_create_evaluator");
+    auto it = value_to_evaluator_list_pos.find(evaluator_idx);
+    if (it != value_to_evaluator_list_pos.end()) {
+      // Move the evaluator to the front of the LRU list
+      auto list_it = it->second;
+      evaluators_storage.splice(evaluators_storage.begin(), evaluators_storage, list_it);
+      it->second = evaluators_storage.begin();  // Update map to point to new position
+      return EvaluatorStorageWrapper(evaluators_storage.begin());
+    } else {
+      // Create a new evaluator
+      std::shared_ptr<Evaluation::Evaluator> evaluator = std::make_shared<
+        Evaluation::Evaluator>(this->cea,
+                               evaluator_args.tuple_evaluator,
+                               time_window.duration,
+                               evaluator_args.event_time_of_expiration,
+                               evaluator_args.consumption_policy,
+                               evaluator_args.limit);
+
+      return EvaluatorStorageWrapper(
+        EvaluatorIndexWrapper{evaluator_idx, std::move(evaluator)});
+    }
+  }
+
+  /**
+   * Saves a newly created evaluator into the storage and updates LRU order.
+   */
+  EvaluatorStorageWrapper
+  save_evaluator(uint64_t current_time, EvaluatorIndexWrapper&& shared_evaluator) {
+    ZoneScopedN("Interface::DynamicEvaluator::save_evaluator");
+    // Check if we need to clean
+    if (evaluators_storage.size() >= max_evaluators) {
+      clean_or_expand_evaluator_storage(current_time);
     }
 
-    // Update current size after cleanup
-    current_size = evaluators_storage.size();
+    assert(evaluators_storage.size() < max_evaluators
+           && "Evaluator storage should be within maximum limit after cleanup");
 
-    if (current_size > max_evaluators) {
+    // Save evaluator at front of LRU list
+    size_t idx = shared_evaluator.evaluator_idx;  // Store before move
+    evaluators_storage.emplace_front(std::move(shared_evaluator));
+    value_to_evaluator_list_pos[idx] = evaluators_storage.begin();
+
+    return EvaluatorStorageWrapper(evaluators_storage.begin());
+  }
+
+  /**
+   * Removes evaluators that are empty due to time window contrains or expands if it can't remove any
+   */
+  void clean_or_expand_evaluator_storage(uint64_t current_time) {
+    ZoneScopedN("Interface::DynamicEvaluator::clean_or_expand_evaluator_storage");
+    size_t initial_size = evaluators_storage.size();
+    // First try to clean empty evaluators
+    for (auto it = evaluators_storage.rbegin(); it != evaluators_storage.rend();) {
+      assert(it->evaluator != nullptr && "Evaluator pointer should not be null");
+      // It should be one since it is only copied in this same thread during usage, but after this runs
+      assert(it->evaluator.use_count() == 1 && "Shared pointer use count should be 1.");
+
+      if (it->evaluator->is_time_window_empty(current_time)) {
+        // Remove node from map
+        value_to_evaluator_list_pos.erase(it->evaluator_idx);
+        // Remove from list - advance iterator before erasing
+        auto to_erase = std::next(it).base();
+        it = std::make_reverse_iterator(evaluators_storage.erase(to_erase));
+      } else {
+        ++it;
+      }
+    }
+
+    if (initial_size != evaluators_storage.size()) {
+      LOG_TRACE_L1(this->logger,
+                   "Cleaned up {} evaluators that were out of time window.",
+                   initial_size - evaluators_storage.size());
+    } else {
       LOG_WARNING(this->logger,
                   "Number of evaluators ({}) exceeded maximum allowed ({}). "
                   "Doubling current size to {}",
-                  current_size,
+                  evaluators_storage.size(),
                   max_evaluators,
                   max_evaluators * 2);
       max_evaluators *= 2;
     }
+
     assert(evaluators_storage.size() <= max_evaluators
            && "Number of evaluators should be within the maximum allowed after cleanup");
-  }
-
-  /**
-   * Cleans up evaluators that are empty (have no state).
-   */
-  void cleanup_empty_evaluators() {
-    for (auto it = evaluators_storage.begin(); it != evaluators_storage.end();) {
-      assert(it->get() != nullptr && "Evaluator pointer should not be null");
-      // It should be one since it is only copied in this same thread during usage, but after this runs
-      assert(it->use_count() == 1 && "Shared pointer use count should be 1.");
-      if (it->get()->is_empty()) {
-        it = evaluators_storage.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
-
-  /**
-   * Cleanups evaluators that have no data within the time window.
-   */
-  void cleanup_out_of_time_window_evaluators(uint64_t current_time) {
-    for (auto it = evaluators_storage.begin(); it != evaluators_storage.end();) {
-      assert(it->get() != nullptr && "Evaluator pointer should not be null");
-      // It should be one since it is only copied in this same thread during usage, but after this runs
-      assert(it->use_count() == 1 && "Shared pointer use count should be 1.");
-      if (it->get()->is_time_window_empty(current_time)) {
-        it = evaluators_storage.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
-
-  /**
-   * Routes to the appropriate evaluator creation method based on index state.
-   */
-  void create_evaluator_expired_or_new(size_t evaluator_idx) {
-    ZoneScopedN("Interface::DynamicEvaluator::create_evaluator");
-    if (evaluator_idx < evaluator_idx_to_evaluator.size()) {
-      create_evaluator_expired(evaluator_idx);
-    } else {
-      create_evaluator_new(evaluator_idx);
-    }
-  }
-
-  /**
-   * Recreates an evaluator at the given index.
-   */
-  void create_evaluator_expired(size_t evaluator_idx) {
-    ZoneScopedN("Interface::DynamicEvaluator::create_evaluator_expired");
-    assert(evaluator_idx < evaluator_idx_to_evaluator.size()
-           && "Evaluator index out of bounds for expired evaluator creation");
-    assert(evaluator_idx_to_evaluator[evaluator_idx].expired()
-           && "Evaluator is not expired");
-
-    std::unique_ptr<Evaluation::Evaluator> evaluator = create_evaluator(evaluator_idx);
-
-    evaluators_storage.emplace_back(std::move(evaluator));
-    evaluator_idx_to_evaluator[evaluator_idx] = evaluators_storage.back();
-  }
-
-  /**
-   * Creates a new evaluator at the end of the list.
-   */
-  void create_evaluator_new(size_t evaluator_idx) {
-    ZoneScopedN("Interface::DynamicEvaluator::create_evaluator_new");
-    assert(evaluator_idx == evaluator_idx_to_evaluator.size()
-           && "Evaluator index does not match size for new evaluator creation");
-
-    std::unique_ptr<Evaluation::Evaluator> evaluator = create_evaluator(evaluator_idx);
-
-    evaluators_storage.emplace_back(std::move(evaluator));
-    evaluator_idx_to_evaluator.push_back(evaluators_storage.back());
-
-    assert((evaluator_idx_to_evaluator.size() == evaluator_idx + 1)
-           && "Mismatch in number of evaluators and index mapping");
-  }
-
-  /**
-   * Creates a new evaluator instance with the configured parameters.
-   */
-  std::unique_ptr<Evaluation::Evaluator> create_evaluator(size_t evaluator_idx) {
-    std::unique_ptr<Evaluation::Evaluator> evaluator = std::make_unique<
-      Evaluation::Evaluator>(this->cea,
-                             evaluator_args.tuple_evaluator,
-                             time_window.duration,
-                             evaluator_args.event_time_of_expiration,
-                             evaluator_args.consumption_policy,
-                             evaluator_args.limit);
-
-    // Don't move evaluator to return statement or else we prevent NRVO
-    return evaluator;
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query
