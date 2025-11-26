@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Work at the root directory
-# Should have conanfile.py present there.
+# Should have vcpkg.json present there.
 cd "$(dirname "$0")"
 cd ..
 

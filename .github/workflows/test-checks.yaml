@@ -13,7 +13,7 @@ jobs:
   run-basic-tests-debug:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -48,31 +48,28 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
   run-sanitizer-tests-debug:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -107,34 +104,31 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests with address sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Debug -s thread -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
   run-address-sanitizer-tests-release:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -169,34 +163,31 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests with address sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run stock query tests with address sanitizer
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
   run-thread-sanitizer-tests-release:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -237,35 +228,32 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s address -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s address -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests with thread sanitizer
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run stock query tests with thread sanitizer
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s thread -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s thread -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
 
   run-tests-release:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -306,44 +294,41 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run tests
-        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run stock query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run unordered stock query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh && ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh && ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run smart home query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh && ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh && ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run taxi query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_taxi_queries.sh && ./scripts/queries/base_queries/build_and_test_taxi_queries.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_taxi_queries.sh && ./scripts/queries/base_queries/build_and_test_taxi_queries.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run ordered bluesky query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run unordered bluesky query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh -b Release -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh -b Release -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       # - name: run tests with address sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address

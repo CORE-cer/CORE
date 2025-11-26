@@ -6,7 +6,7 @@ Currently we can only run the program in either native linux machines or virtual
 
 ### Dependencies
 
-- Conan
+- vcpkg
 - CMake
 - Ninja
 - g++ (version 11 or later)
@@ -19,11 +19,14 @@ Currently we can only run the program in either native linux machines or virtual
    sudo apt update -y
    ```
 
-2. Install Conan:
+2. Install vcpkg:
 
    ```bash
-   sudo apt install python3-pip -y
-   pip install conan
+   sudo apt install -y git curl zip unzip tar
+   git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+   ~/vcpkg/bootstrap-vcpkg.sh
+   export VCPKG_ROOT=~/vcpkg
+   echo 'export VCPKG_ROOT=~/vcpkg' >> ~/.bashrc
    ```
 
 3. Install Ninja:
@@ -60,13 +63,7 @@ Currently we can only run the program in either native linux machines or virtual
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1000
     ```
 
-6. Setup Conan With Your Computers Configs:
-
-   ```
-   conan profile detect
-   ```
-
-7. Compile the project:
+6. Compile the project:
 
    ```
    ./scripts/build.sh

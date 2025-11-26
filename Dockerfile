@@ -33,11 +33,11 @@ RUN python3 -m venv py
 
 ENV PATH="/CORE/py/bin:$PATH"
 
-RUN pip install conan
+# Install vcpkg
+RUN git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg && \
+    /opt/vcpkg/bootstrap-vcpkg.sh
 
-RUN conan profile detect
-
-# RUN conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
+ENV VCPKG_ROOT=/opt/vcpkg
 
 RUN wget https://apt.llvm.org/llvm.sh
 

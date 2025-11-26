@@ -13,7 +13,7 @@ jobs:
   run-valgrind-debug:
     strategy:
       matrix:
-        conan_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
+        vcpkg_profile: [x86_64-linux-clang-libstdc, x86_64-linux-gcc-libstdc]
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space
@@ -57,23 +57,20 @@ jobs:
       - name: Run valgrind
         run: sudo apt install -y valgrind
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}
 
       - name: run valgrind with no sanitizer
-        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -p conan_profiles/${{ matrix.conan_profile }}
+        run: chmod +x ./scripts/build_and_valgrind.sh && ./scripts/build_and_valgrind.sh -b Debug -p vcpkg_triplets/${{ matrix.vcpkg_profile }}

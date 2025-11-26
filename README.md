@@ -16,7 +16,7 @@ This is a C++ reimplementation of the CORE engine, as presented in the paper ["C
 
 - **Test Driven Development**: Developed using unit tests with the Catch2 framework.
 
-- **Conan Package Manager**
+- **vcpkg Package Manager**: Uses vcpkg for modern, cross-platform C++ dependency management.
 
 ## Quick Start
 

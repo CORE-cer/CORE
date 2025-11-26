@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "core-cep",
+  "version": "0.0.0",
+  "description": "CORE - Complex Event Processing Engine",
+  "dependencies": [
+    "antlr4",
+    "catch2",
+    "cppzmq",
+    "cereal",
+    "gmp",
+    "re2",
+    "quill",
+    "readerwriterqueue",
+    "uwebsockets",
+    "pybind11",
+    "argparse",
+    "nlohmann-json",
+    "glaze"
+  ],
+  "builtin-baseline": "01f602195983451bc83e72f4214af2cbc495aa94"
+}

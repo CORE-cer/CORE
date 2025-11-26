@@ -56,16 +56,13 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Setup vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg
+          $HOME/vcpkg/bootstrap-vcpkg.sh
+          echo "VCPKG_ROOT=$HOME/vcpkg" >> $GITHUB_ENV
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies vcpkg
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
