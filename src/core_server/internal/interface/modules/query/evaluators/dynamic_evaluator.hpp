@@ -135,10 +135,13 @@ class DynamicEvaluator : public GenericEvaluator {
                                                                     time);
 
     // Only if not empty and new, we save it
-    if (evaluator_wrapper.evaluator.has_value()) {
+    if (evaluator_wrapper.evaluator.has_value() && !evaluator_wrapper.evaluator->evaluator->is_empty()) {
       // Automatically move to front of LRU list
       evaluator_wrapper = save_evaluator(time,
                                          std::move(evaluator_wrapper.evaluator.value()));
+    }
+    else {
+      return {};
     }
 
     if (enumerator.has_value()
