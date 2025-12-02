@@ -11,10 +11,28 @@ function _setArgs() {
       "-b" | "--buildType")
         shift
         BUILD_TYPE=$1
+        # Validate BUILD_TYPE
+        case "$BUILD_TYPE" in
+          Debug|Release|RelWithDebInfo|MinSizeRel)
+            ;; # Valid build type
+          *)
+            echo -e "${RED}Error: Invalid build type '${BUILD_TYPE}'. Valid options are: Debug, Release, RelWithDebInfo, MinSizeRel${NORMAL_OUTPUT}"
+            exit 1
+            ;;
+        esac
         ;;
       "-s" | "--sanitizer")
         shift
         SANITIZER=$1
+        # Validate SANITIZER
+        case "$SANITIZER" in
+          none|address|thread)
+            ;; # Valid sanitizer
+          *)
+            echo -e "${RED}Error: Invalid sanitizer '${SANITIZER}'. Valid options are: none, address, thread${NORMAL_OUTPUT}"
+            exit 1
+            ;;
+        esac
         ;;
       "--exclude")
         shift
@@ -23,10 +41,24 @@ function _setArgs() {
       "-l"| "--logging")
         shift
         LOGGING="$1"
+        # Validate LOGGING
+        case "$LOGGING" in
+          trace|debug|info|warn|error|critical|off)
+            ;; # Valid logging level
+          *)
+            echo -e "${RED}Error: Invalid logging level '${LOGGING}'. Valid options are: trace, debug, info, warn, error, critical, off${NORMAL_OUTPUT}"
+            exit 1
+            ;;
+        esac
         ;;
       "-j")
         shift
         J="$1"
+        # Validate J (should be a positive number or "all-1")
+        if [ "$J" != "all-1" ] && ! [[ "$J" =~ ^[0-9]+$ ]]; then
+          echo -e "${RED}Error: Invalid value for -j flag '${J}'. Must be a positive number or 'all-1'${NORMAL_OUTPUT}"
+          exit 1
+        fi
         ;;
       "--profiling")
         PROFILING=on
