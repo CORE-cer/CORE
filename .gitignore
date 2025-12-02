@@ -1,4 +1,6 @@
 build/
+vcpkg/
+vcpkg_installed/
 NetrwTreeListing
 
 # text editor metadata
