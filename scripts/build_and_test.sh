@@ -14,13 +14,13 @@ build
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Internal Tests${NORMAL_OUTPUT}"
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
-./build/${BUILD_TYPE}/tests
+./build/tests
 unit_test_result=$?
 
 echo -e "${PURPLE}-------------------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Third Party Library Tests${NORMAL_OUTPUT}"
 echo -e "${PURPLE}-------------------------${NORMAL_OUTPUT}"
-./build/${BUILD_TYPE}/third_party_tests
+./build/third_party_tests
 third_party_test_result=$?
 
 if [ $unit_test_result -eq 0 ] && [ $third_party_test_result -eq 0 ]; then

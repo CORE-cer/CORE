@@ -9,4 +9,14 @@ cd ..
 source scripts/common.sh
 _setArgs "$@"
 
-conan source .
+
+# Install vcpkg if not present
+if [ ! -d "vcpkg" ]; then
+    echo "Cloning vcpkg..."
+    git clone https://github.com/microsoft/vcpkg.git
+    ./vcpkg/bootstrap-vcpkg.sh
+fi
+
+# Generate ANTLR scripts
+python3 scripts/generate_antlr.py
+

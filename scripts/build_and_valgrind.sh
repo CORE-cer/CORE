@@ -16,7 +16,7 @@ echo -e "${PURPLE}Internal Tests with Valgrind${NORMAL_OUTPUT}"
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 
 valgrind --leak-check=full --suppressions=./valgrind_suppressions.txt \
-    --exit-on-first-error=yes --error-exitcode=1 --gen-suppressions=all ./build/${BUILD_TYPE}/tests
+    --exit-on-first-error=yes --error-exitcode=1 --gen-suppressions=all ./build/tests
 valgrind_unit_test_result=$?
 
 
@@ -28,7 +28,7 @@ valgrind_unit_test_result=$?
 # echo -e "${PURPLE}Third Party Library Tests${NORMAL_OUTPUT}"
 # echo -e "${PURPLE}-------------------------${NORMAL_OUTPUT}"
 # valgrind --leak-check=full --suppressions=./valgrind_suppressions.txt \
-#     --exit-on-first-error=yes --error-exitcode=1 ./build/${BUILD_TYPE}/third_party_tests
+#     --exit-on-first-error=yes --error-exitcode=1 ./build/third_party_tests
 # valgrind_third_party_test_result=$?
 valgrind_third_party_test_result=0
 

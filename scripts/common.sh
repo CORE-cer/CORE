@@ -37,9 +37,35 @@ function _setArgs() {
 }
 
 function build() {
-  conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
-      -s build_type=${BUILD_TYPE}\
-      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING} -o j=${J} -o profiling=${PROFILING}
+  # Define CMake flags based on arguments
+  CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+  if [ "${SANITIZER}" == "address" ]; then
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=ON"
+  elif [ "${SANITIZER}" == "thread" ]; then
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DTHREAD_SANITIZER=ON"
+  fi
+
+  # Logging
+  CMAKE_FLAGS="${CMAKE_FLAGS} -DLOGGING=${LOGGING}"
+
+  # Profiling
+  if [ "${PROFILING}" == "on" ]; then
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DPROFILING=ON"
+  fi
+
+  # Configure
+  cmake -B build -S . -G Ninja ${CMAKE_FLAGS}
+
+  # Build
+  if [ "${J}" == "all-1" ]; then
+      # Get number of cores - 1
+      CORES=$(nproc)
+      CORES=$((CORES-1))
+      cmake --build build -j${CORES}
+  else
+      cmake --build build -j${J}
+  fi
 
   build_result=$?
   if [ $build_result -ne 0 ]; then

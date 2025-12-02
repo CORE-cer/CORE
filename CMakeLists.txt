@@ -11,18 +11,27 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 project (core CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include_directories(src/)
 
 find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(cppzmq REQUIRED)
-find_package(gmp REQUIRED)
+find_package(GMP REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
-find_package(uwebsockets REQUIRED)
-find_package(pybind11 REQUIRED)
+find_package(unofficial-uwebsockets REQUIRED)
+find_package(unofficial-usockets REQUIRED)
+# find_package(pybind11 REQUIRED)
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG v2.13.5
+)
+FetchContent_MakeAvailable(pybind11)
+
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glaze REQUIRED)
@@ -110,7 +119,7 @@ pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 # Add compiler and linker flags to pycore
 target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
+target_link_libraries(_pycore PRIVATE cereal::cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
 
@@ -121,7 +130,11 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets unofficial::usockets::usockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+
+# Add uwebsockets include directory to fix Loop.h missing error
+target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/include/uwebsockets")
+
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)

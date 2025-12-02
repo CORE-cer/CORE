@@ -12,7 +12,7 @@ _setArgs "$@"
 build
 
 base_dir="src/targets/experiments/unordered_stocks"
-executable="build/${BUILD_TYPE}/offline"
+executable="build/offline"
 csv="stock_data.csv"
 declaration="declaration.core"
 quarantine_declaration="quarantine_declaration.core"
