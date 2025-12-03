@@ -127,28 +127,28 @@ file(GLOB_RECURSE PYBIND_FILES
 # Only build Python module if nanobind is available (pip builds)
 if(nanobind_FOUND AND Python_FOUND)
   message(STATUS "Building python target")
-  nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+  nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
 
-# Add compiler and linker flags to pycore (removed -Werror=old-style-cast due to Python/nanobind headers)
-target_compile_options(_pycore PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
+# Add compiler and linker flags to pycer (removed -Werror=old-style-cast due to Python/nanobind headers)
+target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads PkgConfig::gmp PkgConfig::gmpxx)
-# target_link_libraries(_pycore PRIVATE ${project_LIB})
-install(TARGETS _pycore DESTINATION .)
+target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads PkgConfig::gmp PkgConfig::gmpxx)
+# target_link_libraries(pycer PRIVATE ${project_LIB})
+install(TARGETS pycer DESTINATION .)
 
 # Add stub generation using nanobind's built-in tool
 nanobind_add_stub(
-  _pycore_stub
-  MODULE _pycore
-  OUTPUT _pycore.pyi
+  pycer_stub
+  MODULE pycer
+  OUTPUT pycer.pyi
   MARKER_FILE py.typed
-  PYTHON_PATH $<TARGET_FILE_DIR:_pycore>
-  DEPENDS _pycore
+  PYTHON_PATH $<TARGET_FILE_DIR:pycer>
+  DEPENDS pycer
 )
 
 # Install the module, stub, and marker file
-install(TARGETS _pycore LIBRARY DESTINATION . COMPONENT python)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pycore.pyi
+install(TARGETS pycer LIBRARY DESTINATION . COMPONENT python)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pycer.pyi
               ${CMAKE_CURRENT_BINARY_DIR}/py.typed
         DESTINATION .
         COMPONENT python)
