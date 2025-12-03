@@ -64,7 +64,7 @@ subscribe_to_queries(Client& client,
   return handlers;
 }
 
-NB_MODULE(_pycore, m) {
+NB_MODULE(pycer, m) {
   // clang-format off
         m.doc() = "CORE";
 
