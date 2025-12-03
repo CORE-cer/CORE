@@ -32,7 +32,7 @@ find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
 find_package(unofficial-uwebsockets REQUIRED)
 find_package(unofficial-usockets REQUIRED)
-# Python is required by nanobind
+# Python/nanobind is optional - only required for pip builds
 # Use Python from scikit-build-core (set in CMakeInit.txt)
 # Bypass vcpkg's Python wrapper by using the Python_ROOT_DIR set by scikit-build
 if(DEFINED Python_ROOT_DIR)
@@ -40,8 +40,8 @@ if(DEFINED Python_ROOT_DIR)
 endif()
 set(Python_FIND_REGISTRY NEVER)
 set(Python_FIND_VIRTUALENV FIRST)
-find_package(Python COMPONENTS Interpreter Development REQUIRED)
-find_package(nanobind CONFIG REQUIRED)
+find_package(Python COMPONENTS Interpreter Development QUIET)
+find_package(nanobind CONFIG QUIET)
 
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -61,6 +61,13 @@ message("Fetching Tracy")
 # Output what compiler we are using
 message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
+# Output vcpkg triplet information
+if(DEFINED VCPKG_TARGET_TRIPLET)
+  message(STATUS "vcpkg target triplet: ${VCPKG_TARGET_TRIPLET}")
+else()
+  message(WARNING "VCPKG_TARGET_TRIPLET not set - using vcpkg default")
+endif()
 
 Set(FETCHCONTENT_QUIET FALSE)
 
@@ -117,8 +124,10 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
-message(STATUS "Building python target")
-nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+# Only build Python module if nanobind is available (pip builds)
+if(nanobind_FOUND AND Python_FOUND)
+  message(STATUS "Building python target")
+  nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
 # Add compiler and linker flags to pycore (removed -Werror=old-style-cast due to Python/nanobind headers)
 target_compile_options(_pycore PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
@@ -139,10 +148,13 @@ nanobind_add_stub(
 
 # Install the module, stub, and marker file
 install(TARGETS _pycore LIBRARY DESTINATION . COMPONENT python)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pycore.pyi 
-              ${CMAKE_CURRENT_BINARY_DIR}/py.typed 
-        DESTINATION . 
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pycore.pyi
+              ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+        DESTINATION .
         COMPONENT python)
+else()
+  message(STATUS "Skipping Python module build - nanobind not found (only built via pip install)")
+endif()
 
 
 
@@ -155,7 +167,11 @@ add_library(core STATIC
 target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq PkgConfig::gmp PkgConfig::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets unofficial::usockets::usockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
 
 # Add uwebsockets include directory to fix Loop.h missing error
-target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/include/uwebsockets")
+# Use dynamic triplet path
+if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+  set(VCPKG_TARGET_TRIPLET "x64-linux")
+endif()
+target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/uwebsockets")
 
 if (PROFILING)
   message("Profiling enabled")

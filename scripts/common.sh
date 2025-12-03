@@ -21,6 +21,19 @@ function _setArgs() {
             ;;
         esac
         ;;
+      "-c" | "--compiler")
+        shift
+        COMPILER_PROFILE=$1
+        # Validate COMPILER_PROFILE
+        case "$COMPILER_PROFILE" in
+          clang-libstdcxx|clang-libcxx|gcc-libstdcxx)
+            ;; # Valid compiler profile
+          *)
+            echo -e "${RED}Error: Invalid compiler profile '${COMPILER_PROFILE}'. Valid options are: clang-libstdcxx, clang-libcxx, gcc-libstdcxx${NORMAL_OUTPUT}"
+            exit 1
+            ;;
+        esac
+        ;;
       "-s" | "--sanitizer")
         shift
         SANITIZER=$1
@@ -69,8 +82,30 @@ function _setArgs() {
 }
 
 function build() {
-  # Define CMake flags based on arguments
-  CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
+  # Determine vcpkg triplet from compiler profile
+  # Allow override via environment variable (for Python builds and CI)
+  if [ -z "${VCPKG_TARGET_TRIPLET}" ]; then
+    # Hardcode x64-linux for now (extensible to other architectures later)
+    TRIPLET="x64-linux-${COMPILER_PROFILE}"
+    export VCPKG_TARGET_TRIPLET="${TRIPLET}"
+  else
+    echo "Using externally specified triplet: ${VCPKG_TARGET_TRIPLET}"
+    TRIPLET="${VCPKG_TARGET_TRIPLET}"
+  fi
+
+  echo -e "${GREEN}Building with compiler profile: ${COMPILER_PROFILE} (triplet: ${TRIPLET})${NORMAL_OUTPUT}"
+
+  # Define overlay triplets path
+  OVERLAY_TRIPLETS="$(pwd)/vcpkg-triplets"
+
+  # Define CMake flags
+  CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
+  CMAKE_FLAGS="${CMAKE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
+  CMAKE_FLAGS="${CMAKE_FLAGS} -DVCPKG_TARGET_TRIPLET=${TRIPLET}"
+  CMAKE_FLAGS="${CMAKE_FLAGS} -DVCPKG_OVERLAY_TRIPLETS=${OVERLAY_TRIPLETS}"
+
+  # C23 workaround for GMP/M4 autotools packages
+  export CFLAGS="-std=gnu17"
 
   if [ "${SANITIZER}" == "address" ]; then
       CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=ON"
@@ -109,7 +144,7 @@ function build() {
 
 # Default values
 BUILD_TYPE="Debug"
-CONAN_PROFILE="conan_profiles/x86_64-linux-clang-libstdc"
+COMPILER_PROFILE="clang-libstdcxx"  # Default to Clang with libstdc++
 SANITIZER=none
 LOGGING=info
 J="all-1"

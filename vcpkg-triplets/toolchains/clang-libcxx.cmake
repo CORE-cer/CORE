@@ -1,0 +1,6 @@
+set(CMAKE_C_COMPILER clang CACHE STRING "C compiler")
+set(CMAKE_CXX_COMPILER clang++ CACHE STRING "C++ compiler")
+set(CMAKE_CXX_FLAGS_INIT "-stdlib=libc++")
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-lc++ -lc++abi")
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
