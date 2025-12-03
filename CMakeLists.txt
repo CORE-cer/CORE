@@ -25,13 +25,9 @@ find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
 find_package(unofficial-uwebsockets REQUIRED)
 find_package(unofficial-usockets REQUIRED)
-# find_package(pybind11 REQUIRED)
-FetchContent_Declare(
-  pybind11
-  GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG v2.13.5
-)
-FetchContent_MakeAvailable(pybind11)
+# Python is required by nanobind
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+find_package(nanobind CONFIG REQUIRED)
 
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -115,14 +111,32 @@ file(GLOB_RECURSE PYBIND_FILES
 
 message(STATUS "Building python target")
 # include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
-pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
-# Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+# Add compiler and linker flags to pycore (removed -Werror=old-style-cast due to Python/nanobind headers)
+target_compile_options(_pycore PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
 
-target_link_libraries(_pycore PRIVATE cereal::cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads PkgConfig::gmp PkgConfig::gmpxx)
+target_link_libraries(_pycore PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads PkgConfig::gmp PkgConfig::gmpxx)
 # target_link_libraries(_pycore PRIVATE ${project_LIB})
 install(TARGETS _pycore DESTINATION .)
+
+# Add stub generation using nanobind's built-in tool
+nanobind_add_stub(
+  _pycore_stub
+  MODULE _pycore
+  OUTPUT _pycore.pyi
+  MARKER_FILE py.typed
+  PYTHON_PATH $<TARGET_FILE_DIR:_pycore>
+  DEPENDS _pycore
+)
+
+# Install the module, stub, and marker file
+install(TARGETS _pycore LIBRARY DESTINATION . COMPONENT python)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/_pycore.pyi 
+              ${CMAKE_CURRENT_BINARY_DIR}/py.typed 
+        DESTINATION . 
+        COMPONENT python)
+
 
 
 add_library(core STATIC

@@ -13,6 +13,7 @@
         "uwebsockets",
         "argparse",
         "nlohmann-json",
-        "glaze"
+        "glaze",
+        "nanobind"
     ]
 }
