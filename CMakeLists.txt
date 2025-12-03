@@ -117,10 +117,8 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
-# message(STATUS "Building python target")
-# # pybind11_add_module(pycore MODULE src/pybind/python_binding.cpp)
-# add_library(pycore MODULE src/pybind/python_binding.cpp)
-# target_link_libraries(pycore PRIVATE pybind11::module)
+message(STATUS "Building python target")
+nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
 
 message(STATUS "Building python target")
