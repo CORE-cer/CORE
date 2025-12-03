@@ -120,11 +120,6 @@ file(GLOB_RECURSE PYBIND_FILES
 message(STATUS "Building python target")
 nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
 
-
-message(STATUS "Building python target")
-# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
-nanobind_add_module(_pycore MODULE src/pybind/python_binding.cpp)
-
 # Add compiler and linker flags to pycore (removed -Werror=old-style-cast due to Python/nanobind headers)
 target_compile_options(_pycore PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
 
