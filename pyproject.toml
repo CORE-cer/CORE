@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "nanobind>=2.0.0"]
+requires = ["scikit-build-core>=0.4.3", "nanobind>=2.0.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -11,7 +11,6 @@ requires-python = ">=3.8"
 authors = [
     { name = "Your Name", email = "your.email@example.com" }
 ]
-license = { text = "MIT" }  # Adjust to your license
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -24,48 +23,21 @@ classifiers = [
     "Programming Language :: C++",
 ]
 
-# No runtime Python dependencies for the bindings themselves
-dependencies = []
-
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "mypy",
-    "pybind11-stubgen",  # For stub verification
-]
+[project.urls]
+Homepage = "https://github.com/yourusername/core"
 
 [tool.scikit-build]
-# Minimum required CMake version
-cmake.minimum-version = "3.20"
-# Build type
-cmake.build-type = "Release"
+# Protect the configuration against future changes in scikit-build-core
+minimum-version = "0.4"
+# Use existing build directory where vcpkg packages are installed
+build-dir = "build"
+# Build stable ABI wheels for CPython 3.12+
+wheel.py-api = "cp312"
 # Use vcpkg toolchain
-cmake.args = [
-    "-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake",
-]
-# Install only the Python module and stub files
-install.components = ["python"]
-
-[tool.scikit-build.cmake.define]
-# Pass build options to CMake
-ADDRESS_SANITIZER = "OFF"
-PROFILING = "OFF"
-LOGGING = "info"
-
-# Exclude build artifacts from wheel
-[tool.scikit-build.wheel.exclude]
-patterns = [
-    "build/**",
-    "vcpkg/**",
-    "vcpkg_installed/**",
-]
+cmake.args = ["-DCMAKE_TOOLCHAIN_FILE=/home/nicobuzeta/Documents/CORE/vcpkg/scripts/buildsystems/vcpkg.cmake"]
 
 [tool.mypy]
 python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]

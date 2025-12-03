@@ -1,3 +1,10 @@
+# Set vcpkg toolchain before cmake_minimum_required() call
+# This is required for both standalone builds and scikit-build-core
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "Vcpkg toolchain file")
+endif()
+
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -26,6 +33,13 @@ find_package(readerwriterqueue REQUIRED)
 find_package(unofficial-uwebsockets REQUIRED)
 find_package(unofficial-usockets REQUIRED)
 # Python is required by nanobind
+# Use Python from scikit-build-core (set in CMakeInit.txt)
+# Bypass vcpkg's Python wrapper by using the Python_ROOT_DIR set by scikit-build
+if(DEFINED Python_ROOT_DIR)
+  set(Python_ROOT "${Python_ROOT_DIR}")
+endif()
+set(Python_FIND_REGISTRY NEVER)
+set(Python_FIND_VIRTUALENV FIRST)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(nanobind CONFIG REQUIRED)
 
