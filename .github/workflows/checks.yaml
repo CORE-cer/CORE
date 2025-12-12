@@ -44,16 +44,7 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
-
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
@@ -113,12 +104,6 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
-
-      - name: "Setup conan"
-        run: conan profile detect
-
       - name: Check clang-format version
         run: clang-format --version
 
@@ -167,22 +152,13 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
-
-      - name: "Setup conan"
-        run: conan profile detect
-
       - name: clang tidy version
         run: clang-tidy --version
 
       - name: clang tidy location
         run: which clang-tidy
 
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: install dependencies
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build

@@ -26,7 +26,7 @@ Note that if you wish to not use clang-format somewhere in your code, you just n
 // clang-format on
 ```
 
-It is important to note we also provide known working conan profiles, located at `./conan_profiles`.
+We provide custom vcpkg triplets for different compiler configurations, located at `./vcpkg-triplets`.
 
 
 ## Folder Distribution

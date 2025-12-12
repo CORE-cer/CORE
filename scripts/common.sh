@@ -4,10 +4,6 @@ declare -a EXCLUDED_QUERIES
 function _setArgs() {
   while [ "${1:-}" != "" ]; do
     case "$1" in
-      "-p" | "--profile")
-        shift
-        CONAN_PROFILE=$1
-        ;;
       "-b" | "--buildType")
         shift
         BUILD_TYPE=$1

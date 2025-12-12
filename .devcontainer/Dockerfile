@@ -19,14 +19,12 @@ RUN apt -y update && apt -y install \
 RUN apt -y upgrade cmake g++
 RUN apt -y clean all
 
-# Conan stuff
-RUN pip install conan
-RUN conan profile detect
+# vcpkg setup
+RUN git clone https://github.com/microsoft/vcpkg.git /vcpkg && /vcpkg/bootstrap-vcpkg.sh
 
-# Install dependencies
-COPY conanfile.py conanfile.py
+# Copy dependency files
+COPY vcpkg.json vcpkg.json
+COPY vcpkg-triplets vcpkg-triplets
 COPY scripts scripts
 COPY ./src/core_server/internal/parsing/ceql_query/autogenerate_script.sh ./src/core_server/internal/parsing/ceql_query/autogenerate_script.sh
 COPY ./src/core_server/internal/parsing/stream_declaration/autogenerate_script.sh ./src/core_server/internal/parsing/stream_declaration/autogenerate_script.sh
-RUN conan source .
-RUN conan install . --build missing -s:h compiler=gcc -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2

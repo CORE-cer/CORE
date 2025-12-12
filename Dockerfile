@@ -29,16 +29,6 @@ RUN sudo apt update -y
 
 RUN apt install cmake -y
 
-RUN python3 -m venv py
-
-ENV PATH="/CORE/py/bin:$PATH"
-
-RUN pip install conan
-
-RUN conan profile detect
-
-# RUN conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
-
 RUN wget https://apt.llvm.org/llvm.sh
 
 RUN chmod +x llvm.sh
@@ -60,6 +50,9 @@ COPY . .
 RUN chmod +x /CORE/scripts/*.sh
 
 RUN apt-get clean
+
+# Install vcpkg and dependencies
+RUN scripts/install_dependencies.sh
 
 RUN scripts/build_and_test.sh -b Debug
 
