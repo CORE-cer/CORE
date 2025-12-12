@@ -2,6 +2,7 @@ Dockerfile
 docker-compose.yml
 py/
 build/
+vcpkg/
 .github/
 .git
 .dockerignore

@@ -15,7 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # Install the latest version of cmake:
 RUN apt remove --purge --auto-remove cmake
 
-RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev
+RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev curl zip unzip tar pkg-config autoconf automake libtool
 
 RUN pipx ensurepath
 
