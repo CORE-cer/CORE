@@ -1,3 +1,10 @@
+# Set vcpkg toolchain before cmake_minimum_required() call
+# This is required for both standalone builds and scikit-build-core
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "Vcpkg toolchain file")
+endif()
+
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -14,15 +21,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(src/)
 
+find_package(PkgConfig REQUIRED)
 find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(cppzmq REQUIRED)
-find_package(gmp REQUIRED)
+pkg_check_modules(gmp REQUIRED IMPORTED_TARGET gmp)
+pkg_check_modules(gmpxx REQUIRED IMPORTED_TARGET gmpxx)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
-find_package(uwebsockets REQUIRED)
-find_package(pybind11 REQUIRED)
+find_package(unofficial-uwebsockets REQUIRED)
+find_package(unofficial-usockets REQUIRED)
+# Python/nanobind is optional - only required for pip builds
+# Use Python from scikit-build-core (set in CMakeInit.txt)
+# Bypass vcpkg's Python wrapper by using the Python_ROOT_DIR set by scikit-build
+if(DEFINED Python_ROOT_DIR)
+  set(Python_ROOT "${Python_ROOT_DIR}")
+endif()
+set(Python_FIND_REGISTRY NEVER)
+set(Python_FIND_VIRTUALENV FIRST)
+find_package(Python COMPONENTS Interpreter Development QUIET)
+find_package(nanobind CONFIG QUIET)
+
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glaze REQUIRED)
@@ -41,6 +61,13 @@ message("Fetching Tracy")
 # Output what compiler we are using
 message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
+# Output vcpkg triplet information
+if(DEFINED VCPKG_TARGET_TRIPLET)
+  message(STATUS "vcpkg target triplet: ${VCPKG_TARGET_TRIPLET}")
+else()
+  message(WARNING "VCPKG_TARGET_TRIPLET not set - using vcpkg default")
+endif()
 
 Set(FETCHCONTENT_QUIET FALSE)
 
@@ -97,22 +124,38 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
-# message(STATUS "Building python target")
-# # pybind11_add_module(pycore MODULE src/pybind/python_binding.cpp)
-# add_library(pycore MODULE src/pybind/python_binding.cpp)
-# target_link_libraries(pycore PRIVATE pybind11::module)
+# Only build Python module if nanobind is available (pip builds)
+if(nanobind_FOUND AND Python_FOUND)
+  message(STATUS "Building python target")
+  nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
 
+# Add compiler and linker flags to pycer (removed -Werror=old-style-cast due to Python/nanobind headers)
+target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-unused-command-line-argument)
 
-message(STATUS "Building python target")
-# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
-pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
+target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads PkgConfig::gmp PkgConfig::gmpxx)
+# target_link_libraries(pycer PRIVATE ${project_LIB})
+install(TARGETS pycer DESTINATION .)
 
-# Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+# Add stub generation using nanobind's built-in tool
+nanobind_add_stub(
+  pycer_stub
+  MODULE pycer
+  OUTPUT pycer.pyi
+  MARKER_FILE py.typed
+  PYTHON_PATH $<TARGET_FILE_DIR:pycer>
+  DEPENDS pycer
+)
 
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
-# target_link_libraries(_pycore PRIVATE ${project_LIB})
-install(TARGETS _pycore DESTINATION .)
+# Install the module, stub, and marker file
+install(TARGETS pycer LIBRARY DESTINATION . COMPONENT python)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pycer.pyi
+              ${CMAKE_CURRENT_BINARY_DIR}/py.typed
+        DESTINATION .
+        COMPONENT python)
+else()
+  message(STATUS "Skipping Python module build - nanobind not found (only built via pip install)")
+endif()
+
 
 
 add_library(core STATIC
@@ -121,7 +164,15 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq PkgConfig::gmp PkgConfig::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets unofficial::usockets::usockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+
+# Add uwebsockets include directory to fix Loop.h missing error
+# Use dynamic triplet path
+if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+  set(VCPKG_TARGET_TRIPLET "x64-linux")
+endif()
+target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/uwebsockets")
+
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)

@@ -68,10 +68,8 @@ class Evaluator {
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
   CEQL::Limit enumeration_limit;
 
-// Only in debug, check tuples are being sent in ascending order.
-#ifdef CORE_DEBUG
+  // Last tuple time seen by the evaluator.
   uint64_t last_tuple_time = 0;
-#endif
 
  public:
   std::atomic<bool> should_reset = false;
@@ -104,6 +102,21 @@ class Evaluator {
         consumption_policy(consumption_policy),
         enumeration_limit(enumeration_limit) {}
 
+  bool is_empty() const {
+    assert(historic_ordered_keys.size() == historic_union_list_map.size()
+           && "historic_ordered_keys and historic_union_list_map should be in sync");
+    return historic_ordered_keys.empty();
+  }
+
+  bool is_time_window_empty(uint64_t current_time) const {
+    assert(current_time >= last_tuple_time);
+    uint64_t expiration_time = current_time < time_window ? 0 : current_time - time_window;
+    if (last_tuple_time < expiration_time) {
+      return true;
+    }
+    return false;
+  }
+
   std::optional<tECS::Enumerator>
   next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
@@ -120,21 +133,22 @@ class Evaluator {
     }
     auto start_time = std::chrono::steady_clock::now();
 #endif
-// If in debug, check tuples are being sent in ascending order.
-#ifdef CORE_DEBUG
-    if (current_time < last_tuple_time) {
+    // Check tuples are being sent in ascending order.
+    if (current_time < last_tuple_time) [[unlikely]] {
       std::string attributes = event.get_event_reference().to_string();
       LOG_CRITICAL(logger,
                    "Received tuple with timestamp {} in Evaluator::next, "
-                   "but the last tuple time was {}. Attributes: {}",
+                   "but the last tuple time was {}. Attributes: {}. Ignoring event.",
                    current_time,
                    last_tuple_time,
                    attributes);
+#ifdef CORE_DEBUG
       std::this_thread::sleep_for(std::chrono::nanoseconds(500000000));
       assert(false && "Received tuple out of order in Evaluator::next");
+#endif
+      return {};
     }
     last_tuple_time = current_time;
-#endif
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
     LOG_TRACE_L2(logger,

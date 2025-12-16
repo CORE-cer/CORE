@@ -15,7 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # Install the latest version of cmake:
 RUN apt remove --purge --auto-remove cmake
 
-RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev
+RUN apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev curl zip unzip tar pkg-config autoconf automake libtool
 
 RUN pipx ensurepath
 
@@ -28,16 +28,6 @@ RUN rm /etc/apt/trusted.gpg.d/kitware.gpg
 RUN sudo apt update -y
 
 RUN apt install cmake -y
-
-RUN python3 -m venv py
-
-ENV PATH="/CORE/py/bin:$PATH"
-
-RUN pip install conan
-
-RUN conan profile detect
-
-# RUN conan remote add artifactory https://conan.buzeta.net/artifactory/api/conan/conan-local
 
 RUN wget https://apt.llvm.org/llvm.sh
 
@@ -60,6 +50,9 @@ COPY . .
 RUN chmod +x /CORE/scripts/*.sh
 
 RUN apt-get clean
+
+# Install vcpkg and dependencies
+RUN scripts/install_dependencies.sh
 
 RUN scripts/build_and_test.sh -b Debug
 

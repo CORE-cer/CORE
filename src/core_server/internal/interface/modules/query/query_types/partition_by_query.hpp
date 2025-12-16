@@ -1,3 +1,14 @@
+/**
+ * @file partition_by_query.hpp
+ * @brief Implements partitioned Complex Event Processing (CEP) query evaluation.
+ *
+ * This file provides PartitionByQuery, which partitions incoming event streams based on
+ * specified attributes and maintains separate evaluators for each unique partition. This
+ * enables independent query evaluation for different attribute value combinations, allowing
+ * for scalable and isolated processing of event patterns across different contexts (e.g.,
+ * per-user, per-session, or per-device queries).
+ */
+
 #pragma once
 
 #include <readerwriterqueue/readerwriterqueue.h>
@@ -32,9 +43,10 @@
 #include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
+
 class PartitionByQuery : public GenericQuery {
   struct TupleValuesKey {
-    // TODO: optimize memory usage here
+    // Vector of attribute values forming the partition key
     std::vector<std::unique_ptr<const Types::Value>> attribute_values{};
 
     explicit TupleValuesKey(
@@ -54,10 +66,10 @@ class PartitionByQuery : public GenericQuery {
     std::size_t operator()(const TupleValuesKey& tuple_values_key) const noexcept {
       std::size_t seed = tuple_values_key.attribute_values.size();
       for (const auto& val : tuple_values_key.attribute_values) {
-        // Mix type id
+        // Mix type id to ensure different types produce different hashes
         seed ^= std::hash<std::string>{}(val->get_type()) + 0x9e3779b9 + (seed << 6)
                 + (seed >> 2);
-        // Mix textual form
+        // Mix textual form to incorporate the actual value into the hash
         seed ^= std::hash<std::string>{}(val->to_string()) + 0x9e3779b9 + (seed << 6)
                 + (seed >> 2);
       }
@@ -67,12 +79,15 @@ class PartitionByQuery : public GenericQuery {
 
   friend GenericQuery;
 
+  // Parsed and transformed CEQL query containing partition attributes and evaluation logic
   std::optional<CEQL::Query> query;
+
+  // Dynamic evaluator managing multiple internal evaluators (one per partition)
   std::unique_ptr<DynamicEvaluator> evaluator;
+
   std::unordered_map<TupleValuesKey, size_t, ValueVectorHash>
     partition_by_attrs_to_evaluator_idx;
 
-  // Use optional to show that event type has already been processed and should not be consumed by any evaluator
   std::unordered_map<Types::UniqueEventTypeId, std::optional<std::vector<uint64_t>>>
     event_id_to_tuple_idx;
 
@@ -91,6 +106,7 @@ class PartitionByQuery : public GenericQuery {
 
  private:
   void create_query(Internal::CEQL::Query&& query) override {
+    // Stage 1: Transform predicates into physical predicates for tuple evaluation
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
@@ -98,16 +114,21 @@ class PartitionByQuery : public GenericQuery {
 
     auto predicates = std::move(transformer.physical_predicates);
 
+    // Stage 2: Create tuple evaluator for checking event constraints
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
 
+    // Stage 3: Convert CEQL formula to logical CEA
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
-    query.where.formula->accept_visitor(visitor);
+    query.where.formula->accept_visitor(visitor);  // Process WHERE clause
     if (!query.select.is_star) {
-      query.select.formula->accept_visitor(visitor);
+      query.select.formula->accept_visitor(
+        visitor);  // Process SELECT clause if not SELECT *
     }
 
+    // Stage 4: Determinize the CEA for efficient runtime evaluation
     Internal::CEA::DetCEA cea(Internal::CEA::CEA(std::move(visitor.current_cea)));
 
+    // Stage 5: Store query metadata and create the dynamic evaluator
     this->time_window = query.within.time_window;
     this->query = std::make_optional(std::move(query));
 
@@ -122,22 +143,29 @@ class PartitionByQuery : public GenericQuery {
 
   std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
+    // Check cache for attribute indices - most events hit this path after warmup
     if (auto it = event_id_to_tuple_idx.find(event.get_unique_event_type_id());
         it != event_id_to_tuple_idx.end()) [[likely]] {
       tuple_indexes = &(it->second);
     } else {
+      // First occurrence of this event type - determine and cache attribute indices
       tuple_indexes = find_tuple_indexes(event);
     }
 
+    // Early exit if this event type lacks required partition attributes
     if (!tuple_indexes->has_value()) {
       return {};
     }
 
+    // Find or create evaluator for this partition and delegate processing
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
       event, tuple_indexes->value());
     return evaluator->process_event(std::move(event), evaluator_idx);
   }
 
+  /**
+   * @brief Determines which attribute indices to extract from events of a given type.
+   */
   std::optional<std::vector<uint64_t>>* find_tuple_indexes(Types::EventWrapper& event) {
     std::vector<uint64_t> tuple_indexes = {};
 
@@ -145,41 +173,53 @@ class PartitionByQuery : public GenericQuery {
     const Types::EventInfo& event_info = this->query_catalog.get_event_info(event_id);
 
     assert(query.has_value());
+    // For each attribute group, find the first matching attribute in the event schema
     for (auto& attr_group : query.value().partition_by.partition_attributes) {
       for (auto& attr : attr_group) {
         if (auto it_attr_id = event_info.attribute_names_to_ids.find(attr.value);
             it_attr_id != event_info.attribute_names_to_ids.end()) {
+          // Found a match for this group - store its index and move to next group
           tuple_indexes.push_back(it_attr_id->second);
           break;
         }
       }
     }
 
+    // Check if we found a match for every attribute group
     if (tuple_indexes.size() < query.value().partition_by.partition_attributes.size()) {
-      // Could not find any attr for the attr_group in tuple.
+      // Incomplete match - event type is missing required partition attributes
+      // Cache nullopt to mark this event type as incompatible
       return &(event_id_to_tuple_idx.emplace(event_id, std::nullopt).first->second);
     } else {
-      // Found indexes for all attributes
+      // Complete match - cache the attribute indices for future events of this type
       return &(event_id_to_tuple_idx.emplace(event_id, tuple_indexes).first->second);
     }
   }
 
+  /**
+   * @brief Maps specific attribute values to an evaluator index, creating new partitions as needed.
+   */
   size_t
   find_or_create_evaluator_index_from_tuple_indexes(Types::EventWrapper& event,
                                                     std::vector<uint64_t>& tuple_indexes) {
+    // Extract partition key values from the event
     std::vector<std::unique_ptr<const Types::Value>> tuple_values = {};
-    tuple_values.reserve(tuple_indexes.size());
+    tuple_values.reserve(tuple_indexes.size());  // Avoid reallocations
 
     for (const auto& tuple_index : tuple_indexes) {
       auto value = event.get_attribute_clone_at_index(tuple_index);
       tuple_values.emplace_back(std::move(value));
     }
 
+    // Create partition key and look up evaluator index
     TupleValuesKey tuple_values_key(std::move(tuple_values));
     if (auto evaluator_it = partition_by_attrs_to_evaluator_idx.find(tuple_values_key);
         evaluator_it != partition_by_attrs_to_evaluator_idx.end()) [[likely]] {
+      // Hot path: partition already exists, return its evaluator index
       return evaluator_it->second;
     } else {
+      // Cold path: new partition detected, create mapping with sequential index
+      // New index = current map size (creates dense 0, 1, 2, ... sequence)
       return partition_by_attrs_to_evaluator_idx
         .emplace(std::piecewise_construct,
                  std::forward_as_tuple(std::move(tuple_values_key)),

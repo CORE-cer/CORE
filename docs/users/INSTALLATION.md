@@ -6,10 +6,10 @@ Currently we can only run the program in either native linux machines or virtual
 
 ### Dependencies
 
-- Conan
+- Git
 - CMake
 - Ninja
-- g++ (version 11 or later)
+- g++ (version 14 or later) or Clang (version 19 or later)
 
 #### Steps
 
@@ -19,20 +19,13 @@ Currently we can only run the program in either native linux machines or virtual
    sudo apt update -y
    ```
 
-2. Install Conan:
+2. Install build tools:
 
    ```bash
-   sudo apt install python3-pip -y
-   pip install conan
+   sudo apt install -y git ninja-build build-essential pkg-config
    ```
 
-3. Install Ninja:
-
-   ```bash
-   sudo apt-get install -y ninja-build
-   ```
-
-4. Install the latest version of CMake:
+3. Install the latest version of CMake:
 
     ```bash
     sudo apt remove --purge --auto-remove cmake
@@ -46,27 +39,27 @@ Currently we can only run the program in either native linux machines or virtual
     sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
     sudo apt update -y
     sudo apt install cmake -y
-    source ~/.profile # Or reboot your terminal`
+    source ~/.profile # Or reboot your terminal
     ```
 
-5. Install g++ version 11 or later:
+4. Install g++ version 14 or later:
 
     ```bash
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install g++-11
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 1000
-    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 1000
+    sudo apt install gcc-14 g++-14
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 1000
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 1000
     ```
 
-6. Setup Conan With Your Computers Configs:
+5. Install dependencies (vcpkg will be bootstrapped automatically):
 
-   ```
-   conan profile detect
+   ```bash
+   ./scripts/install_dependencies.sh
    ```
 
-7. Compile the project:
+6. Compile the project:
 
    ```
    ./scripts/build.sh

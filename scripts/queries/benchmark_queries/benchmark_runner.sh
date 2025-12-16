@@ -7,7 +7,7 @@
 # BENCHMARK_BASE_DIR: Base directory for experiment (required)
 # BENCHMARK_FILE: Output CSV file (default: $BENCHMARK_BASE_DIR/benchmark_${BUILD_TYPE}.csv)
 # BENCHMARK_REPEATS: Number of runs per query (default: 3)
-# BENCHMARK_EXECUTABLE: Path to executable (default: build/${BUILD_TYPE}/offline)
+# BENCHMARK_EXECUTABLE: Path to executable (default: build/offline)
 # BENCHMARK_CSV: Data CSV file (required)
 # BENCHMARK_DECLARATION: Declaration file (required)
 # BENCHMARK_EXTRA_ARGS: Extra arguments (e.g., "-o quarantine.core")
