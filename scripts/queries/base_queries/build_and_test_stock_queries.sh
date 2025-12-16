@@ -11,7 +11,7 @@ _setArgs "$@"
 build
 
 base_dir="src/targets/experiments/stocks"
-executable="build/offline"
+executable="build/${BUILD_TYPE}/offline"
 csv="stock_data.csv"
 declaration="declaration.core"
 

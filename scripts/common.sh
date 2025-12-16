@@ -118,16 +118,16 @@ function build() {
   fi
 
   # Configure
-  cmake -B build -S . -G Ninja ${CMAKE_FLAGS}
+  cmake -B build/${BUILD_TYPE} -S . -G Ninja ${CMAKE_FLAGS}
 
   # Build
   if [ "${J}" == "all-1" ]; then
       # Get number of cores - 1
       CORES=$(nproc)
       CORES=$((CORES-1))
-      cmake --build build -j${CORES}
+      cmake --build build/${BUILD_TYPE} -j${CORES}
   else
-      cmake --build build -j${J}
+      cmake --build build/${BUILD_TYPE} -j${J}
   fi
 
   build_result=$?
