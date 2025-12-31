@@ -140,7 +140,9 @@ class DynamicEvaluator : public GenericEvaluator {
       evaluator_wrapper = save_evaluator(time,
                                          std::move(evaluator_wrapper.evaluator.value()));
     }
-    else {
+
+    // Only return early for NEW evaluators that are empty (no match, nothing to save)
+    if (evaluator_wrapper.evaluator.has_value() && evaluator_wrapper.evaluator->evaluator->is_empty()) {
       return {};
     }
 
