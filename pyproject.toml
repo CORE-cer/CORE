@@ -37,7 +37,10 @@ wheel.py-api = "cp312"
 cmake.args = [
     "-DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake",
     "-DVCPKG_TARGET_TRIPLET=x64-linux-clang-libstdcxx",
-    "-DVCPKG_OVERLAY_TRIPLETS=vcpkg-triplets"
+    "-DVCPKG_OVERLAY_TRIPLETS=vcpkg-triplets",
+    "-DCMAKE_C_COMPILER=clang",
+    "-DCMAKE_CXX_COMPILER=clang++",
+    "-DCMAKE_CXX_FLAGS=-stdlib=libstdc++"
 ]
 
 [tool.mypy]
