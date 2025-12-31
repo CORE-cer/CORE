@@ -58,7 +58,8 @@ RUN scripts/build_and_test.sh -b Debug
 
 RUN scripts/build_and_test.sh -b Release
 
-RUN cp build/Debug/_pycore.cpython-312-x86_64-linux-gnu.so python_streamer/_pycore.cpython-312-x86_64-linux-gnu.so
+# Build Python package wheel
+RUN pipx run build --wheel
 
 
 FROM ubuntu:24.04 AS final
@@ -86,6 +87,10 @@ RUN python3 -m venv py
 COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
 COPY --from=build /CORE/python_streamer /CORE/python_streamer
+COPY --from=build /CORE/dist/*.whl /tmp/
+
+# Install the Python package wheel
+RUN pip3 install /tmp/*.whl && rm /tmp/*.whl
 
 RUN cd /CORE/python_streamer && uv sync
 

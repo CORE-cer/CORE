@@ -94,6 +94,23 @@ function build() {
   # Define overlay triplets path
   OVERLAY_TRIPLETS="$(pwd)/vcpkg-triplets"
 
+  # Set compiler and stdlib based on COMPILER_PROFILE
+  case "${COMPILER_PROFILE}" in
+    clang-libcxx)
+      COMPILER_FLAGS="-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-stdlib=libc++"
+      ;;
+    clang-libstdcxx)
+      COMPILER_FLAGS="-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-stdlib=libstdc++"
+      ;;
+    gcc-libstdcxx)
+      COMPILER_FLAGS="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"
+      ;;
+    *)
+      echo -e "${RED}Error: Unhandled compiler profile '${COMPILER_PROFILE}'${NORMAL_OUTPUT}"
+      exit 1
+      ;;
+  esac
+
   # Define CMake flags
   CMAKE_FLAGS="-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
   CMAKE_FLAGS="${CMAKE_FLAGS} -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake"
@@ -104,9 +121,11 @@ function build() {
   export CFLAGS="-std=gnu17"
 
   if [ "${SANITIZER}" == "address" ]; then
-      CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=ON"
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=ON -DTHREAD_SANITIZER=OFF"
   elif [ "${SANITIZER}" == "thread" ]; then
-      CMAKE_FLAGS="${CMAKE_FLAGS} -DTHREAD_SANITIZER=ON"
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=OFF -DTHREAD_SANITIZER=ON"
+  else
+      CMAKE_FLAGS="${CMAKE_FLAGS} -DADDRESS_SANITIZER=OFF -DTHREAD_SANITIZER=OFF"
   fi
 
   # Logging
@@ -118,7 +137,7 @@ function build() {
   fi
 
   # Configure
-  cmake -B build/${BUILD_TYPE} -S . -G Ninja ${CMAKE_FLAGS}
+  cmake -B build/${BUILD_TYPE} -S . -G Ninja ${COMPILER_FLAGS} ${CMAKE_FLAGS}
 
   # Build
   if [ "${J}" == "all-1" ]; then
