@@ -1,7 +1,5 @@
 #pragma once
 
-#include <re2/re2.h>
-
 #include <cstdint>
 #include <memory>
 #include <set>
@@ -9,6 +7,8 @@
 #include <string_view>
 #include <utility>
 
+#include "REmatch/REmatch.hpp"
+#include "REmatch/query.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -18,7 +18,7 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
  private:
   std::unique_ptr<NonStronglyTypedAttribute<std::string_view>> left;
   std::string_view regex_string;
-  re2::RE2 regex_compiled;
+  REmatch::Query regex_compiled;
 
  public:
   CompareWithRegexWeaklyTyped(
@@ -28,12 +28,12 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
       : PhysicalPredicate(admissible_event_types),
         left(std::move(left)),
         regex_string(regex),
-        regex_compiled(regex) {}
+        regex_compiled(std::move(REmatch::reql(regex))) {}
 
   ~CompareWithRegexWeaklyTyped() override = default;
 
   bool eval(Types::EventWrapper& event) override {
-    return re2::RE2::PartialMatch(left->eval(event), regex_compiled);
+    return regex_compiled.check(std::string(left->eval(event)));
   }
 
   std::string to_string() const override {
