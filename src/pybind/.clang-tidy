@@ -1,0 +1,15 @@
+# clang-tidy config for nanobind Python bindings.
+#
+# Disabled checks (false positives with nanobind):
+#   - bugprone-unused-raii: nb::class_ and nb::exception register types via construction side effects
+#   - bugprone-throw-keyword-missing: nb::exception is a type registrar, not an exception throw
+#   - misc-include-cleaner: nanobind STL headers work via template specialization
+Checks: >
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-unused-raii,
+  -bugprone-throw-keyword-missing,
+  -misc-include-cleaner
+
+WarningsAsErrors: "*"

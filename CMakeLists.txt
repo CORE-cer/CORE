@@ -104,26 +104,45 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
-# Python/nanobind is optional - only required for pip wheel builds
-# nanobind is installed via pip, not vcpkg
-find_package(Python COMPONENTS Interpreter Development QUIET)
+# Python/nanobind - FetchContent for dev builds (LSP/clang-tidy),
+# pip-installed nanobind for wheel builds.
 find_package(nanobind CONFIG QUIET)
-if(nanobind_FOUND)
-    message(STATUS "Building Python bindings with nanobind")
+if(NOT nanobind_FOUND)
+    FetchContent_Declare(
+      nanobind
+      GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+      GIT_TAG        v2.4.0
+      GIT_SHALLOW    TRUE
+    )
+endif()
+
+find_package(Python COMPONENTS Interpreter Development.Module QUIET)
+if(Python_FOUND)
+    if(NOT nanobind_FOUND)
+        FetchContent_MakeAvailable(nanobind)
+    endif()
     nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
     target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
     target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads GMP::gmp GMP::gmpxx)
-    install(TARGETS pycer DESTINATION .)
-    nanobind_add_stub(
-      pycer_stub
-      INSTALL_TIME
-      MODULE pycer
-      OUTPUT pycer.pyi
-      PYTHON_PATH "."
-      MARKER_FILE py.typed
-    )
+
+    if(SKBUILD)
+        # pip wheel build - install module and generate stubs
+        install(TARGETS pycer DESTINATION .)
+        nanobind_add_stub(
+          pycer_stub
+          INSTALL_TIME
+          MODULE pycer
+          OUTPUT pycer.pyi
+          PYTHON_PATH "."
+          MARKER_FILE py.typed
+        )
+    else()
+        # Dev build - keep in compile_commands.json for LSP/clang-tidy
+        # but don't build by default
+        set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
 else()
-    message(STATUS "nanobind not found, skipping Python bindings")
+    message(STATUS "Python not found, skipping Python bindings")
 endif()
 
 
