@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Etc/UTC
 
 # Dependencies to install build dependencies
-RUN apt -y update && apt install -y wget software-properties-common
+RUN apt -y update && apt install -y wget software-properties-common curl zip unzip tar pkg-config autoconf automake libtool
 
 # Build dependencies
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
@@ -19,14 +19,13 @@ RUN apt -y update && apt -y install \
 RUN apt -y upgrade cmake g++
 RUN apt -y clean all
 
-# Conan stuff
-RUN pip install conan
-RUN conan profile detect
-
-# Install dependencies
-COPY conanfile.py conanfile.py
+# Copy project files needed for dependency installation
+COPY vcpkg.json vcpkg.json
+COPY vcpkg-triplets vcpkg-triplets
 COPY scripts scripts
 COPY ./src/core_server/internal/parsing/ceql_query/autogenerate_script.sh ./src/core_server/internal/parsing/ceql_query/autogenerate_script.sh
 COPY ./src/core_server/internal/parsing/stream_declaration/autogenerate_script.sh ./src/core_server/internal/parsing/stream_declaration/autogenerate_script.sh
-RUN conan source .
-RUN conan install . --build missing -s:h compiler=gcc -s:h compiler.cppstd=gnu20 -s:h compiler.version=12.2
+COPY ./src/core_server/internal/parsing/option_declaration/autogenerate_script.sh ./src/core_server/internal/parsing/option_declaration/autogenerate_script.sh
+
+# Install vcpkg and dependencies
+RUN chmod +x scripts/*.sh && scripts/install_dependencies.sh

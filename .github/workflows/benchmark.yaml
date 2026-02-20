@@ -56,16 +56,10 @@ jobs:
           clang-format --version
           gcc -v
 
-      - name: Get Conan
-        uses: turtlebrowser/get-conan@v1.2
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
 
-      - name: "Setup conan"
-        run: conan profile detect
-
-      - name: update conan default remote
-        run: conan remote update conancenter --url https://center2.conan.io
-
-      - name: install dependencies conan
+      - name: Install dependencies
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
