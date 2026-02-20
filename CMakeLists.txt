@@ -114,6 +114,14 @@ if(nanobind_FOUND)
     target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
     target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads GMP::gmp GMP::gmpxx)
     install(TARGETS pycer DESTINATION .)
+    nanobind_add_stub(
+      pycer_stub
+      INSTALL_TIME
+      MODULE pycer
+      OUTPUT pycer.pyi
+      PYTHON_PATH "."
+      MARKER_FILE py.typed
+    )
 else()
     message(STATUS "nanobind not found, skipping Python bindings")
 endif()
