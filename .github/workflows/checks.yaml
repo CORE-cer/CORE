@@ -179,4 +179,4 @@ jobs:
       - name: Check clang tidy
         run: |
           chmod +x ./scripts/clang_tidy_check_all_files.sh
-          ./scripts/clang_tidy_check_all_files.sh
+          FAIL_FAST=true ./scripts/clang_tidy_check_all_files.sh
