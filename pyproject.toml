@@ -12,5 +12,4 @@ requires-python = ">=3.10"
 cmake.build-type = "Release"
 
 [tool.scikit-build.cmake.define]
-CMAKE_TOOLCHAIN_FILE = {env = "VCPKG_ROOT", default = "vcpkg/scripts/buildsystems/vcpkg.cmake"}
 VCPKG_OVERLAY_TRIPLETS = "vcpkg-triplets"
