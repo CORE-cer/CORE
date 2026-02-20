@@ -104,6 +104,9 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
+# Python/nanobind is optional - only required for pip wheel builds
+# nanobind is installed via pip, not vcpkg
+find_package(Python COMPONENTS Interpreter Development QUIET)
 find_package(nanobind CONFIG QUIET)
 if(nanobind_FOUND)
     message(STATUS "Building Python bindings with nanobind")
@@ -124,6 +127,8 @@ add_library(core STATIC
             ${STREAMER_FILES})
 
 target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+# uwebsockets headers are in a subdirectory but source uses bare includes like <Loop.h>
+target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/uwebsockets")
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)

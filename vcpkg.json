@@ -12,7 +12,6 @@
     "quill",
     "readerwriterqueue",
     "uwebsockets",
-    "nanobind",
     "argparse",
     "nlohmann-json",
     "glaze"
