@@ -1,9 +1,10 @@
-#include <pybind11/attr.h>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/functional.h>  // NOLINT
-#include <pybind11/pybind11.h>    // NOLINT
-#include <pybind11/stl.h>         // NOLINT
+#include <nanobind/nanobind.h>
+#include <nanobind/make_iterator.h>
+#include <nanobind/stl/function.h>
+#include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/unique_ptr.h>
+#include <nanobind/stl/vector.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -42,10 +43,10 @@
 #include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace CORE {
-using namespace pybind11::literals;
+using namespace nanobind::literals;
 
 void hello_world() { std::cout << "Hello World" << std::endl; }
 
@@ -56,14 +57,14 @@ subscribe_to_queries(Client& client,
   std::vector<std::unique_ptr<CallbackHandler>> handlers;
   for (size_t port = initial_port; port < final_port; port++) {
     std::cout << "Subscribing to port: " << port << std::endl;
-    handlers.emplace_back(std::make_unique<CallbackHandler>());  // Store one enumerator.
+    handlers.emplace_back(std::make_unique<CallbackHandler>());
     client.subscribe_to_complex_event<CallbackHandler>(handlers.back().get(), port);
   }
   std::cout << "Created handlers" << std::endl;
   return handlers;
 }
 
-PYBIND11_MODULE(_pycore, m) {
+NB_MODULE(pycer, m) {
   // clang-format off
         m.doc() = "CORE";
 
@@ -71,7 +72,7 @@ PYBIND11_MODULE(_pycore, m) {
 
         m.def("subscribe_to_queries", &subscribe_to_queries);
 
-        py::enum_<Types::ValueTypes>(m, "PyValueTypes")
+        nb::enum_<Types::ValueTypes>(m, "PyValueTypes")
             .value("INT64", Types::ValueTypes::INT64)
             .value("DOUBLE", Types::ValueTypes::DOUBLE)
             .value("BOOL", Types::ValueTypes::BOOL)
@@ -80,100 +81,100 @@ PYBIND11_MODULE(_pycore, m) {
             .value("PRIMARY_TIME", Types::ValueTypes::PRIMARY_TIME)
             .export_values();
 
-        py::class_<Types::Value, std::shared_ptr<Types::Value>>(m, "PyValue"); // NOLINT
+        nb::class_<Types::Value>(m, "PyValue");
 
-        py::class_<Types::IntValue, Types::Value, std::shared_ptr<Types::IntValue>>(m, "PyIntValue")
-            .def(py::init<int64_t>());
+        nb::class_<Types::IntValue, Types::Value>(m, "PyIntValue")
+            .def(nb::init<int64_t>());
 
-        py::class_<Types::StringValue, Types::Value, std::shared_ptr<Types::StringValue>>(m, "PyStringValue")
-            .def(py::init<std::string>());
+        nb::class_<Types::StringValue, Types::Value>(m, "PyStringValue")
+            .def(nb::init<std::string>());
 
-        py::class_<Types::DoubleValue, Types::Value, std::shared_ptr<Types::DoubleValue>>(m, "PyDoubleValue")
-            .def(py::init<double>());
+        nb::class_<Types::DoubleValue, Types::Value>(m, "PyDoubleValue")
+            .def(nb::init<double>());
 
-        py::class_<Types::BoolValue, Types::Value, std::shared_ptr<Types::BoolValue>>(m, "PyBoolValue")
-            .def(py::init<bool>());
+        nb::class_<Types::BoolValue, Types::Value>(m, "PyBoolValue")
+            .def(nb::init<bool>());
 
-        py::class_<Types::DateValue, Types::Value, std::shared_ptr<Types::DateValue>>(m, "PyDateValue")
-            .def(py::init<std::time_t>());
+        nb::class_<Types::DateValue, Types::Value>(m, "PyDateValue")
+            .def(nb::init<std::time_t>());
 
-        py::class_<Types::AttributeInfo>(m, "PyAttributeInfo")
-            .def(py::init<std::string, Types::ValueTypes>())
-            .def_readonly("name", &Types::AttributeInfo::name)
-            .def_readonly("value_type", &Types::AttributeInfo::value_type);
+        nb::class_<Types::AttributeInfo>(m, "PyAttributeInfo")
+            .def(nb::init<std::string, Types::ValueTypes>())
+            .def_ro("name", &Types::AttributeInfo::name)
+            .def_ro("value_type", &Types::AttributeInfo::value_type);
 
-        py::class_<Types::Event, std::shared_ptr<Types::Event>>(m, "PyEvent")
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>());
- 
-        py::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
-            .def(py::init<std::string, std::vector<Types::AttributeInfo>>())
-            .def_readonly("name", &Types::EventInfoParsed::name)
-            .def_readonly("attributes", &Types::EventInfoParsed::attributes_info);
+        nb::class_<Types::Event>(m, "PyEvent")
+            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
+            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>());
 
-        py::class_<Types::EventInfo>(m, "PyEventInfo")
-            .def(py::init<uint64_t, std::string, std::vector<Types::AttributeInfo>>())
-            .def_readonly("id", &Types::EventInfo::id)
-            .def_readonly("name", &Types::EventInfo::name);
+        nb::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
+            .def(nb::init<std::string, std::vector<Types::AttributeInfo>>())
+            .def_ro("name", &Types::EventInfoParsed::name)
+            .def_ro("attributes", &Types::EventInfoParsed::attributes_info);
 
-        py::class_<Types::Stream>(m, "PyStream")
-            .def(py::init<uint64_t, std::vector<std::shared_ptr<Types::Event>>&&>())
-            .def_readonly("id", &Types::Stream::id)
-            .def_readonly("events", &Types::Stream::events);
+        nb::class_<Types::EventInfo>(m, "PyEventInfo")
+            .def(nb::init<uint64_t, std::string, std::vector<Types::AttributeInfo>>())
+            .def_ro("id", &Types::EventInfo::id)
+            .def_ro("name", &Types::EventInfo::name);
 
-        py::class_<Types::StreamInfoParsed>(m, "PyStreamInfoParsed")
-            .def(py::init<std::string, std::vector<Types::EventInfoParsed>>())
-            .def_readonly("name", &Types::StreamInfoParsed::name)
-            .def_readonly("events_info", &Types::StreamInfoParsed::events_info);
+        nb::class_<Types::Stream>(m, "PyStream")
+            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Event>>&&>())
+            .def_ro("id", &Types::Stream::id)
+            .def_ro("events", &Types::Stream::events);
 
-        py::class_<Types::StreamInfo>(m, "PyStreamInfo")
-            .def(py::init<uint64_t, std::string, std::vector<Types::EventInfo>&&>())
-            .def_readonly("events_info", &Types::StreamInfo::events_info)
-            .def_readonly("name", &Types::StreamInfo::name)
-            .def_readonly("id", &Types::StreamInfo::id);
-            
-        py::class_<Streamer>(m, "PyStreamer")
-            .def(py::init<std::string, uint16_t>())
-            .def("send_stream", py::overload_cast<Types::Stream>(&Streamer::send_stream))
+        nb::class_<Types::StreamInfoParsed>(m, "PyStreamInfoParsed")
+            .def(nb::init<std::string, std::vector<Types::EventInfoParsed>>())
+            .def_ro("name", &Types::StreamInfoParsed::name)
+            .def_ro("events_info", &Types::StreamInfoParsed::events_info);
+
+        nb::class_<Types::StreamInfo>(m, "PyStreamInfo")
+            .def(nb::init<uint64_t, std::string, std::vector<Types::EventInfo>&&>())
+            .def_ro("events_info", &Types::StreamInfo::events_info)
+            .def_ro("name", &Types::StreamInfo::name)
+            .def_ro("id", &Types::StreamInfo::id);
+
+        nb::class_<Streamer>(m, "PyStreamer")
+            .def(nb::init<std::string, uint16_t>())
+            .def("send_stream", nb::overload_cast<Types::Stream>(&Streamer::send_stream))
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
-            }, py::arg("stream_id"), py::arg("event"),
-            "Envía un evento único a un stream.");
+            }, nb::arg("stream_id"), nb::arg("event"),
+            "Sends a single event to a stream.");
 
-        py::class_<Client>(m, "PyClient")
-            .def(py::init<std::string, uint16_t>())
-            .def("declare_stream", py::overload_cast<std::string>(&Client::declare_stream))
-            .def("declare_option", py::overload_cast<std::string>(&Client::declare_option))
-            .def("add_query", py::overload_cast<std::string>(&Client::add_query));
+        nb::class_<Client>(m, "PyClient")
+            .def(nb::init<std::string, uint16_t>())
+            .def("declare_stream", nb::overload_cast<std::string>(&Client::declare_stream))
+            .def("declare_option", nb::overload_cast<std::string>(&Client::declare_option))
+            .def("add_query", nb::overload_cast<std::string>(&Client::add_query));
 
-        py::class_<Types::ComplexEvent>(m, "PyComplexEvent")
+        nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
-            .def_readonly("start", &Types::ComplexEvent::start)
-            .def_readonly("end", &Types::ComplexEvent::end)
-            .def_readonly("start", &Types::ComplexEvent::start)
-            .def_readonly("events", &Types::ComplexEvent::events);
+            .def_ro("start", &Types::ComplexEvent::start)
+            .def_ro("end", &Types::ComplexEvent::end)
+            .def_ro("events", &Types::ComplexEvent::events);
 
-        py::class_<CallbackHandler, std::unique_ptr<CallbackHandler>>(m, "PyCallbckHandler")
+        nb::class_<CallbackHandler>(m, "PyCallbackHandler")
             .def_static("set_event_handler", [](std::function<void(const Types::Enumerator&)> handler) {
                 CallbackHandler::event_handler = handler;
             });
 
-        py::class_<CORE::Types::Enumerator>(m, "PyEnumerator")
-            .def_readonly("complex_events", &CORE::Types::Enumerator::complex_events)
+        nb::class_<CORE::Types::Enumerator>(m, "PyEnumerator")
+            .def_ro("complex_events", &CORE::Types::Enumerator::complex_events)
             .def("__iter__", [](CORE::Types::Enumerator &self) {
-                return py::make_iterator(self.complex_events.begin(), self.complex_events.end());
-            }, py::keep_alive<0, 1>());
+                return nb::make_iterator(nb::type<CORE::Types::Enumerator>(), "iterator",
+                    self.complex_events.begin(), self.complex_events.end());
+            }, nb::keep_alive<0, 1>());
 
-        py::register_exception<ClientException>(m, "PyClientException");
-        py::register_exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");
-        py::register_exception<AttributeNotDefinedException>(m, "PyAttributeNotDefinedException");
-        py::register_exception<EventNameAlreadyDeclaredException>(m, "PyEventNameAlreadyDeclared");
-        py::register_exception<EventNotDefinedException>(m, "PyEventNotDefinedException");
-        py::register_exception<EventNotInStreamException>(m, "EventNotInStreamException");
-        py::register_exception<ParsingSyntaxException>(m, "PyParsingSyntaxException");
-        py::register_exception<StreamNameAlreadyDeclaredException>(m, "PyStreamNameAlreadyDeclaredException");
-        py::register_exception<StreamNotFoundException>(m, "PyStreamNotFoundException");
-        py::register_exception<WarningException>(m, "PyWarningException");
+        nb::exception<ClientException>(m, "PyClientException");
+        nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");
+        nb::exception<AttributeNotDefinedException>(m, "PyAttributeNotDefinedException");
+        nb::exception<EventNameAlreadyDeclaredException>(m, "PyEventNameAlreadyDeclared");
+        nb::exception<EventNotDefinedException>(m, "PyEventNotDefinedException");
+        nb::exception<EventNotInStreamException>(m, "EventNotInStreamException");
+        nb::exception<ParsingSyntaxException>(m, "PyParsingSyntaxException");
+        nb::exception<StreamNameAlreadyDeclaredException>(m, "PyStreamNameAlreadyDeclaredException");
+        nb::exception<StreamNotFoundException>(m, "PyStreamNotFoundException");
+        nb::exception<WarningException>(m, "PyWarningException");
   // clang-format on
 }
 }  // namespace CORE

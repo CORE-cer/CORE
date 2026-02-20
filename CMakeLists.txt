@@ -1,3 +1,9 @@
+# Auto-detect vcpkg toolchain
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      CACHE STRING "Vcpkg toolchain file")
+endif()
+
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -14,15 +20,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(src/)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(cppzmq REQUIRED)
-find_package(gmp REQUIRED)
+find_package(GMP REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
-find_package(uwebsockets REQUIRED)
-find_package(pybind11 REQUIRED)
+find_package(unofficial-uwebsockets CONFIG REQUIRED)
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glaze REQUIRED)
@@ -97,22 +104,17 @@ file(GLOB_RECURSE PYBIND_FILES
      src/pybind/*.cpp
 )
 
-# message(STATUS "Building python target")
-# # pybind11_add_module(pycore MODULE src/pybind/python_binding.cpp)
-# add_library(pycore MODULE src/pybind/python_binding.cpp)
-# target_link_libraries(pycore PRIVATE pybind11::module)
-
-
-message(STATUS "Building python target")
-# include(${PROJECT_SOURCE_DIR}/cmake/setup_pybind11.cmake)
-pybind11_add_module(_pycore MODULE src/pybind/python_binding.cpp)
-
-# Add compiler and linker flags to pycore
-target_compile_options(_pycore PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
-
-target_link_libraries(_pycore PRIVATE cereal quill::quill cppzmq pybind11::module TracyClient Threads::Threads gmp::gmp gmp::gmpxx gmp::libgmp)
-# target_link_libraries(_pycore PRIVATE ${project_LIB})
-install(TARGETS _pycore DESTINATION .)
+find_package(nanobind CONFIG QUIET)
+if(nanobind_FOUND)
+    message(STATUS "Building Python bindings with nanobind")
+    nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
+    target_compile_options(pycer PRIVATE -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+    target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads GMP::gmp GMP::gmpxx)
+    install(TARGETS pycer DESTINATION .)
+    nanobind_add_stub(pycer_stub MODULE pycer)
+else()
+    message(STATUS "nanobind not found, skipping Python bindings")
+endif()
 
 
 add_library(core STATIC
@@ -121,7 +123,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal cppzmq gmp::gmp gmp::gmpxx gmp::libgmp Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue uwebsockets::uwebsockets  argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
