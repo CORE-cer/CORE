@@ -22,7 +22,7 @@ else
     number_of_cores=$(nproc --all)
 fi
 
-parallel --bar --jobs $number_of_cores --halt now,fail=1 clang-tidy -p build/compile_commands.json --header-filter=".*\/src\/.*" -system-headers ::: $files
+parallel --bar --jobs $number_of_cores --halt now,fail=1 clang-tidy -p build/${BUILD_TYPE}/compile_commands.json --header-filter=".*\/src\/.*" -system-headers ::: $files
 clang_tidy_result=$?
 
 

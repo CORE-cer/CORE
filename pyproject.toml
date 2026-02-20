@@ -1,0 +1,16 @@
+[build-system]
+requires = ["scikit-build-core>=0.4.3", "nanobind>=2.0.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pycer"
+version = "0.0.0"
+description = "CORE - Complex Event Recognition Engine Python Bindings"
+requires-python = ">=3.10"
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+
+[tool.scikit-build.cmake.define]
+CMAKE_TOOLCHAIN_FILE = {env = "VCPKG_ROOT", default = "vcpkg/scripts/buildsystems/vcpkg.cmake"}
+VCPKG_OVERLAY_TRIPLETS = "vcpkg-triplets"
