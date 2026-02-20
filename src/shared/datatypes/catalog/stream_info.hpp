@@ -93,7 +93,7 @@ struct StreamInfo {
       std::string line;
       std::getline(file, line);  // Skip header.
       bool expect_time_line = true;
-      while (std::getline(file, line)) {
+      while (std::getline(file, line)) {  // NOLINT(bugprone-infinite-loop)
         ZoneScopedN("DataReader::read_csv::getline");
 
         if (expect_time_line) {
@@ -124,7 +124,7 @@ struct StreamInfo {
       std::ifstream file(csv_path);
       uint64_t count = 0;
       std::string line;
-      while (std::getline(file, line)) {
+      while (std::getline(file, line)) {  // NOLINT(bugprone-infinite-loop)
         count++;
       }
       return count;
