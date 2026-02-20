@@ -49,6 +49,20 @@ function build() {
     jobs=$J
   fi
 
+  # Set compiler based on profile
+  local compiler_flags=""
+  case "${COMPILER_PROFILE}" in
+    clang-libcxx)
+      compiler_flags="-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-stdlib=libc++"
+      ;;
+    clang-libstdcxx)
+      compiler_flags="-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-stdlib=libstdc++"
+      ;;
+    gcc-libstdcxx)
+      compiler_flags="-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++"
+      ;;
+  esac
+
   # Sanitizer flags
   local sanitizer_flags=""
   if [ "$SANITIZER" == "address" ]; then
@@ -71,10 +85,11 @@ function build() {
   # Configure
   cmake -S . -B "${build_dir}" \
     -G Ninja \
+    ${compiler_flags} \
     -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
     -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" \
     -DVCPKG_TARGET_TRIPLET="${triplet}" \
-    -DVCPKG_OVERLAY_TRIPLETS="vcpkg-triplets" \
+    -DVCPKG_OVERLAY_TRIPLETS="$(pwd)/vcpkg-triplets" \
     -DLOGGING="${LOGGING}" \
     -DPROFILING="${profiling_flag}" \
     ${sanitizer_flags} \
