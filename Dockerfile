@@ -15,9 +15,9 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # Install the latest version of cmake:
 RUN apt remove --purge --auto-remove cmake
 
-RUN apt-get update && apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-pip lsb-release wget sudo pipx git build-essential python3-dev curl zip unzip tar pkg-config autoconf automake libtool
+RUN apt-get update && apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-dev lsb-release wget sudo git build-essential curl zip unzip tar pkg-config autoconf automake libtool
 
-RUN pipx ensurepath
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 RUN apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
@@ -58,7 +58,7 @@ RUN scripts/build_and_test.sh -b Debug
 RUN scripts/build_and_test.sh -b Release
 
 # Build Python wheel
-RUN pipx run build --wheel
+RUN uv build --wheel
 
 FROM ubuntu:24.04 AS final
 
@@ -76,7 +76,7 @@ RUN apt-get update
 
 RUN apt-get -y upgrade
 
-RUN apt install -y python3 python3-pip python3.12-venv
+RUN apt install -y python3 python3-dev
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -84,7 +84,7 @@ COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
 COPY --from=build /CORE/dist/*.whl /tmp/
 
-RUN pip3 install --break-system-packages /tmp/*.whl && rm /tmp/*.whl
+RUN uv pip install --system /tmp/*.whl && rm /tmp/*.whl
 
 COPY --from=build /CORE/python_streamer /CORE/python_streamer
 
