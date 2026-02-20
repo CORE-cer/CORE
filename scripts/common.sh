@@ -4,9 +4,9 @@ declare -a EXCLUDED_QUERIES
 function _setArgs() {
   while [ "${1:-}" != "" ]; do
     case "$1" in
-      "-p" | "--profile")
+      "-c" | "--compiler")
         shift
-        CONAN_PROFILE=$1
+        COMPILER_PROFILE=$1
         ;;
       "-b" | "--buildType")
         shift
@@ -18,7 +18,7 @@ function _setArgs() {
         ;;
       "--exclude")
         shift
-        EXCLUDED_QUERIES+=("$1") # Add the excluded query to the array
+        EXCLUDED_QUERIES+=("$1")
         ;;
       "-l"| "--logging")
         shift
@@ -37,21 +37,62 @@ function _setArgs() {
 }
 
 function build() {
-  conan build . --profile:host ${CONAN_PROFILE} --profile:build ${CONAN_PROFILE}\
-      -s build_type=${BUILD_TYPE}\
-      --build missing -o sanitizer=${SANITIZER} -o logging=${LOGGING} -o j=${J} -o profiling=${PROFILING}
+  local triplet="x64-linux-${COMPILER_PROFILE}"
+  local build_dir="build/${BUILD_TYPE}"
+
+  # Determine parallel jobs
+  local jobs
+  if [ "$J" == "all-1" ]; then
+    jobs=$(($(nproc) - 1))
+    [ "$jobs" -lt 1 ] && jobs=1
+  else
+    jobs=$J
+  fi
+
+  # Sanitizer flags
+  local sanitizer_flags=""
+  if [ "$SANITIZER" == "address" ]; then
+    sanitizer_flags="-DADDRESS_SANITIZER=ON -DTHREAD_SANITIZER=OFF"
+  elif [ "$SANITIZER" == "thread" ]; then
+    sanitizer_flags="-DTHREAD_SANITIZER=ON -DADDRESS_SANITIZER=OFF"
+  else
+    sanitizer_flags="-DADDRESS_SANITIZER=OFF -DTHREAD_SANITIZER=OFF"
+  fi
+
+  # Profiling flag
+  local profiling_flag="OFF"
+  if [ "$PROFILING" == "on" ]; then
+    profiling_flag="ON"
+  fi
+
+  # GMP autotools needs C17 (C23 default breaks it)
+  export CFLAGS="-std=gnu17"
+
+  # Configure
+  cmake -S . -B "${build_dir}" \
+    -G Ninja \
+    -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+    -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" \
+    -DVCPKG_TARGET_TRIPLET="${triplet}" \
+    -DVCPKG_OVERLAY_TRIPLETS="vcpkg-triplets" \
+    -DLOGGING="${LOGGING}" \
+    -DPROFILING="${profiling_flag}" \
+    ${sanitizer_flags} \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+  # Build
+  cmake --build "${build_dir}" -j "${jobs}"
 
   build_result=$?
   if [ $build_result -ne 0 ]; then
       echo -e "${RED}Build failed!${NORMAL_OUTPUT}"
       exit 1
   fi
-  # echo current path
 }
 
 # Default values
 BUILD_TYPE="Debug"
-CONAN_PROFILE="conan_profiles/x86_64-linux-clang-libstdc"
+COMPILER_PROFILE="clang-libstdcxx"
 SANITIZER=none
 LOGGING=info
 J="all-1"
