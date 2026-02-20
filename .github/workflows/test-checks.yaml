@@ -320,3 +320,39 @@ jobs:
 
       # - name: run tests with thread sanitizer
       #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
+
+  build-pycer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - uses: astral-sh/setup-uv@v7.3.0
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19.1.7"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
+
+      - name: Install dependencies
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: Build pycer wheel
+        run: uv build --wheel
+
+      - name: Verify pycer import
+        run: uv run python -c "import pycer; print('pycer loaded successfully')"
