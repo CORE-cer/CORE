@@ -80,17 +80,18 @@ RUN apt install -y python3 python3-dev
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+COPY --from=build /CORE/.python-version /CORE/.python-version
 COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
 COPY --from=build /CORE/dist/*.whl /tmp/
 
-RUN uv pip install --system /tmp/*.whl && rm /tmp/*.whl
+RUN uv venv /CORE/.venv && uv pip install --python /CORE/.venv/bin/python /tmp/*.whl && rm /tmp/*.whl
 
 COPY --from=build /CORE/python_streamer /CORE/python_streamer
 
 RUN cd /CORE/python_streamer && uv sync
 
-ENV PATH="/CORE/python_streamer/.venv/bin:$PATH"
+ENV PATH="/CORE/.venv/bin:/CORE/python_streamer/.venv/bin:$PATH"
 
 # Set default command to bash for interactive terminal
 CMD ["/bin/bash"]
