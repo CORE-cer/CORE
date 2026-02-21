@@ -16,13 +16,6 @@ jobs:
         compiler_profile: [clang-libstdcxx, gcc-libstdcxx]
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
@@ -69,13 +62,6 @@ jobs:
         compiler_profile: [clang-libstdcxx]
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
@@ -125,13 +111,6 @@ jobs:
         compiler_profile: [clang-libstdcxx]
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
@@ -181,13 +160,6 @@ jobs:
         compiler_profile: [clang-libstdcxx]
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
@@ -244,13 +216,6 @@ jobs:
         compiler_profile: [clang-libstdcxx, gcc-libstdcxx]
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
