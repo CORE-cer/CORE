@@ -124,7 +124,7 @@ class HTTPServer {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
                   try {
-                    auto s = glz::read_json<AddQueryRequest>(data);
+                    auto s = glz::read_json<AddQueryRequest>(std::string(data));
                     if (s.has_value()) {
                       std::string response_add_query = add_query(s->query, s->query_name);
                       res->writeStatus("200 OK");
