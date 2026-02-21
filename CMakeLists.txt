@@ -106,19 +106,16 @@ file(GLOB_RECURSE PYBIND_FILES
 
 # Python/nanobind - FetchContent for dev builds (LSP/clang-tidy),
 # pip-installed nanobind for wheel builds.
-find_package(nanobind CONFIG QUIET)
-if(NOT nanobind_FOUND)
-    FetchContent_Declare(
-      nanobind
-      GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-      GIT_TAG        v2.4.0
-      GIT_SHALLOW    TRUE
-    )
-endif()
-
 find_package(Python COMPONENTS Interpreter Development.Module QUIET)
 if(Python_FOUND)
+    find_package(nanobind CONFIG QUIET)
     if(NOT nanobind_FOUND)
+        FetchContent_Declare(
+          nanobind
+          GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+          GIT_TAG        v2.4.0
+          GIT_SHALLOW    TRUE
+        )
         FetchContent_MakeAvailable(nanobind)
     endif()
     nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
@@ -142,7 +139,7 @@ if(Python_FOUND)
         set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
     endif()
 else()
-    message(STATUS "Python not found, skipping Python bindings")
+    message(WARNING "Python not found, skipping Python bindings. clangd will not work on nanobind files.")
 endif()
 
 
