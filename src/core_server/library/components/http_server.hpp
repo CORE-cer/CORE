@@ -31,6 +31,11 @@
 
 namespace CORE::Library::Components {
 
+struct AddQueryRequest {
+  std::string query;
+  std::string query_name;
+};
+
 class HTTPServer {
   using Backend = CORE::Internal::Interface::Backend<false>;
 
@@ -119,11 +124,7 @@ class HTTPServer {
               res->onData([this, res](std::string_view data, bool is_end) {
                 if (is_end) {
                   try {
-                    struct Data {
-                      std::string query;
-                      std::string query_name;
-                    };
-                    auto s = glz::read_json<Data>(data);
+                    auto s = glz::read_json<AddQueryRequest>(data);
                     if (s.has_value()) {
                       std::string response_add_query = add_query(s->query, s->query_name);
                       res->writeStatus("200 OK");
