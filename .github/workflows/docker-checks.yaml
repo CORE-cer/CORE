@@ -13,13 +13,6 @@ jobs:
   run-docker-build-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@v10
-        with:
-          overprovision-lvm: true
-          remove-dotnet: true
-          remove-android: true
-
       - name: Check out repository code
         uses: actions/checkout@v3
 
