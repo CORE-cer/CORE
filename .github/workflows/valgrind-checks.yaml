@@ -17,6 +17,12 @@ jobs:
     strategy:
       matrix:
         compiler_profile: [clang-libstdcxx, gcc-libstdcxx]
+        include:
+          - compiler_profile: clang-libstdcxx
+            check_name: x86_64-linux-clang-libstdc
+          - compiler_profile: gcc-libstdcxx
+            check_name: x86_64-linux-gcc-libstdc
+    name: run-valgrind-debug (${{ matrix.check_name }})
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
