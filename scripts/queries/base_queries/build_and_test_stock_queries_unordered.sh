@@ -38,6 +38,10 @@ for query in $queries; do
         echo -e "${RED}Check if expected_results folder is up-to-date with tar.xz${NORMAL_OUTPUT}"
         exit 1
     fi
+    if [ -n "$CORE_TEST_FIRST_QUERY_ONLY" ]; then
+        echo -e "${GREEN}CORE_TEST_FIRST_QUERY_ONLY is set, skipping remaining queries.${NORMAL_OUTPUT}"
+        break
+    fi
 done
 
 if [ -n "$base_dir" ] && [[ "$base_dir" == "src/targets/experiments/unordered_stocks" ]]; then
