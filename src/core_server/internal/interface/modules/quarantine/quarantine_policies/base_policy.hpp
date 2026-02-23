@@ -172,13 +172,12 @@ class BasePolicy {
 
   void handle_destruction() {
     stop_condition = true;
-    std::this_thread::sleep_for(std::chrono::milliseconds(60));
+    worker_thread.join();
     for (auto& blocking_event_queue : blocking_event_queues) {
       while (blocking_event_queue.size_approx() != 0) {
         std::this_thread::sleep_for(std::chrono::microseconds(1));
       }
     }
-    worker_thread.join();
   }
 
   void start() {
