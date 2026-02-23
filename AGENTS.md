@@ -4,6 +4,9 @@ C++23 complex event recognition engine. Built with CMake + Ninja, dependencies m
 
 All scripts are in `scripts/` and accept common flags defined in `scripts/common.sh`.
 
+- **To compile only** (e.g. checking that edits build): use `scripts/build.sh`
+- **To compile and run tests**: use `scripts/build_and_test.sh`
+
 Key scripts:
 
 | Script | Purpose |
