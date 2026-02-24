@@ -146,7 +146,6 @@ NB_MODULE(pycer, m) {
         nb::enum_<Library::Components::ResultHandlerType>(m, "PyResultHandlerType")
             .value("OFFLINE", Library::Components::ResultHandlerType::OFFLINE)
             .value("ONLINE", Library::Components::ResultHandlerType::ONLINE)
-            .value("WEBSOCKET", Library::Components::ResultHandlerType::WEBSOCKET)
             .value("CUSTOM", Library::Components::ResultHandlerType::CUSTOM)
             .export_values();
 
