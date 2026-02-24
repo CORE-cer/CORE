@@ -148,9 +148,9 @@ class Client {
   }
 
   void inactivate_query(Types::UniqueQueryId query_id) {
-    Types::ClientRequest request(
-      Internal::CerealSerializer<Types::UniqueQueryId>::serialize(query_id),
-      Types::ClientRequestType::InactivateQuery);
+    Types::ClientRequest
+      request(Internal::CerealSerializer<Types::UniqueQueryId>::serialize(query_id),
+              Types::ClientRequestType::InactivateQuery);
     Types::ServerResponse response = send_request(request);
     assert(response.response_type == Types::ServerResponseType::SuccessEmpty);
   }

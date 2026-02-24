@@ -20,8 +20,7 @@ class ZMQMessageRouter : MessageRouter {
   std::atomic<bool> stop_router;
 
  public:
-  ZMQMessageRouter(const std::string& address,
-                   TransformFunc&& transformer)
+  ZMQMessageRouter(const std::string& address, TransformFunc&& transformer)
       : context(1),
         socket(context, zmq::socket_type::router),
         transformer(std::move(transformer)),
