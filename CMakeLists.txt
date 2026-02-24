@@ -29,7 +29,6 @@ find_package(GMP REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
-find_package(unofficial-uwebsockets CONFIG REQUIRED)
 find_package(argparse REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glaze REQUIRED)
@@ -149,9 +148,7 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
-# uwebsockets headers are in a subdirectory but source uses bare includes like <Loop.h>
-target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/uwebsockets")
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
