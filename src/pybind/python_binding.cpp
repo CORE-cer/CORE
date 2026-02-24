@@ -18,12 +18,14 @@
 
 #include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
+#include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/complex_event.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -141,11 +143,26 @@ NB_MODULE(pycer, m) {
             }, nb::arg("stream_id"), nb::arg("event"),
             "Sends a single event to a stream.");
 
+        nb::enum_<Library::Components::ResultHandlerType>(m, "PyResultHandlerType")
+            .value("OFFLINE", Library::Components::ResultHandlerType::OFFLINE)
+            .value("ONLINE", Library::Components::ResultHandlerType::ONLINE)
+            .value("WEBSOCKET", Library::Components::ResultHandlerType::WEBSOCKET)
+            .value("CUSTOM", Library::Components::ResultHandlerType::CUSTOM)
+            .export_values();
+
+        nb::class_<Types::QueryInfo>(m, "PyQueryInfo")
+            .def_ro("result_handler_identifier", &Types::QueryInfo::result_handler_identifier)
+            .def_ro("query_string", &Types::QueryInfo::query_string)
+            .def_ro("query_name", &Types::QueryInfo::query_name)
+            .def_ro("active", &Types::QueryInfo::active);
+
         nb::class_<Client>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
             .def("declare_stream", nb::overload_cast<std::string>(&Client::declare_stream))
             .def("declare_option", nb::overload_cast<std::string>(&Client::declare_option))
-            .def("add_query", nb::overload_cast<std::string>(&Client::add_query));
+            .def("add_query", nb::overload_cast<std::string>(&Client::add_query))
+            .def("list_all_streams", &Client::list_all_streams)
+            .def("list_all_queries", &Client::list_all_queries);
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)

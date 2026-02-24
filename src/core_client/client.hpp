@@ -19,6 +19,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
+#include "shared/datatypes/catalog/query_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/client_request.hpp"
 #include "shared/datatypes/client_request_type.hpp"
@@ -127,6 +128,22 @@ class Client {
     auto port_number = Internal::CerealSerializer<Types::PortNumber>::deserialize(
       response.serialized_response_data);
     return port_number;
+  }
+
+  std::vector<Types::StreamInfo> list_all_streams() {
+    Types::ClientRequest request("", Types::ClientRequestType::ListStreams);
+    Types::ServerResponse response = send_request(request);
+    assert(response.response_type == Types::ServerResponseType::StreamInfoVector);
+    return Internal::CerealSerializer<std::vector<Types::StreamInfo>>::deserialize(
+      response.serialized_response_data);
+  }
+
+  std::vector<Types::QueryInfo> list_all_queries() {
+    Types::ClientRequest request("", Types::ClientRequestType::ListQueries);
+    Types::ServerResponse response = send_request(request);
+    assert(response.response_type == Types::ServerResponseType::QueryInfoVector);
+    return Internal::CerealSerializer<std::vector<Types::QueryInfo>>::deserialize(
+      response.serialized_response_data);
   }
 
   template <class Handler>
