@@ -1,0 +1,13 @@
+[project]
+name = "core-server-py"
+version = "0.1.0"
+description = "CORE Python Server - FastAPI replacement for C++ HTTP/WebSocket server"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "websockets>=15.0.0",
+]
+
+[project.scripts]
+core-server = "core_server_py.__main__:main"

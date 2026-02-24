@@ -13,3 +13,8 @@ cmake.build-type = "Release"
 
 [tool.scikit-build.cmake.define]
 VCPKG_OVERLAY_TRIPLETS = "vcpkg-triplets"
+
+[tool.uv.workspace]
+members = [
+    "core_server_py",
+]
