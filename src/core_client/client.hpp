@@ -17,6 +17,7 @@
 #include "message_handler.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
@@ -144,6 +145,14 @@ class Client {
     assert(response.response_type == Types::ServerResponseType::QueryInfoVector);
     return Internal::CerealSerializer<std::vector<Types::QueryInfo>>::deserialize(
       response.serialized_response_data);
+  }
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    Types::ClientRequest request(
+      Internal::CerealSerializer<Types::UniqueQueryId>::serialize(query_id),
+      Types::ClientRequestType::InactivateQuery);
+    Types::ServerResponse response = send_request(request);
+    assert(response.response_type == Types::ServerResponseType::SuccessEmpty);
   }
 
   template <class Handler>

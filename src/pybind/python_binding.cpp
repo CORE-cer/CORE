@@ -162,7 +162,8 @@ NB_MODULE(pycer, m) {
             .def("declare_option", nb::overload_cast<std::string>(&Client::declare_option))
             .def("add_query", nb::overload_cast<std::string>(&Client::add_query))
             .def("list_all_streams", &Client::list_all_streams)
-            .def("list_all_queries", &Client::list_all_queries);
+            .def("list_all_queries", &Client::list_all_queries)
+            .def("inactivate_query", &Client::inactivate_query);
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
