@@ -65,6 +65,20 @@ async def all_queries_info():
     return result
 
 
+@app.post("/declare-stream")
+async def declare_stream(request: Request):
+    body = await request.json()
+    declaration = body.get("declaration", "")
+    try:
+        stream_info = engine.declare_stream(declaration)
+        events = []
+        for e in stream_info.events_info:
+            events.append({"id": e.id, "name": e.name})
+        return {"id": stream_info.id, "name": stream_info.name, "events_info": events}
+    except Exception as e:
+        return PlainTextResponse(str(e), status_code=400)
+
+
 @app.post("/add-query")
 async def add_query(request: Request):
     body = await request.json()

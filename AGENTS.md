@@ -79,6 +79,16 @@ Formatting and static analysis rules are defined in `.clang-format` and `.clang-
 - **Never push directly to main** — always use feature branches and pull requests
 - **Before committing**: Run `scripts/clang_format_all_files.sh` and `scripts/build_and_test.sh` at minimum
 
+## Python Bindings
+
+Build the `pycer` Python package using uv:
+
+```
+uv sync --reinstall-package pycer
+```
+
+This compiles the C++ bindings via scikit-build-core/CMake and installs the `pycer` package. The same command is used by `scripts/build_pycer.sh`.
+
 ## Dependencies
 
 - Managed via vcpkg (`vcpkg.json`). Install with `scripts/install_dependencies.sh`

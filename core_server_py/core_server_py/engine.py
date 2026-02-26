@@ -17,6 +17,7 @@ class QuerySubscription:
     port: int
     query_string: str
     query_name: str
+    handler: pycer.PyQueryResultHandler | None = None
 
 
 class CoreEngine:
@@ -42,13 +43,17 @@ class CoreEngine:
         port = self._client.add_query(query)
         query_id = self._next_query_id
         self._next_query_id += 1
+        self._result_queues[query_id] = []
+
+        handler = self._create_result_handler(query_id)
         self._subscriptions[query_id] = QuerySubscription(
             query_id=query_id,
             port=port,
             query_string=query,
             query_name=query_name,
+            handler=handler,
         )
-        self._result_queues[query_id] = []
+        self._client.subscribe_to_complex_event(handler, port)
         return query_id
 
     def inactivate_query(self, query_id: int) -> None:
@@ -76,17 +81,18 @@ class CoreEngine:
             except ValueError:
                 pass
 
-    def start_result_listener(self, query_id: int, port: int) -> None:
-        """Start listening for results on a ZMQ PUB port via PyCallbackHandler."""
+    def _create_result_handler(self, query_id: int) -> pycer.PyQueryResultHandler:
+        """Create a per-query result handler that forwards to asyncio queues."""
 
         def on_result(enumerator: pycer.PyEnumerator) -> None:
             result = self._enumerator_to_json(enumerator)
+            if not result:
+                return
             if self._loop and query_id in self._result_queues:
                 for queue in self._result_queues[query_id]:
                     self._loop.call_soon_threadsafe(queue.put_nowait, result)
 
-        pycer.PyCallbackHandler.set_event_handler(on_result)
-        pycer.subscribe_to_queries(self._client, port, port + 1)
+        return pycer.PyQueryResultHandler(on_result)
 
     @staticmethod
     def _enumerator_to_json(enumerator: pycer.PyEnumerator) -> list[dict]:
@@ -95,6 +101,6 @@ class CoreEngine:
             results.append({
                 "start": ce.start,
                 "end": ce.end,
-                "events": [str(e) for e in ce.events],
+                "to_string": ce.to_string(),
             })
         return results
