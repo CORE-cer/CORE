@@ -6,12 +6,15 @@
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,6 +22,8 @@
 #include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
+#include "core_server/library/server.hpp"
+#include "core_server/library/server_config.hpp"
 #include "core_streamer/streamer.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -65,6 +70,89 @@ subscribe_to_queries(Client& client,
   std::cout << "Created handlers" << std::endl;
   return handlers;
 }
+
+class PyOfflineServerWrapper {
+  static std::atomic<uint16_t> next_port;
+
+  std::unique_ptr<Library::OfflineServer> server;
+  std::unique_ptr<Client> client;
+  std::ostringstream capture_stream;
+  std::streambuf* original_cout_buf = nullptr;
+  bool capturing = false;
+
+  void start_capture() {
+    if (!capturing) {
+      original_cout_buf = std::cout.rdbuf(capture_stream.rdbuf());
+      capturing = true;
+    }
+  }
+
+  void stop_capture() {
+    if (capturing) {
+      std::cout.rdbuf(original_cout_buf);
+      original_cout_buf = nullptr;
+      capturing = false;
+    }
+  }
+
+ public:
+  PyOfflineServerWrapper() {
+    uint16_t base = next_port.fetch_add(3);
+    Library::ServerConfig::FixedPorts ports{base, static_cast<uint16_t>(base + 1)};
+    Library::ServerConfig config{ports,
+                                 static_cast<Types::PortNumber>(base + 2),
+                                 "",
+                                 "",
+                                 "",
+                                 ""};
+    server = std::make_unique<Library::OfflineServer>(std::move(config));
+    client = std::make_unique<Client>("tcp://localhost", base);
+  }
+
+  ~PyOfflineServerWrapper() { stop_capture(); }
+
+  Types::StreamInfo declare_stream(const std::string& declaration) {
+    return client->declare_stream(declaration);
+  }
+
+  void declare_option(const std::string& option) { client->declare_option(option); }
+
+  Types::PortNumber add_query(const std::string& query) {
+    try {
+      return client->add_query(query);
+    } catch (const std::invalid_argument&) {
+      // OfflineResultHandler returns "offline" as identifier, not a port number.
+      // The query is still registered; there is just no port to subscribe to.
+      return 0;
+    }
+  }
+
+  void send_event(std::shared_ptr<Types::Event> event) {
+    start_capture();
+    server->receive_stream({0, {std::move(event)}});
+  }
+
+  void send_events(std::vector<std::shared_ptr<Types::Event>> events) {
+    start_capture();
+    for (auto& event : events) {
+      server->receive_stream({0, {std::move(event)}});
+    }
+  }
+
+  std::string get_output() {
+    // Destroy server first — this joins all worker threads (BasePolicy,
+    // GenericQuery) ensuring all pending output has been written.
+    server.reset();
+    client.reset();
+    stop_capture();
+    std::string result = capture_stream.str();
+    capture_stream.str("");
+    capture_stream.clear();
+    return result;
+  }
+};
+
+std::atomic<uint16_t> PyOfflineServerWrapper::next_port{6000};
 
 NB_MODULE(pycer, m) {
   // clang-format off
@@ -189,6 +277,15 @@ NB_MODULE(pycer, m) {
                 return nb::make_iterator(nb::type<CORE::Types::Enumerator>(), "iterator",
                     self.complex_events.begin(), self.complex_events.end());
             }, nb::keep_alive<0, 1>());
+
+        nb::class_<PyOfflineServerWrapper>(m, "PyOfflineServer")
+            .def(nb::init<>())
+            .def("declare_stream", &PyOfflineServerWrapper::declare_stream)
+            .def("declare_option", &PyOfflineServerWrapper::declare_option)
+            .def("add_query", &PyOfflineServerWrapper::add_query)
+            .def("send_event", &PyOfflineServerWrapper::send_event)
+            .def("send_events", &PyOfflineServerWrapper::send_events)
+            .def("get_output", &PyOfflineServerWrapper::get_output);
 
         nb::exception<ClientException>(m, "PyClientException");
         nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");

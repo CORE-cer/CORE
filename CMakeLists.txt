@@ -117,36 +117,15 @@ if(Python_FOUND)
         )
         FetchContent_MakeAvailable(nanobind)
     endif()
-    nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
-    target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
-    target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads GMP::gmp GMP::gmpxx)
-
-    if(SKBUILD)
-        # pip wheel build - install module and generate stubs
-        install(TARGETS pycer DESTINATION .)
-        nanobind_add_stub(
-          pycer_stub
-          INSTALL_TIME
-          MODULE pycer
-          OUTPUT pycer.pyi
-          PYTHON_PATH "."
-          MARKER_FILE py.typed
-        )
-    else()
-        # Dev build - keep in compile_commands.json for LSP/clang-tidy
-        # but don't build by default
-        set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    endif()
-else()
-    message(WARNING "Python not found, skipping Python bindings. clangd will not work on nanobind files.")
 endif()
-
 
 add_library(core STATIC
             ${SHARED_FILES}
             ${CLIENT_FILES}
             ${SERVER_FILES}
             ${STREAMER_FILES})
+
+set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
 if (PROFILING)
@@ -160,7 +139,8 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+target_compile_options(core PUBLIC -Wno-unused-variable -Wno-unused-command-line-argument)
+target_compile_options(core PRIVATE -Werror=old-style-cast)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
@@ -203,6 +183,31 @@ if (LOGGING MATCHES "trace_l3")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L3)
   message("Logging set to trace_l3")
 endif()
+
+# Python bindings (must come after core target definition)
+if(Python_FOUND)
+    nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
+    target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
+    target_link_libraries(pycer PRIVATE core)
+
+    if(SKBUILD)
+        # pip wheel build - install module and generate stubs
+        install(TARGETS pycer DESTINATION .)
+        nanobind_add_stub(
+          pycer_stub
+          INSTALL_TIME
+          MODULE pycer
+          OUTPUT pycer.pyi
+          PYTHON_PATH "."
+          MARKER_FILE py.typed
+        )
+    else()
+        # Dev build - keep in compile_commands.json for LSP/clang-tidy
+        # but don't build by default
+        set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+endif()
+
 # executable target
 # Main Offline
 add_executable(offline src/targets/offline/offline.cpp)
