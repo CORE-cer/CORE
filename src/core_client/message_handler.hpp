@@ -81,6 +81,24 @@ class CallbackHandler : public StaticMessageHandler<CallbackHandler> {
 
 std::function<void(const Types::Enumerator&)> CallbackHandler::event_handler = nullptr;
 
+class InstanceCallbackHandler : public MessageHandler<InstanceCallbackHandler> {
+  friend class MessageHandler<InstanceCallbackHandler>;
+
+ public:
+  std::function<void(const Types::Enumerator&)> event_handler;
+
+  InstanceCallbackHandler() = default;
+
+  explicit InstanceCallbackHandler(std::function<void(const Types::Enumerator&)> handler)
+      : event_handler(std::move(handler)) {}
+
+  void handle_complex_event(Types::Enumerator& enumerator) {
+    if (event_handler) {
+      event_handler(enumerator);
+    }
+  }
+};
+
 class DummyHandler : public StaticMessageHandler<DummyHandler> {
   friend class StaticMessageHandler<DummyHandler>;
 

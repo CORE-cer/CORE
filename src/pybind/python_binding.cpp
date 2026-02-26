@@ -162,7 +162,11 @@ NB_MODULE(pycer, m) {
             .def("add_query", nb::overload_cast<std::string>(&Client::add_query))
             .def("list_all_streams", &Client::list_all_streams)
             .def("list_all_queries", &Client::list_all_queries)
-            .def("inactivate_query", &Client::inactivate_query);
+            .def("inactivate_query", &Client::inactivate_query)
+            .def("subscribe_to_complex_event", [](Client& self, InstanceCallbackHandler* handler, Types::PortNumber port) {
+                self.subscribe_to_complex_event(handler, port);
+            }, nb::arg("handler"), nb::arg("port"),
+            "Subscribe to query results on a ZMQ PUB port with a per-query handler.");
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
@@ -174,6 +178,9 @@ NB_MODULE(pycer, m) {
             .def_static("set_event_handler", [](std::function<void(const Types::Enumerator&)> handler) {
                 CallbackHandler::event_handler = handler;
             });
+
+        nb::class_<InstanceCallbackHandler>(m, "PyQueryResultHandler")
+            .def(nb::init<std::function<void(const Types::Enumerator&)>>());
 
         nb::class_<CORE::Types::Enumerator>(m, "PyEnumerator")
             .def_ro("complex_events", &CORE::Types::Enumerator::complex_events)

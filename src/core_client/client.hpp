@@ -126,9 +126,9 @@ class Client {
                                          Types::ClientRequestType::AddQuery};
     Types::ServerResponse response = send_request(create_streamer);
     assert(response.response_type == Types::ServerResponseType::PortNumber);
-    auto port_number = Internal::CerealSerializer<Types::PortNumber>::deserialize(
+    auto port_string = Internal::CerealSerializer<std::string>::deserialize(
       response.serialized_response_data);
-    return port_number;
+    return static_cast<Types::PortNumber>(std::stoi(port_string));
   }
 
   std::vector<Types::StreamInfo> list_all_streams() {
