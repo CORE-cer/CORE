@@ -117,7 +117,8 @@ NB_MODULE(pycer, m) {
         nb::class_<Types::EventInfo>(m, "PyEventInfo")
             .def(nb::init<uint64_t, std::string, std::vector<Types::AttributeInfo>>())
             .def_ro("id", &Types::EventInfo::id)
-            .def_ro("name", &Types::EventInfo::name);
+            .def_ro("name", &Types::EventInfo::name)
+            .def_ro("attributes_info", &Types::EventInfo::attributes_info);
 
         nb::class_<Types::Stream>(m, "PyStream")
             .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Event>>&&>())
