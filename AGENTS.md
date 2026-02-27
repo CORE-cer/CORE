@@ -18,7 +18,7 @@ Key scripts:
 | `scripts/clang_tidy_check_all_files.sh` | Run clang-tidy static analysis (slow) |
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
-| `scripts/build_pycer.sh` | Build Python bindings wheel |
+| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers) |
 
 ## Testing
 
@@ -42,11 +42,13 @@ Use the appropriate tier based on where you are in the development cycle:
    ```
    Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`uv sync --reinstall-package pycer`).
 
-4. **Sanitizers + targeted integration** (run alongside tier 3):
+4. **E2E tests with sanitizers** (run alongside tier 3):
+   Build pycer with sanitizers and run e2e tests:
    ```
-   scripts/queries/base_queries/build_and_test_stock_queries.sh -s address
+   scripts/build_pycer.sh -s address
+   uv run pytest tests/e2e/ -v
    ```
-   Runs stock queries with sanitizer-instrumented C++ binary for memory/threading bug detection.
+   Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
 
 **Before finishing a task:**
 

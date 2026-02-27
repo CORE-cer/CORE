@@ -183,8 +183,13 @@ jobs:
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address -c ${{ matrix.compiler_profile }}
 
-      - name: run stock query tests with address sanitizer
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s address -c ${{ matrix.compiler_profile }}
+      - uses: astral-sh/setup-uv@v7.3.0
+
+      - name: Build pycer with address sanitizer
+        run: uv sync --reinstall-package pycer --config-settings=cmake.define.ADDRESS_SANITIZER=ON
+
+      - name: Run e2e tests with address sanitizer
+        run: uv run pytest tests/e2e/ -v
 
   run-thread-sanitizer-tests-release:
     strategy:
@@ -247,8 +252,13 @@ jobs:
       - name: run tests with thread sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
 
-      - name: run stock query tests with thread sanitizer
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
+      - uses: astral-sh/setup-uv@v7.3.0
+
+      - name: Build pycer with thread sanitizer
+        run: uv sync --reinstall-package pycer --config-settings=cmake.define.THREAD_SANITIZER=ON
+
+      - name: Run e2e tests with thread sanitizer
+        run: uv run pytest tests/e2e/ -v
 
 
   run-tests-release:
