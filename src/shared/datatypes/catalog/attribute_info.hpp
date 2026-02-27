@@ -23,13 +23,5 @@ struct AttributeInfo {
   void serialize(Archive& archive) {
     archive(name, value_type);
   }
-
-  std::string to_json() const {
-    std::string out = "{";
-    out += "\"name\": \"" + name + "\", ";
-    out += "\"value_type\": " + std::to_string(value_type);
-    out += "}";
-    return out;
-  }
 };
 }  // namespace CORE::Types

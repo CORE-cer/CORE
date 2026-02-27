@@ -10,10 +10,6 @@
 #include "core_server/internal/evaluation/enumeration/tecs/eventEvent.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
-namespace CORE::Internal {
-class QueryCatalog;
-}
-
 namespace CORE::Internal::tECS {
 
 class ComplexEvent {
@@ -39,7 +35,5 @@ class ComplexEvent {
     }
     return out + ")";
   }
-
-  std::string to_json(const QueryCatalog& query_catalog) const;
 };
 }  // namespace CORE::Internal::tECS

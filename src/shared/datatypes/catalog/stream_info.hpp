@@ -182,23 +182,5 @@ struct StreamInfo {
   void serialize(Archive& archive) {
     archive(id, name, events_info);
   }
-
-  std::string to_json() const {
-    std::string out = "{";
-    out += "\"id\":" + std::to_string(id) + ",";
-    out += "\"name\":\"" + name + "\",";
-    out += "\"events_info\":[";
-    auto it = events_info.begin();
-    while (it != events_info.end()) {
-      out += it->to_json();
-      ++it;
-      if (it != events_info.end()) {
-        out += ",";
-      }
-    }
-
-    out += "]}";
-    return out;
-  }
 };
 }  // namespace CORE::Types

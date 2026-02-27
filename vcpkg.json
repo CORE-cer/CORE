@@ -11,8 +11,6 @@
     "re2",
     "quill",
     "readerwriterqueue",
-    "argparse",
-    "nlohmann-json",
-    "glaze"
+    "argparse"
   ]
 }
