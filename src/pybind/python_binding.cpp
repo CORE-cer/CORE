@@ -8,6 +8,8 @@
 
 #include <atomic>
 #include <cstddef>
+
+#include "quill/Backend.h"
 #include <cstdint>
 #include <ctime>
 #include <functional>
@@ -129,21 +131,31 @@ class PyOfflineServerWrapper {
 
   void send_event(std::shared_ptr<Types::Event> event) {
     start_capture();
-    server->receive_stream({0, {std::move(event)}});
+    // Deep-copy to break nanobind shared_ptr tie — the copy lives
+    // entirely in C++ land so worker threads can free it without GIL.
+    auto copy = std::make_shared<Types::Event>(*event);
+    server->receive_stream({0, {std::move(copy)}});
   }
 
   void send_events(std::vector<std::shared_ptr<Types::Event>> events) {
     start_capture();
     for (auto& event : events) {
-      server->receive_stream({0, {std::move(event)}});
+      // Deep-copy to break nanobind shared_ptr tie — the copy lives
+      // entirely in C++ land so worker threads can free it without GIL.
+      auto copy = std::make_shared<Types::Event>(*event);
+      server->receive_stream({0, {std::move(copy)}});
     }
   }
 
   std::string get_output() {
-    // Destroy server first — this joins all worker threads (BasePolicy,
-    // GenericQuery) ensuring all pending output has been written.
-    server.reset();
+    // Destroy client first (closes ZMQ sockets), then server — mirrors
+    // offline.cpp stack destruction order. Server destruction joins all
+    // worker threads ensuring all pending output has been written.
     client.reset();
+    server.reset();
+    // Stop Quill backend so it releases SPSC queues held for dead worker
+    // threads.  The next PyOfflineServer will call Backend::start() again.
+    quill::Backend::stop();
     stop_capture();
     std::string result = capture_stream.str();
     capture_stream.str("");

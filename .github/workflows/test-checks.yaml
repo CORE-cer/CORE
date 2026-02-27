@@ -314,29 +314,7 @@ jobs:
       - name: run tests
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -c ${{ matrix.compiler_profile }}
 
-      - name: run stock query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries.sh && ./scripts/queries/base_queries/build_and_test_stock_queries.sh -b Release -c ${{ matrix.compiler_profile }}
-
-      - name: run unordered stock query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh && ./scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -b Release -c ${{ matrix.compiler_profile }}
-
-      - name: run smart home query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh && ./scripts/queries/base_queries/build_and_test_smart_homes_queries.sh -b Release --exclude q3_none.txt --exclude q4_none.txt -c ${{ matrix.compiler_profile }}
-
-      - name: run taxi query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_taxi_queries.sh && ./scripts/queries/base_queries/build_and_test_taxi_queries.sh -b Release -c ${{ matrix.compiler_profile }}
-
-      - name: run ordered bluesky query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_ordered.sh -b Release -c ${{ matrix.compiler_profile }}
-
-      - name: run unordered bluesky query tests
-        run: chmod +x ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh && ./scripts/queries/base_queries/build_and_test_bluesky_unordered.sh -b Release -c ${{ matrix.compiler_profile }}
-
-      # - name: run tests with address sanitizer
-      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address
-
-      # - name: run tests with thread sanitizer
-      #   run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread
+      # Integration query tests are now run via pycer e2e tests in the build-pycer job
 
   build-pycer:
     runs-on: ubuntu-latest
@@ -378,3 +356,6 @@ jobs:
 
       - name: Verify pycer import
         run: uv run python -c "import pycer; print('pycer loaded successfully')"
+
+      - name: Run e2e integration tests
+        run: uv run pytest tests/e2e/ -v

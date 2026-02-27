@@ -34,24 +34,19 @@ Use the appropriate tier based on where you are in the development cycle:
 2. **Unit tests with sanitizers**: `scripts/build_and_test.sh -s address` (or `-s thread`)
    Same as above but catches memory/threading bugs. Still fast.
 
-**When validating broader correctness — run these together:**
+**When validating broader correctness:**
 
-3. **Integration query tests**: Scripts in `scripts/queries/base_queries/`
-   - `build_and_test_stock_queries.sh` (ordered)
-   - `build_and_test_stock_queries_unordered.sh`
-   - `build_and_test_smart_homes_queries.sh`
-   - `build_and_test_taxi_queries.sh`
-   - `build_and_test_bluesky_ordered.sh`
-   - `build_and_test_bluesky_unordered.sh`
-
-   These are slow. They compare output against expected results with `diff`. Note: output order differences can cause false failures even when the answer is correct.
+3. **E2E integration query tests** (via pycer Python bindings):
+   ```
+   uv run pytest tests/e2e/ -v
+   ```
+   Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`uv sync --reinstall-package pycer`).
 
 4. **Sanitizers + targeted integration** (run alongside tier 3):
-   Run only the stock queries with `CORE_TEST_FIRST_QUERY_ONLY=1` to keep it feasible:
    ```
-   CORE_TEST_FIRST_QUERY_ONLY=1 scripts/queries/base_queries/build_and_test_stock_queries.sh -s address
-   CORE_TEST_FIRST_QUERY_ONLY=1 scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -s address
+   scripts/queries/base_queries/build_and_test_stock_queries.sh -s address
    ```
+   Runs stock queries with sanitizer-instrumented C++ binary for memory/threading bug detection.
 
 **Before finishing a task:**
 

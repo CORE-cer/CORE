@@ -50,6 +50,16 @@ message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
 Set(FETCHCONTENT_QUIET FALSE)
 
+# Tracy must be configured BEFORE FetchContent_MakeAvailable so that
+# its CMakeLists.txt sees the correct TRACY_ENABLE value.
+if (PROFILING)
+  set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
+  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
+  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+else()
+  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
+endif()
+
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
@@ -65,14 +75,6 @@ if(TARGET TracyClient)
     message(STATUS "Enabled POSITION_INDEPENDENT_CODE for TracyClient target.")
 else()
     message(WARNING "TracyClient target was not found after FetchContent_MakeAvailable(tracy). The -fPIC fix might not be applied correctly.")
-endif()
-
-if (PROFILING)
-  set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
-  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
-  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
-else()
-  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
 endif()
 
 # Target in Makefile for generation of grammar from .g4 file.
