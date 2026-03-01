@@ -8,8 +8,6 @@
 
 #include <atomic>
 #include <cstddef>
-
-#include "quill/Backend.h"
 #include <cstdint>
 #include <ctime>
 #include <functional>
@@ -27,6 +25,7 @@
 #include "core_server/library/server.hpp"
 #include "core_server/library/server_config.hpp"
 #include "core_streamer/streamer.hpp"
+#include "quill/Backend.h"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
