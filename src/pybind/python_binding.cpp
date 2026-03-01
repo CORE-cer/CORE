@@ -8,6 +8,12 @@
 
 #include <atomic>
 #include <cstddef>
+
+// clang-format off
+// Must precede project headers: quill's bundled fmt uses the EOF macro,
+// which is provided transitively by the nanobind includes above.
+#include "quill/Backend.h"
+// clang-format on
 #include <cstdint>
 #include <ctime>
 #include <functional>
@@ -25,7 +31,6 @@
 #include "core_server/library/server.hpp"
 #include "core_server/library/server_config.hpp"
 #include "core_streamer/streamer.hpp"
-#include "quill/Backend.h"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
