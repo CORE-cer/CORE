@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -19,7 +18,6 @@
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -175,18 +173,6 @@ class EventWrapper {
     LOG_TRACE_L3(logger, "Converting EventWrapper with id {} to JSON", id);
     assert(!moved);
     return event->to_json();
-  }
-
-  std::string to_json_with_attribute_projection(
-    std::vector<bool> attribute_projection,
-    std::function<Types::StreamTypeId(Types::UniqueEventTypeId)>
-      stream_id_from_unique_event_id) const {
-    LOG_TRACE_L3(logger,
-                 "Converting EventWrapper with id {} to JSON with attribute projection",
-                 id);
-    assert(!moved);
-    return event->to_json_with_attribute_projection(attribute_projection,
-                                                    stream_id_from_unique_event_id);
   }
 
  private:

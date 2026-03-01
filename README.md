@@ -110,19 +110,17 @@ Once the server has started, you can start adding clients to it. To add a client
 
 Currently there are three data sets used as streams for doing experiments with this project. The files can be found in `src/targets/experiments`. Each experiment file has its own data, queries and expected results for every specific query.
 
-There is also a script for every experiment which runs every query and compares the result with the expected results automarically. For example, to run the script of the smart_homes experiments you have to run the following command:
+Integration tests run all experiments via the Python bindings (`pycer`), comparing output against expected results:
 
 ```bash
-./scripts/build_and_test_smart_homes_queries.sh
+uv run pytest tests/e2e/ -v
 ```
 
-For the same experiment, if you only want to try an specific query you'll have to run the following command:
+You can also run the C++ offline binary directly for a specific query:
 
 ```bash
 ./build/Debug/offline ./src/targets/experiments/smart_homes/queries/q1_none.txt ./src/targets/experiments/smart_homes/declaration.core ./src/targets/experiments/smart_homes/smart_homes_data.csv
 ```
-
-In this example, we are running the executable of the smart homes experiment in Debug mode for the specific query q1_any.txt, the stream declaration is declaration.core and the data set is the one in smart_homes_data.csv.
 
 ## Detailed Documentation
 

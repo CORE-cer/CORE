@@ -63,14 +63,14 @@ jobs:
       - name: Install dependencies
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
-      - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release
+      - name: Build pycer
+        run: uv sync --reinstall-package pycer
 
-      - name: benchmark stock query
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries.sh -b Release
+      - name: benchmark stocks
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset stocks
 
       - name: Read CSV
         id: csv_1
@@ -91,8 +91,8 @@ jobs:
             Stocks:
             ${{steps.csv-table-output_1.outputs.markdown-table}}
 
-      - name: benchmark unordered stock query
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_stock_queries_unordered.sh -b Release
+      - name: benchmark unordered stocks
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset unordered_stocks
 
       - name: Read CSV
         id: csv_2
@@ -113,8 +113,8 @@ jobs:
             Unordered Stocks:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
 
-      - name: benchmark smart home query
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_smart_homes_queries.sh -b Release
+      - name: benchmark smart homes
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset smart_homes
 
       - name: Read CSV
         id: csv_3
@@ -135,8 +135,8 @@ jobs:
             Smart Homes:
             ${{steps.csv-table-output_3.outputs.markdown-table}}
 
-      - name: benchmark taxi query
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_taxi_queries.sh -b Release
+      - name: benchmark taxis
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset taxis
 
       - name: Read CSV
         id: csv_4
@@ -158,7 +158,7 @@ jobs:
             ${{steps.csv-table-output_4.outputs.markdown-table}}
 
       - name: benchmark ordered bluesky
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_ordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_ordered.sh -b Release
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset ordered_bluesky
 
       - name: Read CSV
         id: csv_5
@@ -180,7 +180,7 @@ jobs:
             ${{steps.csv-table-output_5.outputs.markdown-table}}
 
       - name: benchmark unordered bluesky
-        run: chmod +x ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh && ./scripts/queries/benchmark_queries/build_and_benchmark_bluesky_unordered.sh -b Release
+        run: uv run python tests/benchmark/benchmark_queries.py --dataset unordered_bluesky
 
       - name: Read CSV
         id: csv_6

@@ -13,6 +13,7 @@ enum struct ClientRequestType {
   ListStreams,
   ListQueries,
   AddQuery,
-  SetOption
+  SetOption,
+  InactivateQuery
 };
 }  // namespace CORE::Types
