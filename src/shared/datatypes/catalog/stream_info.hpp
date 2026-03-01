@@ -7,11 +7,7 @@
 #include <vector>
 
 #include "shared/datatypes/aliases/stream_type_id.hpp"
-#include "shared/datatypes/catalog/attribute_info.hpp"
-#include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
-#include "shared/datatypes/event.hpp"
-#include "shared/datatypes/value.hpp"
 
 namespace CORE::Types {
 struct StreamInfo {
