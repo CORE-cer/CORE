@@ -86,6 +86,12 @@ class GenericQuery {
         std::optional<tECS::Enumerator> output = process_event(std::move(event.value()));
         (*result_handler)(std::move(output));
       }
+      // Drain remaining events after stop is signaled
+      Types::EventWrapper event;
+      while (blocking_event_queue.try_dequeue(event)) {
+        std::optional<tECS::Enumerator> output = process_event(std::move(event));
+        (*result_handler)(std::move(output));
+      }
     });
   }
 

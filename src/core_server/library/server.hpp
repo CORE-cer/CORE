@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "core_server/internal/interface/backend.hpp"
-#include "core_server/library/components/http_server.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "core_server/library/components/router.hpp"
 #include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
@@ -86,7 +85,6 @@ class OnlineServer {
 
   std::shared_ptr<Components::ResultHandlerFactory> result_handler_factory;
   Components::Router router;
-  Components::HTTPServer http_server;
   Components::OnlineStreamsListener stream_listener;
 
  public:
@@ -97,9 +95,6 @@ class OnlineServer {
                backend_mutex,
                this->server_config.get_fixed_ports().router,
                result_handler_factory},
-        http_server{backend,
-                    backend_mutex,
-                    this->server_config.get_fixed_ports().webserver},
         stream_listener{backend,
                         backend_mutex,
                         this->server_config.get_fixed_ports().stream_listener} {

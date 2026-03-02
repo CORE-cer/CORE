@@ -18,6 +18,7 @@
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_factory.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/aliases/query_info_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/query_info.hpp"
@@ -101,6 +102,10 @@ class ClientMessageHandler {
           return add_query(request.serialized_request_data);
         case Types::ClientRequestType::SetOption:
           return set_option(request.serialized_request_data);
+        case Types::ClientRequestType::ListQueries:
+          return list_all_queries();
+        case Types::ClientRequestType::InactivateQuery:
+          return inactivate_query(request.serialized_request_data);
         default:
           throw std::runtime_error("Not Implemented!");
       }
@@ -259,6 +264,16 @@ class ClientMessageHandler {
              "Received option \n'{}' in ClientMessageHandler::set_option",
              option_declaration);
     Parsing::Option::OptionsParser::parse_option(option_declaration, backend);
+    return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
+  }
+
+  Types::ServerResponse inactivate_query(std::string s_query_id) {
+    auto query_id = CerealSerializer<Types::UniqueQueryId>::deserialize(s_query_id);
+    LOG_INFO(logger,
+             "Received request to inactivate query with id {} in "
+             "ClientMessageHandler::inactivate_query",
+             query_id);
+    backend.inactivate_query(query_id);
     return Types::ServerResponse("", Types::ServerResponseType::SuccessEmpty);
   }
 };

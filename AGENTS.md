@@ -18,7 +18,7 @@ Key scripts:
 | `scripts/clang_tidy_check_all_files.sh` | Run clang-tidy static analysis (slow) |
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
-| `scripts/build_pycer.sh` | Build Python bindings wheel |
+| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers) |
 
 ## Testing
 
@@ -34,24 +34,21 @@ Use the appropriate tier based on where you are in the development cycle:
 2. **Unit tests with sanitizers**: `scripts/build_and_test.sh -s address` (or `-s thread`)
    Same as above but catches memory/threading bugs. Still fast.
 
-**When validating broader correctness — run these together:**
+**When validating broader correctness:**
 
-3. **Integration query tests**: Scripts in `scripts/queries/base_queries/`
-   - `build_and_test_stock_queries.sh` (ordered)
-   - `build_and_test_stock_queries_unordered.sh`
-   - `build_and_test_smart_homes_queries.sh`
-   - `build_and_test_taxi_queries.sh`
-   - `build_and_test_bluesky_ordered.sh`
-   - `build_and_test_bluesky_unordered.sh`
-
-   These are slow. They compare output against expected results with `diff`. Note: output order differences can cause false failures even when the answer is correct.
-
-4. **Sanitizers + targeted integration** (run alongside tier 3):
-   Run only the stock queries with `CORE_TEST_FIRST_QUERY_ONLY=1` to keep it feasible:
+3. **E2E integration query tests** (via pycer Python bindings):
    ```
-   CORE_TEST_FIRST_QUERY_ONLY=1 scripts/queries/base_queries/build_and_test_stock_queries.sh -s address
-   CORE_TEST_FIRST_QUERY_ONLY=1 scripts/queries/base_queries/build_and_test_stock_queries_unordered.sh -s address
+   uv run pytest tests/e2e/ -v
    ```
+   Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`uv sync --reinstall-package pycer`).
+
+4. **E2E tests with sanitizers** (run alongside tier 3):
+   Build pycer with sanitizers and run e2e tests:
+   ```
+   scripts/build_pycer.sh -s address
+   uv run pytest tests/e2e/ -v
+   ```
+   Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
 
 **Before finishing a task:**
 
@@ -78,6 +75,16 @@ Formatting and static analysis rules are defined in `.clang-format` and `.clang-
 - **Conventional commits**: Use `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:` prefixes
 - **Never push directly to main** — always use feature branches and pull requests
 - **Before committing**: Run `scripts/clang_format_all_files.sh` and `scripts/build_and_test.sh` at minimum
+
+## Python Bindings
+
+Build the `pycer` Python package using uv:
+
+```
+uv sync --reinstall-package pycer
+```
+
+This compiles the C++ bindings via scikit-build-core/CMake and installs the `pycer` package. The same command is used by `scripts/build_pycer.sh`.
 
 ## Dependencies
 

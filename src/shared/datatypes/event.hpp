@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cereal/access.hpp>
-#include <cstddef>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -11,7 +9,6 @@
 #include <vector>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
-#include "shared/datatypes/aliases/stream_type_id.hpp"
 #include "value.hpp"
 
 namespace CORE::Types {
@@ -127,29 +124,6 @@ struct Event {
       if (it != attributes.end()) {
         out += ",";
       }
-    }
-
-    out += "]}";
-
-    return out;
-  }
-
-  std::string to_json_with_attribute_projection(
-    std::vector<bool> attribute_projection,
-    std::function<Types::StreamTypeId(Types::UniqueEventTypeId)>
-      stream_id_from_unique_event_id) const {
-    std::string out = "{";
-    out += "\"event_type_id\": " + std::to_string(get_event_type_id()) + ", ";
-    Types::StreamTypeId stream_id = stream_id_from_unique_event_id(get_event_type_id());
-    out += "\"stream_type_id\": " + std::to_string(stream_id) + ", ";
-    out += "\"attributes\": [";
-    for (size_t i = 0; i < attributes.size(); ++i) {
-      if (attribute_projection[i]) {
-        out += attributes[i]->to_json() + ",";
-      }
-    }
-    if (out.back() == ',') {
-      out.pop_back();  // Remove the last comma
     }
 
     out += "]}";

@@ -50,31 +50,6 @@ for buildType in "Debug" "Release"; do
         exit 1
     fi
 
-    if [ $buildType == "Release" ]; then
-
-        echo -e "${GREEN}Running build and test stock queries${NORMAL_OUTPUT}"
-        ./scripts/build_and_test_stock_queries.sh -b ${buildType} $@
-        result=$?
-        if [ $result -ne 0 ]; then
-            echo -e "${RED}Some stock queries failed! (${buildType})${NORMAL_OUTPUT}"
-            exit 1
-        fi
-
-        echo -e "${GREEN}Running build and test smart homes queries${NORMAL_OUTPUT}"
-        ./scripts/build_and_test_smart_homes_queries.sh -b ${buildType} $@
-        result=$?
-        if [ $result -ne 0 ]; then
-            echo -e "${RED}Some smart homes queries failed! (${buildType})${NORMAL_OUTPUT}"
-            exit 1
-        fi
-
-        echo -e "${GREEN}Running build and test taxi queries${NORMAL_OUTPUT}"
-        ./scripts/build_and_test_taxi_queries.sh -b ${buildType} $@
-        result=$?
-        if [ $result -ne 0 ]; then
-            echo -e "${RED}Some taxi queries failed! (${buildType})${NORMAL_OUTPUT}"
-            exit 1
-        fi
-    fi
+    # Integration query tests are now run via: uv run pytest tests/e2e/ -v
 
 done

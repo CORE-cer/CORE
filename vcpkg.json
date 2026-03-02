@@ -11,9 +11,6 @@
     "re2",
     "quill",
     "readerwriterqueue",
-    "uwebsockets",
-    "argparse",
-    "nlohmann-json",
-    "glaze"
+    "argparse"
   ]
 }

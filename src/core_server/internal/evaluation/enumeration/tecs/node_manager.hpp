@@ -117,12 +117,12 @@ class NodeManager {
     }
     if (recyclable_node_head == nullptr) {
       if (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load())) {
-        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load()));
+        while (time_list_manager.remove_a_dead_node_if_possible(expiration_time.load())) {
+        }
         if (recyclable_node_head != nullptr) {
           return get_node_to_recycle();
         }
       };
-      LOG_DEBUG(logger, "Not enough memory to allocate node for TECS");
       increase_mempool_size();
       return nullptr;
     }

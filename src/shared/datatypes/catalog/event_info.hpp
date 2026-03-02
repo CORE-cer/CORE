@@ -50,21 +50,6 @@ struct EventInfo {
   void serialize(Archive& archive) {
     archive(id, name, attributes_info);
   }
-
-  std::string to_json() const {
-    std::string out = "{";
-    out += "\"id\": " + std::to_string(id) + ", ";
-    out += "\"name\": \"" + name + "\", ";
-    out += "\"attributes_info\": [";
-    for (size_t i = 0; i < attributes_info.size(); i++) {
-      out += attributes_info[i].to_json();
-      if (i != attributes_info.size() - 1) {
-        out += ", ";
-      }
-    }
-    out += "]}";
-    return out;
-  }
 };
 
 }  // namespace CORE::Types

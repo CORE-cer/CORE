@@ -17,34 +17,23 @@ namespace CORE::Library {
 class ServerConfig {
  public:
   struct FixedPorts {
-    Types::PortNumber webserver;
     Types::PortNumber router;
     Types::PortNumber stream_listener;
 
     static FixedPorts from_args(argparse::ArgumentParser& parsed_program) {
-      int webserver = parsed_program.get<int>("webserver");
       int router = parsed_program.get<int>("router");
       int stream_listener = parsed_program.get<int>("stream_listener");
 
-      return FixedPorts{static_cast<Types::PortNumber>(webserver),
-                        static_cast<Types::PortNumber>(router),
+      return FixedPorts{static_cast<Types::PortNumber>(router),
                         static_cast<Types::PortNumber>(stream_listener)};
     }
 
     static void add_to_args(argparse::ArgumentParser& program) {
-      webserver_from_args(program);
       router_from_args(program);
       stream_listener_from_args(program);
     }
 
    private:
-    static void webserver_from_args(argparse::ArgumentParser& program) {
-      program.add_argument("-w", "--webserver")
-        .help("Port for the webserver")
-        .default_value(443)
-        .scan<'i', int>();
-    }
-
     static void router_from_args(argparse::ArgumentParser& program) {
       program.add_argument("-r", "--router")
         .help("Port for the router")
@@ -82,7 +71,6 @@ class ServerConfig {
       : fixed_ports(fixed_ports),
         next_open_port(next_open_port),
         used_ports{
-          fixed_ports.webserver,
           fixed_ports.router,
           fixed_ports.stream_listener,
         },

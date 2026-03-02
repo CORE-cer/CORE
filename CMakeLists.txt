@@ -29,10 +29,7 @@ find_package(GMP REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
-find_package(unofficial-uwebsockets CONFIG REQUIRED)
 find_package(argparse REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(glaze REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
@@ -51,6 +48,16 @@ message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
 Set(FETCHCONTENT_QUIET FALSE)
 
+# Tracy must be configured BEFORE FetchContent_MakeAvailable so that
+# its CMakeLists.txt sees the correct TRACY_ENABLE value.
+if (PROFILING)
+  set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
+  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
+  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+else()
+  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
+endif()
+
 FetchContent_Declare (
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy.git
@@ -66,14 +73,6 @@ if(TARGET TracyClient)
     message(STATUS "Enabled POSITION_INDEPENDENT_CODE for TracyClient target.")
 else()
     message(WARNING "TracyClient target was not found after FetchContent_MakeAvailable(tracy). The -fPIC fix might not be applied correctly.")
-endif()
-
-if (PROFILING)
-  set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
-  set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
-  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
-else()
-  set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
 endif()
 
 # Target in Makefile for generation of grammar from .g4 file.
@@ -118,30 +117,7 @@ if(Python_FOUND)
         )
         FetchContent_MakeAvailable(nanobind)
     endif()
-    nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
-    target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
-    target_link_libraries(pycer PRIVATE cereal::cereal quill::quill cppzmq TracyClient Threads::Threads GMP::gmp GMP::gmpxx)
-
-    if(SKBUILD)
-        # pip wheel build - install module and generate stubs
-        install(TARGETS pycer DESTINATION .)
-        nanobind_add_stub(
-          pycer_stub
-          INSTALL_TIME
-          MODULE pycer
-          OUTPUT pycer.pyi
-          PYTHON_PATH "."
-          MARKER_FILE py.typed
-        )
-    else()
-        # Dev build - keep in compile_commands.json for LSP/clang-tidy
-        # but don't build by default
-        set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    endif()
-else()
-    message(WARNING "Python not found, skipping Python bindings. clangd will not work on nanobind files.")
 endif()
-
 
 add_library(core STATIC
             ${SHARED_FILES}
@@ -149,9 +125,9 @@ add_library(core STATIC
             ${SERVER_FILES}
             ${STREAMER_FILES})
 
-target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue unofficial::uwebsockets::uwebsockets argparse::argparse nlohmann_json::nlohmann_json glaze::glaze)
-# uwebsockets headers are in a subdirectory but source uses bare includes like <Loop.h>
-target_include_directories(core SYSTEM PUBLIC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include/uwebsockets")
+set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
@@ -163,7 +139,8 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 # Add compiler and linker flags to core
-target_compile_options(core PUBLIC -Werror=old-style-cast -Wno-unused-variable -Wno-unused-command-line-argument)
+target_compile_options(core PUBLIC -Wno-unused-variable -Wno-unused-command-line-argument)
+target_compile_options(core PRIVATE -Werror=old-style-cast)
 
 if (ADDRESS_SANITIZER)
   message("Address sanitizer enabled")
@@ -206,18 +183,30 @@ if (LOGGING MATCHES "trace_l3")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L3)
   message("Logging set to trace_l3")
 endif()
-# executable target
-# Main Offline
-add_executable(offline src/targets/offline/offline.cpp)
-target_link_libraries(offline PRIVATE core)
 
-# Main Online
-add_executable(online_client src/targets/online/client.cpp)
-target_link_libraries(online_client PRIVATE core)
-add_executable(online_streamer src/targets/online/streamer.cpp)
-target_link_libraries(online_streamer PRIVATE core)
-add_executable(online_server src/targets/online/server.cpp)
-target_link_libraries(online_server PRIVATE core)
+# Python bindings (must come after core target definition)
+if(Python_FOUND)
+    nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
+    target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
+    target_link_libraries(pycer PRIVATE core)
+
+    if(SKBUILD)
+        # pip wheel build - install module and generate stubs
+        install(TARGETS pycer DESTINATION .)
+        nanobind_add_stub(
+          pycer_stub
+          INSTALL_TIME
+          MODULE pycer
+          OUTPUT pycer.pyi
+          PYTHON_PATH "."
+          MARKER_FILE py.typed
+        )
+    else()
+        # Dev build - keep in compile_commands.json for LSP/clang-tidy
+        # but don't build by default
+        set_target_properties(pycer PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+endif()
 
 #install(TARGETS core)
 # TODO: Add the library to the filesystem, maybe with:

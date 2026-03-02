@@ -4,7 +4,6 @@ namespace CORE::Library::Components {
 enum ResultHandlerType {
   OFFLINE,
   ONLINE,
-  WEBSOCKET,
   CUSTOM,
 };
 

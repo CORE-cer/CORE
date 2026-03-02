@@ -1,16 +1,11 @@
 #pragma once
 
-#include <Loop.h>
-#include <WebSocket.h>
-#include <WebSocketProtocol.h>
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
 
 #include <iostream>
-#include <list>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -19,7 +14,6 @@
 
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
-#include "core_server/library/components/user_data.hpp"
 #include "result_handler_types.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -118,52 +112,6 @@ class OnlineResultHandler : public ResultHandler {
 
   // Returns the port as the identifier
   std::string get_identifier() const override { return std::to_string(port); }
-};
-
-class WebSocketResultHandler : public ResultHandler {
-  std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients;
-  std::mutex& ws_clients_mutex;
-  UniqueWebSocketQueryId query_id;
-  uWS::Loop* uws_loop;
-
- public:
-  explicit WebSocketResultHandler(
-    std::shared_ptr<std::list<uWS::WebSocket<false, true, UserData>*>> ws_clients,
-    std::mutex& ws_clients_mutex,
-    uWS::Loop* uws_loop,
-    UniqueWebSocketQueryId query_id)
-      : ws_clients(ws_clients),
-        ws_clients_mutex(ws_clients_mutex),
-        uws_loop(uws_loop),
-        query_id(query_id),
-        ResultHandler(ResultHandlerType::WEBSOCKET) {}
-
-  void start() override {}
-
-  void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
-    if (!internal_enumerator.has_value()) {  // NOLINT
-      return;
-    }
-
-    std::string result_json = "[";
-    for (const auto& complex_event : internal_enumerator.value()) {
-      result_json += complex_event.to_json(get_query_catalog());
-      result_json += ",";
-    }
-    result_json = result_json.substr(0, result_json.size() - 1);
-    result_json += "]";
-
-    uws_loop->defer([this, result_json]() {
-      std::lock_guard<std::mutex> lock(ws_clients_mutex);
-      for (auto& ws_client : *ws_clients) {
-        ws_client->send(result_json, uWS::OpCode::TEXT);  // NOLINT
-      }
-    });
-    // Send the result to all connected clients
-  }
-
-  std::string get_identifier() const override { return std::to_string(query_id); }
 };
 
 }  // namespace CORE::Library::Components

@@ -173,11 +173,8 @@ class BasePolicy {
   void handle_destruction() {
     stop_condition = true;
     worker_thread.join();
-    for (auto& blocking_event_queue : blocking_event_queues) {
-      while (blocking_event_queue.size_approx() != 0) {
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
-      }
-    }
+    // Query worker threads drain their own blocking_event_queues
+    // after their stop_condition is set during ~queries destruction.
   }
 
   void start() {
