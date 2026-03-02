@@ -5,6 +5,9 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/map.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
 
 #include <atomic>
 #include <cstddef>
@@ -211,7 +214,28 @@ NB_MODULE(pycer, m) {
 
         nb::class_<Types::Event>(m, "PyEvent")
             .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
-            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>());
+            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>())
+            .def("get_event_type_id", &Types::Event::get_event_type_id)
+            .def("get_attributes_as_list", [](const Types::Event& self) {
+                nb::list result;
+                for (const auto& attr : self.attributes) {
+                    // Convert Value* to Python native types
+                    if (auto* iv = dynamic_cast<const Types::IntValue*>(attr.get())) {
+                        result.append(iv->val);
+                    } else if (auto* dv = dynamic_cast<const Types::DoubleValue*>(attr.get())) {
+                        result.append(dv->val);
+                    } else if (auto* sv = dynamic_cast<const Types::StringValue*>(attr.get())) {
+                        result.append(sv->val);
+                    } else if (auto* bv = dynamic_cast<const Types::BoolValue*>(attr.get())) {
+                        result.append(bv->val);
+                    } else if (auto* dtv = dynamic_cast<const Types::DateValue*>(attr.get())) {
+                        result.append(dtv->val);
+                    } else {
+                        result.append(attr->to_string());
+                    }
+                }
+                return result;
+            });
 
         nb::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
             .def(nb::init<std::string, std::vector<Types::AttributeInfo>>())
@@ -256,9 +280,28 @@ NB_MODULE(pycer, m) {
 
         nb::class_<Types::QueryInfo>(m, "PyQueryInfo")
             .def_ro("result_handler_identifier", &Types::QueryInfo::result_handler_identifier)
+            .def_ro("result_handler_type", &Types::QueryInfo::result_handler_type)
             .def_ro("query_string", &Types::QueryInfo::query_string)
             .def_ro("query_name", &Types::QueryInfo::query_name)
-            .def_ro("active", &Types::QueryInfo::active);
+            .def_ro("active", &Types::QueryInfo::active)
+            .def_ro("attribute_projection_variable", &Types::QueryInfo::attribute_projection_variable)
+            .def("get_attribute_projection_stream_event", [](const Types::QueryInfo& self) {
+                // Convert map<pair<string,string>, vector<string>> to
+                // list of {stream_name, event_name, attributes} dicts for JSON friendliness
+                nb::list result;
+                for (const auto& [key, attrs] : self.attribute_projection_stream_event) {
+                    nb::dict entry;
+                    entry["stream_name"] = key.first;
+                    entry["event_name"] = key.second;
+                    nb::list attr_list;
+                    for (const auto& a : attrs) {
+                        attr_list.append(a);
+                    }
+                    entry["attributes"] = attr_list;
+                    result.append(entry);
+                }
+                return result;
+            });
 
         nb::class_<Client>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
