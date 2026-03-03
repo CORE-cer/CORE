@@ -1,13 +1,13 @@
 #include <nanobind/make_iterator.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/function.h>
+#include <nanobind/stl/map.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
 #include <nanobind/stl/vector.h>
-#include <nanobind/stl/map.h>
-#include <nanobind/stl/optional.h>
-#include <nanobind/stl/pair.h>
 
 #include <atomic>
 #include <cstddef>
@@ -172,6 +172,37 @@ class PyOfflineServerWrapper {
 };
 
 std::atomic<uint16_t> PyOfflineServerWrapper::next_port{6000};
+
+class PyOnlineServerWrapper {
+  std::unique_ptr<Library::OnlineServer> server;
+
+  Types::PortNumber router_port;
+  Types::PortNumber stream_listener_port;
+  Types::PortNumber starting_query_port;
+
+ public:
+  PyOnlineServerWrapper(uint16_t router_port = 5000,
+                        uint16_t stream_listener_port = 5001,
+                        uint16_t starting_query_port = 5002)
+      : router_port(router_port),
+        stream_listener_port(stream_listener_port),
+        starting_query_port(starting_query_port) {
+    Library::ServerConfig::FixedPorts ports{router_port, stream_listener_port};
+    Library::ServerConfig config{ports,
+                                 static_cast<Types::PortNumber>(starting_query_port),
+                                 "",
+                                 "",
+                                 "",
+                                 ""};
+    server = std::make_unique<Library::OnlineServer>(std::move(config));
+  }
+
+  ~PyOnlineServerWrapper() { server.reset(); }
+
+  Types::PortNumber get_router_port() const { return router_port; }
+
+  Types::PortNumber get_stream_listener_port() const { return stream_listener_port; }
+};
 
 NB_MODULE(pycer, m) {
   // clang-format off
@@ -345,6 +376,14 @@ NB_MODULE(pycer, m) {
             .def("send_event", &PyOfflineServerWrapper::send_event)
             .def("send_events", &PyOfflineServerWrapper::send_events)
             .def("get_output", &PyOfflineServerWrapper::get_output);
+
+        nb::class_<PyOnlineServerWrapper>(m, "PyOnlineServer")
+            .def(nb::init<uint16_t, uint16_t, uint16_t>(),
+                 nb::arg("router_port") = 5000,
+                 nb::arg("stream_listener_port") = 5001,
+                 nb::arg("starting_query_port") = 5002)
+            .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
+            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port);
 
         nb::exception<ClientException>(m, "PyClientException");
         nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");
