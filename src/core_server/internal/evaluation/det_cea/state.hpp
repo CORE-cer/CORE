@@ -50,7 +50,6 @@ class State {
       }
       return true;
     }
-
   };
 
   uint64_t id;
