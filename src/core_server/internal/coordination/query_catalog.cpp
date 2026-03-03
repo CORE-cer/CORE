@@ -646,18 +646,18 @@ Types::ComplexEvent QueryCatalog::event_wrappers_to_complex_event(
         var_name = var_opt.value();
       } else {
         auto stream_event_opt = get_stream_event_name_pair(marking_id);
-        if (stream_event_opt.has_value()) {
-          var_name = stream_event_opt->first + ">" + stream_event_opt->second;
-        } else {
-          continue;  // Unknown marking — skip.
-        }
+        assert (stream_event_opt.has_value()
+                && "Marking ID should have either an event/AS variable name or a stream>event name");
+        var_name = stream_event_opt->first + ">" + stream_event_opt->second;
       }
 
       // 2. Apply attribute projection.
       const auto& projection = get_attribute_projection(marking_id, event_type_id);
       std::vector<std::unique_ptr<Types::Value>> projected_attrs;
       for (size_t j = 0; j < event_wrapper.event->attributes.size(); ++j) {
-        if (j < projection.size() && projection[j]) {
+        assert(j < projection.size()
+               && "Projection size should match number of attributes in event");
+        if (projection[j]) {
           projected_attrs.push_back(event_wrapper.event->attributes[j]->clone());
         }
       }
