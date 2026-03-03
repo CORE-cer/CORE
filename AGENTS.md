@@ -1,4 +1,4 @@
-C++23 complex event recognition engine. Built with CMake + Ninja, dependencies managed via vcpkg.
+C++20 complex event recognition engine. Built with CMake + Ninja, dependencies managed via vcpkg.
 
 ## Build Scripts
 
@@ -40,7 +40,7 @@ Use the appropriate tier based on where you are in the development cycle:
    ```
    uv run pytest tests/e2e/ -v
    ```
-   Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`uv sync --reinstall-package pycer`).
+   Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`scripts/build_pycer.sh`).
 
 4. **E2E tests with sanitizers** (run alongside tier 3):
    Build pycer with sanitizers and run e2e tests:
@@ -78,13 +78,13 @@ Formatting and static analysis rules are defined in `.clang-format` and `.clang-
 
 ## Python Bindings
 
-Build the `pycer` Python package using uv:
+Build the `pycer` Python package using the build script:
 
 ```
-uv sync --reinstall-package pycer
+scripts/build_pycer.sh
 ```
 
-This compiles the C++ bindings via scikit-build-core/CMake and installs the `pycer` package. The same command is used by `scripts/build_pycer.sh`.
+This compiles the C++ bindings via scikit-build-core/CMake and installs the `pycer` package. Supports `-s address`/`-s thread` for sanitizers.
 
 ## Dependencies
 
