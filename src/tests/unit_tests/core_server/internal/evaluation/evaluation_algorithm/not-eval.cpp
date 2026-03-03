@@ -289,15 +289,21 @@ TEST_CASE("Evaluation of NOT in a more complex query") {
   REQUIRE(output.complex_events[1].start == 0);
   REQUIRE(output.complex_events[1].end == 5);
 
-  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(output.complex_events[0].events.size() == 6);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 100));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 1, "AMZN", 1000));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "INTL", 100));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "INTL", 100));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 1, "AMZN", 1000));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 1, "AMZN", 1000));
 
-  REQUIRE(output.complex_events[1].events.size() == 3);
+  REQUIRE(output.complex_events[1].events.size() == 6);
   REQUIRE(is_the_same_as(output.complex_events[1].events[0], 0, "MSFT", 101));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "INTL", 100));
-  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 1, "AMZN", 1000));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "MSFT", 101));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[2], 0, "INTL", 100));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[3], 0, "INTL", 100));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[4], 1, "AMZN", 1000));
+  REQUIRE(is_the_same_as(output.complex_events[1].events[5], 1, "AMZN", 1000));
 }
 
 TEST_CASE("Evaluation of sequencing NOT query") {
