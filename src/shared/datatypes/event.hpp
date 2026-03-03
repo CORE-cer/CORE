@@ -21,29 +21,14 @@ namespace CORE::Types {
  * from attribute names to values can be obtained.
  */
 struct Event {
-  /**
-   * An EventType is an id that is used to know what each index in the
-   * attributes vector represent. To obtain this, it needs to be requested
-   * to the Schema
-   */
-  /**
-   * Shared pointers are used because it can be exploited in serialization,
-   * officially from cereal (our current serialization provider):
-   *   "cereal will make sure that the data pointed to by an
-   *   std::shared_ptr is serialized only once, even if several
-   *   std::shared_ptr (or std::weak_ptr) that point to the same data
-   *   are serialized in the same archive. This means that when saving
-   *   to an archive cereal will avoid duplication, and when loading
-   *   from an archive, cereal will not allocate extraneous data."
-   *   https://uscilab.github.io/cereal/pointers.html
-   */
   std::vector<std::unique_ptr<Types::Value>> attributes;
-  /**
-   * Primary is usually shared with one of the attributes
-   * however we do not use a shared pointer here to remove
-   * a common jump in memory.
-   */
   std::optional<Types::IntValue> primary_time;
+  /**
+   * Resolved marked-variable name from the QueryCatalog.  Set during
+   * convert_enumerator() so that it survives serialisation over ZMQ.
+   * Examples: "Sell", "s" (AS variable), "TICKER>Sell" (stream>event).
+   */
+  std::string variable_name;
 
  private:
   friend class cereal::access;
@@ -74,7 +59,9 @@ struct Event {
   ~Event() {}
 
   Event(const Event& other)
-      : event_type_id(other.event_type_id), primary_time(other.primary_time) {
+      : event_type_id(other.event_type_id),
+        primary_time(other.primary_time),
+        variable_name(other.variable_name) {
     attributes.reserve(other.attributes.size());
     for (const auto& attr : other.attributes) {
       attributes.push_back(std::unique_ptr<Types::Value>(attr->clone()));
@@ -87,6 +74,7 @@ struct Event {
     }
     event_type_id = other.event_type_id;
     primary_time = other.primary_time;
+    variable_name = other.variable_name;
 
     attributes.clear();
     attributes.reserve(other.attributes.size());
@@ -133,7 +121,7 @@ struct Event {
 
   template <class Archive>
   void serialize(Archive& archive) {
-    archive(event_type_id, attributes, primary_time);
+    archive(event_type_id, attributes, primary_time, variable_name);
   }
 };
 

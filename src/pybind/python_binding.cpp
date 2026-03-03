@@ -247,6 +247,7 @@ NB_MODULE(pycer, m) {
             .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
             .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>())
             .def("get_event_type_id", &Types::Event::get_event_type_id)
+            .def_ro("variable_name", &Types::Event::variable_name)
             .def("get_attributes_as_list", [](const Types::Event& self) {
                 nb::list result;
                 for (const auto& attr : self.attributes) {
