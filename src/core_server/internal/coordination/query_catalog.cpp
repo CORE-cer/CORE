@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
@@ -29,6 +30,7 @@
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal {
 
