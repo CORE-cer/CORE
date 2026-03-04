@@ -90,7 +90,8 @@ class OnlineServer {
  public:
   OnlineServer(ServerConfig&& server_config)
       : server_config(std::move(server_config)),
-        result_handler_factory(std::make_shared<ResultHandlerFactoryT>(server_config)),
+        result_handler_factory(
+          std::make_shared<ResultHandlerFactoryT>(this->server_config)),
         router{backend,
                backend_mutex,
                this->server_config.get_fixed_ports().router,

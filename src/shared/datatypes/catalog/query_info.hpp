@@ -58,6 +58,8 @@ struct QueryInfo {
     archive(result_handler_identifier,
             result_handler_type,
             query_string,
+            query_name,
+            active,
             attribute_projection_variable,
             attribute_projection_stream_event);
   }

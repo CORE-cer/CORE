@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <set>
@@ -29,6 +30,7 @@
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/value.hpp"
 
 namespace CORE::Internal {
 
@@ -613,21 +615,59 @@ Types::ComplexEvent QueryCatalog::event_wrappers_to_complex_event(
   std::vector<Types::EventWrapper>& events) const {
   ZoneScopedN("Catalog::event_wrappers_to_complex_event");
   std::vector<Types::Event> converted_events;
-  converted_events.reserve(events.size());  // Optimization
-  for (auto& event_wrapper : events) {      // Iterate by reference
-    // The original code had: assert(event.get_unique_event_type_id() < events_info.size());
-    // This check is problematic because UniqueEventTypeId is not an index into events_info.
-    // unique_event_id_to_events_info_idx maps UniqueEventTypeId to an index.
-    // Let's check if the unique_event_type_id exists in our map, which implies it's known.
+
+  for (auto& event_wrapper : events) {
     assert(
       unique_event_id_to_events_info_idx.count(event_wrapper.get_unique_event_type_id())
       && "Event type ID from wrapper not found in catalog's known events");
-    // The actual event_info object for this unique_event_type_id would be:
-    // const Types::EventInfo& actual_event_info = get_event_info(event_wrapper.get_unique_event_type_id());
-    // The original code directly emplaced `event.get_event_reference()`. This implies EventWrapper
-    // holds a reference to an Event object conforming to one of the EventInfo descriptions.
 
-    converted_events.emplace_back(event_wrapper.get_event_reference());
+    if (!event_wrapper.marked_variables.has_value()) {
+      // No marking info — copy the event as-is with all attributes.
+      converted_events.emplace_back(event_wrapper.get_event_reference());
+      continue;
+    }
+
+    // Resolve each marked variable from the bitset, exactly like the old
+    // tECS::ComplexEvent::to_json(query_catalog) did.
+    std::string marked_vars_binary = event_wrapper.marked_variables->get_str(2);
+    Types::UniqueEventTypeId event_type_id = event_wrapper.event->get_event_type_id();
+
+    for (size_t i = 0; i < marked_vars_binary.length(); ++i) {
+      if (marked_vars_binary[i] != '1') {
+        continue;
+      }
+      size_t bit_pos_from_lsb = marked_vars_binary.length() - 1 - i;
+      MarkingId marking_id = static_cast<MarkingId>(bit_pos_from_lsb);
+
+      // 1. Resolve variable name — prefer event/AS name, fall back to stream>event.
+      std::string var_name;
+      auto var_opt = get_event_or_as_variable_name(marking_id);
+      if (var_opt.has_value()) {
+        var_name = var_opt.value();
+      } else {
+        auto stream_event_opt = get_stream_event_name_pair(marking_id);
+        assert (stream_event_opt.has_value()
+                && "Marking ID should have either an event/AS variable name or a stream>event name");
+        var_name = stream_event_opt->first + ">" + stream_event_opt->second;
+      }
+
+      // 2. Apply attribute projection.
+      const auto& projection = get_attribute_projection(marking_id, event_type_id);
+      std::vector<std::unique_ptr<Types::Value>> projected_attrs;
+      for (size_t j = 0; j < event_wrapper.event->attributes.size(); ++j) {
+        assert(j < projection.size()
+               && "Projection size should match number of attributes in event");
+        if (projection[j]) {
+          projected_attrs.push_back(event_wrapper.event->attributes[j]->clone());
+        }
+      }
+
+      Types::Event projected_event(event_type_id,
+                                   std::move(projected_attrs),
+                                   event_wrapper.event->primary_time);
+      projected_event.variable_name = std::move(var_name);
+      converted_events.push_back(std::move(projected_event));
+    }
   }
   return {start, end, std::move(converted_events)};
 }

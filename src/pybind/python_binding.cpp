@@ -1,6 +1,9 @@
 #include <nanobind/make_iterator.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/function.h>
+#include <nanobind/stl/map.h>
+#include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/unique_ptr.h>
@@ -170,6 +173,37 @@ class PyOfflineServerWrapper {
 
 std::atomic<uint16_t> PyOfflineServerWrapper::next_port{6000};
 
+class PyOnlineServerWrapper {
+  std::unique_ptr<Library::OnlineServer> server;
+
+  Types::PortNumber router_port;
+  Types::PortNumber stream_listener_port;
+  Types::PortNumber starting_query_port;
+
+ public:
+  PyOnlineServerWrapper(uint16_t router_port = 5000,
+                        uint16_t stream_listener_port = 5001,
+                        uint16_t starting_query_port = 5002)
+      : router_port(router_port),
+        stream_listener_port(stream_listener_port),
+        starting_query_port(starting_query_port) {
+    Library::ServerConfig::FixedPorts ports{router_port, stream_listener_port};
+    Library::ServerConfig config{ports,
+                                 static_cast<Types::PortNumber>(starting_query_port),
+                                 "",
+                                 "",
+                                 "",
+                                 ""};
+    server = std::make_unique<Library::OnlineServer>(std::move(config));
+  }
+
+  ~PyOnlineServerWrapper() { server.reset(); }
+
+  Types::PortNumber get_router_port() const { return router_port; }
+
+  Types::PortNumber get_stream_listener_port() const { return stream_listener_port; }
+};
+
 NB_MODULE(pycer, m) {
   // clang-format off
         m.doc() = "CORE";
@@ -211,7 +245,29 @@ NB_MODULE(pycer, m) {
 
         nb::class_<Types::Event>(m, "PyEvent")
             .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>>())
-            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>());
+            .def(nb::init<uint64_t, std::vector<std::shared_ptr<Types::Value>>, Types::IntValue>())
+            .def("get_event_type_id", &Types::Event::get_event_type_id)
+            .def_ro("variable_name", &Types::Event::variable_name)
+            .def("get_attributes_as_list", [](const Types::Event& self) {
+                nb::list result;
+                for (const auto& attr : self.attributes) {
+                    // Convert Value* to Python native types
+                    if (auto* iv = dynamic_cast<const Types::IntValue*>(attr.get())) {
+                        result.append(iv->val);
+                    } else if (auto* dv = dynamic_cast<const Types::DoubleValue*>(attr.get())) {
+                        result.append(dv->val);
+                    } else if (auto* sv = dynamic_cast<const Types::StringValue*>(attr.get())) {
+                        result.append(sv->val);
+                    } else if (auto* bv = dynamic_cast<const Types::BoolValue*>(attr.get())) {
+                        result.append(bv->val);
+                    } else if (auto* dtv = dynamic_cast<const Types::DateValue*>(attr.get())) {
+                        result.append(dtv->val);
+                    } else {
+                        result.append(attr->to_string());
+                    }
+                }
+                return result;
+            });
 
         nb::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
             .def(nb::init<std::string, std::vector<Types::AttributeInfo>>())
@@ -256,9 +312,28 @@ NB_MODULE(pycer, m) {
 
         nb::class_<Types::QueryInfo>(m, "PyQueryInfo")
             .def_ro("result_handler_identifier", &Types::QueryInfo::result_handler_identifier)
+            .def_ro("result_handler_type", &Types::QueryInfo::result_handler_type)
             .def_ro("query_string", &Types::QueryInfo::query_string)
             .def_ro("query_name", &Types::QueryInfo::query_name)
-            .def_ro("active", &Types::QueryInfo::active);
+            .def_ro("active", &Types::QueryInfo::active)
+            .def_ro("attribute_projection_variable", &Types::QueryInfo::attribute_projection_variable)
+            .def("get_attribute_projection_stream_event", [](const Types::QueryInfo& self) {
+                // Convert map<pair<string,string>, vector<string>> to
+                // list of {stream_name, event_name, attributes} dicts for JSON friendliness
+                nb::list result;
+                for (const auto& [key, attrs] : self.attribute_projection_stream_event) {
+                    nb::dict entry;
+                    entry["stream_name"] = key.first;
+                    entry["event_name"] = key.second;
+                    nb::list attr_list;
+                    for (const auto& a : attrs) {
+                        attr_list.append(a);
+                    }
+                    entry["attributes"] = attr_list;
+                    result.append(entry);
+                }
+                return result;
+            });
 
         nb::class_<Client>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
@@ -302,6 +377,14 @@ NB_MODULE(pycer, m) {
             .def("send_event", &PyOfflineServerWrapper::send_event)
             .def("send_events", &PyOfflineServerWrapper::send_events)
             .def("get_output", &PyOfflineServerWrapper::get_output);
+
+        nb::class_<PyOnlineServerWrapper>(m, "PyOnlineServer")
+            .def(nb::init<uint16_t, uint16_t, uint16_t>(),
+                 nb::arg("router_port") = 5000,
+                 nb::arg("stream_listener_port") = 5001,
+                 nb::arg("starting_query_port") = 5002)
+            .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
+            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port);
 
         nb::exception<ClientException>(m, "PyClientException");
         nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");

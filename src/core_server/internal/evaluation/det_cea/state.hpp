@@ -7,8 +7,6 @@
 #include <functional>
 #include <map>
 #include <optional>
-#include <ranges>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -36,11 +34,10 @@ class State {
         assert(state != nullptr);
         states_ids.push_back(state->id);
       }
-      auto ranges_state_marked_variables_pair = std::views::zip(std::move(states),
-                                                                std::move(marked_variables))
-                                                | std::views::transform(make_pair);
-      state_marked_variables_pair = std::vector(ranges_state_marked_variables_pair.begin(),
-                                                ranges_state_marked_variables_pair.end());
+      state_marked_variables_pair.reserve(states.size());
+      for (size_t i = 0; i < states.size(); ++i) {
+        state_marked_variables_pair.push_back({states[i], std::move(marked_variables[i])});
+      }
     }
 
     bool is_consistent() {
@@ -52,11 +49,6 @@ class State {
         }
       }
       return true;
-    }
-
-   private:
-    static StateWithMarkedVariables make_pair(std::tuple<State*, mpz_class>&& pair) {
-      return {std::get<0>(pair), std::get<1>(pair)};
     }
   };
 

@@ -99,10 +99,13 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
   REQUIRE(output.complex_events[0].start == 1);
   REQUIRE(output.complex_events[0].end == 4);
 
-  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(output.complex_events[0].events.size() == 6);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "AMZN", 1900));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1900));
 
   event = {0,
            {std::make_shared<Types::StringValue>("INTL"),
@@ -126,10 +129,13 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 
   REQUIRE(output.complex_events.size() == 1);
 
-  REQUIRE(output.complex_events[0].events.size() == 3);
+  REQUIRE(output.complex_events[0].events.size() == 6);
   REQUIRE(is_the_same_as(output.complex_events[0].events[0], 0, "MSFT", 102));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "INTL", 80));
-  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "AMZN", 1920));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[1], 0, "MSFT", 102));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[2], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[3], 0, "INTL", 80));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[4], 0, "AMZN", 1920));
+  REQUIRE(is_the_same_as(output.complex_events[0].events[5], 0, "AMZN", 1920));
 }
 
 TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
