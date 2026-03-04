@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 #include <stack>
 #include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
-#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 

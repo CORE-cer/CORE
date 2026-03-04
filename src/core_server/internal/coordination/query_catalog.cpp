@@ -23,6 +23,7 @@
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/event_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"

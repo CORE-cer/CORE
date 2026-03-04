@@ -1,6 +1,7 @@
 #pragma once
 
-#include <boost/dynamic_bitset.hpp>
+#include <algorithm>
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <cstddef>
 #include <string>
 

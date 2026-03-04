@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "shared/datatypes/bitset.hpp"
 
