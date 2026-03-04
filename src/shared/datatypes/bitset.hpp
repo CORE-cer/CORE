@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <cassert>
 #include <cstddef>
 #include <string>
 
@@ -39,6 +40,8 @@ class Bitset {
 
   // Static factory: create a bitset from an unsigned long value with explicit size
   static Bitset from_ulong(unsigned long val, std::size_t num_bits) {
+    assert(num_bits >= required_bits(val)
+           && "num_bits too small to represent val");
     Bitset b(num_bits);
     for (std::size_t i = 0; val != 0; ++i, val >>= 1) {
       if (val & 1) {
@@ -243,6 +246,15 @@ class Bitset {
   friend bool operator>=(const Bitset& a, const Bitset& b) { return !(a < b); }
 
  private:
+  static std::size_t required_bits(unsigned long val) {
+    std::size_t n = 0;
+    while (val != 0) {
+      ++n;
+      val >>= 1;
+    }
+    return n;
+  }
+
   void match_sizes(const Bitset& other) {
     if (bits_.size() < other.bits_.size()) {
       bits_.resize(other.bits_.size());
