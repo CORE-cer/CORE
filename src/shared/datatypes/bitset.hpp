@@ -218,7 +218,7 @@ class Bitset {
   friend bool operator==(const Bitset& a, unsigned long val) {
     if (val == 0) return a.none();
     if (a.bits_.empty()) return val == 0;
-    return a.bits_ == boost::dynamic_bitset<>(a.bits_.size(), val);
+    return a == Bitset::from_ulong(val);
   }
 
   friend bool operator==(unsigned long val, const Bitset& a) { return a == val; }
