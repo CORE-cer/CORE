@@ -40,8 +40,7 @@ class Bitset {
 
   // Static factory: create a bitset from an unsigned long value with explicit size
   static Bitset from_ulong(unsigned long val, std::size_t num_bits) {
-    assert(num_bits >= required_bits(val)
-           && "num_bits too small to represent val");
+    assert(num_bits >= required_bits(val) && "num_bits too small to represent val");
     Bitset b(num_bits);
     for (std::size_t i = 0; val != 0; ++i, val >>= 1) {
       if (val & 1) {
