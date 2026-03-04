@@ -4,6 +4,9 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
       CACHE STRING "Vcpkg toolchain file")
 endif()
 
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg-triplets"
+    CACHE STRING "Vcpkg overlay triplets directory")
+
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 20)
