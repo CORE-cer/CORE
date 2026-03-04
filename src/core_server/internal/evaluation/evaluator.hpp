@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <atomic>
 #include <cassert>
 #include <chrono>  // NOLINT
@@ -25,6 +23,7 @@
 #include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "tracy/Tracy.hpp"
 
@@ -161,7 +160,7 @@ class Evaluator {
       should_reset.store(false);
     }
 
-    mpz_class predicates_satisfied = tuple_evaluator(event);
+    Bitset predicates_satisfied = tuple_evaluator(event);
     current_union_list_map = {};
     current_ordered_keys = {};
     final_states.clear();
@@ -260,7 +259,7 @@ class Evaluator {
   void exec_trans(Types::EventWrapper& event,
                   State* p,
                   UnionList&& ul,
-                  mpz_class& t,
+                  Bitset& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");
@@ -271,7 +270,7 @@ class Evaluator {
     State::TransitionTargetStatesWithMarkings
       next_states_with_markings = cea.next(p, t, current_iteration);
     bool recycle_ulist = false;
-    mpz_class empty_marked_variables = mpz_class(0);
+    Bitset empty_marked_variables;
     for (auto& [state, marked_variables] :
          next_states_with_markings.state_marked_variables_pair) {
       assert(state != nullptr);

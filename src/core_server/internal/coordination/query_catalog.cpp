@@ -301,6 +301,10 @@ std::size_t QueryCatalog::number_of_unique_event_names_query() const {
   return unique_event_names_query.size();
 }
 
+std::size_t QueryCatalog::number_of_marking_ids() const {
+  return next_marking_id;
+}
+
 Types::StreamTypeId QueryCatalog::stream_id_from_unique_event_id(
   Types::UniqueEventTypeId unique_event_id) const {
   auto iter = unique_event_type_id_to_stream_event_type_id.find(unique_event_id);
@@ -627,17 +631,13 @@ Types::ComplexEvent QueryCatalog::event_wrappers_to_complex_event(
       continue;
     }
 
-    // Resolve each marked variable from the bitset, exactly like the old
-    // tECS::ComplexEvent::to_json(query_catalog) did.
-    std::string marked_vars_binary = event_wrapper.marked_variables->get_str(2);
+    // Resolve each marked variable from the bitset using find_first()/find_next()
+    const Bitset& marked_vars = event_wrapper.marked_variables.value();
     Types::UniqueEventTypeId event_type_id = event_wrapper.event->get_event_type_id();
 
-    for (size_t i = 0; i < marked_vars_binary.length(); ++i) {
-      if (marked_vars_binary[i] != '1') {
-        continue;
-      }
-      size_t bit_pos_from_lsb = marked_vars_binary.length() - 1 - i;
-      MarkingId marking_id = static_cast<MarkingId>(bit_pos_from_lsb);
+    for (auto bit_pos = marked_vars.find_first(); bit_pos != Bitset::npos;
+         bit_pos = marked_vars.find_next(bit_pos)) {
+      MarkingId marking_id = static_cast<MarkingId>(bit_pos);
 
       // 1. Resolve variable name — prefer event/AS name, fall back to stream>event.
       std::string var_name;

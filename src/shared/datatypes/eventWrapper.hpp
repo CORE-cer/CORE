@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -18,6 +16,7 @@
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
 #include "shared/datatypes/aliases/event_type_id.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -42,11 +41,11 @@ class EventWrapper {
 
  public:
   std::shared_ptr<const Event> event;
-  std::optional<mpz_class> marked_variables;
+  std::optional<Bitset> marked_variables;
   EventWrapper() = default;
 
   EventWrapper(std::shared_ptr<const Event> event,
-               std::optional<mpz_class> marked_variables)
+               std::optional<Bitset> marked_variables)
       : logger(quill::Frontend::get_logger("root")),
         event(event),
         marked_variables(marked_variables) {

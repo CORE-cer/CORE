@@ -79,9 +79,6 @@ function build() {
     profiling_flag="ON"
   fi
 
-  # GMP autotools needs C17 (C23 default breaks it)
-  export CFLAGS="-std=gnu17"
-
   # Configure
   cmake -S . -B "${build_dir}" \
     -G Ninja \

@@ -1,19 +1,18 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cstdint>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "union.hpp"
 
 namespace CORE::Internal::CEA {
 
 class NonContiguousSequencing final : public LogicalCEATransformer {
  public:
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using EndNodeId = uint64_t;
 
   // The difference between sequencing and concat is that
@@ -29,7 +28,7 @@ class NonContiguousSequencing final : public LogicalCEATransformer {
     for (auto right_initial_state : right_initial_states) {
       uint64_t target_state_id = right_initial_state + left.amount_of_states;
       out.transitions[target_state_id]
-        .emplace_back(PredicateSet(PredicateSet::Type::Tautology), 0, target_state_id);
+        .emplace_back(PredicateSet(PredicateSet::Type::Tautology), Bitset(), target_state_id);
     }
 
     for (auto left_final_state : left_final_states) {

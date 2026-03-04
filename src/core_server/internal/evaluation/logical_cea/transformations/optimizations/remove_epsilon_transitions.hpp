@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <stack>
@@ -8,6 +7,7 @@
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -23,12 +23,12 @@ class RemoveEpsilonTransitions final : public LogicalCEATransformer {
   // to CEA.
   LogicalCEA eval(LogicalCEA&& cea) override {
     LogicalCEA cea_copy = LogicalCEA(cea);
-    for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
+    for (uint64_t source_node = 0; source_node < cea.amount_of_states; source_node++) {
       cea_copy.transitions[source_node].clear();
       cea_copy.epsilon_transitions[source_node].clear();
     }
 
-    for (int source_node = 0; source_node < cea.amount_of_states; source_node++) {
+    for (uint64_t source_node = 0; source_node < cea.amount_of_states; source_node++) {
       std::vector<bool> visited(cea.amount_of_states, false);
       std::stack<NodeId> epsilon_reachable_nodes;
       epsilon_reachable_nodes.push(source_node);
@@ -62,10 +62,9 @@ class RemoveEpsilonTransitions final : public LogicalCEATransformer {
   void check_if_reached_node_is_accepting(NodeId reached_node,
                                           NodeId source_node,
                                           LogicalCEA& cea) {
-    mpz_class reached_binary = mpz_class(1) << reached_node;
-    if ((reached_binary & cea.final_states) != 0) {
-      mpz_class binary_source_node = mpz_class(1) << source_node;
-      cea.final_states |= binary_source_node;
+    cea.final_states.resize(cea.amount_of_states);
+    if (cea.final_states.test(reached_node)) {
+      cea.final_states.set(source_node);
     }
   }
 };

@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -10,6 +9,7 @@
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -34,7 +34,7 @@ class RemoveStates final : public LogicalCEATransformer {
     for (NodeId old_state = 0; old_state < cea.amount_of_states; old_state++) {
       if (!nodes_to_discard.contains(old_state)) {
         NodeId new_state = mapping[old_state];
-        assert(new_state != -1);
+        assert(new_state != static_cast<uint64_t>(-1));
         transcribe_transitions(new_state, cea.transitions[old_state]);
         transcribe_epsilons(new_state, cea.epsilon_transitions[old_state]);
       }
@@ -59,7 +59,7 @@ class RemoveStates final : public LogicalCEATransformer {
         mapping[previous_state_id] = new_state_id++;
       }
     }
-    assert(new_state_id == new_cea.amount_of_states);
+    assert(new_state_id == static_cast<int64_t>(new_cea.amount_of_states));
   }
 
   void transcribe_transitions(NodeId new_state, std::vector<Transition> transitions) {
@@ -67,7 +67,7 @@ class RemoveStates final : public LogicalCEATransformer {
       NodeId previous_target_node = std::get<2>(transition);
       if (!nodes_to_discard.contains(previous_target_node)) {
         NodeId target_node = mapping[std::get<2>(transition)];
-        assert(target_node != -1);
+        assert(target_node != static_cast<uint64_t>(-1));
         auto new_transition = std::make_tuple(std::get<0>(transition),
                                               std::get<1>(transition),
                                               target_node);
@@ -80,26 +80,21 @@ class RemoveStates final : public LogicalCEATransformer {
     for (NodeId previous_target_node : transitions) {
       if (!nodes_to_discard.contains(previous_target_node)) {
         NodeId new_target_node = mapping[previous_target_node];
-        assert(new_target_node != -1);
+        assert(new_target_node != static_cast<uint64_t>(-1));
         new_cea.epsilon_transitions[new_state].insert(new_target_node);
       }
     }
   }
 
-  States map_states(States states, std::vector<int64_t> new_mapping) {
-    States out = 0;
-    NodeId current_node = 0;
-    mpz_class shifter = 1;
-    while (states != 0) {
-      if ((states & 1) == 1) {
-        assert(current_node < new_mapping.size());
-        NodeId new_state = new_mapping[current_node];
-        if (new_state != -1) {
-          out |= shifter << new_state;
-        }
+  States map_states(const States& states, std::vector<int64_t> new_mapping) {
+    std::size_t new_size = new_cea.amount_of_states;
+    States out(new_size);
+    for (auto i = states.find_first(); i != Bitset::npos; i = states.find_next(i)) {
+      assert(i < new_mapping.size());
+      int64_t new_state = new_mapping[i];
+      if (new_state != -1) {
+        out.set(static_cast<std::size_t>(new_state));
       }
-      current_node++;
-      states >>= 1;
     }
     return out;
   }

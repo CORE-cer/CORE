@@ -89,6 +89,7 @@ class QueryCatalog {
   is_unique_event_id_relevant_to_query(Types::UniqueEventTypeId unique_event_id) const;
   const std::vector<std::string> get_unique_event_names_query() const;
   std::size_t number_of_unique_event_names_query() const;
+  std::size_t number_of_marking_ids() const;
 
   Types::StreamTypeId
   stream_id_from_unique_event_id(Types::UniqueEventTypeId unique_event_id) const;

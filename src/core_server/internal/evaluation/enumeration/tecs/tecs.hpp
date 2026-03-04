@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <atomic>
 #include <cassert>
 #include <cstdint>
@@ -10,6 +8,7 @@
 
 #include "node.hpp"
 #include "node_manager.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "time_reservator.hpp"
 
@@ -70,9 +69,9 @@ class tECS {
   [[nodiscard]] Node* new_extend(Node* node,
                                  Types::EventWrapper& event,
                                  uint64_t timestamp,
-                                 mpz_class marked_variables) {
+                                 Bitset marked_variables) {
     Types::EventWrapper event_copy = event.clone();
-    return node_manager.alloc(node, std::move(event.clone()), timestamp, marked_variables);
+    return node_manager.alloc(node, std::move(event.clone()), timestamp, std::move(marked_variables));
   }
 
   /**

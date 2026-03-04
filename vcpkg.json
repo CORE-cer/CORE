@@ -7,7 +7,7 @@
     "catch2",
     "cppzmq",
     "cereal",
-    "gmp",
+    "boost-dynamic-bitset",
     "re2",
     "quill",
     "readerwriterqueue",

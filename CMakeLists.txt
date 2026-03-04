@@ -28,7 +28,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(antlr4-runtime REQUIRED)
 find_package(cereal REQUIRED)
 find_package(cppzmq REQUIRED)
-find_package(GMP REQUIRED)
+find_package(Boost REQUIRED)
 find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
@@ -130,7 +130,7 @@ add_library(core STATIC
 
 set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq GMP::gmp GMP::gmpxx Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse)
+target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq Boost::boost Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse)
 if (PROFILING)
   message("Profiling enabled")
   target_link_libraries(core PUBLIC debuginfod)
@@ -157,34 +157,30 @@ if (THREAD_SANITIZER)
   target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
 endif()
 
+message("Logging level: ${LOGGING}")
+
 if (LOGGING MATCHES "critical")
-  message("Logging set to critical")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_CRITICAL)
 endif()
 
 if (LOGGING MATCHES "info")
-  message("Logging set to info")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_INFO)
 endif()
 
 if (LOGGING MATCHES "debug")
-  message("Logging set to debug")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_DEBUG)
 endif()
 
 if (LOGGING MATCHES "trace_l1")
-  message("Logging set to trace_l1")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L1)
 endif()
 
 if (LOGGING MATCHES "trace_l2")
-  message("Logging set to trace_l2")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L2)
 endif()
 
 if (LOGGING MATCHES "trace_l3")
   target_compile_options(core PUBLIC -DQUILL_COMPILE_ACTIVE_LOG_LEVEL=QUILL_COMPILE_ACTIVE_LOG_LEVEL_TRACE_L3)
-  message("Logging set to trace_l3")
 endif()
 
 # Python bindings (must come after core target definition)

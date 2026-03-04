@@ -2,6 +2,7 @@
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -14,9 +15,12 @@
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 
 namespace CORE::Internal::CEQL::UnitTests::CEAConstructionFromLogicalCEA {
+
+using CORE::Bitset;
 
 std::string create_query(std::string clause) {
   // clang-format off
@@ -45,13 +49,13 @@ TEST_CASE("Remove Epsilons of Sequencing and Contiguous Iteration Combined",
   REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
   REQUIRE(cea.transitions[3].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 2))); // NOLINT
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0b0, 1))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b100, 0b100), 0b1000, 2))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), 0b0, 1))); // NOLINT
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
-  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b100), Bitset::from_ulong(0b100)), Bitset::from_ulong(0b1000), uint64_t{2}))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), Bitset{}, uint64_t{1}))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b100), Bitset::from_ulong(0b100)), Bitset::from_ulong(0b1000), uint64_t{2}))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), Bitset{}, uint64_t{1}))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
+  REQUIRE(cea.transitions[3].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
   // clang-format on
   REQUIRE(cea.initial_state == 3);     // NOLINT
   REQUIRE(cea.final_states == 0b100);  // NOLINT
@@ -78,7 +82,7 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
 
   REQUIRE(std::count(logical_cea.transitions[0].begin(),
                      logical_cea.transitions[0].end(),
-                     std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 1)));
+                     std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), 0b100, 1)));
   REQUIRE(std::count(logical_cea.transitions[2].begin(),
                      logical_cea.transitions[2].end(),
                      std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),
@@ -99,11 +103,11 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
   REQUIRE(cea.transitions[1].size() == 2);  // NOLINT
   REQUIRE(cea.transitions[2].size() == 1);  // NOLINT
   // clang-format off
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
-  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
-  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), false, 1))); // NOLINT
-  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(0b010, 0b010), 0b100, 0))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
+  REQUIRE(cea.transitions[0].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), Bitset{}, uint64_t{1}))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
+  REQUIRE(cea.transitions[1].contains(std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology), Bitset{}, uint64_t{1}))); // NOLINT
+  REQUIRE(cea.transitions[2].contains(std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), Bitset::from_ulong(0b100), uint64_t{0}))); // NOLINT
   // clang-format on
   REQUIRE(cea.initial_state == 0b010);  // NOLINT
   REQUIRE(cea.final_states == 0b001);   // NOLINT

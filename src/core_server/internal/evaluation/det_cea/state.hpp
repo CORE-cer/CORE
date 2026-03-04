@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstddef>
@@ -12,6 +11,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/det_cea/StateWithMarkedVariables.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA::Det {
 
@@ -27,7 +27,7 @@ class State {
 
    public:
     TransitionTargetStatesWithMarkings(std::vector<State*>&& states,
-                                       std::vector<mpz_class>&& marked_variables) {
+                                       std::vector<Bitset>&& marked_variables) {
       assert(states.size() == marked_variables.size());
       states_ids.reserve(states.size());
       for (auto& state : states) {
@@ -53,7 +53,7 @@ class State {
   };
 
   uint64_t id;
-  mpz_class states;
+  Bitset states;
   // The id is stored in the transitions because in the future we might
   // want to remove some states. And to remove them we can
   CEA& cea;
@@ -66,23 +66,23 @@ class State {
  private:
   inline static uint64_t IdCounter = 0;
   uint64_t ref_count = 0;
-  std::map<mpz_class, TransitionTargetStatesWithMarkings> transitions;
+  std::map<Bitset, TransitionTargetStatesWithMarkings> transitions;
 
  public:
-  State(mpz_class states, CEA& cea)
+  State(Bitset states, CEA& cea)
       : id(IdCounter++),
-        states(states),
+        states(std::move(states)),
         cea(cea),
-        is_final((states & cea.final_states) != 0),
-        is_empty(states == 0) {}
+        is_final((this->states & cea.final_states).any()),
+        is_empty(this->states.none()) {}
 
-  void reset(mpz_class states, CEA& cea) {
+  void reset(Bitset states, CEA& cea) {
     this->id = IdCounter++;
-    this->states = states;
+    this->states = std::move(states);
     this->cea = cea;
     this->ref_count = 0;
-    is_final = (states & cea.final_states) != 0;
-    is_empty = states == 0;
+    is_final = (this->states & cea.final_states).any();
+    is_empty = this->states.none();
     transitions.clear();
   }
 
@@ -94,7 +94,7 @@ class State {
   }
 
   std::optional<std::reference_wrapper<TransitionTargetStatesWithMarkings>>
-  next(mpz_class evaluation, uint64_t& n_hits) {
+  next(Bitset evaluation, uint64_t& n_hits) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
@@ -110,12 +110,12 @@ class State {
   }
 
   std::reference_wrapper<TransitionTargetStatesWithMarkings>
-  add_transition(mpz_class evaluation, TransitionTargetStatesWithMarkings next_states) {
+  add_transition(Bitset evaluation, TransitionTargetStatesWithMarkings next_states) {
     assert(!transitions.contains(evaluation));
     for (auto& [state, marked_variables] : next_states.state_marked_variables_pair) {
       assert(state != nullptr);
     }
-    auto it = transitions.insert(std::make_pair(evaluation, std::move(next_states)));
+    auto it = transitions.insert(std::make_pair(std::move(evaluation), std::move(next_states)));
     TransitionTargetStatesWithMarkings& transition_target = it.first->second;
     return transition_target;
   }
