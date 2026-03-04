@@ -19,7 +19,7 @@ struct PredicateSet {
   PredicateSet(Type type = Contradiction) : type(type) {}
 
   PredicateSet(Bitset mask, Bitset predicates)
-      : mask(std::move(mask)), predicates(std::move(predicates)), type(Satisfiable) {}
+      : mask(std::move(mask)), predicates(predicates & this->mask), type(Satisfiable) {}
 
   /**
    * This creates a new PredicateSet that is satisfied iff both this and
