@@ -44,8 +44,7 @@ class EventWrapper {
   std::optional<Bitset> marked_variables;
   EventWrapper() = default;
 
-  EventWrapper(std::shared_ptr<const Event> event,
-               std::optional<Bitset> marked_variables)
+  EventWrapper(std::shared_ptr<const Event> event, std::optional<Bitset> marked_variables)
       : logger(quill::Frontend::get_logger("root")),
         event(event),
         marked_variables(marked_variables) {

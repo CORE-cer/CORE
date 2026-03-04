@@ -190,7 +190,8 @@ struct LogicalCEA {
     out += "    \u0394\u03B5: [NodeId]:\n";
     for (size_t i = 0; i < epsilon_transitions.size(); i++) {
       for (const NodeId& end_node : epsilon_transitions[i]) {
-        out += "        " + std::to_string(i) + "\u2192 " + std::to_string(end_node) + "\n";
+        out += "        " + std::to_string(i) + "\u2192 " + std::to_string(end_node)
+               + "\n";
       }
     }
 

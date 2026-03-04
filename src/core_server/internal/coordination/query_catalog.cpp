@@ -301,9 +301,7 @@ std::size_t QueryCatalog::number_of_unique_event_names_query() const {
   return unique_event_names_query.size();
 }
 
-std::size_t QueryCatalog::number_of_marking_ids() const {
-  return next_marking_id;
-}
+std::size_t QueryCatalog::number_of_marking_ids() const { return next_marking_id; }
 
 Types::StreamTypeId QueryCatalog::stream_id_from_unique_event_id(
   Types::UniqueEventTypeId unique_event_id) const {

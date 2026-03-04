@@ -39,8 +39,7 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
     // Create a single-bit bitset for the variable
     variables_to_filter = Bitset::with_bit(variable_id_to_filter,
                                            variable_id_to_filter + 1);
-    Bitset pred_bit = Bitset::with_bit(physical_predicate_id,
-                                       physical_predicate_id + 1);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
     predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 
@@ -62,8 +61,7 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    Bitset pred_bit = Bitset::with_bit(physical_predicate_id,
-                                       physical_predicate_id + 1);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
     predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 
@@ -83,8 +81,7 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    Bitset pred_bit = Bitset::with_bit(physical_predicate_id,
-                                       physical_predicate_id + 1);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
     predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 

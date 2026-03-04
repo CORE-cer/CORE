@@ -14,6 +14,7 @@ class Bitset {
 
   // Construction
   Bitset() = default;
+
   explicit Bitset(std::size_t num_bits) : bits_(num_bits) {}
 
   // Static factory: single bit set at position `pos` in a bitset of `num_bits`
@@ -83,10 +84,12 @@ class Bitset {
 
   // Queries
   bool none() const { return bits_.none(); }
+
   bool any() const { return bits_.any(); }
 
   // Iteration over set bits
   std::size_t find_first() const { return bits_.find_first(); }
+
   std::size_t find_next(std::size_t pos) const { return bits_.find_next(pos); }
 
   // Conversion
@@ -215,7 +218,9 @@ class Bitset {
   }
 
   friend bool operator==(unsigned long val, const Bitset& a) { return a == val; }
+
   friend bool operator!=(const Bitset& a, unsigned long val) { return !(a == val); }
+
   friend bool operator!=(unsigned long val, const Bitset& a) { return !(a == val); }
 
   friend bool operator<(const Bitset& a, const Bitset& b) {
@@ -231,7 +236,9 @@ class Bitset {
   }
 
   friend bool operator>(const Bitset& a, const Bitset& b) { return b < a; }
+
   friend bool operator<=(const Bitset& a, const Bitset& b) { return !(b < a); }
+
   friend bool operator>=(const Bitset& a, const Bitset& b) { return !(a < b); }
 
  private:

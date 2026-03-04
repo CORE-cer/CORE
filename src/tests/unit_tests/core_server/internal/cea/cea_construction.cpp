@@ -82,7 +82,10 @@ TEST_CASE("Remove Epsilons of Sequencing and non_contiguous Iteration Combined",
 
   REQUIRE(std::count(logical_cea.transitions[0].begin(),
                      logical_cea.transitions[0].end(),
-                     std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010), Bitset::from_ulong(0b010)), 0b100, 1)));
+                     std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b010),
+                                                       Bitset::from_ulong(0b010)),
+                                     0b100,
+                                     1)));
   REQUIRE(std::count(logical_cea.transitions[2].begin(),
                      logical_cea.transitions[2].end(),
                      std::make_tuple(CEA::PredicateSet(CEA::PredicateSet::Type::Tautology),

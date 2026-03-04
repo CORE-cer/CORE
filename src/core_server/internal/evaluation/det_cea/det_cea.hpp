@@ -41,8 +41,9 @@ class DetCEA {
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
     Bitset initial_bitset(this->cea.amount_of_states);
     initial_bitset.set(this->cea.initial_state);
-    State* initial_state = state_manager.create_or_return_existing_state(
-      std::move(initial_bitset), this->cea);
+    State* initial_state = state_manager.create_or_return_existing_state(std::move(
+                                                                           initial_bitset),
+                                                                         this->cea);
     this->initial_state = initial_state;
     state_manager.pin_state(this->initial_state);
   }
@@ -75,9 +76,7 @@ class DetCEA {
 
  private:
   State::TransitionTargetStatesWithMarkings
-  compute_next_states(State* state,
-                      Bitset& evaluation,
-                      const uint64_t& current_iteration) {
+  compute_next_states(State* state, Bitset& evaluation, const uint64_t& current_iteration) {
     std::vector<RawStates> computed_raw_states = std::move(
       compute_next_raw_states(state, evaluation));
     std::vector<State*> next_states;

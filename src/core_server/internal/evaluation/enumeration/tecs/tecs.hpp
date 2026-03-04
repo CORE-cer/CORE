@@ -71,7 +71,10 @@ class tECS {
                                  uint64_t timestamp,
                                  Bitset marked_variables) {
     Types::EventWrapper event_copy = event.clone();
-    return node_manager.alloc(node, std::move(event.clone()), timestamp, std::move(marked_variables));
+    return node_manager.alloc(node,
+                              std::move(event.clone()),
+                              timestamp,
+                              std::move(marked_variables));
   }
 
   /**

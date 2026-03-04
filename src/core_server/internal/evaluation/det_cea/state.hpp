@@ -115,7 +115,8 @@ class State {
     for (auto& [state, marked_variables] : next_states.state_marked_variables_pair) {
       assert(state != nullptr);
     }
-    auto it = transitions.insert(std::make_pair(std::move(evaluation), std::move(next_states)));
+    auto it = transitions.insert(
+      std::make_pair(std::move(evaluation), std::move(next_states)));
     TransitionTargetStatesWithMarkings& transition_target = it.first->second;
     return transition_target;
   }
