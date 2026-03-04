@@ -57,7 +57,8 @@ jobs:
         run: uv build --wheel -v 2>&1 | tee /tmp/pycer-build.log
 
       - name: Verify logging is set to info
-        run: grep -q "Logging level: info" /tmp/pycer-build.log || { echo "::error::LOGGING was not set to info during CMake configure"; exit 1; }
+        run: |
+          grep -q "Logging level: info" /tmp/pycer-build.log || { echo "::error::LOGGING was not set to info during CMake configure"; exit 1; }
 
       - name: Verify pycer import
         run: uv run python -c "import pycer; print('pycer loaded successfully')"
