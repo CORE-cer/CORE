@@ -49,7 +49,7 @@ class DetCEA {
   }
 
   State::TransitionTargetStatesWithMarkings
-  next(State* state, Bitset evaluation, const uint64_t& current_iteration) {
+  next(State* state, const Bitset& evaluation, const uint64_t& current_iteration) {
     ZoneScopedN("DetCEA::next");
     assert(state != nullptr);
     n_nexts++;
@@ -76,7 +76,9 @@ class DetCEA {
 
  private:
   State::TransitionTargetStatesWithMarkings
-  compute_next_states(State* state, Bitset& evaluation, const uint64_t& current_iteration) {
+  compute_next_states(State* state,
+                      const Bitset& evaluation,
+                      const uint64_t& current_iteration) {
     std::vector<RawStates> computed_raw_states = std::move(
       compute_next_raw_states(state, evaluation));
     std::vector<State*> next_states;
@@ -85,11 +87,12 @@ class DetCEA {
     next_states_marked_variables.reserve(computed_raw_states.size());
 
     for (auto& raw_state : computed_raw_states) {
-      auto states_bitset = raw_state.states;
-      auto marked_variables = raw_state.marked_variables;
-      State* state = state_manager.create_or_return_existing_state(states_bitset, cea);
+      auto states_bitset = std::move(raw_state.states);
+      auto marked_variables = std::move(raw_state.marked_variables);
+      State* state = state_manager.create_or_return_existing_state(std::move(states_bitset),
+                                                                   cea);
       next_states.push_back(state);
-      next_states_marked_variables.push_back(marked_variables);
+      next_states_marked_variables.push_back(std::move(marked_variables));
     }
 
     return {std::move(next_states), std::move(next_states_marked_variables)};
@@ -97,7 +100,6 @@ class DetCEA {
 
   std::vector<RawStates> compute_next_raw_states(State* state, Bitset evaluation) {
     assert(state != nullptr);
-    auto states_bitset = state->states;
     auto states_vector = get_states_from_bitset(state->states);
     std::map<VariablesToMark, StateStates> computed_raw_states;
     for (uint64_t state : states_vector) {

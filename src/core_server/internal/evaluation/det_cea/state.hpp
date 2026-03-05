@@ -94,7 +94,7 @@ class State {
   }
 
   std::optional<std::reference_wrapper<TransitionTargetStatesWithMarkings>>
-  next(Bitset evaluation, uint64_t& n_hits) {
+  next(const Bitset& evaluation, uint64_t& n_hits) {
     assert(next_evictable_state == nullptr && prev_evictable_state == nullptr);
     auto it = transitions.find(evaluation);
     if (it != transitions.end()) {
@@ -110,13 +110,13 @@ class State {
   }
 
   std::reference_wrapper<TransitionTargetStatesWithMarkings>
-  add_transition(Bitset evaluation, TransitionTargetStatesWithMarkings next_states) {
+  add_transition(const Bitset& evaluation,
+                 TransitionTargetStatesWithMarkings next_states) {
     assert(!transitions.contains(evaluation));
     for (auto& [state, marked_variables] : next_states.state_marked_variables_pair) {
       assert(state != nullptr);
     }
-    auto it = transitions.insert(
-      std::make_pair(std::move(evaluation), std::move(next_states)));
+    auto it = transitions.insert(std::make_pair(evaluation, std::move(next_states)));
     TransitionTargetStatesWithMarkings& transition_target = it.first->second;
     return transition_target;
   }
