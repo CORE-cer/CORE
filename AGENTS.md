@@ -46,12 +46,13 @@ Use the appropriate tier based on where you are in the development cycle:
    Build pycer with sanitizers and run e2e tests. Example with address sanitizer:
    ```
    scripts/build_pycer.sh -s address
-   LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
+   LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s -k "q1_ or q10_"
    ```
    Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
    - Do NOT use `uv run` — it silently rebuilds pycer without sanitizer flags. Use `.venv/bin/pytest` directly instead.
    - `LD_PRELOAD` is needed because clang doesn't add the sanitizer runtime to pycer.so's NEEDED entries. It force-loads the runtime before Python loads the extension.
    - Use `-k "q1_ or q10_"` to run a subset of tests — sanitizer e2e tests are slow.
+   - **Pass suppression files** when running e2e tests — `scripts/common.sh` sets these for build scripts, but pytest runs outside that shell. Use `TSAN_OPTIONS="suppressions=tsan_suppressions.txt"` or `ASAN_OPTIONS="suppressions=asan_suppressions.txt"` as needed.
 
 **Before finishing a task:**
 
