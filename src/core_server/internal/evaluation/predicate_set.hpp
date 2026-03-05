@@ -1,22 +1,25 @@
 #pragma once
-#include <gmpxx.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
+
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 struct PredicateSet {
   enum Type { Satisfiable, Contradiction, Tautology };
 
-  mpz_class mask;        // Specifies relevant bits
-  mpz_class predicates;  // expected evaluation
+  Bitset mask;        // Specifies relevant bits
+  Bitset predicates;  // expected evaluation
   Type type;
 
-  PredicateSet(Type type = Contradiction) : mask(0), predicates(0), type(type) {}
+  PredicateSet(Type type = Contradiction) : type(type) {}
 
-  PredicateSet(mpz_class mask, mpz_class predicates)
-      : mask(mask), predicates(predicates), type(Satisfiable) {}
+  PredicateSet(Bitset mask, Bitset predicates)
+      : mask(std::move(mask)), predicates(predicates & this->mask), type(Satisfiable) {}
 
   /**
    * This creates a new PredicateSet that is satisfied iff both this and
@@ -29,13 +32,13 @@ struct PredicateSet {
       return PredicateSet(other);
     else if (other.type == Tautology)
       return PredicateSet(*this);
-    mpz_class conflict = (mask & other.mask) & (predicates ^ other.predicates);
-    if (conflict != 0) {
+    Bitset conflict = (mask & other.mask) & (predicates ^ other.predicates);
+    if (conflict.any()) {
       return PredicateSet(Contradiction);
     }
 
-    mpz_class combined_mask = mask | other.mask;
-    mpz_class combined_predicates = predicates | other.predicates;
+    Bitset combined_mask = mask | other.mask;
+    Bitset combined_predicates = predicates | other.predicates;
     PredicateSet combined(combined_mask, combined_predicates);
     return combined;
   }
@@ -47,30 +50,31 @@ struct PredicateSet {
       case Tautology:
         return PredicateSet(Contradiction);
       default:
-        mpz_class unselective_mask = (mpz_class(1) << (amount_of_bits + 1)) - 1;
-        mpz_class new_mask = unselective_mask ^ mask;
-        mpz_class new_predicates = ~predicates;
+        Bitset unselective_mask = Bitset::all_set(
+          static_cast<std::size_t>(amount_of_bits + 1));
+        Bitset new_mask = unselective_mask ^ mask;
+        Bitset new_predicates = ~predicates;
         return PredicateSet(new_mask, new_predicates);
     }
   }
 
-  bool is_satisfied_by(const mpz_class& predicate_evaluation) const {
+  bool is_satisfied_by(const Bitset& predicate_evaluation) const {
     switch (type) {
       case Contradiction:
         return false;
       case Tautology:
         return true;
       default:
-        mpz_class conflicts = (predicate_evaluation ^ predicates) & mask;
-        return conflicts == 0;
+        Bitset conflicts = (predicate_evaluation ^ predicates) & mask;
+        return conflicts.none();
     }
   }
 
   bool operator==(const PredicateSet other) const {
     if (type != other.type || mask != other.mask) return false;
     if (type == Contradiction || type == Tautology) return true;
-    auto conflicts = static_cast<mpz_class>((predicates ^ other.predicates)) & mask;
-    return conflicts == 0;
+    Bitset conflicts = (predicates ^ other.predicates) & mask;
+    return conflicts.none();
   }
 
   // For set comparison
@@ -79,31 +83,25 @@ struct PredicateSet {
     if (type > other.type) return false;
     if (mask < other.mask) return true;
     if (mask > other.mask) return false;
-    if (mask < other.predicates) return true;
+    if (predicates < other.predicates) return true;
     return false;
   }
 
   std::string to_string() const {
     if (type == Contradiction)
-      return "⊥";
+      return "\u22A5";
     else if (type == Tautology)
-      return "⊤";
-    std::string out = predicates.get_str(2);
-    std::string mask_string = mask.get_str(2);
+      return "\u22A4";
+    std::string out = predicates.to_string();
+    std::string mask_string = mask.to_string();
 
-    uint64_t buffer_length = out.size() > mask_string.size()
-                               ? out.size() - mask_string.size()
-                               : mask_string.size() - out.size();
-    std::string buffer = "";
-    for (int i = 0; i < buffer_length; i++) {
-      buffer += '0';
+    // Pad shorter string with leading zeros
+    if (out.size() < mask_string.size()) {
+      out.insert(0, mask_string.size() - out.size(), '0');
+    } else if (mask_string.size() < out.size()) {
+      mask_string.insert(0, out.size() - mask_string.size(), '0');
     }
-
-    if (out.size() > mask_string.size())
-      out = buffer + out;
-    else
-      mask_string = buffer + mask_string;
-    for (int i = 0; i <= out.size(); i++) {
+    for (std::size_t i = 0; i < out.size(); i++) {
       if (mask_string[i] == '0') {
         out[i] = '?';
       }

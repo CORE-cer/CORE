@@ -155,7 +155,7 @@ get_predicates(CEQL::Query& query, QueryCatalog& query_catalog) {
 }
 
 TEST_CASE(
-  "Predicate Evaluator creates the correct mpz_class for CompareMathExprs "
+  "Predicate Evaluator creates the correct Bitset for CompareMathExprs "
   "(bitset)",
   "[PredicateEvaluator]") {
   Catalog catalog;

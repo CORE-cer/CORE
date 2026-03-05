@@ -1,16 +1,17 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cstdint>
 #include <tuple>
+#include <utility>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 class Project final : public LogicalCEATransformer {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using EndNodeId = uint64_t;
 
  private:
@@ -18,10 +19,10 @@ class Project final : public LogicalCEATransformer {
 
  public:
   Project(VariablesToMark variables_to_project)
-      : variables_to_project(variables_to_project) {}
+      : variables_to_project(std::move(variables_to_project)) {}
 
   LogicalCEA eval(LogicalCEA&& cea) override {
-    for (int i = 0; i < cea.amount_of_states; i++) {
+    for (uint64_t i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
         transition = std::make_tuple(std::get<0>(transition),
                                      std::get<1>(transition) & variables_to_project,

@@ -1,11 +1,10 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <utility>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -21,7 +20,7 @@ class AddUniqueInitialState final : public LogicalCEATransformer {
     for (NodeId initial_state : cea.get_initial_states()) {
       cea.epsilon_transitions[new_initial_state].insert(initial_state);
     }
-    cea.initial_states = mpz_class(1) << (cea.amount_of_states - 1);
+    cea.initial_states = Bitset::with_bit(cea.amount_of_states - 1, cea.amount_of_states);
     return std::move(cea);
   }
 };

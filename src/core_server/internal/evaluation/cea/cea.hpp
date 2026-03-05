@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -17,14 +15,15 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 struct CEA {
  public:
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using NodeId = uint64_t;
   using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
-  using States = mpz_class;
+  using States = Bitset;
 
   uint64_t amount_of_states;
   std::vector<std::set<Transition>> transitions;
@@ -57,14 +56,9 @@ struct CEA {
 
   std::vector<int64_t> get_final_states() {
     std::vector<int64_t> out;
-    States final_states_copy = final_states;
-    int64_t current_pos = 0;
-    while (final_states_copy != 0) {
-      if ((final_states_copy & 1) != 0) {
-        out.push_back(current_pos);
-      }
-      final_states_copy >>= 1;
-      current_pos++;
+    for (auto i = final_states.find_first(); i != Bitset::npos;
+         i = final_states.find_next(i)) {
+      out.push_back(static_cast<int64_t>(i));
     }
     return out;
   }
@@ -76,15 +70,15 @@ struct CEA {
       "CEA\n"
       "    Q = {0.." + std::to_string(amount_of_states - 1) + "}\n"
       "    q0 = " + std::to_string(initial_state) + "\n"
-      "    F = (bitset) " + final_states.get_str(2) + "\n"
-      "    Δ : {PredicateSet × Marked → FinalState}" + "\n";
+      "    F = (bitset) " + final_states.to_string() + "\n"
+      "    \u0394 : {PredicateSet \u00D7 Marked \u2192 FinalState}" + "\n";
     // clang-format on
     for (size_t i = 0; i < transitions.size(); i++) {
-      if (transitions[i].size() != 0) out += "    Δ[" + std::to_string(i) + "]\n";
+      if (transitions[i].size() != 0) out += "    \u0394[" + std::to_string(i) + "]\n";
       for (const std::tuple<PredicateSet, VariablesToMark, NodeId>& transition :
            transitions[i]) {
         out += "        " + std::get<0>(transition).to_string() + ","
-               + std::get<1>(transition).get_str(2) + ","
+               + std::get<1>(transition).to_string() + ","
                + std::to_string(std::get<2>(transition)) + "\n";
       }
     }

@@ -1,18 +1,17 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cstdint>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "union.hpp"
 
 namespace CORE::Internal::CEA {
 
 class ContiguousSequencing final : public LogicalCEATransformer {
  public:
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using EndNodeId = uint64_t;
 
   // Note, for this to work the implementation of union must offset the

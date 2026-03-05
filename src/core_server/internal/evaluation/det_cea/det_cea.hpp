@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -12,6 +11,7 @@
 
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "state.hpp"
 #include "state_manager.hpp"
 
@@ -19,8 +19,8 @@ namespace CORE::Internal::CEA {
 class DetCEA {
   using State = Det::State;
   using StateManager = Det::StateManager;
-  using VariablesToMark = mpz_class;
-  using StateStates = mpz_class;
+  using VariablesToMark = Bitset;
+  using StateStates = Bitset;
 
  public:
   State* initial_state;
@@ -28,7 +28,7 @@ class DetCEA {
  private:
   struct RawStates {
     StateStates states;
-    mpz_class marked_variables;
+    Bitset marked_variables;
   };
 
   CEA cea;
@@ -39,24 +39,17 @@ class DetCEA {
   StateManager state_manager;
 
   DetCEA(CEA&& cea) : cea(cea), state_manager() {
-    mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-    mpz_class initial_marked_variables = mpz_class(0);
-    State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
-                                                                         cea);
+    Bitset initial_bitset(this->cea.amount_of_states);
+    initial_bitset.set(this->cea.initial_state);
+    State* initial_state = state_manager.create_or_return_existing_state(std::move(
+                                                                           initial_bitset),
+                                                                         this->cea);
     this->initial_state = initial_state;
     state_manager.pin_state(this->initial_state);
   }
 
-  // DetCEA(const DetCEA& other) : cea(other.cea), state_manager() {
-  //   mpz_class initial_bitset_1 = mpz_class(1) << cea.initial_state;
-  //   State* initial_state = state_manager.create_or_return_existing_state(initial_bitset_1,
-  //                                                                        cea);
-  //   this->initial_state = initial_state;
-  //   this->initial_state->pin();
-  // }
-
   State::TransitionTargetStatesWithMarkings
-  next(State* state, mpz_class evaluation, const uint64_t& current_iteration) {
+  next(State* state, Bitset evaluation, const uint64_t& current_iteration) {
     ZoneScopedN("DetCEA::next");
     assert(state != nullptr);
     n_nexts++;
@@ -75,7 +68,7 @@ class DetCEA {
 
   std::string to_string() {
     std::string out = "";
-    out += "Initial state: " + initial_state->states.get_str(2) + "\n";
+    out += "Initial state: " + initial_state->states.to_string() + "\n";
     out += "State manager:\n";
     out += state_manager.to_string();
     return out;
@@ -83,13 +76,11 @@ class DetCEA {
 
  private:
   State::TransitionTargetStatesWithMarkings
-  compute_next_states(State* state,
-                      mpz_class& evaluation,
-                      const uint64_t& current_iteration) {
+  compute_next_states(State* state, Bitset& evaluation, const uint64_t& current_iteration) {
     std::vector<RawStates> computed_raw_states = std::move(
       compute_next_raw_states(state, evaluation));
     std::vector<State*> next_states;
-    std::vector<mpz_class> next_states_marked_variables;
+    std::vector<Bitset> next_states_marked_variables;
     next_states.reserve(computed_raw_states.size());
     next_states_marked_variables.reserve(computed_raw_states.size());
 
@@ -104,10 +95,10 @@ class DetCEA {
     return {std::move(next_states), std::move(next_states_marked_variables)};
   }
 
-  std::vector<RawStates> compute_next_raw_states(State* state, mpz_class evaluation) {
+  std::vector<RawStates> compute_next_raw_states(State* state, Bitset evaluation) {
     assert(state != nullptr);
     auto states_bitset = state->states;
-    auto states_vector = get_states_from_mpz_class(state->states);
+    auto states_vector = get_states_from_bitset(state->states);
     std::map<VariablesToMark, StateStates> computed_raw_states;
     for (uint64_t state : states_vector) {
       for (auto transition : cea.transitions[state]) {
@@ -117,9 +108,12 @@ class DetCEA {
           uint64_t target_node = std::get<2>(transition);
           auto iter = computed_raw_states.find(variables_to_mark);
           if (iter == computed_raw_states.end()) {
-            computed_raw_states[variables_to_mark] = mpz_class(1) << target_node;
+            Bitset target(cea.amount_of_states);
+            target.set(target_node);
+            computed_raw_states[variables_to_mark] = std::move(target);
           } else {
-            computed_raw_states[variables_to_mark] |= mpz_class(1) << target_node;
+            iter->second.resize(cea.amount_of_states);
+            iter->second.set(target_node);
           }
         }
       }
@@ -133,15 +127,10 @@ class DetCEA {
     return computed_states;
   }
 
-  std::vector<uint64_t> get_states_from_mpz_class(mpz_class states) {
+  std::vector<uint64_t> get_states_from_bitset(const Bitset& states) {
     std::vector<uint64_t> out;
-    int64_t current_pos = 0;
-    while (states != 0) {
-      if ((states & 1) != 0) {
-        out.push_back(current_pos);
-      }
-      states >>= 1;
-      current_pos++;
+    for (auto i = states.find_first(); i != Bitset::npos; i = states.find_next(i)) {
+      out.push_back(i);
     }
     return out;
   }

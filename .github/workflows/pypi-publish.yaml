@@ -1,0 +1,67 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+
+      - name: Export GitHub Actions cache variables
+        run: |
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+
+      - uses: astral-sh/setup-uv@v7.3.0
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19.1.7"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
+
+      - name: Install dependencies
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: Set version from git tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = \"0.0.0\"/version = \"${VERSION}\"/" pyproject.toml
+
+      - name: Build pycer wheel
+        run: uv build --wheel -v 2>&1 | tee /tmp/pycer-build.log
+
+      - name: Verify logging is set to info
+        run: |
+          grep -q "Logging level: info" /tmp/pycer-build.log || { echo "::error::LOGGING was not set to info during CMake configure"; exit 1; }
+
+      - name: Verify pycer import
+        run: uv run python -c "import pycer; print('pycer loaded successfully')"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

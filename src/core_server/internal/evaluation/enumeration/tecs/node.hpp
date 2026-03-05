@@ -1,5 +1,4 @@
 #pragma once
-#include <gmpxx.h>
 #include <stdint.h>
 
 #include <cassert>
@@ -9,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::tECS {
@@ -73,21 +73,21 @@ class Node {
   Node(Node* node,
        Types::EventWrapper&& event,
        uint64_t timestamp,
-       mpz_class marked_variables) {
+       Bitset marked_variables) {
     assert(node != nullptr);
     reset(node,
           std::move(event),
           timestamp,
-          marked_variables);  //Se llama a reset para evitar repetir codigo
+          std::move(marked_variables));  //Se llama a reset para evitar repetir codigo
   }
 
   void reset(Node* node,
              Types::EventWrapper&& event,
              uint64_t timestamp,
-             mpz_class marked_variables) {
+             Bitset marked_variables) {
     this->left = node;
     this->event = std::move(event);
-    this->event->marked_variables = marked_variables;
+    this->event->marked_variables = std::move(marked_variables);
     this->timestamp = timestamp;
     this->node_type = NodeType::OUTPUT;
     assert(left != nullptr);

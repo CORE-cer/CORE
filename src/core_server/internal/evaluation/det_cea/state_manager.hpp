@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
@@ -15,6 +13,7 @@
 #include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
+#include "shared/datatypes/bitset.hpp"
 #include "state.hpp"
 
 namespace CORE::Internal::CEA::Det {
@@ -29,8 +28,8 @@ const size_t STATE_MANAGER_MAX_SIZE = 4;
  */
 class StateManager {
   using StatePool = MiniPool::MiniPool<State>;
-  using VariablesToMark = mpz_class;
-  using StateBitset = mpz_class;
+  using VariablesToMark = Bitset;
+  using StateBitset = Bitset;
 
  private:
   size_t amount_of_used_states{0};
@@ -86,18 +85,18 @@ class StateManager {
     out += "Number of initialized states: " + std::to_string(states.size()) + "\n";
     out += "Initialized States:\n";
     for (auto& state : states) {
-      out += state->states.get_str(2);
+      out += state->states.to_string();
     }
     return out;
   }
 
-  State* create_or_return_existing_state(mpz_class bitset, CEA& cea) {
+  State* create_or_return_existing_state(Bitset bitset, CEA& cea) {
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());
       return states[it->second];
     } else {
-      State* state = alloc(bitset, cea);
+      State* state = alloc(std::move(bitset), cea);
       return state;
     }
   }

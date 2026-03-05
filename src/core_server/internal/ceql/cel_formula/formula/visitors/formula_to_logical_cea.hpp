@@ -1,8 +1,7 @@
 #pragma once
 
-#include <gmpxx.h>
-
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <ostream>
@@ -32,11 +31,12 @@
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/project.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/union.hpp"
 #include "formula_visitor.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEQL {
 
 class FormulaToLogicalCEA : public FormulaVisitor {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using EndNodeId = int64_t;
   using StreamName = std::string;
   using EventName = std::string;
@@ -55,11 +55,6 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   void visit(EventTypeFormula& formula) override {
     assert(query_catalog.get_unique_events_from_event_name(formula.event_name).size() != 0
            && "There event_name is not in the catalog");
-    // if (query_catalog.get_unique_events_from_event_name(formula.event_name).size() == 0) {
-    //   throw std::runtime_error("The event_name: " + formula.event_name +
-    //                            " is not in the catalog, and base cases "
-    //                            "that are variables are not allowed.");
-    // }
     if (formula.stream_name.has_value()) {
       current_cea = CEA::LogicalCEA::atomic_cea(query_catalog,
                                                 formula.stream_name.value(),
@@ -110,12 +105,12 @@ class FormulaToLogicalCEA : public FormulaVisitor {
   }
 
   void visit(ProjectionFormula& formula) override {
-    mpz_class variables_to_project = 0;
+    std::size_t num_marking_bits = query_catalog.number_of_marking_ids();
+    Bitset variables_to_project(num_marking_bits);
     for (const std::string& var_name : formula.variables) {
       auto marking_id = query_catalog.get_marking_id(var_name);
       if (marking_id.has_value()) {
-        variables_to_project |= mpz_class(1) << marking_id.value();
-
+        variables_to_project.set(marking_id.value());
       } else {
         throw std::runtime_error("Projecting on unknown variable: " + var_name);
       }
@@ -124,7 +119,7 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     for (auto&& [stream_name, event_name] : formula.streams_events) {
       auto marking_id = query_catalog.get_marking_id(stream_name, event_name);
       if (marking_id.has_value()) {
-        variables_to_project |= mpz_class(1) << marking_id.value();
+        variables_to_project.set(marking_id.value());
       } else {
         std::cout << "Projecting on unknown variable" << std::endl;
         continue;

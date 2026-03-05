@@ -1,7 +1,7 @@
 #pragma once
-#include <gmpxx.h>
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -14,11 +14,12 @@
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
+#include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
 class ApplyAtomicFilter final : public LogicalCEATransformer {
-  using VariablesToMark = mpz_class;
+  using VariablesToMark = Bitset;
   using EndNodeId = uint64_t;
   using StreamName = std::string;
   using EventName = std::string;
@@ -30,15 +31,17 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
 
  public:
   ApplyAtomicFilter(uint64_t variable_id_to_filter, CEQL::AtomicFilter& atomic_filter)
-      : variables_to_filter(mpz_class(1) << variable_id_to_filter),
-        physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
+      : physical_predicate_id(atomic_filter.predicate->physical_predicate_id) {
     // The physical predicate id should be assigned
     // before starting the conversion to a LogicalCEA.
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    // Create a single-bit bitset for the variable
+    variables_to_filter = Bitset::with_bit(variable_id_to_filter,
+                                           variable_id_to_filter + 1);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
+    predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 
   ApplyAtomicFilter(const QueryCatalog& query_catalog,
@@ -53,14 +56,14 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
       throw std::runtime_error(
         "Stream name and Event name combination not found in query catalog");
     }
-    VariablesToMark stream_event = mpz_class(1) << stream_event_marking_id.value();
-
-    variables_to_filter = stream_event;
+    std::size_t num_marking_bits = query_catalog.number_of_marking_ids();
+    variables_to_filter = Bitset::with_bit(stream_event_marking_id.value(),
+                                           num_marking_bits);
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
+    predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 
   ApplyAtomicFilter(const QueryCatalog& query_catalog,
@@ -74,20 +77,19 @@ class ApplyAtomicFilter final : public LogicalCEATransformer {
       throw std::runtime_error("Event name not found in query catalog");
     }
 
-    VariablesToMark event = mpz_class(1) << event_marking_id.value();
-
-    variables_to_filter = event;
+    std::size_t num_marking_bits = query_catalog.number_of_marking_ids();
+    variables_to_filter = Bitset::with_bit(event_marking_id.value(), num_marking_bits);
     assert(
       physical_predicate_id != std::numeric_limits<uint64_t>::max()
       && "Physical predicate ID should be added to query before creating the automaton.");
-    predicate_set = PredicateSet(mpz_class(1) << physical_predicate_id,
-                                 mpz_class(1) << physical_predicate_id);
+    Bitset pred_bit = Bitset::with_bit(physical_predicate_id, physical_predicate_id + 1);
+    predicate_set = PredicateSet(pred_bit, pred_bit);
   }
 
   virtual LogicalCEA eval(LogicalCEA&& cea) override {
-    for (int i = 0; i < cea.amount_of_states; i++) {
+    for (uint64_t i = 0; i < cea.amount_of_states; i++) {
       for (auto& transition : cea.transitions[i]) {
-        if ((std::get<1>(transition) & variables_to_filter) != 0) {
+        if ((std::get<1>(transition) & variables_to_filter).any()) {
           transition = std::make_tuple(std::get<0>(transition) & predicate_set,
                                        std::get<1>(transition),
                                        std::get<2>(transition));
