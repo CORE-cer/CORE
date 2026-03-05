@@ -183,13 +183,53 @@ jobs:
       - name: run tests with address sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s address -c ${{ matrix.compiler_profile }}
 
+  run-address-sanitizer-e2e-release:
+    strategy:
+      matrix:
+        compiler_profile: [clang-libstdcxx]
+        include:
+          - compiler_profile: clang-libstdcxx
+            check_name: x86_64-linux-clang-libstdc
+    name: run-address-sanitizer-e2e-release (${{ matrix.check_name }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+
+      - name: Export GitHub Actions cache variables
+        run: |
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+
       - uses: astral-sh/setup-uv@v7.3.0
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19.1.7"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
+
+      - name: Install dependencies
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
       - name: Build pycer with address sanitizer
-        run: uv sync --reinstall-package pycer --config-settings=cmake.define.ADDRESS_SANITIZER=ON
+        run: chmod +x ./scripts/build_pycer.sh && ./scripts/build_pycer.sh -s address -b RelWithDebInfo
 
       - name: Run e2e tests with address sanitizer
-        run: uv run pytest tests/e2e/ -v
+        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
 
   run-thread-sanitizer-tests-release:
     strategy:
@@ -252,14 +292,53 @@ jobs:
       - name: run tests with thread sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
 
+  run-thread-sanitizer-e2e-release:
+    strategy:
+      matrix:
+        compiler_profile: [clang-libstdcxx]
+        include:
+          - compiler_profile: clang-libstdcxx
+            check_name: x86_64-linux-clang-libstdc
+    name: run-thread-sanitizer-e2e-release (${{ matrix.check_name }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+
+      - name: Export GitHub Actions cache variables
+        run: |
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+
       - uses: astral-sh/setup-uv@v7.3.0
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19.1.7"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
+
+      - name: Install dependencies
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
       - name: Build pycer with thread sanitizer
-        run: uv sync --reinstall-package pycer --config-settings=cmake.define.THREAD_SANITIZER=ON
+        run: chmod +x ./scripts/build_pycer.sh && ./scripts/build_pycer.sh -s thread -b RelWithDebInfo
 
       - name: Run e2e tests with thread sanitizer
-        run: uv run pytest tests/e2e/ -v
-
+        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.tsan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
 
   run-tests-release:
     strategy:

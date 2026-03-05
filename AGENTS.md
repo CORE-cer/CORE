@@ -18,7 +18,7 @@ Key scripts:
 | `scripts/clang_tidy_check_all_files.sh` | Run clang-tidy static analysis (slow) |
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
-| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers) |
+| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers, `-b Debug`/`-b Release` for build type) |
 
 ## Testing
 
@@ -43,12 +43,15 @@ Use the appropriate tier based on where you are in the development cycle:
    Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`scripts/build_pycer.sh`).
 
 4. **E2E tests with sanitizers** (run alongside tier 3):
-   Build pycer with sanitizers and run e2e tests:
+   Build pycer with sanitizers and run e2e tests. Example with address sanitizer:
    ```
    scripts/build_pycer.sh -s address
-   uv run pytest tests/e2e/ -v
+   LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
    ```
    Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
+   - Do NOT use `uv run` — it silently rebuilds pycer without sanitizer flags. Use `.venv/bin/pytest` directly instead.
+   - `LD_PRELOAD` is needed because clang doesn't add the sanitizer runtime to pycer.so's NEEDED entries. It force-loads the runtime before Python loads the extension.
+   - Use `-k "q1_ or q10_"` to run a subset of tests — sanitizer e2e tests are slow.
 
 **Before finishing a task:**
 
