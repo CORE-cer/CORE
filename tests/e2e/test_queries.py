@@ -3,9 +3,11 @@
 import time
 from pathlib import Path
 
+import pytest
 import pycer
 
 from tests.e2e.csv_parser import parse_csv
+from tests.e2e.online_runner import run_dataset_online
 
 
 def test_query(dataset: dict, query_file: Path, expected_file: Path) -> None:
@@ -46,3 +48,14 @@ def test_query(dataset: dict, query_file: Path, expected_file: Path) -> None:
     assert actual_output == expected, (
         f"Output mismatch for {dataset['name']}/{query_file.name}"
     )
+
+
+@pytest.mark.online
+def test_dataset_online(dataset_with_queries: tuple[dict, list[Path]]) -> None:
+    """Run all queries for a dataset through PyOnlineServer (ZMQ path).
+
+    No output comparison — exercises serialization, networking, and threading
+    code for sanitizer detection.
+    """
+    dataset, query_files = dataset_with_queries
+    run_dataset_online(dataset, query_files)

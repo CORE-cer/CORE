@@ -346,7 +346,12 @@ NB_MODULE(pycer, m) {
             .def("subscribe_to_complex_event", [](Client& self, InstanceCallbackHandler* handler, Types::PortNumber port) {
                 self.subscribe_to_complex_event(handler, port);
             }, nb::arg("handler"), nb::arg("port"),
-            "Subscribe to query results on a ZMQ PUB port with a per-query handler.");
+            "Subscribe to query results on a ZMQ PUB port with a per-query handler.")
+            .def("shutdown", [](Client& self) {
+                self.stop_all_subscriptions();
+                self.join_all_threads();
+            }, nb::call_guard<nb::gil_scoped_release>(),
+            "Stop all subscriptions and join threads. Releases the GIL to avoid deadlock.");
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)

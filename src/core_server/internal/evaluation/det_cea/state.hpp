@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -64,7 +65,7 @@ class State {
   State* next_evictable_state = nullptr;
 
  private:
-  inline static uint64_t IdCounter = 0;
+  inline static std::atomic<uint64_t> IdCounter = 0;
   uint64_t ref_count = 0;
   std::map<Bitset, TransitionTargetStatesWithMarkings> transitions;
 

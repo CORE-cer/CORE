@@ -54,9 +54,15 @@ Use the appropriate tier based on where you are in the development cycle:
    - Use `-k "q1_ or q10_"` to run a subset of tests — sanitizer e2e tests are slow.
    - **Pass suppression files** when running e2e tests — `scripts/common.sh` sets these for build scripts, but pytest runs outside that shell. Use `TSAN_OPTIONS="suppressions=tsan_suppressions.txt"` or `ASAN_OPTIONS="suppressions=asan_suppressions.txt"` as needed.
 
+5. **Online mode E2E tests** (exercises ZMQ/serialization path):
+   ```
+   uv run pytest tests/e2e/ -v -s --server-mode online
+   ```
+   Runs all queries per dataset through `PyOnlineServer` (ZMQ transport, Cereal serialization). No output comparison — tests pass if no crash. Useful for catching data races, serialization bugs, and use-after-free issues under sanitizers.
+
 **Before finishing a task:**
 
-5. **Code quality checks**:
+6. **Code quality checks**:
    - `scripts/clang_format_all_files.sh` — fast, run first
    - `scripts/clang_tidy_check_all_files.sh` — slow, runs clang-tidy across all files
 

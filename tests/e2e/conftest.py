@@ -113,6 +113,47 @@ def extract_archives():
             shutil.rmtree(expected_dir)
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--server-mode",
+        choices=["offline", "online"],
+        required=True,
+        help="Server mode for e2e tests: offline or online (ZMQ)",
+    )
+
+
+def _discover_datasets_with_queries() -> list[tuple[dict, list[Path]]]:
+    """Group all query files by dataset for online tests."""
+    result = []
+    for dataset in DATASETS:
+        base = dataset["base"]
+        queries_dir = base / "queries"
+        if not queries_dir.exists():
+            continue
+        query_files = [
+            f
+            for f in sorted(queries_dir.iterdir(), key=_version_sort_key)
+            if f.name not in dataset["exclude"]
+        ]
+        if query_files:
+            result.append((dataset, query_files))
+    return result
+
+
+def pytest_collection_modifyitems(config, items):
+    mode = config.getoption("--server-mode")
+    if mode == "offline":
+        skip = pytest.mark.skip(reason="need --server-mode online")
+        for item in items:
+            if "online" in item.keywords:
+                item.add_marker(skip)
+    elif mode == "online":
+        skip = pytest.mark.skip(reason="need --server-mode offline")
+        for item in items:
+            if "online" not in item.keywords:
+                item.add_marker(skip)
+
+
 def pytest_generate_tests(metafunc):
     if "dataset" in metafunc.fixturenames:
         cases = discover_test_cases()
@@ -120,4 +161,11 @@ def pytest_generate_tests(metafunc):
             "dataset,query_file,expected_file",
             cases,
             ids=[_case_id(c) for c in cases],
+        )
+    if "dataset_with_queries" in metafunc.fixturenames:
+        cases = _discover_datasets_with_queries()
+        metafunc.parametrize(
+            "dataset_with_queries",
+            cases,
+            ids=[ds["name"] for ds, _ in cases],
         )
