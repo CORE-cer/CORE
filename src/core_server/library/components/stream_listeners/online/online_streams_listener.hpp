@@ -5,10 +5,8 @@
 #include <quill/Logger.h>
 
 #include <atomic>
-#include <exception>
-#include <iostream>
 #include <mutex>
-#include <ostream>
+#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
@@ -17,7 +15,6 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
-#include "shared/networking/message_sender/zmq_message_sender.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -29,7 +26,6 @@ class OnlineStreamsListener {
   quill::Logger* logger = quill::Frontend::get_logger("root");
   Backend& backend;
   std::mutex& backend_mutex;
-  Types::PortNumber receiver_port;
   Internal::ZMQMessageReceiver receiver;
   std::thread worker_thread;
   std::atomic<bool> stop_condition;
@@ -40,7 +36,6 @@ class OnlineStreamsListener {
                         Types::PortNumber port_number)
       : backend(backend),
         backend_mutex(backend_mutex),
-        receiver_port(port_number),
         receiver("tcp://*:" + std::to_string(port_number)) {
     start();
   }
@@ -59,9 +54,12 @@ class OnlineStreamsListener {
 
   void worker() {
     while (!stop_condition) {
-      std::string s_message = receiver.receive();
+      std::optional<std::string> s_message = receiver.receive(100);
+      if (!s_message.has_value()) {
+        continue;
+      }
       Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
-        s_message);
+        s_message.value());
       LOG_TRACE_L3(logger,
                    "Received stream with id {} and {} events in OnlineStreamsListener",
                    stream.id,
@@ -77,15 +75,9 @@ class OnlineStreamsListener {
   }
 
   void stop() {
-    try {
-      Internal::ZMQMessageSender sender("tcp://localhost:"
-                                        + std::to_string(receiver_port));
-      stop_condition = true;
-      sender.send(
-        Internal::CerealSerializer<Types::Stream>::serialize(Types::Stream(0, {})));
+    stop_condition = true;
+    if (worker_thread.joinable()) {
       worker_thread.join();
-    } catch (std::exception& e) {
-      std::cout << "Exception: " << e.what() << std::endl;
     }
   }
 };

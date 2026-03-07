@@ -173,6 +173,56 @@ class PyOfflineServerWrapper {
 
 std::atomic<uint16_t> PyOfflineServerWrapper::next_port{6000};
 
+class PyClientWrapper {
+  std::unique_ptr<Client> client;
+  std::vector<std::shared_ptr<InstanceCallbackHandler>> handlers;
+
+ public:
+  PyClientWrapper(std::string address, uint16_t port)
+      : client(std::make_unique<Client>(std::move(address), port)) {}
+
+  ~PyClientWrapper() {
+    {
+      nb::gil_scoped_release release;
+      client->stop_all_subscriptions();
+      client->join_all_threads();
+    }
+    // GIL re-acquired. Member destruction order (reverse of declaration):
+    // 1. ~handlers — destroys InstanceCallbackHandlers, Py_DECREF on callbacks (needs GIL)
+    // 2. ~client — Client destructor (join is no-op, ZMQ cleanup, no GIL needed)
+  }
+
+  Types::StreamInfo declare_stream(const std::string& declaration) {
+    return client->declare_stream(declaration);
+  }
+
+  void declare_option(const std::string& option) { client->declare_option(option); }
+
+  Types::PortNumber add_query(const std::string& query) {
+    return client->add_query(query);
+  }
+
+  std::vector<Types::StreamInfo> list_all_streams() { return client->list_all_streams(); }
+
+  std::vector<Types::QueryInfo> list_all_queries() { return client->list_all_queries(); }
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    client->inactivate_query(query_id);
+  }
+
+  void subscribe_to_complex_event(std::function<void(const Types::Enumerator&)> callback,
+                                  Types::PortNumber port) {
+    auto handler = std::make_shared<InstanceCallbackHandler>(std::move(callback));
+    handlers.push_back(handler);
+    client->subscribe_to_complex_event(handler.get(), port);
+  }
+
+  void shutdown() {
+    client->stop_all_subscriptions();
+    client->join_all_threads();
+  }
+};
+
 class PyOnlineServerWrapper {
   std::unique_ptr<Library::OnlineServer> server;
 
@@ -335,23 +385,20 @@ NB_MODULE(pycer, m) {
                 return result;
             });
 
-        nb::class_<Client>(m, "PyClient")
+        nb::class_<PyClientWrapper>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
-            .def("declare_stream", nb::overload_cast<std::string>(&Client::declare_stream))
-            .def("declare_option", nb::overload_cast<std::string>(&Client::declare_option))
-            .def("add_query", nb::overload_cast<std::string>(&Client::add_query))
-            .def("list_all_streams", &Client::list_all_streams)
-            .def("list_all_queries", &Client::list_all_queries)
-            .def("inactivate_query", &Client::inactivate_query)
-            .def("subscribe_to_complex_event", [](Client& self, InstanceCallbackHandler* handler, Types::PortNumber port) {
-                self.subscribe_to_complex_event(handler, port);
-            }, nb::arg("handler"), nb::arg("port"),
-            "Subscribe to query results on a ZMQ PUB port with a per-query handler.")
-            .def("shutdown", [](Client& self) {
-                self.stop_all_subscriptions();
-                self.join_all_threads();
-            }, nb::call_guard<nb::gil_scoped_release>(),
-            "Stop all subscriptions and join threads. Releases the GIL to avoid deadlock.");
+            .def("declare_stream", &PyClientWrapper::declare_stream)
+            .def("declare_option", &PyClientWrapper::declare_option)
+            .def("add_query", &PyClientWrapper::add_query)
+            .def("list_all_streams", &PyClientWrapper::list_all_streams)
+            .def("list_all_queries", &PyClientWrapper::list_all_queries)
+            .def("inactivate_query", &PyClientWrapper::inactivate_query)
+            .def("subscribe_to_complex_event", &PyClientWrapper::subscribe_to_complex_event,
+                nb::arg("callback"), nb::arg("port"),
+                "Subscribe to query results on a ZMQ PUB port with a callback.")
+            .def("shutdown", &PyClientWrapper::shutdown,
+                nb::call_guard<nb::gil_scoped_release>(),
+                "Stop all subscriptions and join threads. Releases the GIL to avoid deadlock.");
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)

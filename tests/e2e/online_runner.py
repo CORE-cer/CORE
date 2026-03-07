@@ -42,7 +42,6 @@ def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
 
     # Add all queries and subscribe to results
     results: dict[str, list] = {}
-    handlers = []
     for query_file in query_files:
         query = query_file.read_text()
         port = client.add_query(query)
@@ -54,9 +53,7 @@ def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
             for ce in enumerator:
                 dest.append(ce)
 
-        handler = pycer.PyQueryResultHandler(on_result)
-        handlers.append(handler)
-        client.subscribe_to_complex_event(handler, port)
+        client.subscribe_to_complex_event(on_result, port)
 
     # Let ZMQ subscribers connect
     time.sleep(0.2)
@@ -80,9 +77,7 @@ def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
     # Wait for processing to finish
     time.sleep(2.0)
 
-    # Cleanup: shutdown client first (releases GIL to avoid deadlock with subscriber threads)
+    # Cleanup: destructor handles thread joining and handler cleanup
     del streamer
-    client.shutdown()
-    handlers.clear()
     del client
     del server
