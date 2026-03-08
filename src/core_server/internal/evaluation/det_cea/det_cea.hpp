@@ -98,7 +98,7 @@ class DetCEA {
     return {std::move(next_states), std::move(next_states_marked_variables)};
   }
 
-  std::vector<RawStates> compute_next_raw_states(State* state, Bitset evaluation) {
+  std::vector<RawStates> compute_next_raw_states(State* state, const Bitset& evaluation) {
     assert(state != nullptr);
     auto states_vector = get_states_from_bitset(state->states);
     std::map<VariablesToMark, StateStates> computed_raw_states;
