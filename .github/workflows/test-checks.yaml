@@ -229,12 +229,12 @@ jobs:
         run: chmod +x ./scripts/build_pycer.sh && ./scripts/build_pycer.sh -s address -b RelWithDebInfo
 
       - name: Run e2e tests with address sanitizer
-        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
+        run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.asan-x86_64.so" -o -name "libclang_rt.asan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v --server-mode offline -k "q1_ or q10_"
         env:
           ASAN_OPTIONS: suppressions=asan_suppressions.txt
 
       - name: Run online e2e tests with address sanitizer
-        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
+        run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.asan-x86_64.so" -o -name "libclang_rt.asan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
         env:
           ASAN_OPTIONS: suppressions=asan_suppressions.txt
 
@@ -345,12 +345,12 @@ jobs:
         run: chmod +x ./scripts/build_pycer.sh && ./scripts/build_pycer.sh -s thread -b RelWithDebInfo
 
       - name: Run e2e tests with thread sanitizer
-        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.tsan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
+        run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.tsan-x86_64.so" -o -name "libclang_rt.tsan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v --server-mode offline -k "q1_ or q10_"
         env:
           TSAN_OPTIONS: suppressions=tsan_suppressions.txt
 
       - name: Run online e2e tests with thread sanitizer
-        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.tsan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
+        run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.tsan-x86_64.so" -o -name "libclang_rt.tsan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
         env:
           TSAN_OPTIONS: suppressions=tsan_suppressions.txt
 
@@ -461,4 +461,4 @@ jobs:
         run: uv run python -c "import pycer; print('pycer loaded successfully')"
 
       - name: Run e2e integration tests
-        run: uv run pytest tests/e2e/ -v
+        run: uv run pytest tests/e2e/ -v --server-mode offline
