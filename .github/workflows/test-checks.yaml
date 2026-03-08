@@ -233,6 +233,11 @@ jobs:
         env:
           ASAN_OPTIONS: suppressions=asan_suppressions.txt
 
+      - name: Run online e2e tests with address sanitizer
+        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
+        env:
+          ASAN_OPTIONS: suppressions=asan_suppressions.txt
+
   run-thread-sanitizer-tests-release:
     strategy:
       matrix:
@@ -286,10 +291,10 @@ jobs:
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: base build
-        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s address -c ${{ matrix.compiler_profile }}
+        run: chmod +x ./scripts/build.sh && ./scripts/build.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
 
       - name: build with grammar
-        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s address -c ${{ matrix.compiler_profile }}
+        run: chmod +x ./scripts/build_grammar.sh && ./scripts/build_grammar.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
 
       - name: run tests with thread sanitizer
         run: chmod +x ./scripts/build_and_test.sh && ./scripts/build_and_test.sh -b Release -s thread -c ${{ matrix.compiler_profile }}
@@ -341,6 +346,11 @@ jobs:
 
       - name: Run e2e tests with thread sanitizer
         run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.tsan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -k "q1_ or q10_"
+        env:
+          TSAN_OPTIONS: suppressions=tsan_suppressions.txt
+
+      - name: Run online e2e tests with thread sanitizer
+        run: LD_PRELOAD=$(clang -print-file-name=libclang_rt.tsan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
         env:
           TSAN_OPTIONS: suppressions=tsan_suppressions.txt
 
