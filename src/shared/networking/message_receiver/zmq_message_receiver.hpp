@@ -35,7 +35,13 @@ class ZMQMessageReceiver : MessageReceiver {
     zmq::message_t zmq_message;
 
     socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
-    auto result = socket.recv(zmq_message);
+    zmq::recv_result_t result;
+    try {
+      result = socket.recv(zmq_message);
+    } catch (...) {
+      socket.set(zmq::sockopt::rcvtimeo, -1);
+      throw;
+    }
     socket.set(zmq::sockopt::rcvtimeo, -1);
 
     if (result.has_value()) {
