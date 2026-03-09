@@ -24,7 +24,7 @@ class ZMQMessageReceiver : MessageReceiver {
     zmq::message_t zmq_message;
     auto result = socket.recv(zmq_message, zmq::recv_flags::none);
 
-    if (!result) {
+    if (!result.has_value()) {
       throw std::runtime_error("Failed to receive message from socket");
     }
 
@@ -38,7 +38,7 @@ class ZMQMessageReceiver : MessageReceiver {
     auto result = socket.recv(zmq_message);
     socket.set(zmq::sockopt::rcvtimeo, -1);
 
-    if (result) {
+    if (result.has_value()) {
       return std::string(static_cast<char*>(zmq_message.data()), zmq_message.size());
     }
     return std::nullopt;
