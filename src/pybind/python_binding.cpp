@@ -218,8 +218,13 @@ class PyClientWrapper {
   }
 
   void shutdown() {
-    client->stop_all_subscriptions();
-    client->join_all_threads();
+    {
+      nb::gil_scoped_release release;
+      client->stop_all_subscriptions();
+      client->join_all_threads();
+    }
+    // GIL re-acquired — safe to destroy Python callback references.
+    handlers.clear();
   }
 };
 
@@ -397,8 +402,7 @@ NB_MODULE(pycer, m) {
                 nb::arg("callback"), nb::arg("port"),
                 "Subscribe to query results on a ZMQ PUB port with a callback.")
             .def("shutdown", &PyClientWrapper::shutdown,
-                nb::call_guard<nb::gil_scoped_release>(),
-                "Stop all subscriptions and join threads. Releases the GIL to avoid deadlock.");
+                "Stop all subscriptions and join threads.");
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
