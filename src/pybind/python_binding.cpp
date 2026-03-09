@@ -375,8 +375,12 @@ NB_MODULE(pycer, m) {
                 self.send_stream(stream_id, std::move(event));
             }, nb::arg("stream_id"), nb::arg("event"),
             "Sends a single event to a stream.")
+            .def("shutdown", &Streamer::shutdown,
+                "Shut down the streamer and release resources.")
             .def("__enter__", [](Streamer& self) -> Streamer& { return self; })
-            .def("__exit__", [](Streamer&, nb::handle, nb::handle, nb::handle) {});
+            .def("__exit__", [](Streamer& self, nb::handle, nb::handle, nb::handle) {
+                self.shutdown();
+            });
 
         nb::enum_<Library::Components::ResultHandlerType>(m, "PyResultHandlerType")
             .value("OFFLINE", Library::Components::ResultHandlerType::OFFLINE)

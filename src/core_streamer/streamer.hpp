@@ -30,6 +30,10 @@ class Streamer {
     send_stream({stream_id, {std::move(event)}});
   }
 
+  void shutdown() {
+    sender.shutdown();
+  }
+
   // TODO: Send a stream through a CSV file and an AttributesInfo vector.
   void send_streams(std::string csv_path, std::vector<Types::AttributeInfo> attributes);
 };
