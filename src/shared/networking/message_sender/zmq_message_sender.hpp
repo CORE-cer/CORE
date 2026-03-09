@@ -32,5 +32,10 @@ class ZMQMessageSender : MessageSender {
     memcpy(zmq_message.data(), message.data(), message.size());
     socket.send(zmq_message, zmq::send_flags::none);
   }
+
+  void shutdown() {
+    socket.close();
+    context.close();
+  }
 };
 }  // namespace CORE::Internal

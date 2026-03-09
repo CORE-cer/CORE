@@ -153,8 +153,8 @@ endif()
 
 if (THREAD_SANITIZER)
   message("Thread sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
-  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
 endif()
 
 message("Logging level: ${LOGGING}")
@@ -188,6 +188,7 @@ if(Python_FOUND)
     nanobind_add_module(pycer MODULE src/pybind/python_binding.cpp)
     target_compile_options(pycer PRIVATE -Wno-unused-variable -Wno-old-style-cast)
     target_link_libraries(pycer PRIVATE core)
+    target_link_options(pycer PRIVATE -static-libstdc++ -static-libgcc)
 
     if(SKBUILD)
         # pip wheel build - install module and generate stubs

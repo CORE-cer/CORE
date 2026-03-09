@@ -17,7 +17,6 @@ class QuerySubscription:
     port: int
     query_string: str
     query_name: str
-    handler: pycer.PyQueryResultHandler | None = None
 
 
 class CoreEngine:
@@ -45,15 +44,14 @@ class CoreEngine:
         self._next_query_id += 1
         self._result_queues[query_id] = []
 
-        handler = self._create_result_handler(query_id)
+        callback = self._create_result_callback(query_id)
         self._subscriptions[query_id] = QuerySubscription(
             query_id=query_id,
             port=port,
             query_string=query,
             query_name=query_name,
-            handler=handler,
         )
-        self._client.subscribe_to_complex_event(handler, port)
+        self._client.subscribe_to_complex_event(callback, port)
         return query_id
 
     def inactivate_query(self, query_id: int) -> None:
@@ -81,8 +79,8 @@ class CoreEngine:
             except ValueError:
                 pass
 
-    def _create_result_handler(self, query_id: int) -> pycer.PyQueryResultHandler:
-        """Create a per-query result handler that forwards to asyncio queues."""
+    def _create_result_callback(self, query_id: int):
+        """Create a per-query callback that forwards to asyncio queues."""
 
         def on_result(enumerator: pycer.PyEnumerator) -> None:
             result = self._enumerator_to_json(enumerator)
@@ -92,7 +90,7 @@ class CoreEngine:
                 for queue in self._result_queues[query_id]:
                     self._loop.call_soon_threadsafe(queue.put_nowait, result)
 
-        return pycer.PyQueryResultHandler(on_result)
+        return on_result
 
     @staticmethod
     def _enumerator_to_json(enumerator: pycer.PyEnumerator) -> list[dict]:

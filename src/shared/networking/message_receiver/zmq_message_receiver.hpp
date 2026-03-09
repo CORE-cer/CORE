@@ -2,6 +2,7 @@
 
 #include <zmq.h>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <zmq.hpp>
@@ -23,11 +24,30 @@ class ZMQMessageReceiver : MessageReceiver {
     zmq::message_t zmq_message;
     auto result = socket.recv(zmq_message, zmq::recv_flags::none);
 
-    if (!result) {
+    if (!result.has_value()) {
       throw std::runtime_error("Failed to receive message from socket");
     }
 
     return std::string(static_cast<char*>(zmq_message.data()), zmq_message.size());
+  }
+
+  std::optional<std::string> receive(int timeout_ms) {
+    zmq::message_t zmq_message;
+
+    socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
+    zmq::recv_result_t result;
+    try {
+      result = socket.recv(zmq_message);
+    } catch (...) {
+      socket.set(zmq::sockopt::rcvtimeo, -1);
+      throw;
+    }
+    socket.set(zmq::sockopt::rcvtimeo, -1);
+
+    if (result.has_value()) {
+      return std::string(static_cast<char*>(zmq_message.data()), zmq_message.size());
+    }
+    return std::nullopt;
   }
 
   zmq::context_t& get_context() { return context; }

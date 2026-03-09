@@ -24,7 +24,7 @@ class ZMQMessageSubscriber {
   std::string receive() {
     zmq::message_t zmq_message;
     auto result = socket.recv(zmq_message);
-    if (result) {
+    if (result.has_value()) {
       return std::string(static_cast<char*>(zmq_message.data()), zmq_message.size());
     } else {
       throw std::runtime_error("No message available");
@@ -40,7 +40,7 @@ class ZMQMessageSubscriber {
     // Reset the timeout to infinite
     socket.set(zmq::sockopt::rcvtimeo, -1);
 
-    if (result) {
+    if (result.has_value()) {
       return std::optional<std::string>(
         std::string(static_cast<char*>(zmq_message.data()), zmq_message.size()));
     } else {

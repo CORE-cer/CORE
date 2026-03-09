@@ -18,7 +18,7 @@ Key scripts:
 | `scripts/clang_tidy_check_all_files.sh` | Run clang-tidy static analysis (slow) |
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
-| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers) |
+| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers, `-b Debug`/`-b Release` for build type) |
 
 ## Testing
 
@@ -43,16 +43,26 @@ Use the appropriate tier based on where you are in the development cycle:
    Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`scripts/build_pycer.sh`).
 
 4. **E2E tests with sanitizers** (run alongside tier 3):
-   Build pycer with sanitizers and run e2e tests:
+   Build pycer with sanitizers and run e2e tests. Example with address sanitizer:
    ```
    scripts/build_pycer.sh -s address
-   uv run pytest tests/e2e/ -v
+   LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s -k "q1_ or q10_"
    ```
    Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
+   - Do NOT use `uv run` — it silently rebuilds pycer without sanitizer flags. Use `.venv/bin/pytest` directly instead.
+   - `LD_PRELOAD` is needed because clang doesn't add the sanitizer runtime to pycer.so's NEEDED entries. It force-loads the runtime before Python loads the extension.
+   - Use `-k "q1_ or q10_"` to run a subset of tests — sanitizer e2e tests are slow.
+   - **Pass suppression files** when running e2e tests — `scripts/common.sh` sets these for build scripts, but pytest runs outside that shell. Use `TSAN_OPTIONS="suppressions=tsan_suppressions.txt"` or `ASAN_OPTIONS="suppressions=asan_suppressions.txt"` as needed.
+
+5. **Online mode E2E tests** (exercises ZMQ/serialization path):
+   ```
+   uv run pytest tests/e2e/ -v -s --server-mode online
+   ```
+   Runs all queries per dataset through `PyOnlineServer` (ZMQ transport, Cereal serialization). No output comparison — tests pass if no crash. Useful for catching data races, serialization bugs, and use-after-free issues under sanitizers.
 
 **Before finishing a task:**
 
-5. **Code quality checks**:
+6. **Code quality checks**:
    - `scripts/clang_format_all_files.sh` — fast, run first
    - `scripts/clang_tidy_check_all_files.sh` — slow, runs clang-tidy across all files
 

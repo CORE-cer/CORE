@@ -62,6 +62,11 @@ class Client {
   Client(std::string address, Types::PortNumber dealer_port)
       : dealer(address + ":" + std::to_string(dealer_port)), address(address) {}
 
+  ~Client() {
+    stop_all_subscriptions();
+    join_all_threads();
+  }
+
   void declare_option(std::string option_declaration) {
     Types::ClientRequest option_declaration_req(
       Internal::CerealSerializer<std::string>::serialize(option_declaration),
@@ -203,8 +208,10 @@ class Client {
   }
 
   void join_all_threads() {
-    for (SubscriptionId id = 0; id < stop_conditions.size(); id++) {
-      subscriber_threads[id].join();
+    for (auto& thread : subscriber_threads) {
+      if (thread.joinable()) {
+        thread.join();
+      }
     }
   }
 

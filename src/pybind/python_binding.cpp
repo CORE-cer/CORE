@@ -11,6 +11,8 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdio>
+#include <exception>
 
 // clang-format off
 // Must precede project headers: quill's bundled fmt uses the EOF macro,
@@ -173,6 +175,74 @@ class PyOfflineServerWrapper {
 
 std::atomic<uint16_t> PyOfflineServerWrapper::next_port{6000};
 
+class PyClientWrapper {
+  std::unique_ptr<Client> client;
+  std::vector<std::shared_ptr<InstanceCallbackHandler>> handlers;
+
+ public:
+  PyClientWrapper(std::string address, uint16_t port)
+      : client(std::make_unique<Client>(std::move(address), port)) {}
+
+  ~PyClientWrapper() {
+    {
+      nb::gil_scoped_release release;
+      client->stop_all_subscriptions();
+      client->join_all_threads();
+    }
+    // GIL re-acquired. Member destruction order (reverse of declaration):
+    // 1. ~handlers — destroys InstanceCallbackHandlers, Py_DECREF on callbacks (needs GIL)
+    // 2. ~client — Client destructor (join is no-op, ZMQ cleanup, no GIL needed)
+  }
+
+  Types::StreamInfo declare_stream(const std::string& declaration) {
+    return client->declare_stream(declaration);
+  }
+
+  void declare_option(const std::string& option) { client->declare_option(option); }
+
+  Types::PortNumber add_query(const std::string& query) {
+    return client->add_query(query);
+  }
+
+  std::vector<Types::StreamInfo> list_all_streams() { return client->list_all_streams(); }
+
+  std::vector<Types::QueryInfo> list_all_queries() { return client->list_all_queries(); }
+
+  void inactivate_query(Types::UniqueQueryId query_id) {
+    client->inactivate_query(query_id);
+  }
+
+  void subscribe_to_complex_event(std::function<void(const Types::Enumerator&)> callback,
+                                  Types::PortNumber port) {
+    auto gil_callback = [cb = std::move(callback)](const Types::Enumerator& enumerator) {
+      nb::gil_scoped_acquire gil;
+      try {
+        cb(enumerator);
+      } catch (nb::python_error& e) {
+        e.restore();
+        PyErr_Print();
+      } catch (const std::exception& e) {
+        fprintf(stderr, "Exception in complex event callback: %s\n", e.what());
+      } catch (...) {
+        fprintf(stderr, "Unknown exception in complex event callback\n");
+      }
+    };
+    auto handler = std::make_shared<InstanceCallbackHandler>(std::move(gil_callback));
+    handlers.push_back(handler);
+    client->subscribe_to_complex_event(handler.get(), port);
+  }
+
+  void shutdown() {
+    {
+      nb::gil_scoped_release release;
+      client->stop_all_subscriptions();
+      client->join_all_threads();
+    }
+    // GIL re-acquired — safe to destroy Python callback references.
+    handlers.clear();
+  }
+};
+
 class PyOnlineServerWrapper {
   std::unique_ptr<Library::OnlineServer> server;
 
@@ -198,6 +268,8 @@ class PyOnlineServerWrapper {
   }
 
   ~PyOnlineServerWrapper() { server.reset(); }
+
+  void shutdown() { server.reset(); }
 
   Types::PortNumber get_router_port() const { return router_port; }
 
@@ -302,7 +374,13 @@ NB_MODULE(pycer, m) {
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
             }, nb::arg("stream_id"), nb::arg("event"),
-            "Sends a single event to a stream.");
+            "Sends a single event to a stream.")
+            .def("shutdown", &Streamer::shutdown,
+                "Shut down the streamer and release resources.")
+            .def("__enter__", [](Streamer& self) -> Streamer& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](Streamer& self, nb::args) {
+                self.shutdown();
+            });
 
         nb::enum_<Library::Components::ResultHandlerType>(m, "PyResultHandlerType")
             .value("OFFLINE", Library::Components::ResultHandlerType::OFFLINE)
@@ -335,18 +413,23 @@ NB_MODULE(pycer, m) {
                 return result;
             });
 
-        nb::class_<Client>(m, "PyClient")
+        nb::class_<PyClientWrapper>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
-            .def("declare_stream", nb::overload_cast<std::string>(&Client::declare_stream))
-            .def("declare_option", nb::overload_cast<std::string>(&Client::declare_option))
-            .def("add_query", nb::overload_cast<std::string>(&Client::add_query))
-            .def("list_all_streams", &Client::list_all_streams)
-            .def("list_all_queries", &Client::list_all_queries)
-            .def("inactivate_query", &Client::inactivate_query)
-            .def("subscribe_to_complex_event", [](Client& self, InstanceCallbackHandler* handler, Types::PortNumber port) {
-                self.subscribe_to_complex_event(handler, port);
-            }, nb::arg("handler"), nb::arg("port"),
-            "Subscribe to query results on a ZMQ PUB port with a per-query handler.");
+            .def("declare_stream", &PyClientWrapper::declare_stream)
+            .def("declare_option", &PyClientWrapper::declare_option)
+            .def("add_query", &PyClientWrapper::add_query)
+            .def("list_all_streams", &PyClientWrapper::list_all_streams)
+            .def("list_all_queries", &PyClientWrapper::list_all_queries)
+            .def("inactivate_query", &PyClientWrapper::inactivate_query)
+            .def("subscribe_to_complex_event", &PyClientWrapper::subscribe_to_complex_event,
+                nb::arg("callback"), nb::arg("port"),
+                "Subscribe to query results on a ZMQ PUB port with a callback.")
+            .def("shutdown", &PyClientWrapper::shutdown,
+                "Stop all subscriptions and join threads.")
+            .def("__enter__", [](PyClientWrapper& self) -> PyClientWrapper& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](PyClientWrapper& self, nb::args) {
+                self.shutdown();
+            });
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
@@ -384,7 +467,13 @@ NB_MODULE(pycer, m) {
                  nb::arg("stream_listener_port") = 5001,
                  nb::arg("starting_query_port") = 5002)
             .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
-            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port);
+            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port)
+            .def("shutdown", &PyOnlineServerWrapper::shutdown,
+                "Shut down the server and release resources.")
+            .def("__enter__", [](PyOnlineServerWrapper& self) -> PyOnlineServerWrapper& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](PyOnlineServerWrapper& self, nb::args) {
+                self.shutdown();
+            });
 
         nb::exception<ClientException>(m, "PyClientException");
         nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");

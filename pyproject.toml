@@ -27,6 +27,11 @@ dev = [
     "pytest>=8.0",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "online: e2e tests using online (ZMQ) server mode",
+]
+
 [tool.uv.workspace]
 members = [
     "core_server_py",
