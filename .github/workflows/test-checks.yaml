@@ -232,11 +232,13 @@ jobs:
         run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.asan-x86_64.so" -o -name "libclang_rt.asan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v --server-mode offline -k "q1_ or q10_"
         env:
           ASAN_OPTIONS: suppressions=asan_suppressions.txt
+          LSAN_OPTIONS: suppressions=lsan_suppressions.txt
 
       - name: Run online e2e tests with address sanitizer
         run: LD_PRELOAD=$(find $(clang -print-resource-dir) \( -name "libclang_rt.asan-x86_64.so" -o -name "libclang_rt.asan.so" \) | head -1) .venv/bin/pytest tests/e2e/ -v -s --server-mode online -k "bluesky"
         env:
           ASAN_OPTIONS: suppressions=asan_suppressions.txt
+          LSAN_OPTIONS: suppressions=lsan_suppressions.txt
 
   run-thread-sanitizer-tests-release:
     strategy:

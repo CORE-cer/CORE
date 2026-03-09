@@ -153,8 +153,8 @@ endif()
 
 if (THREAD_SANITIZER)
   message("Thread sanitizer enabled")
-  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
-  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer -fsanitize=undefined)
+  target_compile_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
+  target_link_options(core PUBLIC -fsanitize=thread -fno-omit-frame-pointer)
 endif()
 
 message("Logging level: ${LOGGING}")
