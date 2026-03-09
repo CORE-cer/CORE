@@ -377,8 +377,8 @@ NB_MODULE(pycer, m) {
             "Sends a single event to a stream.")
             .def("shutdown", &Streamer::shutdown,
                 "Shut down the streamer and release resources.")
-            .def("__enter__", [](Streamer& self) -> Streamer& { return self; })
-            .def("__exit__", [](Streamer& self, nb::handle, nb::handle, nb::handle) {
+            .def("__enter__", [](Streamer& self) -> Streamer& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](Streamer& self, nb::args) {
                 self.shutdown();
             });
 
@@ -426,8 +426,8 @@ NB_MODULE(pycer, m) {
                 "Subscribe to query results on a ZMQ PUB port with a callback.")
             .def("shutdown", &PyClientWrapper::shutdown,
                 "Stop all subscriptions and join threads.")
-            .def("__enter__", [](PyClientWrapper& self) -> PyClientWrapper& { return self; })
-            .def("__exit__", [](PyClientWrapper& self, nb::handle, nb::handle, nb::handle) {
+            .def("__enter__", [](PyClientWrapper& self) -> PyClientWrapper& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](PyClientWrapper& self, nb::args) {
                 self.shutdown();
             });
 
@@ -470,8 +470,8 @@ NB_MODULE(pycer, m) {
             .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port)
             .def("shutdown", &PyOnlineServerWrapper::shutdown,
                 "Shut down the server and release resources.")
-            .def("__enter__", [](PyOnlineServerWrapper& self) -> PyOnlineServerWrapper& { return self; })
-            .def("__exit__", [](PyOnlineServerWrapper& self, nb::handle, nb::handle, nb::handle) {
+            .def("__enter__", [](PyOnlineServerWrapper& self) -> PyOnlineServerWrapper& { return self; }, nb::rv_policy::reference)
+            .def("__exit__", [](PyOnlineServerWrapper& self, nb::args) {
                 self.shutdown();
             });
 
