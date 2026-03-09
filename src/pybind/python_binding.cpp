@@ -11,6 +11,8 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdio>
+#include <exception>
 
 // clang-format off
 // Must precede project headers: quill's bundled fmt uses the EOF macro,
@@ -214,7 +216,16 @@ class PyClientWrapper {
                                   Types::PortNumber port) {
     auto gil_callback = [cb = std::move(callback)](const Types::Enumerator& enumerator) {
       nb::gil_scoped_acquire gil;
-      cb(enumerator);
+      try {
+        cb(enumerator);
+      } catch (nb::python_error& e) {
+        e.restore();
+        PyErr_Print();
+      } catch (const std::exception& e) {
+        fprintf(stderr, "Exception in complex event callback: %s\n", e.what());
+      } catch (...) {
+        fprintf(stderr, "Unknown exception in complex event callback\n");
+      }
     };
     auto handler = std::make_shared<InstanceCallbackHandler>(std::move(gil_callback));
     handlers.push_back(handler);
