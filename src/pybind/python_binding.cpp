@@ -254,6 +254,8 @@ class PyOnlineServerWrapper {
 
   ~PyOnlineServerWrapper() { server.reset(); }
 
+  void shutdown() { server.reset(); }
+
   Types::PortNumber get_router_port() const { return router_port; }
 
   Types::PortNumber get_stream_listener_port() const { return stream_listener_port; }
@@ -357,7 +359,9 @@ NB_MODULE(pycer, m) {
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
             }, nb::arg("stream_id"), nb::arg("event"),
-            "Sends a single event to a stream.");
+            "Sends a single event to a stream.")
+            .def("__enter__", [](Streamer& self) -> Streamer& { return self; })
+            .def("__exit__", [](Streamer&, nb::handle, nb::handle, nb::handle) {});
 
         nb::enum_<Library::Components::ResultHandlerType>(m, "PyResultHandlerType")
             .value("OFFLINE", Library::Components::ResultHandlerType::OFFLINE)
@@ -402,7 +406,11 @@ NB_MODULE(pycer, m) {
                 nb::arg("callback"), nb::arg("port"),
                 "Subscribe to query results on a ZMQ PUB port with a callback.")
             .def("shutdown", &PyClientWrapper::shutdown,
-                "Stop all subscriptions and join threads.");
+                "Stop all subscriptions and join threads.")
+            .def("__enter__", [](PyClientWrapper& self) -> PyClientWrapper& { return self; })
+            .def("__exit__", [](PyClientWrapper& self, nb::handle, nb::handle, nb::handle) {
+                self.shutdown();
+            });
 
         nb::class_<Types::ComplexEvent>(m, "PyComplexEvent")
             .def("to_string", &Types::ComplexEvent::to_string)
@@ -440,7 +448,13 @@ NB_MODULE(pycer, m) {
                  nb::arg("stream_listener_port") = 5001,
                  nb::arg("starting_query_port") = 5002)
             .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
-            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port);
+            .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port)
+            .def("shutdown", &PyOnlineServerWrapper::shutdown,
+                "Shut down the server and release resources.")
+            .def("__enter__", [](PyOnlineServerWrapper& self) -> PyOnlineServerWrapper& { return self; })
+            .def("__exit__", [](PyOnlineServerWrapper& self, nb::handle, nb::handle, nb::handle) {
+                self.shutdown();
+            });
 
         nb::exception<ClientException>(m, "PyClientException");
         nb::exception<AttributeNameAlreadyDeclaredException>(m, "PyAttributeNameAlreadyDeclared");

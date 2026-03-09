@@ -30,54 +30,47 @@ def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
     stream_listener_port = base_port + 1
     starting_query_port = base_port + 2
 
-    server = pycer.PyOnlineServer(router_port, stream_listener_port, starting_query_port)
-    client = pycer.PyClient("tcp://localhost", router_port)
+    with pycer.PyOnlineServer(router_port, stream_listener_port, starting_query_port):
+        with pycer.PyClient("tcp://localhost", router_port) as client:
+            declaration = (dataset["base"] / dataset["declaration"]).read_text()
+            stream_info = client.declare_stream(declaration)
 
-    declaration = (dataset["base"] / dataset["declaration"]).read_text()
-    stream_info = client.declare_stream(declaration)
+            if dataset["options"]:
+                options = (dataset["base"] / dataset["options"]).read_text()
+                client.declare_option(options)
 
-    if dataset["options"]:
-        options = (dataset["base"] / dataset["options"]).read_text()
-        client.declare_option(options)
+            # Add all queries and subscribe to results
+            results: dict[str, list] = {}
+            for query_file in query_files:
+                query = query_file.read_text()
+                port = client.add_query(query)
 
-    # Add all queries and subscribe to results
-    results: dict[str, list] = {}
-    for query_file in query_files:
-        query = query_file.read_text()
-        port = client.add_query(query)
+                collected = []
+                results[query_file.name] = collected
 
-        collected = []
-        results[query_file.name] = collected
+                def on_result(enumerator, dest=collected):
+                    for ce in enumerator:
+                        dest.append(ce)
 
-        def on_result(enumerator, dest=collected):
-            for ce in enumerator:
-                dest.append(ce)
+                client.subscribe_to_complex_event(on_result, port)
 
-        client.subscribe_to_complex_event(on_result, port)
+            # Let ZMQ subscribers connect
+            time.sleep(0.2)
 
-    # Let ZMQ subscribers connect
-    time.sleep(0.2)
+            # Parse and send events
+            csv_path = dataset["base"] / dataset["csv"]
+            events, delays_ns = parse_csv(csv_path, stream_info)
 
-    # Parse and send events
-    csv_path = dataset["base"] / dataset["csv"]
-    events, delays_ns = parse_csv(csv_path, stream_info)
+            with pycer.PyStreamer("tcp://localhost", stream_listener_port) as streamer:
+                has_timing = any(d > 0 for d in delays_ns)
+                total = len(events)
+                for i, (event, delay_ns) in enumerate(zip(events, delays_ns)):
+                    if has_timing and delay_ns > 0:
+                        time.sleep(delay_ns / 1e9)
+                    streamer.send_stream(stream_info.id, event)
+                    if (i + 1) % 10000 == 0 or i + 1 == total:
+                        print(f"\r  Sent {i + 1}/{total} events", end="", flush=True)
+                print()
 
-    streamer = pycer.PyStreamer("tcp://localhost", stream_listener_port)
-
-    has_timing = any(d > 0 for d in delays_ns)
-    total = len(events)
-    for i, (event, delay_ns) in enumerate(zip(events, delays_ns)):
-        if has_timing and delay_ns > 0:
-            time.sleep(delay_ns / 1e9)
-        streamer.send_stream(stream_info.id, event)
-        if (i + 1) % 10000 == 0 or i + 1 == total:
-            print(f"\r  Sent {i + 1}/{total} events", end="", flush=True)
-    print()
-
-    # Wait for processing to finish
-    time.sleep(2.0)
-
-    # Cleanup: destructor handles thread joining and handler cleanup
-    del streamer
-    del client
-    del server
+                # Wait for processing to finish
+                time.sleep(2.0)
