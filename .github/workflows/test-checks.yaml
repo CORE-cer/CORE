@@ -30,8 +30,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
@@ -85,8 +85,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
@@ -143,8 +143,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
@@ -198,8 +198,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - uses: astral-sh/setup-uv@v7.3.0
 
@@ -255,8 +255,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -316,8 +316,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - uses: astral-sh/setup-uv@v7.3.0
 
@@ -373,8 +373,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -429,8 +429,8 @@ jobs:
 
       - name: Export GitHub Actions cache variables
         run: |
-          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> $GITHUB_ENV
-          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - uses: astral-sh/setup-uv@v7.3.0
 
