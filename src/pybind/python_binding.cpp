@@ -212,7 +212,11 @@ class PyClientWrapper {
 
   void subscribe_to_complex_event(std::function<void(const Types::Enumerator&)> callback,
                                   Types::PortNumber port) {
-    auto handler = std::make_shared<InstanceCallbackHandler>(std::move(callback));
+    auto gil_callback = [cb = std::move(callback)](const Types::Enumerator& enumerator) {
+      nb::gil_scoped_acquire gil;
+      cb(enumerator);
+    };
+    auto handler = std::make_shared<InstanceCallbackHandler>(std::move(gil_callback));
     handlers.push_back(handler);
     client->subscribe_to_complex_event(handler.get(), port);
   }
