@@ -1,0 +1,70 @@
+name: Sanitizer Wheels
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+jobs:
+  build-sanitizer-wheels:
+    strategy:
+      matrix:
+        sanitizer: [address, thread]
+        include:
+          - sanitizer: address
+            artifact_name: pycer-asan-wheel
+          - sanitizer: thread
+            artifact_name: pycer-tsan-wheel
+    name: build-${{ matrix.sanitizer }}-sanitizer-wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v6
+
+      - name: Export GitHub Actions cache variables
+        run: |
+          echo "ACTIONS_CACHE_URL=${ACTIONS_CACHE_URL}" >> "$GITHUB_ENV"
+          echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
+
+      - uses: astral-sh/setup-uv@v7.3.0
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "19.1.7"
+
+      - name: Install libtinfo5 for clang
+        run: |
+          sudo apt update
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
+      - name: Install vcpkg system dependencies
+        run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
+
+      - name: Install dependencies
+        run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
+
+      - name: Build sanitizer wheel
+        run: |
+          uv build --wheel \
+            --config-settings=cmake.define.CMAKE_C_COMPILER=clang \
+            --config-settings=cmake.define.CMAKE_CXX_COMPILER=clang++ \
+            --config-settings=cmake.define.CMAKE_CXX_FLAGS="-stdlib=libstdc++" \
+            --config-settings=cmake.define.VCPKG_TARGET_TRIPLET=x64-linux-clang-libstdcxx \
+            --config-settings=cmake.define.${{ matrix.sanitizer == 'address' && 'ADDRESS_SANITIZER' || 'THREAD_SANITIZER' }}=ON \
+            --config-settings=cmake.build-type=RelWithDebInfo
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ./dist/*.whl
