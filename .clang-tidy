@@ -23,6 +23,8 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   misc-include-cleaner,
   -bugprone-multi-level-implicit-pointer-conversion
+# misc-const-correctness,
+# readability-make-member-function-const
 # google-*,
 # misc-*,
 # modernize-*,

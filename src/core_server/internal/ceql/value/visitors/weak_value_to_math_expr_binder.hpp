@@ -52,7 +52,7 @@ class WeakValueToMathExprBinder {
   }
 
   std::unique_ptr<CEA::MathExpr<Type>>
-  bind_boolean_literal(BooleanLiteral& literal) const {
+  bind_boolean_literal(const BooleanLiteral& literal) const {
     if constexpr (std::is_same_v<Type, int64_t>) {
       return std::make_unique<CEA::Literal<int64_t>>(static_cast<int64_t>(literal.value));
     } else if constexpr (std::is_same_v<Type, double>) {

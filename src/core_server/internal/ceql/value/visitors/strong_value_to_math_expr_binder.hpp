@@ -33,7 +33,7 @@ class StrongValueToMathExprBinder {
   explicit StrongValueToMathExprBinder(Types::EventInfo& event_info)
       : event_info(event_info) {}
 
-  std::unique_ptr<CEA::MathExpr<Type>> bind_attribute(Attribute& attribute) const {
+  std::unique_ptr<CEA::MathExpr<Type>> bind_attribute(const Attribute& attribute) const {
     auto attribute_id = event_info.attribute_names_to_ids.find(attribute.value);
     if (attribute_id == event_info.attribute_names_to_ids.end()) {
       throw std::runtime_error("Attribute " + attribute.value
@@ -85,7 +85,7 @@ class StrongValueToMathExprBinder {
   }
 
   std::unique_ptr<CEA::MathExpr<Type>>
-  bind_boolean_literal(BooleanLiteral& literal) const {
+  bind_boolean_literal(const BooleanLiteral& literal) const {
     if constexpr (std::is_same_v<Type, int64_t>) {
       return std::make_unique<CEA::Literal<int64_t>>(static_cast<int64_t>(literal.value));
     } else if constexpr (std::is_same_v<Type, double>) {
