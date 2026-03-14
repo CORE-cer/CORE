@@ -41,6 +41,7 @@ jobs:
         env:
           CIBW_BUILD: "cp313-manylinux_x86_64"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          CIBW_CONFIG_SETTINGS: "cmake.build-type=RelWithDebInfo"
           CIBW_BEFORE_ALL_LINUX: >-
             dnf install -y gcc-c++ ninja-build git curl zip unzip tar
             pkg-config autoconf automake libtool &&
