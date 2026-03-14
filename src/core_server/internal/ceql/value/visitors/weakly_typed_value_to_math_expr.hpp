@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "core_server/internal/ceql/value/attribute.hpp"
+#include "core_server/internal/ceql/value/boolean_literal.hpp"
 #include "core_server/internal/ceql/value/double_literal.hpp"
 #include "core_server/internal/ceql/value/integer_literal.hpp"
 #include "core_server/internal/ceql/value/long_literal.hpp"
@@ -50,6 +51,18 @@ class WeaklyTypedValueToMathExpr : public ValueVisitor {
       math_expr = std::make_unique<CEA::Literal<std::string_view>>(value);
     } else {
       assert(false && "Type is not string view");
+    }
+  }
+
+  void visit(BooleanLiteral& literal) override {
+    if constexpr (std::is_same_v<Type, int64_t>) {
+      math_expr = std::make_unique<CEA::Literal<int64_t>>(
+        static_cast<int64_t>(literal.value));
+    } else if constexpr (std::is_same_v<Type, double>) {
+      math_expr = std::make_unique<CEA::Literal<double>>(
+        static_cast<double>(literal.value));
+    } else {
+      assert(false && "BooleanLiteral cannot be casted to a non supported type");
     }
   }
 

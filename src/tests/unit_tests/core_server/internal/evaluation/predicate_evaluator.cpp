@@ -25,6 +25,9 @@
 #include "core_server/internal/ceql/query/select.hpp"
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
+#include "core_server/internal/ceql/value/boolean_literal.hpp"
+#include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
+#include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
@@ -441,6 +444,30 @@ TEST_CASE(
     event = add_event_type_2(20, 21);
     evaluation = evaluator(event);
     REQUIRE(evaluation == 0b0101);
+  }
+}
+
+TEST_CASE("Boolean literals convert into math expressions", "[ValueToMathExpr]") {
+  Catalog catalog;
+  process_catalog(catalog);
+
+  CEQL::Query query = parse_query(create_query("X[Integer1 >= 20]"), catalog);
+  QueryCatalog query_catalog(catalog, query);
+  Types::EventInfo event_info = query_catalog.get_event_info(0);
+  auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
+
+  SECTION("StronglyTyped boolean literal converts to int64_t math expr") {
+    CEQL::ValueToMathExpr<int64_t> convertor(event_info);
+    CEQL::BooleanLiteral literal(true);
+    literal.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == 1);
+  }
+
+  SECTION("WeaklyTyped boolean literal converts to int64_t math expr") {
+    CEQL::WeaklyTypedValueToMathExpr<int64_t> convertor(query_catalog);
+    CEQL::BooleanLiteral literal(true);
+    literal.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == 1);
   }
 }
 }  // namespace CORE::Internal::CEA::UnitTests
