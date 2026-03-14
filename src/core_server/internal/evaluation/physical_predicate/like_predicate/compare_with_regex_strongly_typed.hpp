@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
