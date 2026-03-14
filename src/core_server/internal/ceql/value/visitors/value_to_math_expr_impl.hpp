@@ -30,6 +30,8 @@ class ValueToMathExprImpl : public ValueVisitor {
   Binder binder;
 
  public:
+  using ValueVisitor::visit;
+
   explicit ValueToMathExprImpl(Binder binder) : binder(std::move(binder)) {}
 
   std::unique_ptr<CEA::MathExpr<Type>> math_expr;
