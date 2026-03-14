@@ -27,7 +27,9 @@ class CompareWithConstant : public PhysicalPredicate {
   StoredValueType constant_val;
 
  public:
-  CompareWithConstant(uint64_t event_type_id, size_t pos_to_compare, ValueType new_constant_val)
+  CompareWithConstant(uint64_t event_type_id,
+                      size_t pos_to_compare,
+                      ValueType new_constant_val)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
         constant_val(stored_value(new_constant_val)) {}
@@ -78,9 +80,7 @@ class CompareWithConstant : public PhysicalPredicate {
     }
   }
 
-  std::string constant_to_string() const {
-    return std::format("{}", constant_val);
-  }
+  std::string constant_to_string() const { return std::format("{}", constant_val); }
 
   static std::string_view comparison_to_string() {
     if constexpr (Comp == ComparisonType::EQUALS)
