@@ -27,6 +27,9 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/ceql/query_transformer/annotate_predicates_with_new_physical_predicates.hpp"
 #include "core_server/internal/ceql/value/boolean_literal.hpp"
+#include "core_server/internal/ceql/value/integer_literal.hpp"
+#include "core_server/internal/ceql/value/operations/addition.hpp"
+#include "core_server/internal/ceql/value/string_literal.hpp"
 #include "core_server/internal/ceql/value/visitors/value_to_math_expr.hpp"
 #include "core_server/internal/ceql/value/visitors/weakly_typed_value_to_math_expr.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
@@ -477,6 +480,48 @@ TEST_CASE("Boolean literals convert into math expressions", "[ValueToMathExpr]")
     CEQL::BooleanLiteral literal(true);
     literal.accept_visitor(convertor);
     REQUIRE(convertor.math_expr->eval(event) == 1);
+  }
+}
+
+TEST_CASE("ValueToMathExpr wrappers preserve strong and weak translation behavior",
+          "[ValueToMathExpr]") {
+  Catalog catalog;
+  process_catalog(catalog);
+
+  CEQL::Query query = parse_query(create_query("X[Integer1 >= 20]"), catalog);
+  QueryCatalog query_catalog(catalog, query);
+  Types::EventInfo event_info = query_catalog.get_event_info(0);
+  auto event = add_event_type_1("somestring", 20, 5, 1.5, 1.2);
+
+  SECTION(
+    "StronglyTyped attribute lookup still resolves concrete attribute expressions") {
+    CEQL::ValueToMathExpr<int64_t> convertor(event_info);
+    CEQL::Attribute attribute("Integer2");
+    attribute.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == 5);
+    REQUIRE(convertor.math_expr->to_string() == "Attribute[2]");
+  }
+
+  SECTION("StronglyTyped arithmetic recursion still uses the wrapper class") {
+    CEQL::ValueToMathExpr<int64_t> convertor(event_info);
+    CEQL::Addition addition(std::make_unique<CEQL::IntegerLiteral>(2),
+                            std::make_unique<CEQL::Attribute>("Integer1"));
+    addition.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == 22);
+  }
+
+  SECTION("WeaklyTyped string literals still produce string-view math expressions") {
+    CEQL::WeaklyTypedValueToMathExpr<std::string_view> convertor(query_catalog);
+    CEQL::StringLiteral literal("needle");
+    literal.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == "needle");
+  }
+
+  SECTION("WeaklyTyped integer literals still coerce into double math expressions") {
+    CEQL::WeaklyTypedValueToMathExpr<double> convertor(query_catalog);
+    CEQL::IntegerLiteral literal(7);
+    literal.accept_visitor(convertor);
+    REQUIRE(convertor.math_expr->eval(event) == 7.0);
   }
 }
 
