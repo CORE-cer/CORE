@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <set>
 #include <string>
 #include <string_view>
@@ -62,21 +63,10 @@ class CompareWithConstant : public PhysicalPredicate {
   }
 
   std::string to_string() const override {
-    const std::string constant = constant_to_string();
-    if constexpr (Comp == ComparisonType::EQUALS)
-      return "Event[" + std::to_string(pos_to_compare) + "] == " + constant;
-    else if constexpr (Comp == ComparisonType::GREATER)
-      return "Event[" + std::to_string(pos_to_compare) + "] > " + constant;
-    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return "Event[" + std::to_string(pos_to_compare) + "] >= " + constant;
-    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return "Event[" + std::to_string(pos_to_compare) + "] <= " + constant;
-    else if constexpr (Comp == ComparisonType::LESS)
-      return "Event[" + std::to_string(pos_to_compare) + "] < " + constant;
-    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return "Event[" + std::to_string(pos_to_compare) + "] != " + constant;
-    else
-      assert(false && "to_string() not implemented for some ComparisonType");
+    return std::format("Event[{}] {} {}",
+                       pos_to_compare,
+                       comparison_to_string(),
+                       constant_to_string());
   }
 
  private:
@@ -89,11 +79,25 @@ class CompareWithConstant : public PhysicalPredicate {
   }
 
   std::string constant_to_string() const {
-    if constexpr (std::is_same_v<ValueType, std::string_view>) {
-      return constant_val;
-    } else {
-      return std::to_string(constant_val);
-    }
+    return std::format("{}", constant_val);
+  }
+
+  static std::string_view comparison_to_string() {
+    if constexpr (Comp == ComparisonType::EQUALS)
+      return "==";
+    else if constexpr (Comp == ComparisonType::GREATER)
+      return ">";
+    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+      return ">=";
+    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+      return "<=";
+    else if constexpr (Comp == ComparisonType::LESS)
+      return "<";
+    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+      return "!=";
+    else
+      assert(false && "comparison_to_string() not implemented for some ComparisonType");
+    return {};
   }
 };
 }  // namespace CORE::Internal::CEA
