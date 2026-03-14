@@ -14,7 +14,7 @@ struct Addition final : Value {
   Addition() noexcept {}
 
   Addition(const Addition& addition) noexcept
-      : left(addition.clone()), right(addition.clone()) {}
+      : left(addition.left->clone()), right(addition.right->clone()) {}
 
   Addition(std::unique_ptr<Value> left, std::unique_ptr<Value> right) noexcept
       : left(std::move(left)), right(std::move(right)) {}

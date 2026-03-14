@@ -243,6 +243,25 @@ TEST_CASE(
     REQUIRE(evaluation == 0b111101);
   }
 
+  SECTION("WeaklyTyped mixed numeric and string comparison predicates") {
+    CEQL::Query query = parse_query(create_query("X[Integer1 >= 20 AND "
+                                                 "String == 'somestring']"),
+                                    catalog);
+    QueryCatalog query_catalog(catalog, query);
+    auto evaluator = Evaluation::PredicateEvaluator(get_predicates(query, query_catalog));
+    auto event = add_event_type_1("somestring", 20, 0, 0.0, 1.2);
+    auto evaluation = evaluator(event);
+    REQUIRE(evaluation == 0b1011);
+
+    event = add_event_type_1("another", 20, 0, 0.0, 1.2);
+    evaluation = evaluator(event);
+    REQUIRE(evaluation == 0b0011);
+
+    event = add_event_type_2(20, 5);
+    evaluation = evaluator(event);
+    REQUIRE(evaluation == 0b0101);
+  }
+
   SECTION("IN predicate works correctly") {
     // TODO
   }

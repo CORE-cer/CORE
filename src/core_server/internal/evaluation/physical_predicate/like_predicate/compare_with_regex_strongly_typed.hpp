@@ -23,8 +23,8 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
                                 std::string&& regex)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
-        regex_string(regex),
-        regex_compiled(regex) {}
+        regex_string(std::move(regex)),
+        regex_compiled(regex_string) {}
 
   ~CompareWithRegexStronglyTyped() override = default;
 

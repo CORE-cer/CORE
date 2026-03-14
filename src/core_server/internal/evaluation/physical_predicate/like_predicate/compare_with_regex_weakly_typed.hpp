@@ -17,7 +17,7 @@ namespace CORE::Internal::CEA {
 class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
  private:
   std::unique_ptr<NonStronglyTypedAttribute<std::string_view>> left;
-  std::string_view regex_string;
+  std::string regex_string;
   re2::RE2 regex_compiled;
 
  public:
@@ -27,8 +27,8 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
     std::string&& regex)
       : PhysicalPredicate(admissible_event_types),
         left(std::move(left)),
-        regex_string(regex),
-        regex_compiled(regex) {}
+        regex_string(std::move(regex)),
+        regex_compiled(regex_string) {}
 
   ~CompareWithRegexWeaklyTyped() override = default;
 
@@ -37,7 +37,7 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
   }
 
   std::string to_string() const override {
-    return left->to_string() + " (regex match) " + regex_string.data();
+    return left->to_string() + " (regex match) " + regex_string;
   }
 };
 }  // namespace CORE::Internal::CEA
