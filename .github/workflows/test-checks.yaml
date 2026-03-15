@@ -422,6 +422,24 @@ jobs:
       # Integration query tests are now run via pycer e2e tests in the build-pycer job
 
   build-pycer:
+    strategy:
+      matrix:
+        compiler_profile: [clang-libstdcxx, gcc-libstdcxx]
+        include:
+          - compiler_profile: clang-libstdcxx
+            check_name: x86_64-linux-clang-libstdc
+            build_config_settings: >-
+              --config-settings=cmake.define.VCPKG_TARGET_TRIPLET=x64-linux-clang-libstdcxx
+              --config-settings=cmake.define.CMAKE_C_COMPILER=clang
+              --config-settings=cmake.define.CMAKE_CXX_COMPILER=clang++
+              --config-settings=cmake.define.CMAKE_CXX_FLAGS=-stdlib=libstdc++
+          - compiler_profile: gcc-libstdcxx
+            check_name: x86_64-linux-gcc-libstdc
+            build_config_settings: >-
+              --config-settings=cmake.define.VCPKG_TARGET_TRIPLET=x64-linux-gcc-libstdcxx
+              --config-settings=cmake.define.CMAKE_C_COMPILER=gcc
+              --config-settings=cmake.define.CMAKE_CXX_COMPILER=g++
+    name: build-pycer (${{ matrix.check_name }})
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -457,7 +475,7 @@ jobs:
         run: chmod +x ./scripts/install_dependencies.sh && ./scripts/install_dependencies.sh
 
       - name: Build pycer wheel
-        run: uv build --wheel
+        run: uv build --wheel ${{ matrix.build_config_settings }}
 
       - name: Verify pycer import
         run: uv run python -c "import pycer; print('pycer loaded successfully')"

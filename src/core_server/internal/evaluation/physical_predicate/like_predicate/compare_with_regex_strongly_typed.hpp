@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -23,8 +24,8 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
                                 std::string&& regex)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
-        regex_string(regex),
-        regex_compiled(regex) {}
+        regex_string(std::move(regex)),
+        regex_compiled(regex_string) {}
 
   ~CompareWithRegexStronglyTyped() override = default;
 

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <set>
 #include <string>
 #include <string_view>
@@ -19,32 +20,26 @@ namespace CORE::Internal::CEA {
 template <ComparisonType Comp, typename ValueType>
 class CompareWithConstant : public PhysicalPredicate {
  private:
+  using StoredValueType = std::
+    conditional_t<std::is_same_v<ValueType, std::string_view>, std::string, ValueType>;
+
   size_t pos_to_compare;
-  ValueType constant_val;
-  std::string underlying_string;
+  StoredValueType constant_val;
 
  public:
-  CompareWithConstant(uint64_t event_type_id, size_t pos_to_compare, ValueType constant_val)
+  CompareWithConstant(uint64_t event_type_id,
+                      size_t pos_to_compare,
+                      ValueType new_constant_val)
       : PhysicalPredicate(event_type_id),
         pos_to_compare(pos_to_compare),
-        constant_val(constant_val) {
-    if constexpr (std::is_same_v<ValueType, std::string_view>) {
-      underlying_string = std::string(constant_val);
-      this->constant_val = underlying_string;
-    }
-  }
+        constant_val(stored_value(new_constant_val)) {}
 
   CompareWithConstant(std::set<uint64_t> admissible_event_types,
                       size_t pos_to_compare,
-                      ValueType constant_val)
+                      ValueType new_constant_val)
       : PhysicalPredicate(admissible_event_types),
         pos_to_compare(pos_to_compare),
-        constant_val(constant_val) {
-    if constexpr (std::is_same_v<ValueType, std::string_view>) {
-      underlying_string = std::string(constant_val);
-      this->constant_val = underlying_string;
-    }
-  }
+        constant_val(stored_value(new_constant_val)) {}
 
   ~CompareWithConstant() override = default;
 
@@ -69,54 +64,40 @@ class CompareWithConstant : public PhysicalPredicate {
       assert(false && "Operator() not implemented for some ComparisonType");
   }
 
-  template <typename T, typename = std::void_t<>>
-  struct has_to_string : std::false_type {};
-
-  template <typename T>
-  struct has_to_string<T, std::void_t<decltype(std::to_string(std::declval<T>()))>>
-      : std::true_type {};
-
-  template <typename T>
-  inline static constexpr bool has_to_string_v = has_to_string<T>::value;
-
   std::string to_string() const override {
-    if constexpr (!has_to_string_v<ValueType>) {
-      if constexpr (Comp == ComparisonType::EQUALS)
-        return "Event[" + std::to_string(pos_to_compare) + "] == some chrono";
-      else if constexpr (Comp == ComparisonType::GREATER)
-        return "Event[" + std::to_string(pos_to_compare) + "] > " + "some chrono";
-      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare) + "] >= some chrono";
-      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare) + "] <= some chrono";
-      else if constexpr (Comp == ComparisonType::LESS)
-        return "Event[" + std::to_string(pos_to_compare) + "] < " + "some chrono";
-      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare) + "] != some chrono ";
-      else
-        assert(false && "to_string() not implemented for some ComparisonType");
+    return std::format("Event[{}] {} {}",
+                       pos_to_compare,
+                       comparison_to_string(),
+                       constant_to_string());
+  }
+
+ private:
+  static StoredValueType stored_value(ValueType value) {
+    if constexpr (std::is_same_v<ValueType, std::string_view>) {
+      return std::string(value);
     } else {
-      if constexpr (Comp == ComparisonType::EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] == " + std::to_string(constant_val);
-      else if constexpr (Comp == ComparisonType::GREATER)
-        return "Event[" + std::to_string(pos_to_compare) + "] > "
-               + std::to_string(constant_val);
-      else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] >= " + std::to_string(constant_val);
-      else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] <= " + std::to_string(constant_val);
-      else if constexpr (Comp == ComparisonType::LESS)
-        return "Event[" + std::to_string(pos_to_compare) + "] < "
-               + std::to_string(constant_val);
-      else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return "Event[" + std::to_string(pos_to_compare)
-               + "] != " + std::to_string(constant_val);
-      else
-        assert(false && "to_string() not implemented for some ComparisonType");
+      return value;
     }
+  }
+
+  std::string constant_to_string() const { return std::format("{}", constant_val); }
+
+  static std::string_view comparison_to_string() {
+    if constexpr (Comp == ComparisonType::EQUALS)
+      return "==";
+    else if constexpr (Comp == ComparisonType::GREATER)
+      return ">";
+    else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
+      return ">=";
+    else if constexpr (Comp == ComparisonType::LESS_EQUALS)
+      return "<=";
+    else if constexpr (Comp == ComparisonType::LESS)
+      return "<";
+    else if constexpr (Comp == ComparisonType::NOT_EQUALS)
+      return "!=";
+    else
+      assert(false && "comparison_to_string() not implemented for some ComparisonType");
+    return {};
   }
 };
 }  // namespace CORE::Internal::CEA

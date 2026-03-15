@@ -30,7 +30,6 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
  private:
   const QueryCatalog& query_catalog;
   std::set<Types::UniqueEventTypeId> compatible_event_types = {};
-  bool has_added_an_event_type = false;
 
  public:
   ObtainCompatibleEventTypes(const QueryCatalog& query_catalog)
@@ -41,11 +40,6 @@ class ObtainCompatibleEventTypes : public ValueVisitor {
   }
 
   std::set<uint64_t> get_compatible_event_types() const { return compatible_event_types; }
-
-  void reset() {
-    compatible_event_types = {};
-    has_added_an_event_type = false;
-  }
 
   void visit(Attribute& attribute) override {
     auto event_types = query_catalog.get_compatible_event_types(attribute.value);
