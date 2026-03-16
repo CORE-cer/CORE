@@ -43,6 +43,11 @@ jobs:
           wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
           sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
 
+      - name: Set up GCC
+        run: |
+          sudo apt install gcc-14 g++-14
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 60 --slave /usr/bin/g++ g++ /usr/bin/g++-14 && sudo update-alternatives --config gcc
+
       - name: Install vcpkg system dependencies
         run: sudo apt install -y curl zip unzip tar pkg-config autoconf automake libtool
 
