@@ -15,14 +15,16 @@
 # Configure clang-tidy for this project.
 
 # Disabled:
- # -google-readability-namespace-comments the *_CLIENT_NS is a macro, and
-#   clang-tidy fails to match it against the initial value.
+#  -bugprone-derived-method-shadowing-base-method, new check not currently handled
+# -bugprone-throwing-static-initialization - cereal triggers
 Checks: >
   bugprone-*,
   bugprone-assert-side-effect,
   -bugprone-easily-swappable-parameters,
   misc-include-cleaner,
-  -bugprone-multi-level-implicit-pointer-conversion
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-derived-method-shadowing-base-method,
+  -bugprone-throwing-static-initialization,
 # misc-const-correctness,
 # readability-make-member-function-const
 # google-*,

@@ -4,6 +4,7 @@
 #include <quill/LogMacros.h>
 #include <quill/Logger.h>
 
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <optional>

@@ -24,6 +24,7 @@ Checks: >
   -clang-analyzer-deadcode.DeadStores,
   -bugprone-chained-comparison,
   -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-derived-method-shadowing-base-method,
   -bugprone-throwing-static-initialization,
 # google-*,
 # misc-*,

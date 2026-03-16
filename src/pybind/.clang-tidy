@@ -10,6 +10,9 @@ Checks: >
   -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-unused-raii,
   -bugprone-throw-keyword-missing,
-  -misc-include-cleaner
+  -misc-include-cleaner,
+  -bugprone-derived-method-shadowing-base-method,
+  -bugprone-throwing-static-initialization,
+
 
 WarningsAsErrors: "*"
