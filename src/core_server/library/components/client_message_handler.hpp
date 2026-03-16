@@ -76,11 +76,30 @@ class ClientMessageHandler {
    */
   std::string operator()(const std::string& serialized_client_request) {
     std::lock_guard<std::mutex> lock(backend_mutex);
-    return CerealSerializer<Types::ServerResponse>::serialize(handle_client_request(
-      CerealSerializer<Types::ClientRequest>::deserialize(serialized_client_request)));
+    try {
+      return CerealSerializer<Types::ServerResponse>::serialize(handle_client_request(
+        CerealSerializer<Types::ClientRequest>::deserialize(serialized_client_request)));
+    } catch (const std::exception& e) {
+      LOG_ERROR(logger,
+                "Failed to process client request ({} bytes): {}",
+                serialized_client_request.size(),
+                e.what());
+      return serialize_error_response("Failed to process client request.");
+    } catch (...) {
+      LOG_ERROR(logger,
+                "Failed to process client request ({} bytes): unknown exception",
+                serialized_client_request.size());
+      return serialize_error_response("Failed to process client request.");
+    }
   }
 
  private:
+  std::string serialize_error_response(std::string error_message) {
+    return CerealSerializer<Types::ServerResponse>::serialize(
+      Types::ServerResponse(CerealSerializer<std::string>::serialize(error_message),
+                            Types::ServerResponseType::Error));
+  }
+
   Types::ServerResponse handle_client_request(Types::ClientRequest request) {
     try {
       switch (request.request_type) {
