@@ -2,8 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <sstream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <tracy/Tracy.hpp>
@@ -65,8 +65,8 @@ class CompareWithConstant : public PhysicalPredicate {
   }
 
   std::string to_string() const override {
-    return "Event[" + std::to_string(pos_to_compare) + "] " +
-           std::string(comparison_to_string()) + " " + constant_to_string();
+    return "Event[" + std::to_string(pos_to_compare) + "] "
+           + std::string(comparison_to_string()) + " " + constant_to_string();
   }
 
  private:
