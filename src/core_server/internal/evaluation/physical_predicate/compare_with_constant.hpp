@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <format>
+#include <sstream>
 #include <set>
 #include <string>
 #include <string_view>
@@ -65,10 +65,8 @@ class CompareWithConstant : public PhysicalPredicate {
   }
 
   std::string to_string() const override {
-    return std::format("Event[{}] {} {}",
-                       pos_to_compare,
-                       comparison_to_string(),
-                       constant_to_string());
+    return "Event[" + std::to_string(pos_to_compare) + "] " +
+           std::string(comparison_to_string()) + " " + constant_to_string();
   }
 
  private:
@@ -80,7 +78,11 @@ class CompareWithConstant : public PhysicalPredicate {
     }
   }
 
-  std::string constant_to_string() const { return std::format("{}", constant_val); }
+  std::string constant_to_string() const {
+    std::ostringstream stream;
+    stream << constant_val;
+    return stream.str();
+  }
 
   static std::string_view comparison_to_string() {
     if constexpr (Comp == ComparisonType::EQUALS)
