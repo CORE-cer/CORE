@@ -18,7 +18,7 @@ class StreamMessageCodec {
   static constexpr std::size_t kHeaderSize = kMagic.size() + sizeof(kVersion);
 
   static bool has_magic_prefix(std::string_view message) {
-    return message.size() >= kMagic.size() && message.substr(0, kMagic.size()) == kMagic;
+    return message.size() >= kMagic.size() && message.starts_with(kMagic);
   }
 
  public:

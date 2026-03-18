@@ -21,7 +21,7 @@ class Streamer {
   Streamer(std::string address, Types::PortNumber dealer_port)
       : sender(address + ":" + std::to_string(dealer_port)) {}
 
-  void send_stream(Types::Stream stream) {
+  void send_stream(const Types::Stream& stream) {
     sender.send(Internal::StreamMessageCodec::serialize(stream));
   }
 
