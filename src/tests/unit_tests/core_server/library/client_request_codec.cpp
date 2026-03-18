@@ -32,7 +32,7 @@ TEST_CASE("ClientRequestCodec rejects malformed wire payloads without throwing",
   const std::string malformed_message(malformed_wire_payload,
                                       sizeof(malformed_wire_payload) - 1);
 
-  REQUIRE_FALSE(Internal::ClientRequestCodec::deserialize(malformed_message).has_value());
+  REQUIRE(!Internal::ClientRequestCodec::deserialize(malformed_message).has_value());
 }
 
 TEST_CASE("ClientRequestCodec rejects malformed framed payloads without throwing",
@@ -45,7 +45,7 @@ TEST_CASE("ClientRequestCodec rejects malformed framed payloads without throwing
   malformed_message.append(malformed_serialized_request_payload,
                            sizeof(malformed_serialized_request_payload) - 1);
 
-  REQUIRE_FALSE(Internal::ClientRequestCodec::deserialize(malformed_message).has_value());
+  REQUIRE(!Internal::ClientRequestCodec::deserialize(malformed_message).has_value());
 }
 
 TEST_CASE("ClientRequestCodec rejects oversized frames before decoding",
@@ -54,7 +54,7 @@ TEST_CASE("ClientRequestCodec rejects oversized frames before decoding",
   oversized_message.push_back(static_cast<char>(Internal::ClientRequestCodec::kVersion));
   oversized_message.resize(Internal::ClientRequestCodec::kMaxFrameSize + 1, '\0');
 
-  REQUIRE_FALSE(Internal::ClientRequestCodec::deserialize(oversized_message).has_value());
+  REQUIRE(!Internal::ClientRequestCodec::deserialize(oversized_message).has_value());
 }
 
 }  // namespace CORE::Library::Components::UnitTests

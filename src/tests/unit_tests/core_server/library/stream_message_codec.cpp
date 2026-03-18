@@ -42,7 +42,7 @@ TEST_CASE("StreamMessageCodec rejects malformed wire payloads without throwing",
   const std::string malformed_message(malformed_wire_payload,
                                       sizeof(malformed_wire_payload) - 1);
 
-  REQUIRE_FALSE(Internal::StreamMessageCodec::deserialize(malformed_message).has_value());
+  REQUIRE(!Internal::StreamMessageCodec::deserialize(malformed_message).has_value());
 }
 
 TEST_CASE("StreamMessageCodec rejects oversized frames before decoding",
@@ -51,7 +51,7 @@ TEST_CASE("StreamMessageCodec rejects oversized frames before decoding",
   oversized_message.push_back(static_cast<char>(Internal::StreamMessageCodec::kVersion));
   oversized_message.resize(Internal::StreamMessageCodec::kMaxFrameSize + 1, '\0');
 
-  REQUIRE_FALSE(Internal::StreamMessageCodec::deserialize(oversized_message).has_value());
+  REQUIRE(!Internal::StreamMessageCodec::deserialize(oversized_message).has_value());
 }
 
 }  // namespace CORE::Library::Components::UnitTests
