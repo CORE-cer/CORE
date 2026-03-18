@@ -52,8 +52,7 @@ TEST_CASE("ClientMessageHandler returns an error response for unknown request ty
   auto result_handler_factory = std::make_shared<OfflineResultHandlerFactory>();
   ClientMessageHandler handler(backend, backend_mutex, result_handler_factory);
 
-  const auto valid_request = Types::ClientRequest("",
-                                                  Types::ClientRequestType::AddQuery);
+  const auto valid_request = Types::ClientRequest("", Types::ClientRequestType::AddQuery);
   auto serialized_request = Internal::ClientRequestCodec::serialize(valid_request);
   serialized_request.back() = static_cast<char>(0xff);
 
