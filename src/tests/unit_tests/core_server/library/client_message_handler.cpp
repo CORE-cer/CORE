@@ -12,6 +12,7 @@
 #include "shared/datatypes/server_response.hpp"
 #include "shared/datatypes/server_response_type.hpp"
 #include "shared/logging/setup.hpp"
+#include "shared/networking/client_request_codec.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components::UnitTests {
@@ -51,11 +52,9 @@ TEST_CASE("ClientMessageHandler returns an error response for unknown request ty
   auto result_handler_factory = std::make_shared<OfflineResultHandlerFactory>();
   ClientMessageHandler handler(backend, backend_mutex, result_handler_factory);
 
-  const auto invalid_request = Types::ClientRequest("",
-                                                    static_cast<Types::ClientRequestType>(
-                                                      255));
-  const auto serialized_request = Internal::CerealSerializer<Types::ClientRequest>::serialize(
-    invalid_request);
+  const auto valid_request = Types::ClientRequest("", Types::ClientRequestType::AddQuery);
+  auto serialized_request = Internal::ClientRequestCodec::serialize(valid_request);
+  serialized_request.back() = static_cast<char>(0xff);
 
   const auto serialized_response = handler(serialized_request);
   const auto response = Internal::CerealSerializer<Types::ServerResponse>::deserialize(

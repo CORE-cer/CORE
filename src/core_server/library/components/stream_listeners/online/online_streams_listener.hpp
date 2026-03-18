@@ -5,6 +5,7 @@
 #include <quill/Logger.h>
 
 #include <atomic>
+#include <exception>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -15,7 +16,7 @@
 #include "shared/datatypes/aliases/port_number.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_receiver/zmq_message_receiver.hpp"
-#include "shared/serializer/cereal_serializer.hpp"
+#include "shared/networking/stream_message_codec.hpp"
 
 namespace CORE::Library::Components {
 
@@ -54,22 +55,44 @@ class OnlineStreamsListener {
 
   void worker() {
     while (!stop_condition) {
-      std::optional<std::string> s_message = receiver.receive(100);
-      if (!s_message.has_value()) {
-        continue;
-      }
-      Types::Stream stream = Internal::CerealSerializer<Types::Stream>::deserialize(
-        s_message.value());
-      LOG_TRACE_L3(logger,
-                   "Received stream with id {} and {} events in OnlineStreamsListener",
-                   stream.id,
-                   stream.events.size());
-      for (auto& event : stream.events) {
+      try {
+        std::optional<std::string> s_message = receiver.receive(100);
+        if (!s_message.has_value()) {
+          continue;
+        }
+
+        auto stream = Internal::StreamMessageCodec::deserialize(s_message.value());
+        if (!stream.has_value()) {
+          LOG_WARNING(logger,
+                      "Discarding malformed stream payload ({} bytes) in "
+                      "OnlineStreamsListener",
+                      s_message->size());
+          continue;
+        }
+
         LOG_TRACE_L3(logger,
-                     "Stream with id {} and event {} in OnlineStreamsListener",
-                     stream.id,
-                     event->to_string());
-        backend.send_event_to_queries(stream.id, {std::move(event), logger});
+                     "Received stream with id {} and {} events in OnlineStreamsListener",
+                     stream->id,
+                     stream->events.size());
+        std::lock_guard lock(backend_mutex);
+        for (auto& event : stream->events) {
+          if (!event) {
+            LOG_TRACE_L3(logger,
+                         "Skipping null event for stream with id {} in "
+                         "OnlineStreamsListener",
+                         stream->id);
+            continue;
+          }
+          LOG_TRACE_L3(logger,
+                       "Stream with id {} and event {} in OnlineStreamsListener",
+                       stream->id,
+                       event->to_string());
+          backend.send_event_to_queries(stream->id, {std::move(event), logger});
+        }
+      } catch (const std::exception& e) {
+        LOG_ERROR(logger, "OnlineStreamsListener worker failed: {}", e.what());
+      } catch (...) {
+        LOG_ERROR(logger, "OnlineStreamsListener worker failed with unknown exception");
       }
     }
   }
