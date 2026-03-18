@@ -23,7 +23,7 @@ struct ClientRequest {
    * The request type goes afterwards to have the padding in the end of
    * the class. ClientRequestType is 1 byte. In this case, we will still
    * have the same 3 bytes of padding though.
-  */
+   */
   ClientRequestType request_type;
 
   ClientRequest() noexcept = default;
