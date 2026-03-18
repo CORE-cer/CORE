@@ -24,7 +24,8 @@ TEST_CASE("StreamMessageCodec deserializes framed stream payloads",
   Types::Stream stream(5, {event});
 
   std::string framed_message = Internal::StreamMessageCodec::serialize(stream);
-  std::optional<Types::Stream> decoded_stream = Internal::StreamMessageCodec::deserialize(framed_message);
+  std::optional<Types::Stream> decoded_stream = Internal::StreamMessageCodec::deserialize(
+    framed_message);
 
   REQUIRE(decoded_stream.has_value());
   assert(decoded_stream.has_value());
