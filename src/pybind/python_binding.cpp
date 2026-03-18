@@ -370,7 +370,7 @@ NB_MODULE(pycer, m) {
 
         nb::class_<Streamer>(m, "PyStreamer")
             .def(nb::init<std::string, uint16_t>())
-            .def("send_stream", nb::overload_cast<Types::Stream>(&Streamer::send_stream))
+            .def("send_stream", nb::overload_cast<const Types::Stream&>(&Streamer::send_stream))
             .def("send_stream", [](Streamer& self, Types::StreamTypeId stream_id, std::shared_ptr<Types::Event> event) {
                 self.send_stream(stream_id, std::move(event));
             }, nb::arg("stream_id"), nb::arg("event"),
