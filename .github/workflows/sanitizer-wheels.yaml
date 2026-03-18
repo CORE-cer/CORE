@@ -33,9 +33,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |

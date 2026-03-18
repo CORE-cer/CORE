@@ -34,9 +34,9 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -89,9 +89,9 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -147,9 +147,9 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -204,9 +204,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -265,9 +265,9 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -322,9 +322,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -383,9 +383,9 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
@@ -453,9 +453,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
+        uses: KyleMayes/install-llvm-action@v2.0.9
         with:
-          version: "22"
+          version: "21.1.8"
 
       - name: Install libtinfo5 for clang
         run: |
