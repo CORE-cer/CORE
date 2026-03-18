@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "shared/datatypes/client_request_type.hpp"
 
@@ -28,7 +29,8 @@ struct ClientRequest {
   ClientRequest() noexcept = default;
 
   ClientRequest(std::string&& serialized_request_data, ClientRequestType request_type)
-      : serialized_request_data(serialized_request_data), request_type(request_type) {}
+      : serialized_request_data(std::move(serialized_request_data)),
+        request_type(request_type) {}
 
   ~ClientRequest() noexcept = default;
 
