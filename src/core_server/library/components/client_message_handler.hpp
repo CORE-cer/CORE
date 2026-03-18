@@ -88,7 +88,7 @@ class ClientMessageHandler {
       }
 
       return CerealSerializer<Types::ServerResponse>::serialize(
-        handle_client_request(std::move(request.value())));
+        handle_client_request(request.value()));
     } catch (const std::exception& e) {
       LOG_ERROR(logger,
                 "Failed to process client request ({} bytes): {}",
