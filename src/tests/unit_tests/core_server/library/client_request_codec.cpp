@@ -14,8 +14,8 @@ TEST_CASE("ClientRequestCodec deserializes framed client requests",
   Types::ClientRequest request("payload", Types::ClientRequestType::AddQuery);
 
   std::string framed_message = Internal::ClientRequestCodec::serialize(request);
-  std::optional<Types::ClientRequest> decoded_request = Internal::ClientRequestCodec::deserialize(
-    framed_message);
+  std::optional<Types::ClientRequest>
+    decoded_request = Internal::ClientRequestCodec::deserialize(framed_message);
 
   REQUIRE(decoded_request.has_value());
   REQUIRE(decoded_request->serialized_request_data == request.serialized_request_data);
@@ -35,8 +35,8 @@ TEST_CASE("ClientRequestCodec rejects malformed wire payloads without throwing",
 
 TEST_CASE("ClientRequestCodec rejects malformed framed payloads without throwing",
           "[client_request_codec]") {
-  constexpr char malformed_serialized_request_payload[]
-    = "\0\0\0\0Cookie: mstshash=Administr\r\n\001\000\b\000\003\000\000";
+  constexpr char malformed_serialized_request_payload
+    [] = "\0\0\0\0Cookie: mstshash=Administr\r\n\001\000\b\000\003\000\000";
 
   std::string malformed_message(Internal::ClientRequestCodec::kMagic);
   malformed_message.push_back(static_cast<char>(Internal::ClientRequestCodec::kVersion));

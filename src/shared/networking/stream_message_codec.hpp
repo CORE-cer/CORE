@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "shared/datatypes/stream.hpp"
+#include "shared/networking/framed_message.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Internal {
@@ -15,47 +16,27 @@ class StreamMessageCodec {
  public:
   static constexpr std::string_view kMagic = "CORESTRM";
   static constexpr std::uint8_t kVersion = 1;
-  static constexpr std::size_t kHeaderSize = kMagic.size() + sizeof(kVersion);
   static constexpr std::size_t kMaxPayloadSize = static_cast<const std::size_t>(64U
                                                                                 * 1024U)
                                                  * 1024U;  // Maximum 64MiB
-  static constexpr std::size_t kMaxFrameSize = kHeaderSize + kMaxPayloadSize;
-
- private:
-  static bool has_magic_prefix(std::string_view message) {
-    return message.size() >= kMagic.size() && message.starts_with(kMagic);
-  }
+  static constexpr FramedMessageSpec kFrameSpec{kMagic, kVersion, kMaxPayloadSize};
+  static constexpr std::size_t kHeaderSize = framed_header_size(kFrameSpec);
+  static constexpr std::size_t kMaxFrameSize = framed_max_frame_size(kFrameSpec);
 
  public:
   static std::string serialize(const Types::Stream& stream) {
-    std::string payload = CerealSerializer<Types::Stream>::serialize(stream);
-    std::string framed_message;
-    framed_message.reserve(kHeaderSize + payload.size());
-    framed_message.append(kMagic);
-    framed_message.push_back(static_cast<char>(kVersion));
-    framed_message.append(payload);
-    return framed_message;
+    return serialize_framed_payload(CerealSerializer<Types::Stream>::serialize(stream),
+                                    kFrameSpec);
   }
 
   static std::optional<Types::Stream> deserialize(std::string_view message) {
     try {
-      // Any message should have the magic prefix
-      if (!has_magic_prefix(message)) {
+      auto payload = extract_framed_payload(message, kFrameSpec);
+      if (!payload.has_value()) {
         return std::nullopt;
       }
 
-      // Message needs to be a valid version
-      if (message.size() <= kHeaderSize
-          || static_cast<std::uint8_t>(message[kMagic.size()]) != kVersion) {
-        return std::nullopt;
-      }
-
-      if (message.size() > kMaxFrameSize
-          || message.size() - kHeaderSize > kMaxPayloadSize) {
-        return std::nullopt;
-      }
-
-      return CerealSerializer<Types::Stream>::deserialize(message.substr(kHeaderSize));
+      return CerealSerializer<Types::Stream>::deserialize(payload.value());
     } catch (...) {
       return std::nullopt;
     }
