@@ -39,6 +39,7 @@
 #include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/stream_not_found_exception.hpp"
 #include "shared/exceptions/parsing/warning_exception.hpp"
+#include "shared/networking/client_request_codec.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
 
 namespace CORE::Library::Components {
@@ -78,8 +79,16 @@ class ClientMessageHandler {
   std::string operator()(const std::string& serialized_client_request) {
     std::lock_guard<std::mutex> lock(backend_mutex);
     try {
-      return CerealSerializer<Types::ServerResponse>::serialize(handle_client_request(
-        CerealSerializer<Types::ClientRequest>::deserialize(serialized_client_request)));
+      auto request = ClientRequestCodec::deserialize(serialized_client_request);
+      if (!request.has_value()) {
+        LOG_ERROR(logger,
+                  "Failed to process client request ({} bytes): malformed framed request",
+                  serialized_client_request.size());
+        return serialize_error_response("Failed to process client request.");
+      }
+
+      return CerealSerializer<Types::ServerResponse>::serialize(
+        handle_client_request(std::move(request.value())));
     } catch (const std::exception& e) {
       LOG_ERROR(logger,
                 "Failed to process client request ({} bytes): {}",

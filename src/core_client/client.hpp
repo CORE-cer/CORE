@@ -38,6 +38,7 @@
 #include "shared/exceptions/parsing/parsing_syntax_exception.hpp"
 #include "shared/exceptions/parsing/stream_name_already_declared_exception.hpp"
 #include "shared/exceptions/parsing/stream_not_found_exception.hpp"
+#include "shared/networking/client_request_codec.hpp"
 #include "shared/networking/message_dealer/zmq_message_dealer.hpp"
 #include "shared/networking/message_subscriber/zmq_message_subscriber.hpp"
 #include "shared/serializer/cereal_serializer.hpp"
@@ -46,7 +47,6 @@
 namespace CORE {
 class Client {
   using SubscriptionId = uint64_t;
-  using ClientReqSerializer = Internal::CerealSerializer<Types::ClientRequest>;
   using ServerResSerializer = Internal::CerealSerializer<Types::ServerResponse>;
   using EnumeratorSerializer = Internal::CerealSerializer<Types::Enumerator>;
   std::unordered_set<Types::PortNumber> known_query_evaluator_ports;  // TODO
@@ -224,7 +224,7 @@ class Client {
 
  private:
   Types::ServerResponse send_request(Types::ClientRequest request) {
-    std::string serialized_request = ClientReqSerializer::serialize(request);
+    std::string serialized_request = Internal::ClientRequestCodec::serialize(request);
     auto serialized_response = dealer.send_and_receive(serialized_request);
     auto res = ServerResSerializer::deserialize(serialized_response);
     switch (res.response_type) {
