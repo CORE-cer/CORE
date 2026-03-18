@@ -29,8 +29,11 @@
 #include <cereal/types/valarray.hpp>
 #include <cereal/types/variant.hpp>
 #include <cereal/types/vector.hpp>
+#include <istream>
 #include <sstream>
+#include <streambuf>
 #include <string>
+#include <string_view>
 // NOLINTEND
 
 #include "shared/serializer/serializer.hpp"
@@ -38,6 +41,15 @@
 namespace CORE::Internal {
 template <typename StructName>
 class CerealSerializer : Serializer<StructName> {
+ private:
+  class MemoryInputBuffer final : public std::streambuf {
+   public:
+    explicit MemoryInputBuffer(std::string_view message) {
+      char* begin = message.empty() ? nullptr : const_cast<char*>(message.data());
+      setg(begin, begin, begin == nullptr ? nullptr : begin + message.size());
+    }
+  };
+
  public:
   static std::string serialize(const StructName& data) {
     std::stringstream ss;
@@ -46,10 +58,11 @@ class CerealSerializer : Serializer<StructName> {
     return ss.str();
   }
 
-  static StructName deserialize(const std::string& message) {
-    std::stringstream ss(message);
+  static StructName deserialize(std::string_view message) {
+    MemoryInputBuffer buffer(message);
+    std::istream input(&buffer);
     StructName data;
-    cereal::BinaryInputArchive iarchive(ss);
+    cereal::BinaryInputArchive iarchive(input);
     iarchive(data);
     return data;
   }

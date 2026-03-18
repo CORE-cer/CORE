@@ -12,11 +12,16 @@
 namespace CORE::Internal {
 
 class StreamMessageCodec {
- private:
+ public:
   static constexpr std::string_view kMagic = "CORESTRM";
   static constexpr std::uint8_t kVersion = 1;
   static constexpr std::size_t kHeaderSize = kMagic.size() + sizeof(kVersion);
+  static constexpr std::size_t kMaxPayloadSize = static_cast<const std::size_t>(64U
+                                                                                * 1024U)
+                                                 * 1024U;  // Maximum 64MiB
+  static constexpr std::size_t kMaxFrameSize = kHeaderSize + kMaxPayloadSize;
 
+ private:
   static bool has_magic_prefix(std::string_view message) {
     return message.size() >= kMagic.size() && message.starts_with(kMagic);
   }
@@ -32,7 +37,7 @@ class StreamMessageCodec {
     return framed_message;
   }
 
-  static std::optional<Types::Stream> deserialize(const std::string& message) {
+  static std::optional<Types::Stream> deserialize(std::string_view message) {
     try {
       // Any message should have the magic prefix
       if (!has_magic_prefix(message)) {
@@ -42,6 +47,11 @@ class StreamMessageCodec {
       // Message needs to be a valid version
       if (message.size() <= kHeaderSize
           || static_cast<std::uint8_t>(message[kMagic.size()]) != kVersion) {
+        return std::nullopt;
+      }
+
+      if (message.size() > kMaxFrameSize
+          || message.size() - kHeaderSize > kMaxPayloadSize) {
         return std::nullopt;
       }
 
