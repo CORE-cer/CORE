@@ -26,13 +26,9 @@ struct ClientRequest {
    */
   ClientRequestType request_type;
 
-  ClientRequest() noexcept = default;
-
   ClientRequest(std::string&& serialized_request_data, ClientRequestType request_type)
       : serialized_request_data(std::move(serialized_request_data)),
         request_type(request_type) {}
-
-  ~ClientRequest() noexcept = default;
 
   template <class Archive>
   void serialize(Archive& archive) {
