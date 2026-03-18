@@ -1,5 +1,6 @@
 #include "shared/networking/client_request_codec.hpp"
 
+#include <cassert>
 #include <catch2/catch_test_macros.hpp>
 #include <optional>
 #include <string>
@@ -18,6 +19,7 @@ TEST_CASE("ClientRequestCodec deserializes framed client requests",
     decoded_request = Internal::ClientRequestCodec::deserialize(framed_message);
 
   REQUIRE(decoded_request.has_value());
+  assert(decoded_request.has_value());
   REQUIRE(decoded_request->serialized_request_data == request.serialized_request_data);
   REQUIRE(decoded_request->request_type == request.request_type);
 }
