@@ -76,6 +76,13 @@ class OnlineStreamsListener {
                      stream->events.size());
         std::lock_guard lock(backend_mutex);
         for (auto& event : stream->events) {
+          if (!event) {
+            LOG_TRACE_L3(logger,
+                         "Skipping null event for stream with id {} in "
+                         "OnlineStreamsListener",
+                         stream->id);
+            continue;
+          }
           LOG_TRACE_L3(logger,
                        "Stream with id {} and event {} in OnlineStreamsListener",
                        stream->id,
