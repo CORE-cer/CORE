@@ -11,11 +11,10 @@
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/stream.hpp"
 #include "shared/networking/message_sender/zmq_message_sender.hpp"
-#include "shared/serializer/cereal_serializer.hpp"
+#include "shared/networking/stream_message_codec.hpp"
 
 namespace CORE {
 class Streamer {
-  using StreamSerializer = Internal::CerealSerializer<Types::Stream>;
   Internal::ZMQMessageSender sender;
 
  public:
@@ -23,7 +22,7 @@ class Streamer {
       : sender(address + ":" + std::to_string(dealer_port)) {}
 
   void send_stream(Types::Stream stream) {
-    sender.send(StreamSerializer::serialize(stream));
+    sender.send(Internal::StreamMessageCodec::serialize(stream));
   }
 
   void send_stream(Types::StreamTypeId stream_id, std::shared_ptr<Types::Event>&& event) {
