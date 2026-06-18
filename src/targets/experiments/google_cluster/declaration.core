@@ -1,0 +1,4 @@
+CREATE STREAM S {
+EVENT TASK { job:int, task:int, machine:int, status:int, priority:int, event_number:int }
+}
+ 

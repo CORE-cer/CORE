@@ -1,0 +1,7 @@
+SELECT a,b,c FROM S 
+WHERE (TASK as a, TASK as b, TASK as c, TASK as d)
+FILTER 
+    a[status=4] AND b[status=4] AND c[status=4] AND d[status=4] AND 
+    a[machine] = b[machine] = c[machine] = d[machine]
+WITHIN 100 [event_number]
+CONSUME BY ANY
