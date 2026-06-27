@@ -339,7 +339,8 @@ NB_MODULE(pycer, m) {
                     }
                 }
                 return result;
-            });
+            },
+            nb::sig("def get_attributes_as_list(self) -> list[int | float | str | bool]"));
 
         nb::class_<Types::EventInfoParsed>(m, "PyEventInfoParsed")
             .def(nb::init<std::string, std::vector<Types::AttributeInfo>>())
@@ -411,7 +412,8 @@ NB_MODULE(pycer, m) {
                     result.append(entry);
                 }
                 return result;
-            });
+            },
+            nb::sig("def get_attribute_projection_stream_event(self) -> list[dict[str, str | list[str]]]"));
 
         nb::class_<PyClientWrapper>(m, "PyClient")
             .def(nb::init<std::string, uint16_t>())
