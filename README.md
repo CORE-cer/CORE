@@ -84,7 +84,7 @@ To run the server and client you can run them either in online and offline metho
 
 ##### Offline:
 
-The offline method only allows one cient at a time. In the build folder there will be an executable for runing a stream in a data set for an specific query.  The command to run the executable is the following:
+The offline method only allows one client at a time. In the build folder there will be an executable for running a stream in a data set for an specific query.  The command to run the executable is the following:
 
 ```bash
 ./build/BUILD_METHOD/offline /path/to/specific/query /path/to/stream/declaration path/to/stream/data
