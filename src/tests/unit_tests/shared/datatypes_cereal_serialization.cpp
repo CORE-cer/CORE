@@ -30,6 +30,10 @@ TEST_CASE("Serialization works for all basic CORE types", "[cereal, core_types]"
   check_serialization_of<Types::DateValue, std::time_t>(200);
 }
 
+}  // namespace CORE::Internal::ThirdPartyTests
+
+namespace CORE::Internal::Shared::UnitTests::DatatypesCerealSerialization {
+
 TEST_CASE("Event to_string includes variable name when present", "[core_types]") {
   Types::Event event(0, std::vector<std::unique_ptr<Types::Value>>{});
   event.variable_name = "a";
@@ -37,4 +41,4 @@ TEST_CASE("Event to_string includes variable name when present", "[core_types]")
   REQUIRE(event.to_string() == "(variable_name: a id: 0 attributes: [])");
 }
 
-}  // namespace CORE::Internal::ThirdPartyTests
+}  // namespace CORE::Internal::Shared::UnitTests::DatatypesCerealSerialization
