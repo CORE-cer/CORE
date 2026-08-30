@@ -94,7 +94,11 @@ struct Event {
   }
 
   std::string to_string() const {
-    std::string out = "(id: " + std::to_string(get_event_type_id()) + " attributes: [";
+    std::string out = "(";
+    if (!variable_name.empty()) {
+      out += "variable_name: " + variable_name + " ";
+    }
+    out += "id: " + std::to_string(get_event_type_id()) + " attributes: [";
     for (auto& val : attributes) {
       out += val->to_string() + " ";
     }
