@@ -31,15 +31,14 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common wget
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get install -y clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -94,15 +93,14 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common wget
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get install -y clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -140,15 +138,14 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common wget
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get install -y clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
