@@ -15,7 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 # Install the latest version of cmake:
 RUN apt remove --purge --auto-remove cmake
 
-RUN apt-get update && apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-dev lsb-release wget sudo git build-essential curl zip unzip tar pkg-config autoconf automake libtool
+RUN apt-get update && apt install -y software-properties-common lsb-release parallel ninja-build valgrind default-jdk python3 python3-dev lsb-release wget sudo git build-essential curl gnupg zip unzip tar pkg-config autoconf automake libtool
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -29,11 +29,22 @@ RUN sudo apt update -y
 
 RUN apt install cmake -y
 
-RUN wget https://apt.llvm.org/llvm.sh
+RUN install -d -m 0755 /etc/apt/keyrings \
+    && curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key \
+    && echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check - \
+    && test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421" \
+    && gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key \
+    && rm /tmp/llvm-apt.key
 
-RUN chmod +x llvm.sh
+RUN printf '%s\n' \
+    'Types: deb' \
+    'URIs: https://apt.llvm.org/noble/' \
+    'Suites: llvm-toolchain-noble-19' \
+    'Components: main' \
+    'Architectures: amd64' \
+    'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' > /etc/apt/sources.list.d/llvm.sources
 
-RUN ./llvm.sh 19
+RUN apt-get update && apt-get install -y clang-19 clang-format-19 clang-tidy-19
 
 RUN mkdir /clang
 

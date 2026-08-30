@@ -42,11 +42,22 @@ jobs:
       - name: Install LLVM and Clang
         run: |
           sudo apt-get update
-          sudo apt-get install -y lsb-release gnupg software-properties-common wget
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 21
-          sudo apt-get install -y clang-format-21 clang-tidy-21
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21
           echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
