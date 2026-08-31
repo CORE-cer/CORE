@@ -559,8 +559,8 @@ jobs:
 
       - name: Install pycer wheel
         run: |
-          uv sync --locked --no-install-project
-          uv pip install --no-build --python .venv/bin/python dist/*.whl
+          uv sync --locked --no-install-project --no-build
+          uv pip install --no-build --no-deps --python .venv/bin/python dist/*.whl
 
       - name: Verify pycer import
         run: .venv/bin/python -c "import pycer; print('pycer loaded successfully')"

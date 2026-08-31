@@ -83,7 +83,7 @@ jobs:
         run: uv build --wheel
 
       - name: Install pycer wheel
-        run: uv pip install --no-build --python .venv/bin/python dist/*.whl
+        run: uv pip install --no-build --no-deps --python .venv/bin/python dist/*.whl
 
       - name: benchmark stocks
         run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset stocks
