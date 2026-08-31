@@ -19,7 +19,7 @@ RUN apt-get update && apt install -y software-properties-common lsb-release para
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN wget --max-redirect=0 -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 RUN apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
 RUN apt update
 
@@ -96,11 +96,11 @@ COPY --from=build /CORE/build/Debug /CORE/build/Debug
 COPY --from=build /CORE/build/Release /CORE/build/Release
 COPY --from=build /CORE/dist/*.whl /tmp/
 
-RUN uv venv /CORE/.venv && uv pip install --python /CORE/.venv/bin/python /tmp/*.whl && rm /tmp/*.whl
+RUN uv venv /CORE/.venv && uv pip install --no-build --python /CORE/.venv/bin/python /tmp/*.whl && rm /tmp/*.whl
 
 COPY --from=build /CORE/python_streamer /CORE/python_streamer
 
-RUN cd /CORE/python_streamer && uv sync
+RUN cd /CORE/python_streamer && uv sync --locked --no-build
 
 ENV PATH="/CORE/.venv/bin:/CORE/python_streamer/.venv/bin:$PATH"
 

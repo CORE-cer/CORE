@@ -558,7 +558,7 @@ jobs:
         run: uv build --wheel ${{ matrix.build_config_settings }}
 
       - name: Verify pycer import
-        run: uv run python -c "import pycer; print('pycer loaded successfully')"
+        run: uv run --locked python -c "import pycer; print('pycer loaded successfully')"
 
       - name: Run e2e integration tests
-        run: uv run pytest tests/e2e/ -v --server-mode offline
+        run: uv run --locked pytest tests/e2e/ -v --server-mode offline
