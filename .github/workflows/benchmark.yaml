@@ -77,10 +77,16 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Build pycer
-        run: uv sync --locked --reinstall-package pycer
+        run: uv sync --locked --no-install-project
+
+      - name: Build pycer wheel
+        run: uv build --wheel
+
+      - name: Install pycer wheel
+        run: uv pip install --no-build --python .venv/bin/python dist/*.whl
 
       - name: benchmark stocks
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset stocks
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset stocks
 
       - name: Read CSV
         id: csv_1
@@ -102,7 +108,7 @@ jobs:
             ${{steps.csv-table-output_1.outputs.markdown-table}}
 
       - name: benchmark unordered stocks
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset unordered_stocks
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset unordered_stocks
 
       - name: Read CSV
         id: csv_2
@@ -124,7 +130,7 @@ jobs:
             ${{steps.csv-table-output_2.outputs.markdown-table}}
 
       - name: benchmark smart homes
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset smart_homes
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset smart_homes
 
       - name: Read CSV
         id: csv_3
@@ -146,7 +152,7 @@ jobs:
             ${{steps.csv-table-output_3.outputs.markdown-table}}
 
       - name: benchmark taxis
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset taxis
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset taxis
 
       - name: Read CSV
         id: csv_4
@@ -168,7 +174,7 @@ jobs:
             ${{steps.csv-table-output_4.outputs.markdown-table}}
 
       - name: benchmark ordered bluesky
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset ordered_bluesky
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset ordered_bluesky
 
       - name: Read CSV
         id: csv_5
@@ -190,7 +196,7 @@ jobs:
             ${{steps.csv-table-output_5.outputs.markdown-table}}
 
       - name: benchmark unordered bluesky
-        run: uv run --locked --no-project python tests/benchmark/benchmark_queries.py --dataset unordered_bluesky
+        run: .venv/bin/python tests/benchmark/benchmark_queries.py --dataset unordered_bluesky
 
       - name: Read CSV
         id: csv_6
