@@ -39,6 +39,12 @@ class InRangePredicate : public PhysicalPredicate {
 
   ~InRangePredicate() override = default;
 
+  const MathExpr<ValueType>& value_expr() const { return *left; }
+
+  const MathExpr<ValueType>& lower_bound_expr() const { return *lower_bound; }
+
+  const MathExpr<ValueType>& upper_bound_expr() const { return *upper_bound; }
+
   bool eval(Types::EventWrapper& event) override {
     return (left->eval(event) >= lower_bound->eval(event))
            && (left->eval(event) <= upper_bound->eval(event));

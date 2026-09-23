@@ -14,6 +14,7 @@
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
@@ -139,6 +140,14 @@ bool is_the_same_as(Types::Event event,
                     std::string name,
                     int64_t value1,
                     int64_t value2);
+
+// Engine options for the Backend of a test. By default they select the original
+// predicate evaluation. Setting the environment variable
+// CORE_TEST_PREDICATE_EVALUATION=minterm_tree re-runs every test that uses this
+// helper through the (optional) minterm-tree evaluation, which must give
+// identical results. This needs a build with -o (CORE_ENABLE_MINTERM_OPTIMIZATION).
+// An unknown value throws, so a typo cannot silently test the default path.
+Interface::EngineOptions test_engine_options();
 
 Types::StreamInfo basic_stock_declaration(Interface::Backend<>& backend);
 

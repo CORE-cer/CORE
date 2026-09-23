@@ -10,8 +10,10 @@ from tests.e2e.csv_parser import parse_csv
 from tests.e2e.online_runner import run_dataset_online
 
 
-def test_query(dataset: dict, query_file: Path, expected_file: Path) -> None:
-    server = pycer.PyOfflineServer()
+def test_query(
+    dataset: dict, query_file: Path, expected_file: Path, predicate_evaluation
+) -> None:
+    server = pycer.PyOfflineServer(predicate_evaluation=predicate_evaluation)
 
     declaration = (dataset["base"] / dataset["declaration"]).read_text()
     stream_info = server.declare_stream(declaration)
@@ -51,11 +53,13 @@ def test_query(dataset: dict, query_file: Path, expected_file: Path) -> None:
 
 
 @pytest.mark.online
-def test_dataset_online(dataset_with_queries: tuple[dict, list[Path]]) -> None:
+def test_dataset_online(
+    dataset_with_queries: tuple[dict, list[Path]], predicate_evaluation
+) -> None:
     """Run all queries for a dataset through PyOnlineServer (ZMQ path).
 
     No output comparison — exercises serialization, networking, and threading
     code for sanitizer detection.
     """
     dataset, query_files = dataset_with_queries
-    run_dataset_online(dataset, query_files)
+    run_dataset_online(dataset, query_files, predicate_evaluation)

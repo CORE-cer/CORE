@@ -120,6 +120,28 @@ def pytest_addoption(parser):
         required=True,
         help="Server mode for e2e tests: offline or online (ZMQ)",
     )
+    parser.addoption(
+        "--predicate-evaluation",
+        choices=["default", "minterm_tree"],
+        default="default",
+        help=(
+            "How the server evaluates predicates. 'minterm_tree' is the optional "
+            "optimization and needs pycer built with scripts/build_pycer.sh -o; "
+            "results must be identical to 'default'."
+        ),
+    )
+
+
+@pytest.fixture(scope="session")
+def predicate_evaluation(request):
+    """The pycer predicate-evaluation strategy chosen with --predicate-evaluation."""
+    import pycer
+
+    strategies = {
+        "default": pycer.PyPredicateEvaluation.DEFAULT,
+        "minterm_tree": pycer.PyPredicateEvaluation.MINTERM_TREE,
+    }
+    return strategies[request.config.getoption("--predicate-evaluation")]
 
 
 def _discover_datasets_with_queries() -> list[tuple[dict, list[Path]]]:

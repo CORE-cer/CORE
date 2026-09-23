@@ -25,6 +25,7 @@
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/internal/interface/modules/query/query_types/partition_by_query.hpp"
 #include "core_server/internal/interface/modules/query/query_types/simple_query.hpp"
@@ -71,23 +72,25 @@ class BasePolicy {
 
   virtual ~BasePolicy() {}
 
-  void
-  declare_query(Internal::CEQL::Query&& parsed_query,
-                Types::UniqueQueryId query_id,
-                std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
+  void declare_query(Internal::CEQL::Query&& parsed_query,
+                     Types::UniqueQueryId query_id,
+                     std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
+                     const EngineOptions& options) {
     std::lock_guard<std::mutex> lock(queries_lock);
     if (parsed_query.partition_by.partition_attributes.size() != 0) {
       using QueryDirectType = Query::PartitionByQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
                                         std::move(query_id),
-                                        std::move(result_handler));
+                                        std::move(result_handler),
+                                        options);
     } else {
       using QueryDirectType = Query::SimpleQuery;
 
       initialize_query<QueryDirectType>(std::move(parsed_query),
                                         std::move(query_id),
-                                        std::move(result_handler));
+                                        std::move(result_handler),
+                                        options);
     }
   }
 
@@ -195,7 +198,8 @@ class BasePolicy {
   void
   initialize_query(Internal::CEQL::Query&& parsed_query,
                    Types::UniqueQueryId query_id,
-                   std::unique_ptr<Library::Components::ResultHandler>&& result_handler) {
+                   std::unique_ptr<Library::Components::ResultHandler>&& result_handler,
+                   const EngineOptions& options) {
     std::string inproc_receiver_address = "inproc://"
                                           + std::to_string(next_available_inproc_port++);
     QueryCatalog query_catalog(catalog, parsed_query);
@@ -218,7 +222,7 @@ class BasePolicy {
     Query::GenericQuery* query = static_cast<Query::GenericQuery*>(
       std::get<std::unique_ptr<QueryDirectType>>(queries.back()).get());
 
-    query->init(std::move(parsed_query));
+    query->init(std::move(parsed_query), options);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Quarantine

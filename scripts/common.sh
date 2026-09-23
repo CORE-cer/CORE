@@ -31,14 +31,31 @@ function _setArgs() {
       "--profiling")
         PROFILING=on
         ;;
+      "-o" | "--optimizations")
+        # Build with the optional experimental optimizations (needs Z3).
+        OPTIMIZATIONS=on
+        ;;
     esac
     shift
   done
 }
 
+# Directory that holds the build for the current settings. Builds that include
+# the optional optimizations get their own directory, so alternating between the
+# two kinds of build does not reconfigure everything and re-install the
+# dependencies (Z3) each time.
+function get_build_dir() {
+  if [ "$OPTIMIZATIONS" == "on" ]; then
+    echo "build/${BUILD_TYPE}-opt"
+  else
+    echo "build/${BUILD_TYPE}"
+  fi
+}
+
 function build() {
   local triplet="x64-linux-${COMPILER_PROFILE}"
-  local build_dir="build/${BUILD_TYPE}"
+  local build_dir
+  build_dir="$(get_build_dir)"
 
   # Determine parallel jobs
   local jobs
@@ -79,6 +96,12 @@ function build() {
     profiling_flag="ON"
   fi
 
+  # Optional optimizations flag (see CORE_ENABLE_MINTERM_OPTIMIZATION in CMakeLists.txt)
+  local optimizations_flag="OFF"
+  if [ "$OPTIMIZATIONS" == "on" ]; then
+    optimizations_flag="ON"
+  fi
+
   # Configure
   cmake -S . -B "${build_dir}" \
     -G Ninja \
@@ -89,6 +112,7 @@ function build() {
     -DVCPKG_OVERLAY_TRIPLETS="$(pwd)/vcpkg-triplets" \
     -DLOGGING="${LOGGING}" \
     -DPROFILING="${profiling_flag}" \
+    -DCORE_ENABLE_MINTERM_OPTIMIZATION="${optimizations_flag}" \
     ${sanitizer_flags} \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
@@ -109,6 +133,7 @@ SANITIZER=none
 LOGGING=info
 J="all-1"
 PROFILING=off
+OPTIMIZATIONS=off
 export TSAN_OPTIONS="suppressions=tsan_suppressions.txt"
 export ASAN_OPTIONS="suppressions=asan_suppressions.txt"
 

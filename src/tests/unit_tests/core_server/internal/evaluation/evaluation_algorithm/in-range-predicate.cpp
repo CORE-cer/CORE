@@ -17,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of in-range predicate") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",

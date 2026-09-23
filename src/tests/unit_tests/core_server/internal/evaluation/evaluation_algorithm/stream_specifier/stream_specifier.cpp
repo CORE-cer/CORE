@@ -17,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on two streams using stream specifiers") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -84,7 +84,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers") {
 }
 
 TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -151,7 +151,7 @@ TEST_CASE("Evaluation on two streams using stream specifiers and OR") {
 
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and only where on one stream") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -219,7 +219,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and OR with projection on only one "
   "event") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",
@@ -300,7 +300,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation on two streams using stream specifiers and OR with projection on repeated "
   "event") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo s1_stream_info = backend.add_stream_type(
     {"S1",

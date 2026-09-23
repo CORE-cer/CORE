@@ -17,6 +17,7 @@
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/base_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/bounded_wait_time_policy.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/direct_policy.hpp"
@@ -34,6 +35,8 @@ namespace CORE::Internal::Interface::Module::Quarantine {
 class QuarantineManager {
   quill::Logger* logger = quill::Frontend::get_logger("root");
   Catalog& catalog;
+  // Engine-wide options, handed to every query when it is declared.
+  EngineOptions engine_options;
 
   std::atomic<Types::PortNumber> next_available_inproc_port{5000};
 
@@ -43,7 +46,8 @@ class QuarantineManager {
     stream_type_id_to_relevant_policies;
 
  public:
-  QuarantineManager(Catalog& catalog) : catalog(catalog) {}
+  QuarantineManager(Catalog& catalog, EngineOptions engine_options = {})
+      : catalog(catalog), engine_options(engine_options) {}
 
   void
   declare_query(Internal::CEQL::Query&& parsed_query,
@@ -66,7 +70,8 @@ class QuarantineManager {
          parsed_query.select.attribute_projection_stream_event});
       query_policy.declare_query(std::move(parsed_query),
                                  std::move(query_id),
-                                 std::move(result_handler));
+                                 std::move(result_handler),
+                                 engine_options);
     } else {
       QuarantinePolicy quarantine_policy =
         {QuarantinePolicy::QuarantinePolicyType::DirectPolicy, parsed_query.from.streams};

@@ -13,12 +13,23 @@ Key scripts:
 |--------|---------|
 | `scripts/build.sh` | Configure and build |
 | `scripts/build_and_test.sh` | Build + run unit tests and third-party tests |
+| `scripts/build_and_test_optimizations.sh` | Build (with the optional optimizations, see below) + run only the optimization unit tests (Catch2 tag `[Optimizations]`) |
+| `scripts/run_optimization_tests.sh` | Run only the optimization unit tests against an already-built binary (no build step) |
 | `scripts/build_and_valgrind.sh` | Build + run valgrind memory checks |
 | `scripts/clang_format_all_files.sh` | Run clang-format on all source files (exits 1 if files changed) |
 | `scripts/clang_tidy_check_all_files.sh` | Run clang-tidy static analysis (slow) |
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
-| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers, `-b Debug`/`-b Release` for build type) |
+| `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers, `-b Debug`/`-b Release` for build type, `-o` for the optional optimizations) |
+
+### Optional optimizations (minterm tree)
+
+Experimental optimizations live in `src/core_server/internal/optimizations/` and are OFF by default, so the normal build, CI and wheels are unaffected.
+
+- **Build flag**: `-o` / `--optimizations` (any build script) sets the CMake option `CORE_ENABLE_MINTERM_OPTIMIZATION`, which pulls in Z3 as a vcpkg feature (the first build compiles Z3 from source and is slow). Builds with `-o` use their own directory, `build/<type>-opt`.
+- **Runtime switch**: a server chooses how predicates are evaluated with `EngineOptions.predicate_evaluation` (C++) or `pycer.PyOfflineServer(predicate_evaluation=pycer.PyPredicateEvaluation.MINTERM_TREE)` / `PyOnlineServer(..., predicate_evaluation=...)` (Python). The default is the original evaluation; requesting `MINTERM_TREE` on a build without `-o` raises an error at server construction.
+- **Re-run the tests through the optimization**: C++ unit suite with `CORE_TEST_PREDICATE_EVALUATION=minterm_tree ./build/Debug-opt/tests`; e2e with `uv run pytest tests/e2e/ -v --server-mode offline --predicate-evaluation minterm_tree` (pycer built with `scripts/build_pycer.sh -o`). Results must be identical to the default.
+- `scripts/clang_tidy_check_all_files.sh` skips the Z3-dependent files unless `-o` is passed.
 
 ## Testing
 

@@ -19,6 +19,7 @@
 #include "core_server/internal/ceql/query/within.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -49,8 +50,10 @@ class GenericQuery {
         result_handler(std::move(result_handler)),
         blocking_event_queue(blocking_event_queue) {}
 
-  void init(Internal::CEQL::Query&& query) {
-    create_query(std::move(query));
+  // `options` selects optional engine behaviour (see EngineOptions); it is only
+  // needed while the query is being built.
+  void init(Internal::CEQL::Query&& query, const EngineOptions& options) {
+    create_query(std::move(query), options);
     start();
   }
 
@@ -71,7 +74,8 @@ class GenericQuery {
   }
 
  private:
-  virtual void create_query(Internal::CEQL::Query&& query) = 0;
+  virtual void
+  create_query(Internal::CEQL::Query&& query, const EngineOptions& options) = 0;
 
   void start() {
     worker_thread = std::thread([&]() {

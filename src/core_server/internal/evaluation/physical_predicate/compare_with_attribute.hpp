@@ -65,6 +65,10 @@ class CompareWithAttribute : public PhysicalPredicate {
 
   ~CompareWithAttribute() override = default;
 
+  size_t left_position() const { return first_pos; }
+
+  size_t right_position() const { return second_pos; }
+
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithAttribute::eval()");
     const typename ToCoreType<LeftValueType>::type&

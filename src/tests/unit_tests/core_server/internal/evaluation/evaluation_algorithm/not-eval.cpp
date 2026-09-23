@@ -17,7 +17,7 @@
 // NOLINTBEGIN(bugprone-chained-comparison)
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of NOT on the example stream of the papers") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -112,7 +112,7 @@ TEST_CASE("Evaluation of NOT on the example stream of the papers") {
 }
 
 TEST_CASE("Evaluation of contiguos NOT query") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -189,7 +189,7 @@ TEST_CASE("Evaluation of contiguos NOT query") {
 }
 
 TEST_CASE("Evaluation of NOT in a more complex query") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -307,7 +307,7 @@ TEST_CASE("Evaluation of NOT in a more complex query") {
 }
 
 TEST_CASE("Evaluation of sequencing NOT query") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -420,7 +420,7 @@ TEST_CASE("Evaluation of sequencing NOT query") {
 }
 
 TEST_CASE("Evaluation of contiguos interspersed NOT query") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -510,7 +510,7 @@ TEST_CASE("Evaluation of contiguos interspersed NOT query") {
 }
 
 TEST_CASE("Evaluation of NOT FILTER query") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 
@@ -575,7 +575,7 @@ TEST_CASE("Evaluation of NOT FILTER query") {
 }
 
 TEST_CASE("Evaluation of NOT query with +") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = primary_time_stock_declaration(backend);
 

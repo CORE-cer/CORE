@@ -9,17 +9,18 @@ _setArgs "$@"
 
 # Call build function from common
 build
+BUILD_DIR="$(get_build_dir)"
 
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Internal Tests${NORMAL_OUTPUT}"
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
-./build/${BUILD_TYPE}/tests
+./${BUILD_DIR}/tests
 unit_test_result=$?
 
 echo -e "${PURPLE}-------------------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Third Party Library Tests${NORMAL_OUTPUT}"
 echo -e "${PURPLE}-------------------------${NORMAL_OUTPUT}"
-./build/${BUILD_TYPE}/third_party_tests
+./${BUILD_DIR}/third_party_tests
 third_party_test_result=$?
 
 if [ $unit_test_result -eq 0 ] && [ $third_party_test_result -eq 0 ]; then

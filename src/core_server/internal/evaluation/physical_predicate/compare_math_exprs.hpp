@@ -34,6 +34,10 @@ class CompareMathExprs : public PhysicalPredicate {
 
   ~CompareMathExprs() override = default;
 
+  const MathExpr<ValueType>& left_expr() const { return *left; }
+
+  const MathExpr<ValueType>& right_expr() const { return *right; }
+
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareMathExprs::eval()");
     // std::cout << to_string() << std::endl;

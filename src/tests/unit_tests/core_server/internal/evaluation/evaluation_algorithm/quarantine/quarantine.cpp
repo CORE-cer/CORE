@@ -20,7 +20,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers unordered") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   backend.add_stream_type({"Stock",
                            {{"SELL",
@@ -234,7 +234,7 @@ TEST_CASE("Evaluation on the example stream of the papers unordered") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers unordered expected dropped") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   backend.add_stream_type({"Stock",
                            {{"SELL",

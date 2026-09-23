@@ -17,7 +17,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers Within") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -190,7 +190,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -331,7 +331,7 @@ TEST_CASE("Evaluation on the example stream of the papers Within smaller") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers Within smaller + 1") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",

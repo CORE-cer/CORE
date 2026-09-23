@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/interface/engine_options.hpp"
 #include "shared/datatypes/aliases/port_number.hpp"
 
 namespace CORE::Library {
@@ -61,13 +62,18 @@ class ServerConfig {
   std::string options_path;
   std::string csv_data_path;
 
+  // Optional engine behaviour (e.g. experimental optimizations); the defaults
+  // keep the engine's original behaviour.
+  Internal::Interface::EngineOptions engine_options;
+
  public:
   ServerConfig(FixedPorts fixed_ports,
                Types::PortNumber next_open_port,
                std::string query_path,
                std::string declaration_path,
                std::string options_path,
-               std::string csv_data_path)
+               std::string csv_data_path,
+               Internal::Interface::EngineOptions engine_options = {})
       : fixed_ports(fixed_ports),
         next_open_port(next_open_port),
         used_ports{
@@ -77,7 +83,8 @@ class ServerConfig {
         query_path(query_path),
         declaration_path(declaration_path),
         options_path(options_path),
-        csv_data_path(csv_data_path) {}
+        csv_data_path(csv_data_path),
+        engine_options(engine_options) {}
 
   ServerConfig& operator=(const ServerConfig& other) = delete;
   ServerConfig(const ServerConfig& other) = delete;
@@ -94,6 +101,7 @@ class ServerConfig {
     declaration_path = std::move(other.declaration_path);
     csv_data_path = std::move(other.csv_data_path);
     options_path = std::move(other.options_path);
+    engine_options = other.engine_options;
   }
 
   static ServerConfig from_args(int argc, char** argv) {
@@ -168,6 +176,11 @@ class ServerConfig {
   [[nodiscard]] std::string get_csv_data_path() {
     std::lock_guard lock(server_config_mutex);
     return csv_data_path;
+  }
+
+  [[nodiscard]] Internal::Interface::EngineOptions get_engine_options() {
+    std::lock_guard lock(server_config_mutex);
+    return engine_options;
   }
 
  private:

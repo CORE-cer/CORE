@@ -12,5 +12,13 @@
     "quill",
     "readerwriterqueue",
     "argparse"
-  ]
+  ],
+  "features": {
+    "minterm-optimization": {
+      "description": "Z3 SMT solver used by the optional minterm-tree predicate evaluation",
+      "dependencies": [
+        "z3"
+      ]
+    }
+  }
 }

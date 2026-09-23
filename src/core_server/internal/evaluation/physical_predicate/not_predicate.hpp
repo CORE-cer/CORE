@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "cassert"
 #include "physical_predicate.hpp"
@@ -31,5 +32,11 @@ class NotPredicate : public PhysicalPredicate {
   bool eval(Types::EventWrapper& event) override { return !predicate->eval(event); }
 
   std::string to_string() const override { return "NOT " + predicate->to_string(); }
+
+  bool is_compound() const override { return true; }
+
+  std::vector<PhysicalPredicate*> get_children() const override {
+    return {predicate.get()};
+  }
 };
 }  // namespace CORE::Internal::CEA

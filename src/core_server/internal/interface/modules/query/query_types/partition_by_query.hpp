@@ -34,6 +34,7 @@
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/dynamic_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -105,7 +106,7 @@ class PartitionByQuery : public GenericQuery {
   ~PartitionByQuery() { this->stop(); }
 
  private:
-  void create_query(Internal::CEQL::Query&& query) override {
+  void create_query(Internal::CEQL::Query&& query, const EngineOptions& options) override {
     // Stage 1: Transform predicates into physical predicates for tuple evaluation
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
@@ -115,7 +116,10 @@ class PartitionByQuery : public GenericQuery {
     auto predicates = std::move(transformer.physical_predicates);
 
     // Stage 2: Create tuple evaluator for checking event constraints
-    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
+    // The optimized evaluator (if any) is built once here and shared by the
+    // per-partition copies of this PredicateEvaluator.
+    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
+      std::move(predicates), options.predicate_evaluation);
 
     // Stage 3: Convert CEQL formula to logical CEA
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);

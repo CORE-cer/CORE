@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -37,6 +38,13 @@ class PhysicalPredicate {
   }
 
   virtual bool eval(Types::EventWrapper& event_wrapper) = 0;
+
+  // Distinguishes compound boolean-combinator nodes (And/Or/Not) from atomic
+  // leaf predicates, for traversals that need to reach the atoms (e.g. the
+  // minterm-tree optimization) without a full visitor per templated leaf type.
+  virtual bool is_compound() const { return false; }
+
+  virtual std::vector<PhysicalPredicate*> get_children() const { return {}; }
 
   std::string complete_info_string() const {
     std::string out = "admits any event type: " + std::to_string(admits_any_event_type)

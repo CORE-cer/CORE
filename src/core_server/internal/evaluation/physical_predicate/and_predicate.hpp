@@ -48,5 +48,16 @@ class AndPredicate : public PhysicalPredicate {
     }
     return out;
   }
+
+  bool is_compound() const override { return true; }
+
+  std::vector<PhysicalPredicate*> get_children() const override {
+    std::vector<PhysicalPredicate*> children;
+    children.reserve(predicates.size());
+    for (auto& predicate : predicates) {
+      children.push_back(predicate.get());
+    }
+    return children;
+  }
 };
 }  // namespace CORE::Internal::CEA

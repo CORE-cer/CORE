@@ -17,6 +17,19 @@ include(FetchContent)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
+# --- Optional experimental optimizations -------------------------------------
+# The minterm-tree predicate evaluation (src/core_server/internal/optimizations/
+# minterm_tree/) needs the Z3 SMT solver, which vcpkg builds from source (slow
+# and large). It is therefore opt-in: with this option OFF nothing about the
+# build changes, and Z3 is not even downloaded.
+# This has to be decided BEFORE project(), because the vcpkg toolchain reads
+# VCPKG_MANIFEST_FEATURES when project() runs.
+option(CORE_ENABLE_MINTERM_OPTIMIZATION
+       "Build the optional minterm-tree predicate evaluation (requires Z3)" OFF)
+if(CORE_ENABLE_MINTERM_OPTIMIZATION)
+  list(APPEND VCPKG_MANIFEST_FEATURES "minterm-optimization")
+endif()
+
 project (core CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -33,6 +46,9 @@ find_package(re2 REQUIRED)
 find_package(quill REQUIRED)
 find_package(readerwriterqueue REQUIRED)
 find_package(argparse REQUIRED)
+if(CORE_ENABLE_MINTERM_OPTIMIZATION)
+  find_package(Z3 REQUIRED)
+endif()
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
@@ -136,6 +152,17 @@ if (PROFILING)
   target_link_libraries(core PUBLIC debuginfod)
 endif()
 
+if(CORE_ENABLE_MINTERM_OPTIMIZATION)
+  message("Minterm-tree optimization enabled (linking Z3)")
+  # Only the factory translation unit gets the macro, so flipping the option
+  # recompiles that one file instead of the whole engine. See the .cpp for why
+  # the macro must never be visible in headers.
+  set_source_files_properties(
+    src/core_server/internal/optimizations/optimized_predicate_evaluator_factory.cpp
+    PROPERTIES COMPILE_DEFINITIONS CORE_ENABLE_MINTERM_OPTIMIZATION)
+  target_link_libraries(core PUBLIC z3::libz3)
+endif()
+
 # Set debug flag for core
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   target_compile_definitions(core PUBLIC CORE_DEBUG)
@@ -222,6 +249,11 @@ find_package(Catch2 REQUIRED)
 file(GLOB_RECURSE UNIT_TESTING_FILES
      src/tests/unit_tests/*.cpp
 )
+
+if(NOT CORE_ENABLE_MINTERM_OPTIMIZATION)
+  # Those tests include Z3, which is not available in this configuration.
+  list(FILTER UNIT_TESTING_FILES EXCLUDE REGEX "/optimizations/minterm_tree/")
+endif()
 
 file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
      src/tests/third_party_tests/*.cpp

@@ -9,13 +9,14 @@ _setArgs "$@"
 
 # Call build function from common
 build
+BUILD_DIR="$(get_build_dir)"
 
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 echo -e "${PURPLE}Internal Tests with Valgrind${NORMAL_OUTPUT}"
 echo -e "${PURPLE}--------------${NORMAL_OUTPUT}"
 
 valgrind --leak-check=full --suppressions=./valgrind_suppressions.txt \
-    --exit-on-first-error=yes --error-exitcode=1 --gen-suppressions=all ./build/${BUILD_TYPE}/tests
+    --exit-on-first-error=yes --error-exitcode=1 --gen-suppressions=all ./${BUILD_DIR}/tests
 valgrind_unit_test_result=$?
 
 

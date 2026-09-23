@@ -18,7 +18,7 @@
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by single evaluator") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",
@@ -192,7 +192,7 @@ TEST_CASE(
 
 TEST_CASE(
   "Evaluation on the example stream of the papers with partition-by two evaluators") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = backend.add_stream_type(
     {"Stock",

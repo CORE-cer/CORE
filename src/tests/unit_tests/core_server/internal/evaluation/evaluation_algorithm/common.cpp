@@ -4,14 +4,37 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <cstdint>
+#include <cstdlib>
+#include <stdexcept>
 #include <string>
 
 #include "core_server/internal/interface/backend.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
+#include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 
 namespace CORE::Internal::Evaluation::UnitTests {
+Interface::EngineOptions test_engine_options() {
+  Interface::EngineOptions options;
+  // NOLINTNEXTLINE(concurrency-mt-unsafe): read once, before any thread starts
+  const char* requested = std::getenv("CORE_TEST_PREDICATE_EVALUATION");
+  if (requested == nullptr) {
+    return options;
+  }
+  const std::string value = requested;
+  if (value == "minterm_tree") {
+    options.predicate_evaluation = Optimizations::PredicateEvaluationStrategy::MintermTree;
+  } else if (value != "default" && !value.empty()) {
+    throw std::runtime_error(
+      "CORE_TEST_PREDICATE_EVALUATION must be 'default' or "
+      "'minterm_tree', got '"
+      + value + "'");
+  }
+  return options;
+}
+
 bool is_the_same_as(Types::Event event, uint64_t event_type_id, std::string name) {
   if (event.get_event_type_id() != event_type_id) {
     return false;

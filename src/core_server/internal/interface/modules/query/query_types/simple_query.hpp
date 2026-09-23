@@ -15,6 +15,7 @@
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/query_types/generic_query.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -40,7 +41,7 @@ class SimpleQuery : public GenericQuery {
   ~SimpleQuery() { this->stop(); }
 
  private:
-  void create_query(Internal::CEQL::Query&& query) override {
+  void create_query(Internal::CEQL::Query&& query, const EngineOptions& options) override {
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
@@ -48,7 +49,10 @@ class SimpleQuery : public GenericQuery {
 
     auto predicates = std::move(transformer.physical_predicates);
 
-    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(std::move(predicates));
+    // The strategy decides whether events are evaluated with the original loop
+    // or with an optimized evaluator that is built once here, for this query.
+    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
+      std::move(predicates), options.predicate_evaluation);
 
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
     query.where.formula->accept_visitor(visitor);

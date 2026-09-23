@@ -7,6 +7,7 @@
 #include <cassert>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tracy/Tracy.hpp>
 #include <utility>
@@ -14,8 +15,11 @@
 
 #include "core_server/internal/ceql/query/query.hpp"
 #include "core_server/internal/coordination/catalog.hpp"
+#include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantine_policies/quarantine_policy_type.hpp"
 #include "core_server/internal/interface/modules/quarantine/quarantiner.hpp"
+#include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
+#include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
@@ -50,7 +54,20 @@ class Backend {
   }
 
  public:
-  Backend() : logger(get_logger()), quarantine_manager(catalog) {}
+  // With the default EngineOptions the engine behaves exactly as it always has.
+  // Asking for an optimization that this build does not contain fails right
+  // here, rather than later when the first query is declared.
+  explicit Backend(EngineOptions engine_options = {})
+      : logger(get_logger()), quarantine_manager(catalog, engine_options) {
+    if (engine_options.predicate_evaluation
+          == Optimizations::PredicateEvaluationStrategy::MintermTree
+        && !Optimizations::is_minterm_tree_available()) {
+      throw std::runtime_error(
+        "The minterm-tree optimization was requested, but this build of CORE does not "
+        "include it. Rebuild with -DCORE_ENABLE_MINTERM_OPTIMIZATION=ON (the build "
+        "scripts accept -o).");
+    }
+  }
 
   const Catalog& get_catalog_reference() const { return catalog; }
 

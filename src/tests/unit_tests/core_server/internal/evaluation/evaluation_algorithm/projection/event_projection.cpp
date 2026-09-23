@@ -16,7 +16,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation of a query with contiguous events Projection all filters") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -159,7 +159,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection all filters")
 }
 
 TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -300,7 +300,7 @@ TEST_CASE("Evaluation of a query with contiguous events Projection msft, intel")
 }
 
 TEST_CASE("Evaluation of long query with projection") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -509,7 +509,7 @@ TEST_CASE("Evaluation of long query with projection") {
 }
 
 TEST_CASE("Evaluation of long query with projection swapped order") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -721,7 +721,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous sequencing, contiguous "
   "iteration, and "
   "OR Projection") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -867,7 +867,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 Projection") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -962,7 +962,7 @@ TEST_CASE(
 TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over events") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1058,7 +1058,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over BUY "
   "event") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1327,7 +1327,7 @@ TEST_CASE(
   "Evaluation of a query with mix of non contiguous iteration, contiguous "
   "sequencing, and non contiguous sequencing with Projection over events "
   "swapped") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -1423,7 +1423,7 @@ TEST_CASE(
   "Evaluation of a query with mix of contiguous iteration, contiguous "
   "sequencing, non contiguous sequencing, and "
   "OR v2 / none Projection") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 

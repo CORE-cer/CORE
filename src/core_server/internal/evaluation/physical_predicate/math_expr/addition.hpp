@@ -25,6 +25,10 @@ class Addition : public MathExpr<Type> {
 
   ~Addition() override = default;
 
+  const MathExpr<Type>& left_expr() const { return *left; }
+
+  const MathExpr<Type>& right_expr() const { return *right; }
+
   Type eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Addition is only valid for arithmetic vals");

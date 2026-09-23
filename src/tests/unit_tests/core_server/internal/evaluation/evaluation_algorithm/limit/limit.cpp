@@ -16,7 +16,7 @@
 
 namespace CORE::Internal::Evaluation::UnitTests {
 TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 
@@ -139,7 +139,7 @@ TEST_CASE("Evaluation on the example stream of the papers with limit 1") {
 }
 
 TEST_CASE("Evaluation on the example stream of the papers with limit 0") {
-  Internal::Interface::Backend<> backend;
+  Internal::Interface::Backend<> backend{test_engine_options()};
 
   Types::StreamInfo stream_info = basic_stock_declaration(backend);
 

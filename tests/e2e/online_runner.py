@@ -20,7 +20,9 @@ def _allocate_ports(stride: int = 100) -> int:
     return base
 
 
-def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
+def run_dataset_online(
+    dataset: dict, query_files: list[Path], predicate_evaluation
+) -> None:
     """Start a PyOnlineServer, add all queries, send all events, wait, tear down.
 
     Raises on crash or exception — sanitizers will flag issues via exit code.
@@ -30,7 +32,12 @@ def run_dataset_online(dataset: dict, query_files: list[Path]) -> None:
     stream_listener_port = base_port + 1
     starting_query_port = base_port + 2
 
-    with pycer.PyOnlineServer(router_port, stream_listener_port, starting_query_port):
+    with pycer.PyOnlineServer(
+        router_port,
+        stream_listener_port,
+        starting_query_port,
+        predicate_evaluation=predicate_evaluation,
+    ):
         with pycer.PyClient("tcp://localhost", router_port) as client:
             declaration = (dataset["base"] / dataset["declaration"]).read_text()
             stream_info = client.declare_stream(declaration)

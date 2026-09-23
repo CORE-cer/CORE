@@ -48,6 +48,7 @@ class OfflineServer {
  public:
   OfflineServer(ServerConfig&& server_config)
       : server_config(std::move(server_config)),
+        backend(this->server_config.get_engine_options()),
         router{backend,
                backend_mutex,
                this->server_config.get_fixed_ports().router,
@@ -90,6 +91,7 @@ class OnlineServer {
  public:
   OnlineServer(ServerConfig&& server_config)
       : server_config(std::move(server_config)),
+        backend(this->server_config.get_engine_options()),
         result_handler_factory(
           std::make_shared<ResultHandlerFactoryT>(this->server_config)),
         router{backend,

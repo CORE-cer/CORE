@@ -43,6 +43,10 @@ class CompareWithConstant : public PhysicalPredicate {
 
   ~CompareWithConstant() override = default;
 
+  size_t position() const { return pos_to_compare; }
+
+  auto constant() const { return constant_val; }
+
   bool eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithConstant::eval()");
     const typename ToCoreType<ValueType>::type&
