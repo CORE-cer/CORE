@@ -11,11 +11,13 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/optimizations/minterm_tree/atom_extractor.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_generator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/physical_predicate_z3_algebra.hpp"
 #include "core_server/internal/optimizations/minterm_tree/physical_predicate_z3_translator.hpp"
+#include "core_server/internal/optimizations/minterm_tree/speculation_safety.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -48,7 +50,10 @@ namespace CORE::Internal::Optimizations::MintermTree {
 // TWO PHASES.
 //   Build (once per query; Z3 is used only here):
 //     1. Split the predicates: those that admit any event type (stream/event
-//        name checks) are simply evaluated directly at runtime.
+//        name checks), and those containing an atom that could fail if it were
+//        evaluated when the baseline would have skipped it (integer division
+//        by a possibly-zero divisor, see speculation_safety.hpp), are simply
+//        evaluated directly at runtime.
 //     2. For each event type, take the atoms that can apply to it and translate
 //        them into Z3 formulas (see PhysicalPredicateZ3Translator).
 //     3. Refine a tree with those atoms (one split per atom, only where both
@@ -61,9 +66,14 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //        natively to choose left (true) or right (false), down to a leaf.
 //     3. OR the leaf's precomputed bitmask into the result.
 //
-// SAFETY NET. If building a type's tree fails (Z3 cannot decide a formula, or
-// the tree would exceed kMaxLeavesPerTree), events of that type are evaluated
-// directly like the baseline does, so results are always the same.
+// EVALUATION ORDER. The baseline is lazy (And/Or stop early), the tree is not:
+// it evaluates every atom on its path. That is only safe for atoms that cannot
+// fail, which is why the ones that can are kept out of the trees (step 1).
+//
+// SAFETY NET. If building a type's tree fails (Z3 cannot decide a formula, the
+// tree would exceed kMaxLeavesPerTree, or a predicate is shaped in a way the
+// tree cannot reproduce), events of that type are evaluated directly like the
+// baseline does, so results are always the same.
 //
 // CORRECTNESS INVARIANT. The Z3 model may be less precise than reality (leading
 // to fewer shared decisions) but must never be *stricter*: it must not claim a
@@ -223,13 +233,38 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   }
 
   // A predicate is optimizable if it names specific event types and so do all
-  // of its atoms.
+  // of its atoms, and none of its atoms can fail when evaluated speculatively
+  // (a division that the baseline's short-circuit might have guarded).
   static bool is_optimizable(CEA::PhysicalPredicate* predicate) {
     if (predicate->admits_any_event_type) return false;
     std::vector<CEA::PhysicalPredicate*> atoms;
     GetAllAtomicPhysicalPredicates(predicate, atoms);
     for (CEA::PhysicalPredicate* atom : atoms) {
       if (atom->admits_any_event_type) return false;
+      if (!speculation_safe(atom)) return false;
+    }
+    return true;
+  }
+
+  // Can the tree reproduce `node`'s evaluation for events of `event_type`?
+  // The tree only knows the atoms that admit the event type. At runtime, though,
+  // the children of And/Not are evaluated without any type check (eval()), so
+  // such a child that does not admit the type would be evaluated but missing
+  // from the tree. The CEQL visitors never build that shape (an And admits the
+  // intersection of its children's types), but hand-built predicates can.
+  static bool tree_can_reproduce(const CEA::PhysicalPredicate* node,
+                                 Types::UniqueEventTypeId event_type,
+                                 bool gated) {
+    bool admitted = node->admits_any_event_type
+                    || node->admissible_event_types.contains(event_type);
+    // Gated and not admitted: never evaluated, its formula is a constant false.
+    if (gated && !admitted) return true;
+    if (!node->is_compound()) return admitted;
+
+    // Or evaluates its children through operator() (gated); And/Not do not.
+    bool children_gated = dynamic_cast<const CEA::OrPredicate*>(node) != nullptr;
+    for (const CEA::PhysicalPredicate* child : node->get_children()) {
+      if (!tree_can_reproduce(child, event_type, children_gated)) return false;
     }
     return true;
   }
@@ -243,6 +278,13 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // Steps 2-4 of the build phase for one event type.
   void build_tree_for_event_type(Types::UniqueEventTypeId event_type,
                                  const std::vector<CEA::PhysicalPredicate*>& atoms) {
+    for (size_t index : optimizable_indices_) {
+      if (!tree_can_reproduce(predicates_[index].get(), event_type, /*gated=*/true)) {
+        use_direct_evaluation(event_type, "predicate shape the tree cannot reproduce");
+        return;
+      }
+    }
+
     // Step 2: the atoms that can apply to this event type, as Z3 formulas.
     std::vector<CEA::PhysicalPredicate*> selected_atoms;
     std::vector<z3::expr> selected_formulas;

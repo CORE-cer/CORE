@@ -6,7 +6,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -148,6 +151,154 @@ TEST_CASE("describe() summarizes the built trees",
   REQUIRE(summary.find("3 predicates") != std::string::npos);
   REQUIRE(summary.find("3 atoms (1 opaque)") != std::string::npos);
   REQUIRE(summary.find("1 trees") != std::string::npos);
+}
+
+// ---------------------------------------------------------------------------
+// The Z3 algebra against an independent oracle
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// A random Boolean formula over one integer variable `x`, built as a Z3
+// expression and, in parallel, as a plain C++ function. All constants are in
+// [-5, 5], so the formula behaves the same for every |x| beyond 6 and checking
+// x in [-7, 7] by brute force decides its satisfiability without Z3.
+struct OracleFormula {
+  z3::expr expr;
+  std::function<bool(int64_t)> holds;
+};
+
+OracleFormula random_oracle_formula(z3::context& ctx,
+                                    const PhysicalPredicateZ3Algebra& algebra,
+                                    std::mt19937_64& rng,
+                                    int depth) {
+  z3::expr x = ctx.int_const("x");
+  auto uniform = [&](int low, int high) {
+    return std::uniform_int_distribution<int>(low, high)(rng);
+  };
+
+  if (depth == 0 || uniform(0, 99) < 35) {
+    int constant = uniform(-5, 5);
+    switch (uniform(0, 5)) {
+      case 0:
+        return {x == constant, [constant](int64_t v) { return v == constant; }};
+      case 1:
+        return {x != constant, [constant](int64_t v) { return v != constant; }};
+      case 2:
+        return {x < constant, [constant](int64_t v) { return v < constant; }};
+      case 3:
+        return {x <= constant, [constant](int64_t v) { return v <= constant; }};
+      case 4:
+        return {x > constant, [constant](int64_t v) { return v > constant; }};
+      default:
+        return {x >= constant, [constant](int64_t v) { return v >= constant; }};
+    }
+  }
+
+  OracleFormula left = random_oracle_formula(ctx, algebra, rng, depth - 1);
+  switch (uniform(0, 2)) {
+    case 0: {
+      OracleFormula right = random_oracle_formula(ctx, algebra, rng, depth - 1);
+      return {algebra.And(left.expr, right.expr),
+              [l = left.holds, r = right.holds](int64_t v) { return l(v) && r(v); }};
+    }
+    case 1: {
+      OracleFormula right = random_oracle_formula(ctx, algebra, rng, depth - 1);
+      return {algebra.Or(left.expr, right.expr),
+              [l = left.holds, r = right.holds](int64_t v) { return l(v) || r(v); }};
+    }
+    default:
+      return {algebra.Not(left.expr), [l = left.holds](int64_t v) { return !l(v); }};
+  }
+}
+
+bool brute_force_satisfiable(const OracleFormula& formula) {
+  for (int64_t v = -7; v <= 7; v++) {
+    if (formula.holds(v)) return true;
+  }
+  return false;
+}
+
+}  // namespace
+
+TEST_CASE("The Z3 algebra agrees with brute force on random integer formulas",
+          "[MintermTreeEvaluator][Optimizations][Fallback]") {
+  // Exercises And/Or/Not (with their constant shortcuts and simplify()) and the
+  // satisfiability cache together, against an answer computed without Z3.
+  z3::context ctx;
+  PhysicalPredicateZ3Algebra algebra(ctx);
+
+  for (uint64_t seed = 0; seed < 300; seed++) {
+    std::mt19937_64 rng(seed);
+    OracleFormula formula = random_oracle_formula(ctx, algebra, rng, 3);
+    INFO("seed " << seed << ", formula " << formula.expr.to_string());
+
+    bool expected = brute_force_satisfiable(formula);
+    REQUIRE(algebra.isSat(formula.expr) == expected);
+    // A second, cached, answer is the same.
+    REQUIRE(algebra.isSat(formula.expr) == expected);
+
+    // Identities that must hold for any formula.
+    REQUIRE(!algebra.isSat(algebra.And(formula.expr, algebra.Not(formula.expr))));
+    REQUIRE(algebra.isSat(algebra.Or(formula.expr, algebra.Not(formula.expr))));
+    REQUIRE(
+      algebra.isSat(algebra.Not(formula.expr))
+      == brute_force_satisfiable(
+        {algebra.Not(formula.expr), [h = formula.holds](int64_t v) { return !h(v); }}));
+  }
+}
+
+TEST_CASE("The Z3 algebra's constant shortcuts return the other operand or a constant",
+          "[MintermTreeEvaluator][Optimizations][Fallback]") {
+  z3::context ctx;
+  PhysicalPredicateZ3Algebra algebra(ctx);
+  z3::expr x = ctx.int_const("x");
+  z3::expr p = x > 3;
+
+  REQUIRE(z3::eq(algebra.And(algebra.truePredicate(), p), p));
+  REQUIRE(z3::eq(algebra.And(p, algebra.truePredicate()), p));
+  REQUIRE(algebra.And(algebra.falsePredicate(), p).is_false());
+  REQUIRE(algebra.And(p, algebra.falsePredicate()).is_false());
+
+  REQUIRE(z3::eq(algebra.Or(algebra.falsePredicate(), p), p));
+  REQUIRE(z3::eq(algebra.Or(p, algebra.falsePredicate()), p));
+  REQUIRE(algebra.Or(algebra.truePredicate(), p).is_true());
+  REQUIRE(algebra.Or(p, algebra.truePredicate()).is_true());
+
+  REQUIRE(algebra.Not(algebra.truePredicate()).is_false());
+  REQUIRE(algebra.Not(algebra.falsePredicate()).is_true());
+}
+
+TEST_CASE("The Z3 algebra stays usable after reporting 'unknown'",
+          "[MintermTreeEvaluator][Optimizations][Fallback]") {
+  // Guards against: leaving the failed formula asserted in the solver (a missing
+  // pop after the exception), which would poison every later answer.
+  z3::context ctx;
+  PhysicalPredicateZ3Algebra algebra(ctx, /*timeout_ms=*/1);
+  z3::expr x = ctx.int_const("x");
+  z3::expr y = ctx.int_const("y");
+  z3::expr z = ctx.int_const("z");
+
+  z3::expr hard = (x * x * x + y * y * y == z * z * z) && x > 0 && y > 0 && z > 0;
+  REQUIRE_THROWS_AS(algebra.isSat(hard), SatUnknownError);
+
+  // Easy formulas afterwards, satisfiable and not.
+  REQUIRE(algebra.isSat(x > 5 && x < 10));
+  REQUIRE(!algebra.isSat(x > 5 && x < 3));
+  // And the failure is not cached as an answer: it fails again, not "unsat".
+  REQUIRE_THROWS_AS(algebra.isSat(hard), SatUnknownError);
+}
+
+TEST_CASE("The default partition checks work on real Z3 interval formulas",
+          "[MintermTreeEvaluator][Optimizations][Fallback]") {
+  z3::context ctx;
+  PhysicalPredicateZ3Algebra algebra(ctx);
+  z3::expr x = ctx.int_const("x");
+
+  REQUIRE(algebra.isPartition({x < 0, x >= 0 && x < 10, x >= 10}));
+  REQUIRE(!algebra.isPartition({x < 0, x >= 0 && x <= 10, x >= 10}));  // overlap at 10
+  REQUIRE(!algebra.isPartition({x < 0, x > 0}));                       // gap at 0
+  REQUIRE(!algebra.isPartition({x < 0, x > 5 && x < 3}));              // an empty member
 }
 
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests

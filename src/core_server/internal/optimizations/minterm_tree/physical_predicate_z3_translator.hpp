@@ -53,6 +53,10 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //     double, and IN RANGE over them. NaN is modeled explicitly (see Term).
 //   - int64_t + and - between attributes/literals, and * by a literal
 //     (linear arithmetic; assumes no int64_t overflow).
+//   - an int64_t attribute used where a double is expected (int vs double
+//     comparisons, int attributes inside double expressions). C++ converts by
+//     rounding, which is exact only for |value| <= 2^53, so beyond that range
+//     the converted value is only bounded, not known (see int_attribute_as_double).
 // Everything else becomes an OPAQUE atom: a fresh, unconstrained Z3 boolean.
 // An opaque atom is still evaluated natively at runtime; it just cannot be
 // related to other atoms. Opaque on purpose:
@@ -126,6 +130,38 @@ class PhysicalPredicateZ3Translator {
   // counts once.
   size_t opaque_atom_count() const { return opaque_atoms_.size(); }
 
+  // The Z3 variables that stand for an event's attribute values. They are
+  // public so that tests can pin a concrete event's values onto a translated
+  // formula and check it against native evaluation.
+
+  // One Z3 variable per (event type, attribute position, sort), shared by all
+  // atoms so that Z3 can see they talk about the same attribute.
+  z3::expr
+  attribute_symbol(Types::UniqueEventTypeId event_type, size_t pos, bool is_real) {
+    AttributeKey key{event_type, pos, is_real};
+    auto cached = attribute_symbol_cache_.find(key);
+    if (cached != attribute_symbol_cache_.end()) return cached->second;
+
+    std::string name = "attr_" + std::to_string(event_type) + "_" + std::to_string(pos)
+                       + (is_real ? "_r" : "_i");
+    z3::expr symbol = is_real ? ctx_.real_const(name.c_str())
+                              : ctx_.int_const(name.c_str());
+    attribute_symbol_cache_.emplace(key, symbol);
+    return symbol;
+  }
+
+  // The "this double attribute is NaN" flag for an attribute.
+  z3::expr nan_flag(Types::UniqueEventTypeId event_type, size_t pos) {
+    AttributeKey key{event_type, pos, true};
+    auto cached = nan_flag_cache_.find(key);
+    if (cached != nan_flag_cache_.end()) return cached->second;
+
+    std::string name = "nan_" + std::to_string(event_type) + "_" + std::to_string(pos);
+    z3::expr flag = ctx_.bool_const(name.c_str());
+    nan_flag_cache_.emplace(key, flag);
+    return flag;
+  }
+
  private:
   // A translated numeric operand. `may_be_nan` is only set for double
   // attributes: NaN makes every comparison false except !=, which plain real
@@ -172,10 +208,14 @@ class PhysicalPredicateZ3Translator {
     }
   };
 
+  // Every integer with |value| <= 2^53 is exactly representable as a double.
+  static constexpr int64_t kMaxExactInt = int64_t{1} << 53;
+
   z3::context& ctx_;
   std::unordered_map<AtomKey, z3::expr, AtomKeyHash> atom_cache_;
   std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> attribute_symbol_cache_;
   std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> nan_flag_cache_;
+  std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> conversion_symbol_cache_;
   uint64_t opaque_counter_ = 0;
   std::unordered_set<const CEA::PhysicalPredicate*> opaque_atoms_;
 
@@ -205,34 +245,6 @@ class PhysicalPredicateZ3Translator {
     return ctx_.bool_const(name.c_str());
   }
 
-  // One Z3 variable per (event type, attribute position, sort), shared by all
-  // atoms so that Z3 can see they talk about the same attribute.
-  z3::expr
-  attribute_symbol(Types::UniqueEventTypeId event_type, size_t pos, bool is_real) {
-    AttributeKey key{event_type, pos, is_real};
-    auto cached = attribute_symbol_cache_.find(key);
-    if (cached != attribute_symbol_cache_.end()) return cached->second;
-
-    std::string name = "attr_" + std::to_string(event_type) + "_" + std::to_string(pos)
-                       + (is_real ? "_r" : "_i");
-    z3::expr symbol = is_real ? ctx_.real_const(name.c_str())
-                              : ctx_.int_const(name.c_str());
-    attribute_symbol_cache_.emplace(key, symbol);
-    return symbol;
-  }
-
-  // The "this double attribute is NaN" flag for an attribute.
-  z3::expr nan_flag(Types::UniqueEventTypeId event_type, size_t pos) {
-    AttributeKey key{event_type, pos, true};
-    auto cached = nan_flag_cache_.find(key);
-    if (cached != nan_flag_cache_.end()) return cached->second;
-
-    std::string name = "nan_" + std::to_string(event_type) + "_" + std::to_string(pos);
-    z3::expr flag = ctx_.bool_const(name.c_str());
-    nan_flag_cache_.emplace(key, flag);
-    return flag;
-  }
-
   // An attribute as an operand. ValueType is the attribute's own C++ type.
   template <typename ValueType>
   Term attribute_term(Types::UniqueEventTypeId event_type, size_t pos) {
@@ -240,6 +252,59 @@ class PhysicalPredicateZ3Translator {
       return Term{attribute_symbol(event_type, pos, true), nan_flag(event_type, pos)};
     } else {
       return Term{attribute_symbol(event_type, pos, false), std::nullopt};
+    }
+  }
+
+  // An int64_t attribute as the double C++ would convert it to.
+  //
+  // C++ rounds the conversion to the nearest double, which is exact only while
+  // |value| <= 2^53 (beyond it, neighbouring ints collapse: (double)(2^53 + 1)
+  // == 2^53). Z3's to_real is always exact, so using it alone would let the
+  // solver decide `Integer1 > Double1` differently from the real evaluation. So:
+  //   |value| <= 2^53   the exact value, to_real(value);
+  //   value  >  2^53    some real >= 2^53   (rounding is monotone and 2^53 is
+  //                     itself a double, so the result cannot be smaller);
+  //   value  < -2^53    some real <= -2^53  (likewise).
+  // "Some real" is a free variable, shared by every atom reading the same
+  // attribute since they all see the same rounded value. This only ever makes
+  // the model less precise (more outcomes possible), never stricter, and it
+  // costs nothing at runtime.
+  Term int_attribute_as_double(Types::UniqueEventTypeId event_type, size_t pos) {
+    z3::expr integer = attribute_symbol(event_type, pos, false);
+    z3::expr max_exact = ctx_.int_val(kMaxExactInt);
+    z3::expr min_exact = ctx_.int_val(-kMaxExactInt);
+    z3::expr max_exact_real = z3::to_real(max_exact);
+    z3::expr min_exact_real = z3::to_real(min_exact);
+
+    z3::expr rounded = conversion_symbol(event_type, pos);
+    z3::expr at_least_max = z3::ite(rounded >= max_exact_real, rounded, max_exact_real);
+    z3::expr at_most_min = z3::ite(rounded <= min_exact_real, rounded, min_exact_real);
+    return Term{z3::ite(integer > max_exact,
+                        at_least_max,
+                        z3::ite(integer < min_exact, at_most_min, z3::to_real(integer))),
+                std::nullopt};
+  }
+
+  // The unconstrained "rounded value" of an int attribute beyond 2^53.
+  z3::expr conversion_symbol(Types::UniqueEventTypeId event_type, size_t pos) {
+    AttributeKey key{event_type, pos, true};
+    auto cached = conversion_symbol_cache_.find(key);
+    if (cached != conversion_symbol_cache_.end()) return cached->second;
+
+    std::string name = "conv_" + std::to_string(event_type) + "_" + std::to_string(pos);
+    z3::expr symbol = ctx_.real_const(name.c_str());
+    conversion_symbol_cache_.emplace(key, symbol);
+    return symbol;
+  }
+
+  // One operand of an attribute-vs-attribute comparison. An int64_t compared
+  // with a double is converted to double first (as C++ does).
+  template <typename Type, typename OtherType>
+  Term comparison_operand(Types::UniqueEventTypeId event_type, size_t pos) {
+    if constexpr (std::is_same_v<Type, int64_t> && std::is_same_v<OtherType, double>) {
+      return int_attribute_as_double(event_type, pos);
+    } else {
+      return attribute_term<Type>(event_type, pos);
     }
   }
 
@@ -262,13 +327,13 @@ class PhysicalPredicateZ3Translator {
     return Term{ctx_.real_val(std::string(buffer, end).c_str()), std::nullopt};
   }
 
-  // Z3 needs both sides of a comparison to share a sort: when an int64_t and a
-  // double are mixed, the integer side is converted to a real.
+  // Z3 needs both sides of a comparison to share a sort. Every int64_t -> double
+  // conversion is made explicitly beforehand (int_attribute_as_double), so a mix
+  // reaching this point would be an exact, and therefore unsound, conversion.
+  // Refuse it: translate_atom turns the exception into an opaque atom.
   static std::pair<z3::expr, z3::expr> promote(z3::expr lhs, z3::expr rhs) {
-    if (lhs.is_real() && rhs.is_int()) {
-      rhs = z3::to_real(rhs);
-    } else if (lhs.is_int() && rhs.is_real()) {
-      lhs = z3::to_real(lhs);
+    if (lhs.is_real() != rhs.is_real()) {
+      throw z3::exception("int and real operands must be converted explicitly");
     }
     return {lhs, rhs};
   }
@@ -313,14 +378,13 @@ class PhysicalPredicateZ3Translator {
       return literal_term(static_cast<ValueType>(literal->val));
     }
 
-    // An int64_t attribute; in a double expression it is converted to a real
-    // (exact for |value| < 2^53, the same range where the C++ cast is exact).
+    // An int64_t attribute; in a double expression it is converted the way C++
+    // converts it (see int_attribute_as_double).
     if (const auto* attr = dynamic_cast<const CEA::Attribute<ValueType, int64_t>*>(&node)) {
-      z3::expr symbol = attribute_symbol(event_type, attr->pos, false);
       if constexpr (std::is_same_v<ValueType, double>) {
-        return Term{z3::to_real(symbol), std::nullopt};
+        return int_attribute_as_double(event_type, attr->pos);
       } else {
-        return Term{symbol, std::nullopt};
+        return Term{attribute_symbol(event_type, attr->pos, false), std::nullopt};
       }
     }
 
@@ -406,8 +470,10 @@ class PhysicalPredicateZ3Translator {
       typed = dynamic_cast<const CEA::CompareWithAttribute<Comp, LeftType, RightType>*>(
         atom);
     if (!typed) return std::nullopt;
-    return compare<Comp>(attribute_term<LeftType>(event_type, typed->left_position()),
-                         attribute_term<RightType>(event_type, typed->right_position()));
+    return compare<Comp>(comparison_operand<LeftType, RightType>(event_type,
+                                                                 typed->left_position()),
+                         comparison_operand<RightType, LeftType>(event_type,
+                                                                 typed->right_position()));
   }
 
   // `math_expr <Comp> math_expr`

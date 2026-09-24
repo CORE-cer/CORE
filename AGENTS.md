@@ -30,6 +30,11 @@ Experimental optimizations live in `src/core_server/internal/optimizations/` and
 - **Runtime switch**: a server chooses how predicates are evaluated with `EngineOptions.predicate_evaluation` (C++) or `pycer.PyOfflineServer(predicate_evaluation=pycer.PyPredicateEvaluation.MINTERM_TREE)` / `PyOnlineServer(..., predicate_evaluation=...)` (Python). The default is the original evaluation; requesting `MINTERM_TREE` on a build without `-o` raises an error at server construction.
 - **Re-run the tests through the optimization**: C++ unit suite with `CORE_TEST_PREDICATE_EVALUATION=minterm_tree ./build/Debug-opt/tests`; e2e with `uv run pytest tests/e2e/ -v --server-mode offline --predicate-evaluation minterm_tree` (pycer built with `scripts/build_pycer.sh -o`). Results must be identical to the default.
 - `scripts/clang_tidy_check_all_files.sh` skips the Z3-dependent files unless `-o` is passed.
+- **What the `[Optimizations]` tests cover** (`src/tests/unit_tests/core_server/internal/optimizations/`). The baseline `PredicateEvaluator` is the ground truth everywhere: the tests compare the optimized output with it, or check an internal property of the module.
+  - `tree_core/` (no Z3, so it also runs in the default build): the generic tree, algebra defaults, atom extractor and the speculation-safety analysis, checked against a toy algebra whose answers are brute-forced.
+  - `minterm_tree/` (needs `-o`): `translator` (each atom's Z3 formula against native evaluation), `hazards` (evaluation-order problems such as a guarded division), `structure` (leaf counts, edge cases, leaf cap fallback), `semantics` and the original evaluator tests, `fallback` (the Z3 algebra), and `fuzz` (seeded random predicates and events).
+  - `optimized_engine_parity.cpp` and `optimized_predicate_evaluator_factory.cpp`: the option reaching real queries and servers. They are skipped or adapted when the optimization is not built.
+  - The fuzz test runs 100 seeds by default; set `CORE_MINTERM_FUZZ_SEEDS=1000` (or more) to hunt for bugs. A failure prints its seed and predicates.
 
 ## Testing
 
