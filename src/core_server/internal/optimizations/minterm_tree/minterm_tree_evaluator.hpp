@@ -57,7 +57,9 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //        name checks), and those containing an atom that could fail if it were
 //        evaluated when the baseline would have skipped it (integer division
 //        by a possibly-zero divisor, see speculation_safety.hpp), are simply
-//        evaluated directly at runtime.
+//        evaluated directly at runtime. (An Or that admits any event type but
+//        whose atoms all name theirs is not one of those, see
+//        direct_evaluation_reason.)
 //     2. For each event type, take the atoms that can apply to it and translate
 //        them into Z3 formulas (see PhysicalPredicateZ3Translator).
 //     3. Refine a tree with those atoms (one split per atom, only where both
@@ -310,10 +312,25 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // do all of its atoms, and none of its atoms can fail when evaluated
   // speculatively (a division that the baseline's short-circuit might have
   // guarded).
+  //
+  // One predicate that admits any event type is nevertheless handled by the trees:
+  // an Or. The CEQL visitor for weakly typed filters builds `alias[a OR b]` with
+  // the constructor that admits every event type (it computes the union of the
+  // children's event types but does not apply it). That is harmless at runtime
+  // because an Or evaluates its children through operator(), which returns false
+  // for event types a child does not admit, so the Or is false for every event
+  // type none of its atoms names. The translation mirrors exactly that (gated
+  // children, see PhysicalPredicate::translate), so as long as every atom names
+  // its event types the trees can handle it. Any other predicate that admits
+  // every event type (stream/event name checks, ...) depends on the event itself
+  // and stays direct.
   static std::optional<std::string>
   direct_evaluation_reason(CEA::PhysicalPredicate* predicate) {
     const std::string admits_any = "it admits any event type";
-    if (predicate->admits_any_event_type) return admits_any;
+    if (predicate->admits_any_event_type
+        && dynamic_cast<const CEA::OrPredicate*>(predicate) == nullptr) {
+      return admits_any;
+    }
     std::vector<CEA::PhysicalPredicate*> atoms;
     GetAllAtomicPhysicalPredicates(predicate, atoms);
     for (CEA::PhysicalPredicate* atom : atoms) {
@@ -427,7 +444,13 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     std::vector<std::pair<size_t, z3::expr>> predicate_formulas;
     for (size_t index : optimizable_indices_) {
       const CEA::PhysicalPredicate* predicate = predicates_[index].get();
-      if (!predicate->admissible_event_types.contains(event_type)) continue;
+      // A predicate that admits every event type (a weakly typed Or, see
+      // direct_evaluation_reason) applies here too: its formula is false unless
+      // one of its atoms names this event type.
+      if (!predicate->admits_any_event_type
+          && !predicate->admissible_event_types.contains(event_type)) {
+        continue;
+      }
       predicate_formulas.emplace_back(index,
                                       translator_.translate_formula(predicate,
                                                                     event_type));
