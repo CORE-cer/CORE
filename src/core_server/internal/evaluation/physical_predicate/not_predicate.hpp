@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "cassert"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -30,6 +32,14 @@ class NotPredicate : public PhysicalPredicate {
   ~NotPredicate() override = default;
 
   bool eval(Types::EventWrapper& event) override { return !predicate->eval(event); }
+
+  // The negation of the child. Not evaluates it with eval(), which does not check
+  // event types, so it is translated ungated.
+  FormulaBuilder::Handle
+  translate_ungated(FormulaBuilder& builder,
+                    Types::UniqueEventTypeId event_type) const override {
+    return builder.negation(predicate->translate(builder, event_type, /*gated=*/false));
+  }
 
   std::string to_string() const override { return "NOT " + predicate->to_string(); }
 

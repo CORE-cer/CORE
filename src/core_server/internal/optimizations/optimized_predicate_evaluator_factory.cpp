@@ -18,6 +18,7 @@
 #include <quill/Logger.h>
 
 #include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
+#include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
 #endif
 
 namespace CORE::Internal::Optimizations {
@@ -47,6 +48,10 @@ std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
       quill::Logger* logger = quill::Frontend::get_logger("root");
       if (logger != nullptr) {
         LOG_INFO(logger, "Predicate evaluation: {}", evaluator->describe());
+        // Debugging aid: CORE_PRINT_MINTERM_TREES=1 also logs the trees built.
+        if (MintermTree::print_trees_requested()) {
+          LOG_INFO(logger, "Minterm trees:\n{}", evaluator->trees_to_string());
+        }
       }
       return evaluator;
 #else

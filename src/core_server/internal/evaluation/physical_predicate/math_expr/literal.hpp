@@ -1,10 +1,14 @@
 #pragma once
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -29,6 +33,18 @@ class Literal : public MathExpr<Type> {
   }
 
   Type eval(Types::EventWrapper& /*event*/) override { return val; }
+
+  std::optional<FormulaBuilder::Handle>
+  translate(FormulaBuilder& builder,
+            Types::UniqueEventTypeId /*event_type*/) const override {
+    if constexpr (std::is_same_v<Type, int64_t>) {
+      return builder.int_literal(val);
+    } else if constexpr (std::is_same_v<Type, double>) {
+      return builder.double_literal(val);  // nullopt when not finite
+    } else {
+      return std::nullopt;  // strings, booleans, dates: not modeled
+    }
+  }
 
   std::string to_string() const override {
     if constexpr (std::is_same_v<Type, std::string_view>) {

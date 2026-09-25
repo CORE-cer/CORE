@@ -5,7 +5,10 @@
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -19,6 +22,7 @@
 #include "core_server/internal/optimizations/minterm_tree/physical_predicate_z3_translator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/speculation_safety.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree.hpp"
+#include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/bitset.hpp"
@@ -164,6 +168,71 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     return out;
   }
 
+  // The trees this evaluator built, in an orderly, readable form, for debugging
+  // (mostly from unit tests: it shows what the optimization built for a set of
+  // predicates). For example, for the predicates `x > 100`, `x > 50`, `x < 10`
+  // on one event type:
+  //
+  //   MintermTreeEvaluator: 3 predicates (0 evaluated directly), 3 atoms (0 opaque), ...
+  //
+  //   Predicates
+  //     [0] Event[1] > 100   (tree)
+  //     [1] Event[1] > 50   (tree)
+  //     [2] Event[1] < 10   (tree)
+  //
+  //   Event type 0: 4 leaves, 3 atoms
+  //     Event[1] > 100 ?
+  //     +-- true:  leaf #0 -> p0 p1   region: ...
+  //     `-- false: Event[1] > 50 ?
+  //         +-- true:  leaf #1 -> p1   region: ...
+  //         `-- false: Event[1] < 10 ?
+  //             +-- true:  leaf #2 -> p2   region: ...
+  //             `-- false: leaf #3 -> (none)   region: ...
+  //
+  // Each internal node is the condition tested for an event (left = true, right
+  // = false), each leaf lists the predicates (p<index>) that hold in its region.
+  // Opaque atoms are tagged [opaque]; predicates and event types evaluated
+  // directly say why. Read-only: printing never changes how events are evaluated.
+  std::string trees_to_string(const TreePrintOptions& options = {}) const {
+    std::ostringstream out;
+    print_trees(out, options);
+    return out.str();
+  }
+
+  void print_trees(std::ostream& out, const TreePrintOptions& options = {}) const {
+    out << describe() << "\n\nPredicates\n";
+    for (size_t i = 0; i < predicates_.size(); i++) {
+      out << "  [" << i << "] " << predicates_[i]->to_string() << "   ";
+      auto reason = catch_all_reasons_.find(i);
+      if (reason != catch_all_reasons_.end()) {
+        out << "(direct: " << reason->second << ")\n";
+      } else {
+        out << "(tree)\n";
+      }
+    }
+
+    std::set<Types::UniqueEventTypeId> event_types;
+    for (const auto& [event_type, tree] : trees_) event_types.insert(event_type);
+    for (const auto& [event_type, reason] : direct_event_types_)
+      event_types.insert(event_type);
+
+    MintermTreeNode<z3::expr>::Printer printer = make_printer(options);
+    for (Types::UniqueEventTypeId event_type : event_types) {
+      out << "\nEvent type " << event_type;
+      auto tree = trees_.find(event_type);
+      if (tree == trees_.end()) {
+        out << ": evaluated directly (" << direct_event_types_.at(event_type) << ")\n";
+        continue;
+      }
+      std::vector<const MintermTreeNode<z3::expr>*> leaves;
+      tree->second->collectLeaves(leaves);
+      std::set<const CEA::PhysicalPredicate*> atoms;
+      collect_split_atoms(*tree->second, atoms);
+      out << ": " << leaves.size() << " leaves, " << atoms.size() << " atoms\n";
+      tree->second->print(out, printer, "  ");
+    }
+  }
+
  private:
   // Declaration order matters for destruction: the trees (which hold Z3
   // expressions) must be destroyed before the Z3 context they belong to, and
@@ -176,6 +245,8 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
 
   // Predicates evaluated directly on every event (index, predicate).
   std::vector<std::pair<size_t, CEA::PhysicalPredicate*>> catch_all_;
+  // Why each of those is evaluated directly (index -> reason, for printing).
+  std::map<size_t, std::string> catch_all_reasons_;
   // Indices of the predicates the trees are responsible for.
   std::vector<size_t> optimizable_indices_;
   // One minterm tree per event type.
@@ -195,11 +266,13 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     std::vector<CEA::PhysicalPredicate*> optimizable_roots;
     for (size_t i = 0; i < predicates_.size(); i++) {
       CEA::PhysicalPredicate* predicate = predicates_[i].get();
-      if (is_optimizable(predicate)) {
+      std::optional<std::string> reason = direct_evaluation_reason(predicate);
+      if (!reason.has_value()) {
         optimizable_indices_.push_back(i);
         optimizable_roots.push_back(predicate);
       } else {
         catch_all_.emplace_back(i, predicate);
+        catch_all_reasons_[i] = *reason;
       }
     }
 
@@ -232,18 +305,73 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     }
   }
 
-  // A predicate is optimizable if it names specific event types and so do all
-  // of its atoms, and none of its atoms can fail when evaluated speculatively
-  // (a division that the baseline's short-circuit might have guarded).
-  static bool is_optimizable(CEA::PhysicalPredicate* predicate) {
-    if (predicate->admits_any_event_type) return false;
+  // Why a predicate must be evaluated directly, or nullopt if the trees can
+  // handle it. A predicate is optimizable if it names specific event types and so
+  // do all of its atoms, and none of its atoms can fail when evaluated
+  // speculatively (a division that the baseline's short-circuit might have
+  // guarded).
+  static std::optional<std::string>
+  direct_evaluation_reason(CEA::PhysicalPredicate* predicate) {
+    const std::string admits_any = "it admits any event type";
+    if (predicate->admits_any_event_type) return admits_any;
     std::vector<CEA::PhysicalPredicate*> atoms;
     GetAllAtomicPhysicalPredicates(predicate, atoms);
     for (CEA::PhysicalPredicate* atom : atoms) {
-      if (atom->admits_any_event_type) return false;
-      if (!speculation_safe(atom)) return false;
+      if (atom->admits_any_event_type) return admits_any;
+      if (!speculation_safe(atom)) {
+        return "an atom could fail if evaluated early (integer division or modulo by an "
+               "unknown divisor)";
+      }
     }
-    return true;
+    return std::nullopt;
+  }
+
+  // ---- Printing -------------------------------------------------------------
+
+  // The distinct atoms tested somewhere in a tree.
+  static void collect_split_atoms(const MintermTreeNode<z3::expr>& node,
+                                  std::set<const CEA::PhysicalPredicate*>& atoms) {
+    if (node.isLeaf()) return;
+    atoms.insert(node.split_atom);
+    collect_split_atoms(*node.left, atoms);
+    collect_split_atoms(*node.right, atoms);
+  }
+
+  // A formula on one line, cut to `max_chars` (Z3 prints multi-line, indented).
+  static std::string compact(const std::string& text, size_t max_chars) {
+    std::string out;
+    for (char c : text) {
+      bool space = c == ' ' || c == '\n' || c == '\t';
+      if (space && (out.empty() || out.back() == ' ')) continue;
+      out.push_back(space ? ' ' : c);
+    }
+    if (!out.empty() && out.back() == ' ') out.pop_back();
+    if (out.size() > max_chars) out = out.substr(0, max_chars) + "...";
+    return out;
+  }
+
+  MintermTreeNode<z3::expr>::Printer make_printer(const TreePrintOptions& options) const {
+    MintermTreeNode<z3::expr>::Printer printer;
+    printer.atom_label = [this](const CEA::PhysicalPredicate* atom) {
+      return atom->to_string() + (translator_.is_opaque(atom) ? " [opaque]" : "");
+    };
+    printer.leaf_label = [this](const MintermTreeNode<z3::expr>& leaf) {
+      std::string bits;
+      for (size_t i = 0; i < predicates_.size() && i < leaf.satisfied_predicates.size();
+           i++) {
+        if (!leaf.satisfied_predicates.test(i)) continue;
+        if (!bits.empty()) bits += " ";
+        bits += "p" + std::to_string(i);
+      }
+      return bits.empty() ? std::string("(none)") : bits;
+    };
+    if (options.show_regions) {
+      printer.region_label =
+        [max_chars = options.max_region_chars](const z3::expr& region) {
+          return compact(region.to_string(), max_chars);
+        };
+    }
+    return printer;
   }
 
   // Can the tree reproduce `node`'s evaluation for events of `event_type`?

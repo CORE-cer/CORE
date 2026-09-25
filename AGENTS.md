@@ -34,6 +34,8 @@ Experimental optimizations live in `src/core_server/internal/optimizations/` and
   - `tree_core/` (no Z3, so it also runs in the default build): the generic tree, algebra defaults, atom extractor and the speculation-safety analysis, checked against a toy algebra whose answers are brute-forced.
   - `minterm_tree/` (needs `-o`): `translator` (each atom's Z3 formula against native evaluation), `hazards` (evaluation-order problems such as a guarded division), `structure` (leaf counts, edge cases, leaf cap fallback), `semantics` and the original evaluator tests, `fallback` (the Z3 algebra), and `fuzz` (seeded random predicates and events).
   - `optimized_engine_parity.cpp` and `optimized_predicate_evaluator_factory.cpp`: the option reaching real queries and servers. They are skipped or adapted when the optimization is not built.
+  - `tree_core/formula_translation.cpp` (no Z3) tests the `translate` methods that physical predicates use to describe themselves through the Z3-free `FormulaBuilder` (`evaluation/physical_predicate/formula_builder.hpp`); the Z3 side is `PhysicalPredicateZ3Translator`.
+  - To see the trees the optimization builds, run any test with `CORE_PRINT_MINTERM_TREES=1` (or call `MintermTreeEvaluator::trees_to_string()`); `tree_print.cpp` and `minterm_tree_print.cpp` test the printer.
   - The fuzz test runs 100 seeds by default; set `CORE_MINTERM_FUZZ_SEEDS=1000` (or more) to hunt for bugs. A failure prints its seed and predicates.
 
 ## Testing

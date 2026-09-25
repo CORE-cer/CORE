@@ -2,11 +2,16 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
+#include <type_traits>
 
+#include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -48,6 +53,30 @@ class InRangePredicate : public PhysicalPredicate {
   bool eval(Types::EventWrapper& event) override {
     return (left->eval(event) >= lower_bound->eval(event))
            && (left->eval(event) <= upper_bound->eval(event));
+  }
+
+  // `value IN RANGE (lower, upper)`, both bounds inclusive, over int64_t or
+  // double: value >= lower AND value <= upper.
+  std::optional<FormulaBuilder::Handle>
+  translate_atom(FormulaBuilder& builder,
+                 Types::UniqueEventTypeId event_type) const override {
+    if constexpr (std::is_same_v<ValueType, int64_t> || std::is_same_v<ValueType, double>) {
+      std::optional<FormulaBuilder::Handle> value = left->translate(builder, event_type);
+      std::optional<FormulaBuilder::Handle> lower = lower_bound->translate(builder,
+                                                                           event_type);
+      std::optional<FormulaBuilder::Handle> upper = upper_bound->translate(builder,
+                                                                           event_type);
+      if (!value || !lower || !upper) return std::nullopt;
+      FormulaBuilder::Handle above_lower = builder.compare(ComparisonType::GREATER_EQUALS,
+                                                           *value,
+                                                           *lower);
+      FormulaBuilder::Handle below_upper = builder.compare(ComparisonType::LESS_EQUALS,
+                                                           *value,
+                                                           *upper);
+      return builder.conjunction(above_lower, below_upper);
+    } else {
+      return std::nullopt;
+    }
   }
 
   std::string to_string() const override {

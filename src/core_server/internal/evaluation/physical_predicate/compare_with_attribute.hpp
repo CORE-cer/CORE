@@ -1,17 +1,22 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <ctime>
 #include <cwchar>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <tracy/Tracy.hpp>
+#include <type_traits>
 
 #include "cassert"
 #include "comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -99,6 +104,28 @@ class CompareWithAttribute : public PhysicalPredicate {
     }
   }
 
+  // `attribute <Comp> attribute`, when both are int64_t or double. An int64_t
+  // compared with a double is converted to double first, as C++ does.
+  std::optional<FormulaBuilder::Handle>
+  translate_atom(FormulaBuilder& builder,
+                 Types::UniqueEventTypeId event_type) const override {
+    constexpr bool kNumeric = (std::is_same_v<LeftValueType, int64_t>
+                               || std::is_same_v<LeftValueType, double>)
+                              && (std::is_same_v<RightValueType, int64_t>
+                                  || std::is_same_v<RightValueType, double>);
+    if constexpr (kNumeric) {
+      FormulaBuilder::Handle left = operand<LeftValueType, RightValueType>(builder,
+                                                                           event_type,
+                                                                           first_pos);
+      FormulaBuilder::Handle right = operand<RightValueType, LeftValueType>(builder,
+                                                                            event_type,
+                                                                            second_pos);
+      return builder.compare(Comp, left, right);
+    } else {
+      return std::nullopt;
+    }
+  }
+
   std::string to_string() const override {
     if constexpr (Comp == ComparisonType::EQUALS)
       return "Event[" + std::to_string(first_pos) + "] == Event["
@@ -120,6 +147,22 @@ class CompareWithAttribute : public PhysicalPredicate {
              + std::to_string(second_pos) + "]";
     else
       assert(false && "to_string() not implemented for some ComparisonType");
+  }
+
+ private:
+  // One side of the comparison; `Other` is the type of the other side.
+  template <typename Type, typename Other>
+  static FormulaBuilder::Handle
+  operand(FormulaBuilder& builder, Types::UniqueEventTypeId event_type, size_t pos) {
+    if constexpr (std::is_same_v<Type, int64_t>) {
+      if constexpr (std::is_same_v<Other, double>) {
+        return builder.int_attribute_as_double(event_type, pos);
+      } else {
+        return builder.int_attribute(event_type, pos);
+      }
+    } else {
+      return builder.double_attribute(event_type, pos);
+    }
   }
 };
 }  // namespace CORE::Internal::CEA

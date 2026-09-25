@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <ostream>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -77,6 +78,48 @@ class MintermTreeNode {
     }
   }
 
+  // Same as above for a tree that is only read.
+  void collectLeaves(std::vector<const MintermTreeNode<Predicate>*>& leaves) const {
+    if (isLeaf()) {
+      leaves.push_back(this);
+    } else {
+      if (left) left->collectLeaves(leaves);
+      if (right) right->collectLeaves(leaves);
+    }
+  }
+
+  // How to turn the parts of a tree into text. The tree itself only knows
+  // formulas and atom pointers, so whoever prints it says what they look like.
+  struct Printer {
+    // The text of the condition tested at an internal node (required).
+    std::function<std::string(const CEA::PhysicalPredicate*)> atom_label;
+    // The text describing a leaf's region (optional: leave empty to omit it).
+    std::function<std::string(const Predicate&)> region_label;
+    // The text saying what a leaf means, e.g. which predicates it sets (required).
+    std::function<std::string(const MintermTreeNode<Predicate>&)> leaf_label;
+  };
+
+  // Prints the tree in an orderly way, depth-first with the "atom true" branch
+  // first (the same order as collectLeaves, so leaf numbers match it):
+  //
+  //   x > 100 ?
+  //   +-- true:  leaf #0 -> p0 p1
+  //   `-- false: x > 50 ?
+  //       +-- true:  leaf #1 -> p1
+  //       `-- false: leaf #2 -> (none)
+  //
+  // Every line starts with `indent`.
+  void
+  print(std::ostream& out, const Printer& printer, const std::string& indent = "") const {
+    size_t next_leaf = 0;
+    if (isLeaf()) {
+      out << indent << leaf_text(printer, next_leaf) << "\n";
+      return;
+    }
+    out << indent << printer.atom_label(split_atom) << " ?\n";
+    print_branches(out, printer, indent, next_leaf);
+  }
+
   // Level-by-level dump, for debugging.
   std::string
   to_string(std::function<std::string(const Predicate&)> predicate_to_string) const {
@@ -103,6 +146,43 @@ class MintermTreeNode {
       }
     }
     return oss.str();
+  }
+
+ private:
+  std::string leaf_text(const Printer& printer, size_t& next_leaf) const {
+    std::string text = "leaf #" + std::to_string(next_leaf++) + " -> "
+                       + printer.leaf_label(*this);
+    if (printer.region_label) {
+      std::string region = printer.region_label(phi);
+      if (!region.empty()) text += "   region: " + region;
+    }
+    return text;
+  }
+
+  // The two branches of an internal node, each starting a line under `prefix`.
+  void print_branches(std::ostream& out,
+                      const Printer& printer,
+                      const std::string& prefix,
+                      size_t& next_leaf) const {
+    left->print_branch(out, printer, prefix, "+-- true:  ", "|   ", next_leaf);
+    right->print_branch(out, printer, prefix, "`-- false: ", "    ", next_leaf);
+  }
+
+  // One branch: `connector` and then this node, whose own branches (if it is an
+  // internal node) are indented by `continuation`.
+  void print_branch(std::ostream& out,
+                    const Printer& printer,
+                    const std::string& prefix,
+                    const std::string& connector,
+                    const std::string& continuation,
+                    size_t& next_leaf) const {
+    out << prefix << connector;
+    if (isLeaf()) {
+      out << leaf_text(printer, next_leaf) << "\n";
+      return;
+    }
+    out << printer.atom_label(split_atom) << " ?\n";
+    print_branches(out, printer, prefix + continuation, next_leaf);
   }
 };
 

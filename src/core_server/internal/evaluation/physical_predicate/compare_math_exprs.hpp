@@ -1,14 +1,18 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <tracy/Tracy.hpp>
+#include <type_traits>
 
 #include "cassert"
 #include "comparison_type.hpp"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -57,6 +61,23 @@ class CompareMathExprs : public PhysicalPredicate {
       return left->eval(event) != right->eval(event);
     else
       assert(false && "Operator() not implemented for some ComparisonType");
+  }
+
+  // `math_expr <Comp> math_expr` over int64_t or double. If either side cannot
+  // be translated (division, double arithmetic, ...) the whole atom is opaque.
+  std::optional<FormulaBuilder::Handle>
+  translate_atom(FormulaBuilder& builder,
+                 Types::UniqueEventTypeId event_type) const override {
+    if constexpr (std::is_same_v<ValueType, int64_t> || std::is_same_v<ValueType, double>) {
+      std::optional<FormulaBuilder::Handle> left_formula = left->translate(builder,
+                                                                           event_type);
+      std::optional<FormulaBuilder::Handle> right_formula = right->translate(builder,
+                                                                             event_type);
+      if (!left_formula || !right_formula) return std::nullopt;
+      return builder.compare(Comp, *left_formula, *right_formula);
+    } else {
+      return std::nullopt;
+    }
   }
 
   std::string to_string() const override {

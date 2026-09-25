@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <tracy/Tracy.hpp>
@@ -8,7 +9,9 @@
 #include <vector>
 
 #include "cassert"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -39,6 +42,21 @@ class AndPredicate : public PhysicalPredicate {
       }
     }
     return true;
+  }
+
+  // The conjunction of the children. And evaluates them with eval(), which does not
+  // check event types, so they are translated ungated.
+  FormulaBuilder::Handle
+  translate_ungated(FormulaBuilder& builder,
+                    Types::UniqueEventTypeId event_type) const override {
+    std::optional<FormulaBuilder::Handle> combined;
+    for (const auto& predicate : predicates) {
+      FormulaBuilder::Handle formula = predicate->translate(builder,
+                                                            event_type,
+                                                            /*gated=*/false);
+      combined = combined.has_value() ? builder.conjunction(*combined, formula) : formula;
+    }
+    return combined.has_value() ? *combined : builder.constant_true();
   }
 
   std::string to_string() const override {

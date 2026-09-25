@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <string>
@@ -12,7 +13,9 @@
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "physical_predicate.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -66,6 +69,26 @@ class CompareWithConstant : public PhysicalPredicate {
       return attribute_val.val != constant_val;
     else
       assert(false && "Operator() not implemented for some ComparisonType");
+  }
+
+  // `attribute <Comp> constant`, for int64_t and double attributes. Comparisons
+  // of strings, booleans and dates are not modeled (opaque).
+  std::optional<FormulaBuilder::Handle>
+  translate_atom(FormulaBuilder& builder,
+                 Types::UniqueEventTypeId event_type) const override {
+    if constexpr (std::is_same_v<ValueType, int64_t>) {
+      FormulaBuilder::Handle literal = builder.int_literal(constant_val);
+      FormulaBuilder::Handle attribute = builder.int_attribute(event_type, pos_to_compare);
+      return builder.compare(Comp, attribute, literal);
+    } else if constexpr (std::is_same_v<ValueType, double>) {
+      std::optional<FormulaBuilder::Handle> literal = builder.double_literal(constant_val);
+      if (!literal.has_value()) return std::nullopt;  // NaN / infinity cannot be modeled
+      FormulaBuilder::Handle attribute = builder.double_attribute(event_type,
+                                                                  pos_to_compare);
+      return builder.compare(Comp, attribute, *literal);
+    } else {
+      return std::nullopt;
+    }
   }
 
   std::string to_string() const override {

@@ -1,11 +1,15 @@
 #pragma once
 #include <cassert>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
+#include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "math_expr.hpp"
+#include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -35,6 +39,22 @@ class Addition : public MathExpr<Type> {
       throw std::logic_error("Addition is only valid for arithmetic vals");
     } else
       return left->eval(event) + right->eval(event);
+  }
+
+  // Only int64_t arithmetic is translated: on doubles IEEE rounding differs from the solver's exact
+  // reals (0.2 + 0.1 == 0.3 holds for exact reals, not for doubles).
+  std::optional<FormulaBuilder::Handle>
+  translate(FormulaBuilder& builder, Types::UniqueEventTypeId event_type) const override {
+    if constexpr (std::is_same_v<Type, int64_t>) {
+      std::optional<FormulaBuilder::Handle> left_formula = left->translate(builder,
+                                                                           event_type);
+      std::optional<FormulaBuilder::Handle> right_formula = right->translate(builder,
+                                                                             event_type);
+      if (!left_formula || !right_formula) return std::nullopt;
+      return builder.add(*left_formula, *right_formula);
+    } else {
+      return std::nullopt;
+    }
   }
 
   std::string to_string() const override {
