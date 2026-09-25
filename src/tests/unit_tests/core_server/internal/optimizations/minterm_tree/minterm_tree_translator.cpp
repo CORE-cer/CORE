@@ -825,4 +825,145 @@ TEST_CASE("A predicate that does not admit the event type translates to false",
   REQUIRE(!lab.translator.translate_formula(&only_type_0, 0).is_false());
 }
 
+// ---------------------------------------------------------------------------
+// Weakly typed predicates
+// ---------------------------------------------------------------------------
+
+TEST_CASE(
+  "Weakly typed atoms are translated per event type and agree with native evaluation",
+  "[MintermTreeEvaluator][Optimizations][Translator][Weak]") {
+  // Predicates on an alias (`X[...]`) find their attributes by name, so the same
+  // predicate reads attribute 1 of event type 0 but attribute 0 of event type 1.
+  // Every predicate is translated for BOTH event types and checked against
+  // native evaluation on events of both types. A predicate whose attributes an
+  // event type does not have (Double1 exists only in event1) is not admitted
+  // there: its formula is `false`, as evaluation returns.
+  const std::vector<std::string> filters = {
+    "X[Integer1 > 100]",
+    "X[Integer1 <= Integer2]",
+    "X[Integer1 + Integer2 > 5]",
+    "X[Integer1 * 3 >= Integer2]",
+    "X[Integer1 IN RANGE (2, 10)]",
+    "X[NOT Integer1 > 5 OR Integer2 = 3]",
+    "X[Integer1 > Double1]",
+    "X[Double1 IN RANGE (0.5, 2.5)]",
+    "X[Double1 > Double2]",
+    "event1[Integer1 > 5] AND X[Integer1 < 3]",
+  };
+  const std::vector<int64_t> ints = {-1, 0, 1, 3, 5, 10, 101};
+  const std::vector<double> doubles = {-kInf, -2.5, 0.0, 0.5, 2.5, 3.0, kInf, kNaN};
+
+  for (const std::string& filter : filters) {
+    INFO("filter: " << filter);
+    CompiledFilter compiled(filter);
+    TranslatorLab lab;
+    for (CEA::PhysicalPredicate* predicate : compiled.filter_predicates()) {
+      INFO("predicate: " << predicate->to_string());
+
+      for (int64_t i1 : ints) {
+        for (int64_t i2 : ints) {
+          for (double d1 : doubles) {
+            for (double d2 : {0.5, kNaN}) {
+              auto event = event_type_1(i1, i2, d1, d2);
+              bool native = (*predicate)(event);
+              lab.expect_formula_matches(lab.translator.translate_formula(predicate, 0),
+                                         native,
+                                         event,
+                                         Exactness::Exact);
+            }
+          }
+          auto other = make_event_type_2(i1, i2);
+          bool native = (*predicate)(other);
+          lab.expect_formula_matches(lab.translator.translate_formula(predicate, 1),
+                                     native,
+                                     other,
+                                     Exactness::Exact);
+        }
+      }
+    }
+    // Everything here is numeric and linear: nothing may be left opaque.
+    REQUIRE(lab.translator.opaque_atom_count() == 0);
+  }
+}
+
+TEST_CASE("A weakly typed attribute stored as int in one event and double in another",
+          "[MintermTreeEvaluator][Optimizations][Translator][Weak]") {
+  // `Value` is an int64_t in event1 and a double in event2, so the predicate works
+  // with doubles: event1's int is converted (the model must not contradict C++'s
+  // rounding above 2^53), event2's double is used as is (NaN and infinity too).
+  auto make_event1 = [](int64_t value) {
+    auto event = std::make_shared<Types::Event>(
+      0,
+      std::vector<std::shared_ptr<Types::Value>>{std::make_unique<Types::IntValue>(value),
+                                                 std::make_unique<Types::BoolValue>(false),
+                                                 std::make_unique<Types::DateValue>(0),
+                                                 std::make_unique<Types::StringValue>("t"),
+                                                 std::make_unique<Types::IntValue>(0)});
+    return Types::EventWrapper(std::move(event));
+  };
+  auto make_event2 = [](double value) {
+    auto event = std::make_shared<Types::Event>(
+      1,
+      std::vector<std::shared_ptr<Types::Value>>{std::make_unique<Types::DoubleValue>(
+                                                   value),
+                                                 std::make_unique<Types::IntValue>(0)});
+    return Types::EventWrapper(std::move(event));
+  };
+  auto declare = [](Catalog& catalog) {
+    std::vector<Types::AttributeInfo> first;
+    first.emplace_back("Value", Types::ValueTypes::INT64);
+    first.emplace_back("Flag", Types::ValueTypes::BOOL);
+    first.emplace_back("When", Types::ValueTypes::DATE);
+    first.emplace_back("Text", Types::ValueTypes::STRING_VIEW);
+    first.emplace_back("Count", Types::ValueTypes::INT64);
+    std::vector<Types::AttributeInfo> second;
+    second.emplace_back("Value", Types::ValueTypes::DOUBLE);
+    second.emplace_back("Count", Types::ValueTypes::INT64);
+    Types::StreamInfo info = catalog.add_stream_type(
+      {"S", {{"event1", std::move(first)}, {"event2", std::move(second)}}});
+    (void)info;
+  };
+
+  for (const char* filter :
+       {"X[Value > 5]", "X[Value IN RANGE (1, 9)]", "X[Value = 5.5]"}) {
+    INFO("filter: " << filter);
+    CompiledFilter compiled(filter, declare);
+    TranslatorLab lab;
+    for (CEA::PhysicalPredicate* predicate : compiled.filter_predicates()) {
+      // Ints an exact double can hold: the model must decide them exactly.
+      for (int64_t value : {int64_t{-3},
+                            int64_t{0},
+                            int64_t{1},
+                            int64_t{5},
+                            int64_t{6},
+                            int64_t{9},
+                            int64_t{10},
+                            k2p53}) {
+        auto event = make_event1(value);
+        lab.expect_formula_matches(lab.translator.translate_formula(predicate, 0),
+                                   (*predicate)(event),
+                                   event,
+                                   Exactness::Exact);
+      }
+      // Ints beyond 2^53 are rounded by C++: the model may stay undecided but
+      // must not contradict.
+      for (int64_t value : {k2p53 + 1, k2p53 + 3, kInt64Max, kInt64Min}) {
+        auto event = make_event1(value);
+        lab.expect_formula_matches(lab.translator.translate_formula(predicate, 0),
+                                   (*predicate)(event),
+                                   event,
+                                   Exactness::SoundOnly);
+      }
+      for (double value : {-kInf, -0.0, 0.5, 5.0, 5.5, 9.0, 10.0, kInf, kNaN}) {
+        auto event = make_event2(value);
+        lab.expect_formula_matches(lab.translator.translate_formula(predicate, 1),
+                                   (*predicate)(event),
+                                   event,
+                                   Exactness::Exact);
+      }
+    }
+    REQUIRE(lab.translator.opaque_atom_count() == 0);
+  }
+}
+
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests

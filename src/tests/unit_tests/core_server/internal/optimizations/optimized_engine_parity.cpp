@@ -14,6 +14,7 @@
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cstdint>
+#include <initializer_list>
 #include <memory>
 #include <random>
 #include <string>
@@ -128,6 +129,16 @@ std::vector<Types::Event> event_stream(size_t count) {
   return events;
 }
 
+// A query written line by line (the engine's parser wants one clause per line).
+std::string query_of(std::initializer_list<const char*> lines) {
+  std::string out;
+  for (const char* line : lines) {
+    if (!out.empty()) out += "\n";
+    out += line;
+  }
+  return out;
+}
+
 }  // namespace
 
 TEST_CASE("Complete backends give identical matches with and without the minterm tree",
@@ -141,31 +152,45 @@ TEST_CASE("Complete backends give identical matches with and without the minterm
 
   const std::vector<std::string> queries = {
     // Numeric comparisons joined by OR.
-    "SELECT * FROM Stock\n"
-    "WHERE SELL as a; BUY as b\n"
-    "FILTER a[price > 100] AND b[price < 50 OR quantity > 10]\n"
-    "WITHIN 40 EVENTS",
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; BUY as b",
+              "FILTER a[price > 100] AND b[price < 50 OR quantity > 10]",
+              "WITHIN 40 EVENTS"}),
 
     // NOT, IN RANGE and a string equality next to numeric atoms.
-    "SELECT * FROM Stock\n"
-    "WHERE SELL as a; SELL as b\n"
-    "FILTER a[NOT (price > 100)] AND a[price IN RANGE (0, 99)]\n"
-    "    AND b[price > 1 OR quantity < 2] AND b[name = 'A']\n"
-    "WITHIN 40 EVENTS",
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; SELL as b",
+              "FILTER a[NOT (price > 100)] AND a[price IN RANGE (0, 99)]",
+              "    AND b[price > 1 OR quantity < 2] AND b[name = 'A']",
+              "WITHIN 40 EVENTS"}),
 
     // Arithmetic, and a division the price != 0 guard protects. Events with price
     // 0 must not make the tree divide by zero (the baseline's And stops early).
-    "SELECT * FROM Stock\n"
-    "WHERE SELL as a; BUY as b\n"
-    "FILTER a[price != 0 AND quantity / price > 2] AND b[quantity * 2 > price]\n"
-    "WITHIN 40 EVENTS",
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; BUY as b",
+              "FILTER a[price != 0 AND quantity / price > 2] AND b[quantity * 2 > price]",
+              "WITHIN 40 EVENTS"}),
+
+    // Mutually exclusive equalities on aliases (weakly typed): the tree relates
+    // them, so at most one of the two can hold for an event.
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; SELL as b",
+              "FILTER a[price = 100] AND b[price = 101]",
+              "WITHIN 40 EVENTS"}),
+
+    // Arithmetic and IN RANGE across aliases.
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; BUY as b",
+              "FILTER a[price + quantity > 100 AND quantity IN RANGE (1, 10)]",
+              "    AND b[price * 2 >= quantity]",
+              "WITHIN 40 EVENTS"}),
 
     // PARTITION BY: each partition evaluates through a copy of the predicates.
-    "SELECT * FROM Stock\n"
-    "WHERE SELL as a; BUY as b\n"
-    "FILTER a[price > 100] AND b[price < 100]\n"
-    "PARTITION BY [part]\n"
-    "WITHIN 40 EVENTS",
+    query_of({"SELECT * FROM Stock",
+              "WHERE SELL as a; BUY as b",
+              "FILTER a[price > 100] AND b[price < 100]",
+              "PARTITION BY [part]",
+              "WITHIN 40 EVENTS"}),
   };
   for (const std::string& query : queries) {
     baseline.add_query(query);

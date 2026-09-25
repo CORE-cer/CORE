@@ -496,4 +496,173 @@ TEST_CASE("Random predicates and events give the baseline's bitsets",
   }
 }
 
+// ---------------------------------------------------------------------------
+// Random weakly typed CEQL
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Random FILTER clauses written on aliases (`X[...]`, `Y[...]`): weakly typed
+// predicates, whose attributes are found by name for each event type. They go
+// through the real CEQL parser and visitors, so the physical predicates are the
+// ones the engine builds. Literals are non-negative (CEQL has no unary minus);
+// values that need a negative number come from events and from subtraction.
+class RandomWeakFilter {
+ public:
+  explicit RandomWeakFilter(uint64_t seed) : rng_(seed) {}
+
+  // One to three predicates joined by AND, e.g.  X[Integer1 + 2 > Integer2] AND Y[...]
+  std::string filter() {
+    std::string out;
+    int count = uniform(1, 3);
+    for (int i = 0; i < count; i++) {
+      if (i > 0) out += " AND ";
+      out += (chance(70) ? "X[" : "Y[") + condition() + "]";
+    }
+    return out;
+  }
+
+  Types::EventWrapper event() {
+    if (chance(60)) {
+      int64_t integer1 = uniform(-3, 14);
+      int64_t integer2 = uniform(-3, 14);
+      double double1 = pick(doubles_);
+      double double2 = pick(doubles_);
+      return make_event_type_1("s", integer1, integer2, double1, double2);
+    }
+    int64_t integer1 = uniform(-3, 14);
+    int64_t integer2 = uniform(-3, 14);
+    return make_event_type_2(integer1, integer2);
+  }
+
+ private:
+  std::mt19937_64 rng_;
+  const std::vector<double> doubles_ =
+    {-kInf, -2.5, -0.0, 0.0, 0.1, 0.5, 1.5, 2.5, 3.0, kInf, kNaN};
+
+  int uniform(int low, int high) {
+    return std::uniform_int_distribution<int>(low, high)(rng_);
+  }
+
+  bool chance(int percent) { return uniform(0, 99) < percent; }
+
+  template <typename T>
+  const T& pick(const std::vector<T>& pool) {
+    return pool[static_cast<size_t>(uniform(0, static_cast<int>(pool.size()) - 1))];
+  }
+
+  std::string comparison() {
+    static const std::vector<std::string> all = {"=", "!=", "<", "<=", ">", ">="};
+    return pick(all);
+  }
+
+  std::string int_attribute() { return chance(50) ? "Integer1" : "Integer2"; }
+
+  std::string double_attribute() { return chance(50) ? "Double1" : "Double2"; }
+
+  std::string double_literal() {
+    static const std::vector<std::string> all = {"0.5", "1.5", "2.5", "3.0", "0.1"};
+    return pick(all);
+  }
+
+  // Integer expressions the translator handles (+, - and * by a literal) mixed with
+  // the plain attribute or number.
+  std::string int_expression() {
+    switch (uniform(0, 4)) {
+      case 0:
+        return int_attribute();
+      case 1:
+        return std::to_string(uniform(0, 12));
+      case 2:
+        return "(" + int_attribute() + " + " + std::to_string(uniform(0, 6)) + ")";
+      case 3:
+        return "(" + int_attribute() + " - " + int_attribute() + ")";
+      default:
+        return "(" + int_attribute() + " * " + std::to_string(uniform(2, 4)) + ")";
+    }
+  }
+
+  std::string atom() {
+    switch (uniform(0, 9)) {
+      case 0:
+      case 1:
+        return int_attribute() + " " + comparison() + " " + std::to_string(uniform(0, 12));
+      case 2:
+        return int_expression() + " " + comparison() + " " + int_expression();
+      case 3:
+        return double_attribute() + " " + comparison() + " " + double_literal();
+      case 4:
+        return double_attribute() + " " + comparison() + " " + double_attribute();
+      case 5:  // an int against a double: the int is converted
+        return int_attribute() + " " + comparison() + " " + double_attribute();
+      case 6:
+        return int_attribute() + " IN RANGE (" + std::to_string(uniform(0, 5)) + ", "
+               + std::to_string(uniform(3, 12)) + ")";
+      case 7:
+        return double_attribute() + " IN RANGE (" + double_literal() + ", "
+               + double_literal() + ")";
+      case 8:  // not modeled: division and modulo by a literal
+        return int_attribute() + (chance(50) ? " / " : " % ")
+               + std::to_string(uniform(2, 5)) + " " + comparison() + " "
+               + std::to_string(uniform(0, 4));
+      default:  // not modeled: arithmetic on doubles
+        return "(" + double_attribute() + " + " + double_literal() + ") " + comparison()
+               + " " + double_literal();
+    }
+  }
+
+  std::string condition() {
+    switch (uniform(0, 4)) {
+      case 0:
+        return atom() + " OR " + atom();
+      case 1:
+        return atom() + " AND " + atom();
+      case 2:
+        return "NOT(" + atom() + ")";
+      case 3:
+        return "NOT(" + atom() + " OR " + atom() + ")";
+      default:
+        return atom();
+    }
+  }
+};
+
+}  // namespace
+
+TEST_CASE("Random weakly typed CEQL filters give the baseline's bitsets",
+          "[MintermTreeEvaluator][Optimizations][Fuzz][Weak]") {
+  const uint64_t kSeeds = seeds_to_run();
+  size_t seeds_fully_modeled = 0;
+  size_t seeds_with_a_split_tree = 0;
+
+  for (uint64_t seed = 0; seed < kSeeds; seed++) {
+    RandomWeakFilter generator(seed);
+    std::string filter = generator.filter();
+    INFO("seed " << seed << ", filter: " << filter);
+    CeqlParityChecker parity(filter);
+
+    for (int i = 0; i < 100; i++) {
+      auto event = generator.event();
+      parity.check(event, "random event #" + std::to_string(i));
+    }
+
+    if (parity.checker.minterm.describe().find("atoms (0 opaque)") != std::string::npos) {
+      seeds_fully_modeled++;
+    }
+    if (parity.checker.minterm.debug_leaf_count(0) > 2
+        || parity.checker.minterm.debug_leaf_count(1) > 2) {
+      seeds_with_a_split_tree++;
+    }
+  }
+
+  // The generator must exercise the new path: many filters are entirely modeled
+  // (no opaque atom), and most build trees that split more than once.
+  INFO("fully modeled: " << seeds_fully_modeled
+                         << ", split trees: " << seeds_with_a_split_tree);
+  if (kSeeds >= 50) {
+    REQUIRE(seeds_fully_modeled >= kSeeds / 8);
+    REQUIRE(seeds_with_a_split_tree >= kSeeds / 2);
+  }
+}
+
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests

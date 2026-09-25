@@ -443,4 +443,159 @@ TEST_CASE("Only the event type over the cap falls back; the other keeps its tree
   }
 }
 
+// ---------------------------------------------------------------------------
+// Weakly typed predicates (aliases such as `X[...]`)
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Checks parity on events of both fixture event types over the given values.
+void check_weak_events(CeqlParityChecker& parity) {
+  for (int64_t integer1 : {int64_t{0},
+                           int64_t{1},
+                           int64_t{2},
+                           int64_t{3},
+                           int64_t{4},
+                           int64_t{10},
+                           int64_t{50}}) {
+    for (int64_t integer2 : {int64_t{0}, int64_t{7}}) {
+      auto type_1 = make_event_type_1("s", integer1, integer2, 0.5, 1.5);
+      auto type_2 = make_event_type_2(integer1, integer2);
+      parity.check(type_1, "event1, Integer1 = " + std::to_string(integer1));
+      parity.check(type_2, "event2, Integer1 = " + std::to_string(integer1));
+    }
+  }
+}
+
+}  // namespace
+
+TEST_CASE("Weakly typed predicates on one attribute are related like strongly typed ones",
+          "[MintermTreeEvaluator][Optimizations][Structure][Weak]") {
+  // An alias filter finds Integer1 by name (position 1 in event1, position 0 in
+  // event2). Each event type still gets a tree in which the atoms share one
+  // variable, so mutually exclusive or nested conditions collapse. Before weak
+  // atoms were translated they were opaque, unrelated to each other, and these
+  // trees had 2^n leaves.
+  SECTION("mutually exclusive equalities: n + 1 regions per event type") {
+    CeqlParityChecker parity("X[Integer1 = 1] AND X[Integer1 = 2] AND X[Integer1 = 3]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 4);
+    REQUIRE(parity.checker.minterm.describe().find("atoms (0 opaque)")
+            != std::string::npos);
+    check_weak_events(parity);
+  }
+
+  SECTION("a chain of thresholds: n + 1 regions per event type") {
+    CeqlParityChecker parity(
+      "X[Integer1 > 10] AND X[Integer1 > 20] AND X[Integer1 > 30]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 4);
+    check_weak_events(parity);
+  }
+
+  SECTION("independent attributes still multiply") {
+    CeqlParityChecker parity("X[Integer1 > 5] AND X[Integer2 > 5]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 4);
+    check_weak_events(parity);
+  }
+
+  SECTION("a strongly and a weakly typed predicate share a decision") {
+    // event1[...] only applies to event type 0, X[...] to both: for event type 0
+    // the two thresholds nest (3 regions), for event type 1 only the weak one
+    // exists (2 regions).
+    CeqlParityChecker parity("event1[Integer1 > 5] AND X[Integer1 > 3]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 2);
+    check_weak_events(parity);
+  }
+
+  SECTION("what is not modeled still splits independently") {
+    // Strings are opaque, also on an alias: two unrelated regions per atom.
+    CeqlParityChecker parity("X[String = 'a'] AND X[String = 'b']");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.describe().find("atoms (2 opaque)")
+            != std::string::npos);
+    for (const char* text : {"", "a", "b", "ab"}) {
+      auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+      parity.check(event, std::string("String = '") + text + "'");
+    }
+  }
+}
+
+TEST_CASE("A weakly typed OR is handled by the trees",
+          "[MintermTreeEvaluator][Optimizations][Structure][Weak]") {
+  // The CEQL visitor builds `alias[a OR b]` so that it admits every event type
+  // (see MintermTreeEvaluator::direct_evaluation_reason). It is still false for
+  // any event type none of its atoms names, so it belongs in the trees; it used to
+  // be evaluated directly, with no tree at all.
+  SECTION("exclusive equalities inside one OR") {
+    CeqlParityChecker parity("X[Integer1 = 1 OR Integer1 = 2]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 3);
+    check_weak_events(parity);
+  }
+
+  SECTION("independent atoms inside one OR") {
+    CeqlParityChecker parity("X[Integer1 > 5 OR Integer2 < 2]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 4);
+    check_weak_events(parity);
+  }
+
+  SECTION("an OR whose atoms exist in different event types") {
+    // Double1 only exists in event1: for event2 the OR reduces to `Integer1 > 5`.
+    CeqlParityChecker parity("X[Integer1 > 5 OR Double1 < 2.5]");
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 2);
+    check_weak_events(parity);
+  }
+
+  SECTION("an OR next to other predicates, on aliases and by event name") {
+    CeqlParityChecker parity(
+      "X[Integer1 > 5 OR Integer2 = 3] AND event1[Integer1 > 3] AND Y[Integer2 < 8]");
+    check_weak_events(parity);
+  }
+}
+
+TEST_CASE("Only an Or may admit every event type and still be handled by the trees",
+          "[MintermTreeEvaluator][Optimizations][Structure]") {
+  // An Or evaluates its children through operator(), so one that admits every
+  // event type is false for the types none of its atoms names. An And or a Not
+  // evaluates its children directly, so one that admits every event type depends
+  // on the event: it stays evaluated directly.
+  auto build = [](bool as_or) {
+    std::vector<Atom> children;
+    children.push_back(greater_at({0}, kInteger1, 5));
+    children.push_back(less_at({1}, 0, 3));
+    std::vector<Atom> predicates;
+    if (as_or) {
+      predicates.push_back(std::make_unique<CEA::OrPredicate>(std::move(children)));
+    } else {
+      predicates.push_back(std::make_unique<CEA::AndPredicate>(std::move(children)));
+    }
+    return predicates;
+  };
+
+  SECTION("an Or that admits every event type gets a tree per event type") {
+    ParityChecker parity(build(/*as_or=*/true));
+    REQUIRE(parity.minterm.debug_leaf_count(0) == 2);
+    REQUIRE(parity.minterm.debug_leaf_count(1) == 2);
+    REQUIRE(parity.minterm.describe().find("(0 evaluated directly)") != std::string::npos);
+    check_events(parity);
+  }
+
+  SECTION("an And that admits every event type is evaluated directly") {
+    ParityChecker parity(build(/*as_or=*/false));
+    REQUIRE(parity.minterm.debug_leaf_count(0) == 0);
+    REQUIRE(parity.minterm.describe().find("(1 evaluated directly)") != std::string::npos);
+    // Its children are evaluated ungated, so only event types both atoms
+    // understand can be tried: attribute 1 is an int in both fixture event types.
+    auto type_1 = make_event_type_1("s", 4, 0, 0.0, 0.0);
+    auto type_2 = make_event_type_2(4, 0);
+    parity.check(type_1, "event1");
+    parity.check(type_2, "event2");
+  }
+}
+
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests
