@@ -66,6 +66,9 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //        outcomes are possible).
 //     4. For every leaf, precompute a bitmask: predicate i is set iff the leaf's
 //        region implies predicate i's formula.
+//     5. Collapse any node whose two children turned out to agree on every bit
+//        (MintermTreeNode::reduce): a split that decides nothing is neither
+//        stored nor evaluated again.
 //   Run (per event, Z3 is never touched):
 //     1. Evaluate the directly-evaluated predicates.
 //     2. Walk the event's type tree from the root, evaluating each node's atom
@@ -149,6 +152,13 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     return leaves.size();
   }
 
+  // How many internal nodes MintermTreeNode::reduce() collapsed into leaves
+  // for event_type's tree (0 if none, or if no tree exists for that type).
+  size_t debug_reduced_node_count(Types::UniqueEventTypeId event_type) const {
+    auto it = reduced_nodes_per_type_.find(event_type);
+    return it == reduced_nodes_per_type_.end() ? 0 : it->second;
+  }
+
   // True if `event_type` has no tree and is evaluated directly (SAFETY NET).
   bool uses_direct_evaluation(Types::UniqueEventTypeId event_type) const {
     return direct_event_types_.contains(event_type);
@@ -162,7 +172,8 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
                       + " atoms (" + std::to_string(translator_.opaque_atom_count())
                       + " opaque), " + std::to_string(trees_.size()) + " trees with "
                       + std::to_string(total_leaves_) + " leaves in total (largest "
-                      + std::to_string(max_leaves_) + ")";
+                      + std::to_string(max_leaves_) + ", "
+                      + std::to_string(reduced_nodes_) + " reduced)";
     for (const auto& [event_type, reason] : direct_event_types_) {
       out += "; event type " + std::to_string(event_type) + " evaluated directly ("
              + reason + ")";
@@ -260,6 +271,10 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   size_t atom_count_ = 0;
   size_t total_leaves_ = 0;
   size_t max_leaves_ = 0;
+  size_t reduced_nodes_ = 0;
+  // Per event type: how many internal nodes MintermTreeNode::reduce()
+  // collapsed for that type's tree. Absent for a type with no tree.
+  std::unordered_map<Types::UniqueEventTypeId, size_t> reduced_nodes_per_type_;
 
   void build() {
     // Step 1: decide which predicates the trees handle. A predicate that admits
@@ -420,7 +435,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     direct_event_types_[event_type] = reason;
   }
 
-  // Steps 2-4 of the build phase for one event type.
+  // Steps 2-5b of the build phase for one event type.
   void build_tree_for_event_type(Types::UniqueEventTypeId event_type,
                                  const std::vector<CEA::PhysicalPredicate*>& atoms) {
     for (size_t index : optimizable_indices_) {
@@ -482,6 +497,21 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       }
       leaf->satisfied_predicates = std::move(bits);
     }
+
+    // Step 5b: some leaves agree on every bit after all (e.g. "a AND b" with
+    // a, b independent: every leaf where a is false answers "none" regardless
+    // of b) - collapse those sibling pairs. Must run after the bitmasks above
+    // are real (see MintermTreeNode::reduce), and strictly before the counts
+    // below, which must reflect the tree as it will actually be walked.
+    reduced_nodes_per_type_[event_type] = tree->reduce();
+    reduced_nodes_ += reduced_nodes_per_type_[event_type];
+
+    // Some of the leaves collected above may no longer exist after the
+    // collapse (reduce() frees a collapsed node's children), and the vector's
+    // size would undercount the reduction even where nothing was freed.
+    // Recompute rather than reuse it.
+    leaves.clear();
+    tree->collectLeaves(leaves);
 
     total_leaves_ += leaves.size();
     if (leaves.size() > max_leaves_) max_leaves_ = leaves.size();

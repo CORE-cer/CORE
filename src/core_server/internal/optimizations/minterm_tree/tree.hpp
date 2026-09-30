@@ -69,6 +69,49 @@ class MintermTreeNode {
     return left->refine(atom, psi, algebra) + right->refine(atom, psi, algebra);
   }
 
+  // Collapses this subtree wherever a split turned out to teach nothing: after
+  // recursing into both children (so each is already reduced as far as it can
+  // go), if both are leaves with the SAME satisfied_predicates, every event in
+  // this region gets the same answer whichever way split_atom would have sent
+  // it, so this node becomes that leaf instead. phi is left untouched (it
+  // already describes this wider region correctly; refine() never rewrites a
+  // node's own phi when it splits, only its new children's).
+  //
+  // One post-order pass is enough for cascades: if left/right are themselves
+  // internal nodes that fully collapse down to equal-bitset leaves, this call
+  // already sees the reduced result when it compares them, so this node
+  // collapses too, in the same call.
+  //
+  // Must run only after every leaf's satisfied_predicates has been computed
+  // (see MintermTreeEvaluator::build_tree_for_event_type) - on a freshly built
+  // tree every leaf's bitset is still the same default-constructed one, and
+  // reduce() would collapse everything meaninglessly. Needs no
+  // BooleanAlgebra<Predicate>: only Bitset equality, so it does not depend on
+  // which algebra built the tree, or on the order atoms were refined in (a
+  // future atom-reordering pass changes buildMintermTree's input; reduce()
+  // runs after, on whatever tree results, unaffected).
+  //
+  // This only merges a node's two immediate children into itself (a "sibling"
+  // collapse), not any two same-bitset leaves anywhere in the tree: two leaves
+  // that agree on every bit but are not siblings are left alone, since sharing
+  // those would mean turning the tree into a DAG (see the guide's backlog).
+  //
+  // Returns how many internal nodes were collapsed, mirroring what refine()
+  // reports about growing the tree.
+  size_t reduce() {
+    if (isLeaf()) return 0;
+    size_t collapsed = left->reduce() + right->reduce();
+    if (left->isLeaf() && right->isLeaf()
+        && left->satisfied_predicates == right->satisfied_predicates) {
+      satisfied_predicates = left->satisfied_predicates;
+      left.reset();
+      right.reset();
+      split_atom = nullptr;
+      collapsed++;
+    }
+    return collapsed;
+  }
+
   void collectLeaves(std::vector<MintermTreeNode<Predicate>*>& leaves) {
     if (isLeaf()) {
       leaves.push_back(this);

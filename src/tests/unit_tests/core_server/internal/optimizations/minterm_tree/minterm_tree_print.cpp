@@ -57,10 +57,13 @@ TEST_CASE("The trees of the worked example print as expected",
           "[MintermTreeEvaluator][Optimizations][Print]") {
   ParityChecker parity(worked_example());
 
-  // x > 100 implies x > 50 and excludes x < 10, so four leaves, not eight.
+  // x > 100 implies x > 50 and excludes x < 10, so four leaves, not eight. All
+  // four have distinct bitsets ({p0,p1}, {p1}, {p2}, {}), so reduce() finds
+  // nothing to collapse here (see minterm_tree_structure.cpp for examples where
+  // it does).
   const std::string expected =
     "MintermTreeEvaluator: 3 predicates (0 evaluated directly), 3 atoms (0 opaque), "
-    "1 trees with 4 leaves in total (largest 4)\n"
+    "1 trees with 4 leaves in total (largest 4, 0 reduced)\n"
     "\n"
     "Predicates\n"
     "  [0] Event[1] > 100   (tree)\n"
@@ -211,7 +214,7 @@ TEST_CASE("An evaluator without predicates prints an empty listing",
   ParityChecker parity(std::vector<Atom>{});
   REQUIRE(parity.minterm.trees_to_string(without_regions())
           == "MintermTreeEvaluator: 0 predicates (0 evaluated directly), 0 atoms (0 opaque), "
-             "0 trees with 0 leaves in total (largest 0)\n"
+             "0 trees with 0 leaves in total (largest 0, 0 reduced)\n"
              "\n"
              "Predicates\n");
 }

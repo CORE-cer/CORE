@@ -170,7 +170,10 @@ TEST_CASE("The same condition written in several predicates is decided once",
   // `Integer1 > 5` appears as three separate atom objects (alone, inside an
   // And, inside an Or). They are equal, so the tree splits on it only once.
   // The other atoms, `Integer2 > 5` and `Integer2 < 0`, exclude each other, so
-  // Integer2 has three regions: 2 x 3 = 6 leaves, not 2^4 = 16.
+  // Integer2 has three regions: 2 x 3 = 6 leaves, not 2^4 = 16, before reduce().
+  // Two of those six agree on every bit (Integer1 > 5 alone is enough to decide
+  // all three predicates whenever Integer2 <= 5, whether or not it is < 0) and
+  // are siblings, so they collapse into one: 5 leaves.
   std::vector<Atom> predicates;
   predicates.push_back(greater_at({0}, kInteger1, 5));
   predicates.push_back(
@@ -183,7 +186,8 @@ TEST_CASE("The same condition written in several predicates is decided once",
                                                    less_at({0}, kInteger2, 0))));
   ParityChecker parity(std::move(predicates));
 
-  REQUIRE(parity.minterm.debug_leaf_count(0) == 6);
+  REQUIRE(parity.minterm.debug_leaf_count(0) == 5);
+  REQUIRE(parity.minterm.debug_reduced_node_count(0) == 1);
   check_events(parity);
 }
 
@@ -476,6 +480,16 @@ TEST_CASE("Weakly typed predicates on one attribute are related like strongly ty
   // variable, so mutually exclusive or nested conditions collapse. Before weak
   // atoms were translated they were opaque, unrelated to each other, and these
   // trees had 2^n leaves.
+  //
+  // A top-level "AND" joining several `alias[...]` clauses compiles to several
+  // SEPARATE top-level predicates (one per clause), not one AndPredicate - so
+  // every section below is really n independent single-atom predicates, and
+  // reduce() (MintermTreeNode::reduce, see tree.hpp) never finds two sibling
+  // leaves that agree on every one of their n bits: the leaf counts here are
+  // unaffected by reduce(). An AND/OR written *inside* one bracket, or built by
+  // hand as a single compound predicate, is different - see
+  // "The same condition written in several predicates is decided once" and the
+  // OR sections below for cases reduce() does change.
   SECTION("mutually exclusive equalities: n + 1 regions per event type") {
     CeqlParityChecker parity("X[Integer1 = 1] AND X[Integer1 = 2] AND X[Integer1 = 3]");
     REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
@@ -530,6 +544,11 @@ TEST_CASE("A weakly typed OR is handled by the trees",
   // any event type none of its atoms names, so it belongs in the trees; it used to
   // be evaluated directly, with no tree at all.
   SECTION("exclusive equalities inside one OR") {
+    // Two of these three leaves both answer "true" for the OR, but they are not
+    // siblings (one is the root's own child, the other a grandchild reached
+    // through the second equality), so reduce() leaves them alone: merging
+    // same-bitset leaves that are not siblings needs a shared subtree (a DAG),
+    // which is deliberately out of scope for now (see the guide's backlog).
     CeqlParityChecker parity("X[Integer1 = 1 OR Integer1 = 2]");
     REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
     REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 3);
@@ -537,16 +556,23 @@ TEST_CASE("A weakly typed OR is handled by the trees",
   }
 
   SECTION("independent atoms inside one OR") {
+    // Before reduce(), independent atoms still multiply (4 leaves). But once
+    // Integer1 > 5 holds, the OR is already true regardless of Integer2 < 2: the
+    // two leaves under that branch agree ("(p0)") and are siblings, so they
+    // collapse into one, leaving 3.
     CeqlParityChecker parity("X[Integer1 > 5 OR Integer2 < 2]");
-    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
-    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 3);
     check_weak_events(parity);
   }
 
   SECTION("an OR whose atoms exist in different event types") {
     // Double1 only exists in event1: for event2 the OR reduces to `Integer1 > 5`.
+    // Type 0 collapses exactly like the independent-atoms case above (4 -> 3);
+    // type 1 only has the one atom to begin with, so its two leaves already have
+    // distinct bitsets and nothing collapses.
     CeqlParityChecker parity("X[Integer1 > 5 OR Double1 < 2.5]");
-    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
     REQUIRE(parity.checker.minterm.debug_leaf_count(1) == 2);
     check_weak_events(parity);
   }
