@@ -81,6 +81,42 @@ TEST_CASE("The trees of the worked example print as expected",
   REQUIRE(parity.minterm.trees_to_string(without_regions()) == expected);
 }
 
+TEST_CASE("A collapsed sibling pair prints one fewer leaf and shows up as reduced",
+          "[MintermTreeEvaluator][Optimizations][Print]") {
+  // p0 = a AND b, a and b independent (the guide's worked example for
+  // MintermTreeNode::reduce): without reduce() this is 4 leaves, but once a is
+  // false b cannot change the answer, so that sibling pair collapses to one.
+  // This is also the test that would catch a stale leaf count if
+  // build_tree_for_event_type ever went back to reusing the pre-reduce
+  // `leaves` vector for its bookkeeping (see the comment there): neither the
+  // worked example above nor most other print tests collapse anything, so they
+  // would not notice such a bug.
+  std::vector<Atom> predicates;
+  predicates.push_back(
+    std::make_unique<CEA::AndPredicate>(0,
+                                        children_of(greater_at({0}, kInteger1, 5),
+                                                    greater_at({0}, kInteger2, 5))));
+  ParityChecker parity(std::move(predicates));
+
+  REQUIRE(parity.minterm.debug_leaf_count(0) == 3);
+  REQUIRE(parity.minterm.debug_reduced_node_count(0) == 1);
+
+  std::string dump = parity.minterm.trees_to_string(without_regions());
+  REQUIRE(contains(dump,
+                   "2 atoms (0 opaque), 1 trees with 3 leaves in total (largest 3, 1 "
+                   "reduced)"));
+  REQUIRE(contains(dump, "Event type 0: 3 leaves, 2 atoms"));
+
+  for (int64_t integer1 : {int64_t{0}, int64_t{6}, int64_t{10}}) {
+    for (int64_t integer2 : {int64_t{0}, int64_t{6}}) {
+      auto event = make_event_type_1("s", integer1, integer2, 0.0, 0.0);
+      parity.check(event,
+                   "Integer1=" + std::to_string(integer1)
+                     + " Integer2=" + std::to_string(integer2));
+    }
+  }
+}
+
 TEST_CASE("Regions are shown by default and can be cut short",
           "[MintermTreeEvaluator][Optimizations][Print]") {
   ParityChecker parity(worked_example());
