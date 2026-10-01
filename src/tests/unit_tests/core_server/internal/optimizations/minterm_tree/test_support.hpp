@@ -99,9 +99,10 @@ class ParityChecker {
   explicit ParityChecker(
     std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates,
     size_t max_leaves_per_tree = MintermTreeEvaluator::kMaxLeavesPerTree,
-    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered)
+    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
       : baseline(std::move(predicates)),
-        minterm(baseline.predicates, max_leaves_per_tree, atom_ordering) {
+        minterm(baseline.predicates, max_leaves_per_tree, atom_ordering, string_equality) {
     // Debugging aid: CORE_PRINT_MINTERM_TREES=1 shows the trees every test builds.
     if (print_trees_requested()) {
       std::cout << "\n" << minterm.trees_to_string() << std::endl;
@@ -129,9 +130,15 @@ class CeqlParityChecker {
  public:
   ParityChecker checker;
 
-  explicit CeqlParityChecker(const std::string& filter_clause,
-                             const CompiledFilter::CatalogSetup& setup = process_catalog)
-      : compiled_(filter_clause, setup), checker(std::move(compiled_.predicates)) {}
+  explicit CeqlParityChecker(
+    const std::string& filter_clause,
+    const CompiledFilter::CatalogSetup& setup = process_catalog,
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+      : compiled_(filter_clause, setup),
+        checker(std::move(compiled_.predicates),
+                MintermTreeEvaluator::kMaxLeavesPerTree,
+                AtomOrderingStrategy::AsDiscovered,
+                string_equality) {}
 
   CeqlParityChecker(const CeqlParityChecker&) = delete;
   CeqlParityChecker& operator=(const CeqlParityChecker&) = delete;

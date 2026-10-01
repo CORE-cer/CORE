@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -21,6 +23,7 @@
 #include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -36,6 +39,27 @@ Types::EventWrapper make_int_event(int64_t value) {
                                               std::vector<std::shared_ptr<Types::Value>>{
                                                 std::make_unique<Types::IntValue>(value)});
   return Types::EventWrapper(std::move(event));
+}
+
+// Event type 0 with one string attribute at position 0.
+Types::EventWrapper make_string_event(std::string value) {
+  auto event = std::make_shared<Types::Event>(0,
+                                              std::vector<std::shared_ptr<Types::Value>>{
+                                                std::make_unique<Types::StringValue>(
+                                                  std::move(value))});
+  return Types::EventWrapper(std::move(event));
+}
+
+// Two mutually exclusive string equalities on that attribute.
+std::vector<std::unique_ptr<CEA::PhysicalPredicate>> make_string_predicates() {
+  std::vector<std::unique_ptr<CEA::PhysicalPredicate>> predicates;
+  predicates.push_back(
+    std::make_unique<CEA::CompareWithConstant<CEA::ComparisonType::EQUALS, std::string_view>>(
+      0, 0, std::string_view("AAPL")));
+  predicates.push_back(
+    std::make_unique<CEA::CompareWithConstant<CEA::ComparisonType::EQUALS, std::string_view>>(
+      0, 0, std::string_view("GOOG")));
+  return predicates;
 }
 
 // Two related predicates on that attribute: `x > 100` and `x > 50`.
@@ -122,6 +146,35 @@ TEST_CASE("AtomOrderingStrategy reaches the evaluator through EngineOptions",
   Interface::EngineOptions options;
   options.predicate_evaluation = PredicateEvaluationStrategy::MintermTree;
   options.atom_ordering = AtomOrderingStrategy::MostSharedAttributesFirst;
+  REQUIRE_NOTHROW(Interface::Backend<>(options));
+}
+
+TEST_CASE("StringEqualityStrategy reaches the evaluator through EngineOptions",
+          "[MintermTreeFactory][Optimizations]") {
+  // make_string_predicates()'s two atoms are mutually exclusive string
+  // equalities on the same attribute, exactly the shape InternedEquality
+  // relates (the heuristic's own effect on tree shape is checked directly
+  // against MintermTreeEvaluator in minterm_tree/minterm_tree_structure.cpp
+  // and minterm_tree_translator.cpp).
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+  Evaluation::PredicateEvaluator baseline(make_string_predicates());
+  Evaluation::PredicateEvaluator optimized(make_string_predicates(),
+                                           PredicateEvaluationStrategy::MintermTree,
+                                           AtomOrderingStrategy::AsDiscovered,
+                                           StringEqualityStrategy::InternedEquality);
+  REQUIRE(optimized.optimized_evaluator != nullptr);
+  for (const char* value : {"AAPL", "GOOG", "MSFT"}) {  // match, match, unlisted
+    auto event = make_string_event(value);
+    INFO("value = " << value);
+    REQUIRE(optimized(event) == baseline(event));
+  }
+
+  // The same, reached through EngineOptions/Backend rather than directly.
+  Interface::EngineOptions options;
+  options.predicate_evaluation = PredicateEvaluationStrategy::MintermTree;
+  options.string_equality = StringEqualityStrategy::InternedEquality;
   REQUIRE_NOTHROW(Interface::Backend<>(options));
 }
 

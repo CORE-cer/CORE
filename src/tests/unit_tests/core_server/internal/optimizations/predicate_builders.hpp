@@ -108,8 +108,9 @@ double_greater_at(std::set<uint64_t> types, size_t position, double threshold) {
     std::move(types), position, threshold);
 }
 
-// A string equality: never modeled, so it is opaque, and (unlike the regex
-// predicate) it can admit several event types.
+// A string equality: opaque unless the builder models string equality
+// (StringEqualityStrategy::InternedEquality / RecordingBuilder(true)), and
+// (unlike the regex predicate) it can admit several event types.
 inline Atom string_equals(std::set<uint64_t> types, const char* text) {
   return std::make_unique<CEA::CompareWithConstant<Comparison::EQUALS, std::string_view>>(
     std::move(types), kString, std::string_view(text));

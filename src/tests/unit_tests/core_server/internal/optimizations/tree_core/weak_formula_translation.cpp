@@ -36,8 +36,12 @@ namespace CORE::Internal::Optimizations::MintermTree::UnitTests::TreeCore {
 namespace {
 
 // The formula of a predicate for `event_type`, as text.
-std::string formula_of(const CEA::PhysicalPredicate& predicate, uint64_t event_type) {
-  RecordingBuilder builder;
+// `model_string_equality` toggles RecordingBuilder's own flag, default off:
+// string equality stays opaque by default, matching every existing call site.
+std::string formula_of(const CEA::PhysicalPredicate& predicate,
+                       uint64_t event_type,
+                       bool model_string_equality = false) {
+  RecordingBuilder builder(model_string_equality);
   return builder.text(predicate.translate(builder, event_type));
 }
 
@@ -184,8 +188,8 @@ TEST_CASE("What is not modeled stays opaque for weakly typed predicates too",
          "X[Integer1 % 3 = 1]",         // same for modulo
          "X[Integer1 * Integer2 > 3]",  // nonlinear
          "X[Double1 + Double2 > 3.5]",  // IEEE rounding differs from exact reals
-         "X[String = 'abc']",           // strings are not modeled
-         "X[String LIKE 'a.*']",        // regular expressions neither
+         "X[String = 'abc']",           // strings, by default (see below)
+         "X[String LIKE 'a.*']",        // regular expressions: always opaque
        }) {
     INFO("filter: " << filter);
     CompiledFilter compiled(filter);
@@ -193,6 +197,24 @@ TEST_CASE("What is not modeled stays opaque for weakly typed predicates too",
     REQUIRE(predicates.size() == 1);
     REQUIRE(is_opaque(formula_of(*predicates[0], 0)));
   }
+}
+
+TEST_CASE("Weakly typed string equality is modeled when the builder is asked to",
+          "[MintermTreeCore][Optimizations][Weak]") {
+  // Proves the compare_math_exprs.hpp fix: weakly typed equality always
+  // compiles to CompareMathExprs (never CompareWithConstant), which has its
+  // own gate - without that fix this would still read opaque[...] here no
+  // matter what Literal/NonStronglyTypedAttribute do on their own.
+  CompiledFilter compiled("X[String = 'abc']");
+  auto predicates = compiled.filter_predicates();
+  REQUIRE(predicates.size() == 1);
+  REQUIRE(formula_of(*predicates[0], 0, /*model_string_equality=*/true)
+          == "(== s(0,0) str(abc))");
+
+  // LIKE is a different mechanism entirely, untouched either way.
+  CompiledFilter like_compiled("X[String LIKE 'a.*']");
+  auto like_predicates = like_compiled.filter_predicates();
+  REQUIRE(is_opaque(formula_of(*like_predicates[0], 0, /*model_string_equality=*/true)));
 }
 
 // ---------------------------------------------------------------------------

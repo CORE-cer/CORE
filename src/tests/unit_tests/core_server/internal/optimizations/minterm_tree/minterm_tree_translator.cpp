@@ -99,8 +99,12 @@ enum class Exactness {
 class TranslatorLab {
  public:
   z3::context ctx;
-  PhysicalPredicateZ3Translator translator{ctx};
+  PhysicalPredicateZ3Translator translator;
   PhysicalPredicateZ3Algebra algebra{ctx};
+
+  explicit TranslatorLab(
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+      : translator(ctx, string_equality) {}
 
   CEA::PhysicalPredicate& adopt(Atom atom) {
     atoms_.push_back(std::move(atom));
@@ -143,6 +147,16 @@ class TranslatorLab {
           symbols.push_back(translator.attribute_symbol(type, pos, true));
           values.push_back(real_value(real->val));
         }
+      } else if (const auto* str = dynamic_cast<const Types::StringValue*>(attribute)) {
+        // Calling string_literal(the event's real value) is exactly the right
+        // substitution: if it matches a literal the atom already compared
+        // against, interning gives back that same id (consistent); if it is a
+        // third, unlisted value, interning assigns it a fresh, distinct id,
+        // which Z3 then correctly decides is unequal to every literal in the
+        // atom - the "unlisted literal" case, decided exactly, not just left
+        // open.
+        symbols.push_back(translator.expr_of(translator.string_attribute(type, pos)));
+        values.push_back(translator.expr_of(translator.string_literal(str->val)));
       }
     }
     return formula.substitute(symbols, values).simplify();
@@ -964,6 +978,44 @@ TEST_CASE("A weakly typed attribute stored as int in one event and double in ano
     }
     REQUIRE(lab.translator.opaque_atom_count() == 0);
   }
+}
+
+TEST_CASE(
+  "String equality is translated exactly under InternedEquality, and an "
+  "unlisted literal is decided correctly",
+  "[MintermTreeEvaluator][Optimizations][Translator][Weak]") {
+  // Interning has no approximation anywhere (unlike int->double rounding
+  // elsewhere in this file): a match, a mismatch and a third, unlisted literal
+  // must all be Exactness::Exact, never SoundOnly. Covers both the strongly
+  // typed path (CompareWithConstant) and the weakly typed one
+  // (CompareMathExprs + NonStronglyTypedAttribute, the shape the fix in
+  // compare_math_exprs.hpp made reachable).
+  TranslatorLab lab(StringEqualityStrategy::InternedEquality);
+
+  CEA::PhysicalPredicate& eq = lab.adopt(
+    std::make_unique<CEA::CompareWithConstant<Comparison::EQUALS, std::string_view>>(
+      0, kString, std::string_view("a")));
+  CEA::PhysicalPredicate& neq = lab.adopt(
+    std::make_unique<CEA::CompareWithConstant<Comparison::NOT_EQUALS, std::string_view>>(
+      0, kString, std::string_view("a")));
+
+  for (const char* text : {"a", "b", ""}) {  // match, mismatch, unlisted
+    auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+    lab.expect_atom_matches(eq, event, Exactness::Exact);
+    lab.expect_atom_matches(neq, event, Exactness::Exact);
+  }
+  REQUIRE(lab.translator.opaque_atom_count() == 0);
+
+  // The weak path: "X[String = 'a']" compiles to CompareMathExprs wrapping a
+  // NonStronglyTypedAttribute and a Literal - a different translate_atom
+  // entirely from the strong case above.
+  CompiledFilter compiled("X[String = 'a']");
+  CEA::PhysicalPredicate* weak_eq = compiled.filter_predicates().at(0);
+  for (const char* text : {"a", "b", ""}) {
+    auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+    lab.expect_atom_matches(*weak_eq, event, Exactness::Exact);
+  }
+  REQUIRE(lab.translator.opaque_atom_count() == 0);
 }
 
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests

@@ -525,11 +525,40 @@ TEST_CASE("Weakly typed predicates on one attribute are related like strongly ty
   }
 
   SECTION("what is not modeled still splits independently") {
-    // Strings are opaque, also on an alias: two unrelated regions per atom.
+    // Strings are opaque by default, also on an alias: two unrelated regions
+    // per atom. See "string equality interning collapses mutually exclusive
+    // string atoms" below for the same filter with StringEqualityStrategy::
+    // InternedEquality.
     CeqlParityChecker parity("X[String = 'a'] AND X[String = 'b']");
     REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 4);
     REQUIRE(parity.checker.minterm.describe().find("atoms (2 opaque)")
             != std::string::npos);
+    for (const char* text : {"", "a", "b", "ab"}) {
+      auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+      parity.check(event, std::string("String = '") + text + "'");
+    }
+  }
+
+  SECTION("string equality interning collapses mutually exclusive string atoms") {
+    // Same filter as above, StringEqualityStrategy::InternedEquality instead:
+    // "String = 'a'" and "String = 'b'" are two separate top-level predicates
+    // (a top-level CEQL AND across brackets compiles to separate predicates,
+    // not one compound - see "The same condition written in several
+    // predicates is decided once" and 5.10), both reading the same interned-id
+    // symbol. A string cannot equal two different literals at once, so this is
+    // exactly the n+1-for-n-mutually-exclusive-equalities pattern already
+    // proven above for integers, with n=2: 3 leaves ({p0}, {p1}, {neither}),
+    // none of them opaque, nothing left for reduce() to collapse (the 3
+    // bitsets are already all distinct).
+    CeqlParityChecker parity("X[String = 'a'] AND X[String = 'b']",
+                             process_catalog,
+                             StringEqualityStrategy::InternedEquality);
+    REQUIRE(parity.checker.minterm.debug_leaf_count(0) == 3);
+    REQUIRE(parity.checker.minterm.describe().find("atoms (0 opaque)")
+            != std::string::npos);
+    REQUIRE(parity.checker.minterm.debug_reduced_node_count(0) == 0);
+    // "" and "ab" are unlisted literals: equal to neither "a" nor "b" - the
+    // real soundness check, not just a leaf-count sanity check.
     for (const char* text : {"", "a", "b", "ab"}) {
       auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
       parity.check(event, std::string("String = '") + text + "'");

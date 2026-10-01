@@ -7,11 +7,14 @@
 //
 //   attribute 1 of event type 0, as int / as double   i(0,1)   d(0,1)
 //   an int attribute converted to double               toDouble(i(0,1))
+//   a string attribute / a string literal               s(0,1)   str(abc)
 //   comparison, arithmetic                              (> a b)  (+ a b)  (* a b)
 //   and / or / not / constants                          (and a b)  (or a b)  (not a)  true  false
 //   an atom that could not be translated                opaque[<atom text>]@<event type>
 //
-// so `Integer1 > 5` on event type 0 reads `(> i(0,1) 5)`.
+// so `Integer1 > 5` on event type 0 reads `(> i(0,1) 5)`. String attributes/
+// literals are only produced when constructed with model_string_equality=true
+// (default false, matching how string equality stays opaque by default).
 
 #include <cmath>
 #include <cstddef>
@@ -19,6 +22,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -31,6 +35,14 @@ namespace CORE::Internal::Optimizations::MintermTree::UnitTests::TreeCore {
 
 class RecordingBuilder : public CEA::FormulaBuilder {
  public:
+  // `model_string_equality`: whether this builder should model string
+  // equality/inequality (as it would under
+  // StringEqualityStrategy::InternedEquality) or stay opaque for it (the
+  // default, matching every existing test that constructs a bare
+  // RecordingBuilder and expects string atoms to stay opaque).
+  explicit RecordingBuilder(bool model_string_equality = false)
+      : model_string_equality_(model_string_equality) {}
+
   // The text a handle stands for.
   const std::string& text(Handle handle) const { return formulas_[handle]; }
 
@@ -59,6 +71,19 @@ class RecordingBuilder : public CEA::FormulaBuilder {
     out << value;
     return record(out.str());
   }
+
+  // No interning needed here: this test double only shows what was asked for,
+  // it does not need to prove cross-atom relationships the way the real Z3
+  // translator's identical-id caching does.
+  Handle string_attribute(Types::UniqueEventTypeId event_type, size_t pos) override {
+    return record("s(" + std::to_string(event_type) + "," + std::to_string(pos) + ")");
+  }
+
+  Handle string_literal(std::string_view value) override {
+    return record("str(" + std::string(value) + ")");
+  }
+
+  bool models_string_equality() const override { return model_string_equality_; }
 
   Handle add(Handle left, Handle right) override { return binary("+", left, right); }
 
@@ -109,6 +134,7 @@ class RecordingBuilder : public CEA::FormulaBuilder {
   }
 
  private:
+  bool model_string_equality_;
   std::vector<std::string> formulas_;
   size_t opaque_count_ = 0;
 

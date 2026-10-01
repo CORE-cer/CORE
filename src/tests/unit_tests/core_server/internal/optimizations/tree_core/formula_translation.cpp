@@ -45,10 +45,14 @@ namespace CORE::Internal::Optimizations::MintermTree::UnitTests::TreeCore {
 namespace {
 
 // The formula an atom or compound describes for `event_type`, as text.
+// `model_string_equality` toggles StringEqualityStrategy::InternedEquality's
+// Z3-free counterpart (RecordingBuilder's own flag, default off so every
+// existing call site is unaffected - string equality stays opaque by default).
 std::string formula_of(const CEA::PhysicalPredicate& predicate,
                        uint64_t event_type = 0,
-                       bool gated = true) {
-  RecordingBuilder builder;
+                       bool gated = true,
+                       bool model_string_equality = false) {
+  RecordingBuilder builder(model_string_equality);
   return builder.text(predicate.translate(builder, event_type, gated));
 }
 
@@ -157,6 +161,21 @@ TEST_CASE("Constants and atoms that cannot be described are left opaque",
     REQUIRE(is_opaque(formula_of(regex)));
   }
 
+  SECTION("string equality, modeled only when the builder is asked to") {
+    Atom text = string_equals({0}, "abc");
+    REQUIRE(formula_of(*text, 0, true, /*model_string_equality=*/true)
+            == "(== s(0,0) str(abc))");
+    // A regex is a completely different mechanism: untouched either way.
+    CEA::CompareWithRegexStronglyTyped regex(0, kString, std::string("a.*"));
+    REQUIRE(is_opaque(formula_of(regex, 0, true, /*model_string_equality=*/true)));
+    // Ordering on strings is never modeled (interned ids carry no lexicographic
+    // meaning): this would be unsound, not just unoptimized, so it stays opaque
+    // even when the builder models equality.
+    CEA::CompareWithConstant<Comparison::GREATER, std::string_view>
+      ordering(0, kString, std::string_view("abc"));
+    REQUIRE(is_opaque(formula_of(ordering, 0, true, /*model_string_equality=*/true)));
+  }
+
   SECTION("a predicate class that does not override translate_atom") {
     UnknownAtom atom;
     RecordingBuilder builder;
@@ -185,10 +204,13 @@ TEST_CASE(
   REQUIRE(formula_of(double_then_int) == "(> d(0,3) toDouble(i(0,1)))");
   REQUIRE(formula_of(doubles) == "(> d(0,3) d(0,4))");
 
-  // Comparing text with text (or with a number) is not modeled.
+  // Comparing text with text (or with a number) is not modeled - attribute-vs-
+  // attribute string equality is out of scope even under InternedEquality
+  // (CompareWithAttribute's own numeric-only check never asks the builder).
   CEA::CompareWithAttribute<Comparison::EQUALS, std::string_view, std::string_view>
     strings(0, kString, kString);
   REQUIRE(is_opaque(formula_of(strings)));
+  REQUIRE(is_opaque(formula_of(strings, 0, true, /*model_string_equality=*/true)));
 }
 
 TEST_CASE("Math expression atoms translate linear int arithmetic and nothing else",
@@ -289,6 +311,14 @@ TEST_CASE("Each math node translates only the value types whose semantics match"
   REQUIRE(text_of(CEA::Literal<double>(kNaN)) == "(not translatable)");
   REQUIRE(text_of(CEA::Literal<std::string_view>(std::string_view("a")))
           == "(not translatable)");
+
+  RecordingBuilder builder_with_strings(/*model_string_equality=*/true);
+  auto text_of_with = [&](const auto& node_to_translate) {
+    auto handle = node_to_translate.translate(builder_with_strings, 0);
+    return handle.has_value() ? builder_with_strings.text(*handle)
+                              : std::string("(not translatable)");
+  };
+  REQUIRE(text_of_with(CEA::Literal<std::string_view>(std::string_view("a"))) == "str(a)");
 
   REQUIRE(text_of(*attribute<int64_t, int64_t>(1)) == "i(0,1)");
   REQUIRE(text_of(*attribute<double, int64_t>(1)) == "toDouble(i(0,1))");
