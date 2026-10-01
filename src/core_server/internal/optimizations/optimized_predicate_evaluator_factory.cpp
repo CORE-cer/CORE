@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 

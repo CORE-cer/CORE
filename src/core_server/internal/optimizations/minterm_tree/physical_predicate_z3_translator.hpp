@@ -439,6 +439,13 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
   // and "conv_<type>_<pos>" (exactly the names attribute_symbol / nan_flag /
   // conversion_symbol give out above) and recovers (type, pos). Anything else
   // (including "opaque_<n>", a literal's internal name, ...) is nullopt.
+  // Recognizing nan_/conv_ is currently redundant: double_attribute and
+  // int_attribute_as_double always put the attr_ symbol for the same (type,
+  // pos) in the same formula as any nan_/conv_ symbol they produce, so no
+  // formula seen today needs this to find a key it would otherwise miss. Kept
+  // for symmetry (every symbol this translator names an attribute after is
+  // recognized) and so a future translate() that used one on its own would
+  // not silently need this updated.
   static std::optional<std::pair<Types::UniqueEventTypeId, size_t>>
   parse_attribute_key(const std::string& name) {
     for (std::string_view prefix : {"attr_", "nan_", "conv_"}) {

@@ -55,6 +55,30 @@ TEST_CASE("attribute_keys_of finds every attribute in an arithmetic expression",
           == std::set<Key>{{0, kInteger1}, {0, kInteger2}});
 }
 
+TEST_CASE(
+  "attribute_keys_of finds the attribute nested inside an int-as-double "
+  "conversion",
+  "[MintermTreeTranslator][Optimizations][Weak]") {
+  // An int attribute read as a double (int_attribute_as_double, 5.4) is a
+  // multi-level ite() expression, not a flat comparison like the other cases
+  // here - this exercises the recursive walk going several levels deep rather
+  // than only one. The ite() condition compares the raw int attribute
+  // (attr_<type>_<pos>_i) directly, so the key is found through that symbol;
+  // parse_attribute_key also recognizes the nested conv_<type>_<pos> symbol
+  // (the "uncertain beyond 2^53" value) for the same key, but no formula the
+  // translator produces today uses conv_ (or nan_) for a key without attr_
+  // for that same key already being present too, so that part of
+  // parse_attribute_key cannot be exercised by an observable difference - kept
+  // for symmetry and in case a future translate() adds such a formula.
+  z3::context ctx;
+  PhysicalPredicateZ3Translator translator{ctx};
+  CEA::CompareMathExprs<CEA::ComparisonType::GREATER, double>
+  atom(uint64_t{0}, attribute<double, int64_t>(kInteger1), literal<double>(5.0));
+
+  z3::expr formula = translator.translate_atom(&atom, 0);
+  REQUIRE(translator.attribute_keys_of(formula) == std::set<Key>{{0, kInteger1}});
+}
+
 TEST_CASE("attribute_keys_of returns nothing for an opaque atom",
           "[MintermTreeTranslator][Optimizations][Weak]") {
   z3::context ctx;
