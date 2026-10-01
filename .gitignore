@@ -36,6 +36,9 @@ src/targets/experiments/taxis/benchmark.csv
 
 /minterm_tree
 
+# personal reference docs (see guides/README.md)
+/guides/
+
 .direnv
 
 events_*

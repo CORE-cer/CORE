@@ -19,8 +19,9 @@ namespace CORE::Internal::Optimizations::MintermTree {
 // a broadly relevant atom closer to the root tends to make the leaves beneath
 // an unrelated branch agree on every bit (so that branch collapses); putting it
 // last tends to scatter those same-bitset leaves across different branches,
-// where reduce() cannot reach them. See MINTERM_TREE_GUIDE.md 5.11 for a
-// worked example with real numbers.
+// where reduce() cannot reach them. See
+// guides/minterm_tree/08-the-files-one-by-one.md §8.11 for a worked example
+// with real numbers.
 //
 // THE HEURISTIC. "keys[i]" is whatever set of opaque, comparable markers atom
 // i's formula depends on - in practice the attributes it reads (see

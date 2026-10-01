@@ -118,8 +118,9 @@ namespace {
 // a2 itself) was already seen. b is p1's second child, on a different
 // attribute. The AND's children are listed [b, a2] and p1 is listed BEFORE p0,
 // so first-seen discovery order is [b, a2, a1] - b first, which is the shape
-// that leaves nothing for reduce() to find (see MINTERM_TREE_GUIDE.md 5.11 for
-// the hand-traced numbers this is built to reproduce).
+// that leaves nothing for reduce() to find (see
+// guides/minterm_tree/08-the-files-one-by-one.md §8.11 for the hand-traced
+// numbers this is built to reproduce).
 std::vector<Atom> shared_attribute_predicates() {
   std::vector<Atom> predicates;
   predicates.push_back(
