@@ -119,7 +119,10 @@ class PartitionByQuery : public GenericQuery {
     // The optimized evaluator (if any) is built once here and shared by the
     // per-partition copies of this PredicateEvaluator.
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
-      std::move(predicates), options.predicate_evaluation, options.atom_ordering);
+      std::move(predicates),
+      options.predicate_evaluation,
+      options.atom_ordering,
+      options.string_equality);
 
     // Stage 3: Convert CEQL formula to logical CEA
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);

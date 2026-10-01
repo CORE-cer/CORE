@@ -4,6 +4,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <tracy/Tracy.hpp>
 #include <type_traits>
 
@@ -63,12 +64,29 @@ class CompareMathExprs : public PhysicalPredicate {
       assert(false && "Operator() not implemented for some ComparisonType");
   }
 
-  // `math_expr <Comp> math_expr` over int64_t or double. If either side cannot
-  // be translated (division, double arithmetic, ...) the whole atom is opaque.
+  // `math_expr <Comp> math_expr` over int64_t or double, or string equality/
+  // inequality (this is how weakly typed string equality reaches the builder:
+  // the weak CEQL visitor always builds CompareMathExprs, never
+  // CompareWithConstant, regardless of value type - see
+  // CEQLWeaklyTypedPredicateToCEAPredicate). If either side cannot be
+  // translated (division, double arithmetic, a string the builder does not
+  // model, ...) the whole atom is opaque. This method does not itself ask
+  // models_string_equality(): it is a pure combinator, exactly like the
+  // numeric branch - when string equality is not modeled, left/right already
+  // decline on their own (Literal, NonStronglyTypedAttribute) and that nullopt
+  // propagates here unchanged.
   std::optional<FormulaBuilder::Handle>
   translate_atom(FormulaBuilder& builder,
                  Types::UniqueEventTypeId event_type) const override {
-    if constexpr (std::is_same_v<ValueType, int64_t> || std::is_same_v<ValueType, double>) {
+    constexpr bool kNumeric = std::is_same_v<ValueType, int64_t>
+                              || std::is_same_v<ValueType, double>;
+    // Ordering on strings is never modeled (5.4): interned ids carry no
+    // lexicographic meaning, so this guard is load-bearing for soundness, not
+    // just unoptimized - CEQL's type-checker does not forbid writing one.
+    constexpr bool kStringEquality = std::is_same_v<ValueType, std::string_view>
+                                     && (Comp == ComparisonType::EQUALS
+                                         || Comp == ComparisonType::NOT_EQUALS);
+    if constexpr (kNumeric || kStringEquality) {
       std::optional<FormulaBuilder::Handle> left_formula = left->translate(builder,
                                                                            event_type);
       std::optional<FormulaBuilder::Handle> right_formula = right->translate(builder,

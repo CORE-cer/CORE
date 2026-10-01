@@ -71,8 +71,12 @@ class CompareWithConstant : public PhysicalPredicate {
       assert(false && "Operator() not implemented for some ComparisonType");
   }
 
-  // `attribute <Comp> constant`, for int64_t and double attributes. Comparisons
-  // of strings, booleans and dates are not modeled (opaque).
+  // `attribute <Comp> constant`, for int64_t and double attributes, and for
+  // string equality/inequality when the builder models it (see
+  // FormulaBuilder::models_string_equality, StringEqualityStrategy). Booleans
+  // and dates, and any other comparison on a string (ordering: interned ids
+  // carry no lexicographic meaning, so modeling them would be unsound, not just
+  // unoptimized), are not modeled (opaque).
   std::optional<FormulaBuilder::Handle>
   translate_atom(FormulaBuilder& builder,
                  Types::UniqueEventTypeId event_type) const override {
@@ -86,6 +90,16 @@ class CompareWithConstant : public PhysicalPredicate {
       FormulaBuilder::Handle attribute = builder.double_attribute(event_type,
                                                                   pos_to_compare);
       return builder.compare(Comp, attribute, *literal);
+    } else if constexpr (std::is_same_v<ValueType, std::string_view>) {
+      if (!builder.models_string_equality()) return std::nullopt;
+      if constexpr (Comp != ComparisonType::EQUALS && Comp != ComparisonType::NOT_EQUALS) {
+        return std::nullopt;  // ordering on strings is never modeled, see above
+      } else {
+        FormulaBuilder::Handle attribute = builder.string_attribute(event_type,
+                                                                    pos_to_compare);
+        FormulaBuilder::Handle literal = builder.string_literal(constant_val);
+        return builder.compare(Comp, attribute, literal);
+      }
     } else {
       return std::nullopt;
     }

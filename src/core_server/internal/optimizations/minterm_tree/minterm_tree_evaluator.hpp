@@ -26,6 +26,7 @@
 #include "core_server/internal/optimizations/minterm_tree/tree.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -99,17 +100,19 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // corresponds to predicates[i]. The evaluator co-owns the predicates, so it
   // stays valid however the caller's copies come and go. `max_leaves_per_tree`
   // is only lowered by tests, to exercise the fallback cheaply. `atom_ordering`
-  // defaults to AsDiscovered (today's behaviour, unchanged); it comes after
-  // max_leaves_per_tree so no existing call site that only passes a cap needs
-  // to change.
+  // and `string_equality` default to today's behaviour, unchanged; each comes
+  // after the previous parameters so no existing call site that only passes
+  // some of them needs to change.
   explicit MintermTreeEvaluator(
     const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
     size_t max_leaves_per_tree = kMaxLeavesPerTree,
-    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered)
+    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
       : predicates_(predicates),
         max_leaves_per_tree_(max_leaves_per_tree),
         atom_ordering_(atom_ordering),
-        translator_(ctx_),
+        string_equality_(string_equality),
+        translator_(ctx_, string_equality),
         algebra_(ctx_) {
     build();
   }
@@ -195,6 +198,10 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     if (atom_ordering_ == AtomOrderingStrategy::MostSharedAttributesFirst) {
       out += "; atom ordering: most-shared-attributes-first";
     }
+    // Same convention: only mentioned when non-default.
+    if (string_equality_ == StringEqualityStrategy::InternedEquality) {
+      out += "; string equality: interned";
+    }
     for (const auto& [event_type, reason] : direct_event_types_) {
       out += "; event type " + std::to_string(event_type) + " evaluated directly ("
              + reason + ")";
@@ -274,6 +281,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   std::vector<std::shared_ptr<CEA::PhysicalPredicate>> predicates_;
   size_t max_leaves_per_tree_;
   AtomOrderingStrategy atom_ordering_;
+  StringEqualityStrategy string_equality_;
   z3::context ctx_;
   PhysicalPredicateZ3Translator translator_;
   PhysicalPredicateZ3Algebra algebra_;

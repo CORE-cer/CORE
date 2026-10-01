@@ -20,6 +20,7 @@
 #include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 
 namespace CORE::Internal::Optimizations::MintermTree {
@@ -69,7 +70,10 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //                           event type.
 class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
  public:
-  explicit PhysicalPredicateZ3Translator(z3::context& ctx) : ctx_(ctx) {}
+  explicit PhysicalPredicateZ3Translator(
+    z3::context& ctx,
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+      : ctx_(ctx), string_equality_(string_equality) {}
 
   // Translates one atom (a non-compound predicate) as seen by events of
   // `event_type`. Results are cached per (atom, event type).
@@ -211,6 +215,44 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
                                       std::chars_format::fixed);
     if (error != std::errc()) return std::nullopt;
     return store(Term{ctx_.real_val(std::string(buffer, end).c_str()), std::nullopt});
+  }
+
+  // The interned-id symbol for a string attribute: a fresh Z3 integer per
+  // (event type, position), named "strid_<type>_<pos>" - deliberately NOT the
+  // same name an int64 attribute at that position would get (attr_<type>_<pos>_i),
+  // even though reusing it would be technically safe (a given position is only
+  // ever one stored type, per the catalog): a distinct name keeps a printed
+  // formula from looking like a genuine int64 comparison. Cached per (type,
+  // pos) the same way attribute_symbol/conversion_symbol are; the AttributeKey's
+  // is_real field is unused here (always false), reused only to avoid adding a
+  // fourth near-identical key struct for one more cache.
+  Handle string_attribute(Types::UniqueEventTypeId event_type, size_t pos) override {
+    AttributeKey key{event_type, pos, /*is_real=*/false};
+    auto cached = string_attribute_symbol_cache_.find(key);
+    if (cached != string_attribute_symbol_cache_.end()) {
+      return store(Term{cached->second, std::nullopt});
+    }
+    std::string name = "strid_" + std::to_string(event_type) + "_" + std::to_string(pos);
+    z3::expr symbol = ctx_.int_const(name.c_str());
+    string_attribute_symbol_cache_.emplace(key, symbol);
+    return store(Term{symbol, std::nullopt});
+  }
+
+  // Assign-on-first-sight: the same literal string always gets the same id
+  // within this translator's (i.e. this query's) lifetime. Interning only needs
+  // to be internally consistent for Z3's reasoning - it is never used at
+  // runtime, so there is no meaning to the actual id values beyond "distinct
+  // strings get distinct ids". Reuses int_literal rather than duplicating Z3
+  // term construction.
+  Handle string_literal(std::string_view value) override {
+    auto [it, inserted] = string_literal_ids_.try_emplace(std::string(value),
+                                                          static_cast<int64_t>(
+                                                            string_literal_ids_.size()));
+    return int_literal(it->second);
+  }
+
+  bool models_string_equality() const override {
+    return string_equality_ == StringEqualityStrategy::InternedEquality;
   }
 
   Handle add(Handle left, Handle right) override {
@@ -365,12 +407,18 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
   static constexpr int64_t kMaxExactInt = int64_t{1} << 53;
 
   z3::context& ctx_;
+  StringEqualityStrategy string_equality_;
   // Handles index into this arena: what a FormulaBuilder::Handle stands for.
   std::vector<Term> terms_;
   std::unordered_map<AtomKey, Handle, AtomKeyHash> atom_cache_;
   std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> attribute_symbol_cache_;
   std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> nan_flag_cache_;
   std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> conversion_symbol_cache_;
+  std::unordered_map<AttributeKey, z3::expr, AttributeKeyHash> string_attribute_symbol_cache_;
+  // Owns a copy of each literal string (never a string_view into caller
+  // memory, which may not outlive this map). One per translator, i.e. per
+  // query/build: interning does not need to persist across queries.
+  std::unordered_map<std::string, int64_t> string_literal_ids_;
   uint64_t opaque_counter_ = 0;
   std::unordered_set<const CEA::PhysicalPredicate*> opaque_atoms_;
 
@@ -435,20 +483,23 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
     }
   }
 
-  // Recognizes "attr_<type>_<pos>_i", "attr_<type>_<pos>_r", "nan_<type>_<pos>"
-  // and "conv_<type>_<pos>" (exactly the names attribute_symbol / nan_flag /
-  // conversion_symbol give out above) and recovers (type, pos). Anything else
-  // (including "opaque_<n>", a literal's internal name, ...) is nullopt.
+  // Recognizes "attr_<type>_<pos>_i", "attr_<type>_<pos>_r", "nan_<type>_<pos>",
+  // "conv_<type>_<pos>" and "strid_<type>_<pos>" (exactly the names
+  // attribute_symbol / nan_flag / conversion_symbol / string_attribute give out
+  // above) and recovers (type, pos). Anything else (including "opaque_<n>", a
+  // literal's internal name, ...) is nullopt.
   // Recognizing nan_/conv_ is currently redundant: double_attribute and
   // int_attribute_as_double always put the attr_ symbol for the same (type,
   // pos) in the same formula as any nan_/conv_ symbol they produce, so no
   // formula seen today needs this to find a key it would otherwise miss. Kept
   // for symmetry (every symbol this translator names an attribute after is
   // recognized) and so a future translate() that used one on its own would
-  // not silently need this updated.
+  // not silently need this updated. strid_ is NOT redundant: a string
+  // attribute has no attr_ counterpart at all, so this is the only way a
+  // string atom's attribute shows up for atom ordering (round 7).
   static std::optional<std::pair<Types::UniqueEventTypeId, size_t>>
   parse_attribute_key(const std::string& name) {
-    for (std::string_view prefix : {"attr_", "nan_", "conv_"}) {
+    for (std::string_view prefix : {"attr_", "nan_", "conv_", "strid_"}) {
       if (name.size() <= prefix.size() || name.compare(0, prefix.size(), prefix) != 0) {
         continue;
       }

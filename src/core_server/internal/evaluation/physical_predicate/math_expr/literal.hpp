@@ -41,8 +41,15 @@ class Literal : public MathExpr<Type> {
       return builder.int_literal(val);
     } else if constexpr (std::is_same_v<Type, double>) {
       return builder.double_literal(val);  // nullopt when not finite
+    } else if constexpr (std::is_same_v<Type, std::string_view>) {
+      // Only meaningful for equality/inequality (see
+      // CompareMathExprs::translate_atom, which is the only caller for a
+      // string literal - there is no string arithmetic). Declines the same way
+      // whenever the builder does not model string equality.
+      if (!builder.models_string_equality()) return std::nullopt;
+      return builder.string_literal(val);
     } else {
-      return std::nullopt;  // strings, booleans, dates: not modeled
+      return std::nullopt;  // booleans, dates: not modeled
     }
   }
 

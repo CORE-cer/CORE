@@ -52,7 +52,10 @@ class SimpleQuery : public GenericQuery {
     // The strategy decides whether events are evaluated with the original loop
     // or with an optimized evaluator that is built once here, for this query.
     auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
-      std::move(predicates), options.predicate_evaluation, options.atom_ordering);
+      std::move(predicates),
+      options.predicate_evaluation,
+      options.atom_ordering,
+      options.string_equality);
 
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
     query.where.formula->accept_visitor(visitor);

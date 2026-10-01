@@ -7,6 +7,7 @@
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 
 namespace CORE::Internal::Optimizations {
 
@@ -18,13 +19,15 @@ bool is_minterm_tree_available();
 // nullptr for PredicateEvaluationStrategy::Default (meaning "use the baseline
 // loop"). Throws std::runtime_error if the strategy is not compiled in.
 // Building can be expensive (it runs the SMT solver), so call it once per query.
-// `atom_ordering` is only meaningful for MintermTree; ignored otherwise.
+// `atom_ordering`/`string_equality` are only meaningful for MintermTree;
+// ignored otherwise.
 //
 // Lives in a .cpp so that only that one translation unit ever includes the
 // optimization's heavy dependencies.
 std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
   PredicateEvaluationStrategy strategy,
   const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
-  AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered);
+  AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
+  StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque);
 
 }  // namespace CORE::Internal::Optimizations

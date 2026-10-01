@@ -105,11 +105,12 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
   //
   // Left opaque (nullopt) when the catalog does not know the event type or the
   // event type has no attribute called `name` (the predicate does not admit such
-  // events anyway), and for the stored types that are not modeled: bool, strings,
-  // dates, the primary time. This is decided per event type: the same predicate
-  // may be modeled for one event type and opaque for another. Nothing here throws:
-  // the catalog lookups signal failure with exceptions, which must not escape
-  // while an evaluator is being built.
+  // events anyway), and for the stored types that are not modeled: bool, dates,
+  // the primary time, and strings when the builder does not model string
+  // equality (StringEqualityStrategy::Opaque, the default). This is decided per
+  // event type: the same predicate may be modeled for one event type and opaque
+  // for another. Nothing here throws: the catalog lookups signal failure with
+  // exceptions, which must not escape while an evaluator is being built.
   std::optional<FormulaBuilder::Handle>
   translate(FormulaBuilder& builder, Types::UniqueEventTypeId event_type) const override {
     const Types::EventInfo* event_info = nullptr;
@@ -127,6 +128,18 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
         return attribute_formula<GlobalType, int64_t>(builder, event_type, pos);
       case Types::ValueTypes::DOUBLE:
         return attribute_formula<GlobalType, double>(builder, event_type, pos);
+      case Types::ValueTypes::STRING_VIEW:
+        // Only sound when the predicate itself works with strings too (always
+        // true for a well-typed query: DetermineFinalValueDataTypeWithCatalog
+        // never gives G=string_view an L other than string_view); the
+        // `if constexpr` is defensive rather than load-bearing, since Handle
+        // does not depend on GlobalType and this would compile either way.
+        if constexpr (std::is_same_v<GlobalType, std::string_view>) {
+          if (!builder.models_string_equality()) return std::nullopt;
+          return builder.string_attribute(event_type, pos);
+        } else {
+          return std::nullopt;
+        }
       default:
         return std::nullopt;
     }

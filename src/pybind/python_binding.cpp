@@ -35,6 +35,7 @@
 #include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/server.hpp"
 #include "core_server/library/server_config.hpp"
@@ -114,7 +115,9 @@ class PyOfflineServerWrapper {
     Internal::Optimizations::PredicateEvaluationStrategy predicate_evaluation =
       Internal::Optimizations::PredicateEvaluationStrategy::Default,
     Internal::Optimizations::AtomOrderingStrategy atom_ordering =
-      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered) {
+      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered,
+    Internal::Optimizations::StringEqualityStrategy string_equality =
+      Internal::Optimizations::StringEqualityStrategy::Opaque) {
     uint16_t base = next_port.fetch_add(3);
     Library::ServerConfig::FixedPorts ports{base, static_cast<uint16_t>(base + 1)};
     Library::ServerConfig config{ports,
@@ -124,7 +127,8 @@ class PyOfflineServerWrapper {
                                  "",
                                  "",
                                  Internal::Interface::EngineOptions{predicate_evaluation,
-                                                                    atom_ordering}};
+                                                                    atom_ordering,
+                                                                    string_equality}};
     server = std::make_unique<Library::OfflineServer>(std::move(config));
     client = std::make_unique<Client>("tcp://localhost", base);
   }
@@ -267,7 +271,9 @@ class PyOnlineServerWrapper {
     Internal::Optimizations::PredicateEvaluationStrategy predicate_evaluation =
       Internal::Optimizations::PredicateEvaluationStrategy::Default,
     Internal::Optimizations::AtomOrderingStrategy atom_ordering =
-      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
+      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered,
+    Internal::Optimizations::StringEqualityStrategy string_equality =
+      Internal::Optimizations::StringEqualityStrategy::Opaque)
       : router_port(router_port),
         stream_listener_port(stream_listener_port),
         starting_query_port(starting_query_port) {
@@ -279,7 +285,8 @@ class PyOnlineServerWrapper {
                                  "",
                                  "",
                                  Internal::Interface::EngineOptions{predicate_evaluation,
-                                                                    atom_ordering}};
+                                                                    atom_ordering,
+                                                                    string_equality}};
     server = std::make_unique<Library::OnlineServer>(std::move(config));
   }
 
@@ -313,6 +320,13 @@ NB_MODULE(pycer, m) {
             .value("AS_DISCOVERED", Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
             .value("MOST_SHARED_ATTRIBUTES_FIRST",
                    Internal::Optimizations::AtomOrderingStrategy::MostSharedAttributesFirst);
+
+        // How the minterm-tree optimization treats string equality/inequality
+        // against a literal; only meaningful together with MINTERM_TREE above.
+        nb::enum_<Internal::Optimizations::StringEqualityStrategy>(m, "PyStringEquality")
+            .value("OPAQUE", Internal::Optimizations::StringEqualityStrategy::Opaque)
+            .value("INTERNED_EQUALITY",
+                   Internal::Optimizations::StringEqualityStrategy::InternedEquality);
 
         nb::enum_<Types::ValueTypes>(m, "PyValueTypes")
             .value("INT64", Types::ValueTypes::INT64)
@@ -486,9 +500,11 @@ NB_MODULE(pycer, m) {
 
         nb::class_<PyOfflineServerWrapper>(m, "PyOfflineServer")
             .def(nb::init<Internal::Optimizations::PredicateEvaluationStrategy,
-                         Internal::Optimizations::AtomOrderingStrategy>(),
+                         Internal::Optimizations::AtomOrderingStrategy,
+                         Internal::Optimizations::StringEqualityStrategy>(),
                  nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default,
-                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
+                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered,
+                 nb::arg("string_equality") = Internal::Optimizations::StringEqualityStrategy::Opaque)
             .def("declare_stream", &PyOfflineServerWrapper::declare_stream)
             .def("declare_option", &PyOfflineServerWrapper::declare_option)
             .def("add_query", &PyOfflineServerWrapper::add_query)
@@ -501,12 +517,14 @@ NB_MODULE(pycer, m) {
                          uint16_t,
                          uint16_t,
                          Internal::Optimizations::PredicateEvaluationStrategy,
-                         Internal::Optimizations::AtomOrderingStrategy>(),
+                         Internal::Optimizations::AtomOrderingStrategy,
+                         Internal::Optimizations::StringEqualityStrategy>(),
                  nb::arg("router_port") = 5000,
                  nb::arg("stream_listener_port") = 5001,
                  nb::arg("starting_query_port") = 5002,
                  nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default,
-                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
+                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered,
+                 nb::arg("string_equality") = Internal::Optimizations::StringEqualityStrategy::Opaque)
             .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
             .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port)
             .def("shutdown", &PyOnlineServerWrapper::shutdown,

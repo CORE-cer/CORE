@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 
 #include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
@@ -60,6 +61,15 @@ class FormulaBuilder {
   // predicate must then be left untranslated.
   virtual std::optional<Handle> double_literal(double value) = 0;
 
+  // The interned-id symbol for a string attribute, and the interned id for a
+  // string literal (same value -> same id, within one builder's lifetime). Only
+  // meaningful for equality/inequality: interned ids carry no ordering, so they
+  // must never be used to model a lexicographic comparison. Always callable -
+  // these do not themselves signal "not modeled"; see models_string_equality().
+  virtual Handle
+  string_attribute(Types::UniqueEventTypeId event_type, std::size_t pos) = 0;
+  virtual Handle string_literal(std::string_view value) = 0;
+
   // int64_t arithmetic (assumed not to overflow). Only linear uses are
   // translated by the predicates.
   virtual Handle add(Handle left, Handle right) = 0;
@@ -76,6 +86,15 @@ class FormulaBuilder {
   virtual Handle conjunction(Handle left, Handle right) = 0;
   virtual Handle disjunction(Handle left, Handle right) = 0;
   virtual Handle negation(Handle operand) = 0;
+
+  // Whether this builder can relate string equality/inequality atoms (interned
+  // literals) instead of leaving them opaque. A predicate that could call
+  // string_attribute/string_literal above must check this first and return
+  // nullopt itself when it is false - those two methods are always callable
+  // and never signal "declined" on their own. Defaults to false so every
+  // existing FormulaBuilder implementation keeps behaving exactly as before
+  // this method existed, with no changes required on their part.
+  virtual bool models_string_equality() const { return false; }
 
   // A leaf predicate (atom) evaluated for events of `event_type`. The builder
   // asks the atom to translate itself (PhysicalPredicate::translate_atom) and, if

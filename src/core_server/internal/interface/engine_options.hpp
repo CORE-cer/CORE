@@ -2,6 +2,7 @@
 
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
 
 namespace CORE::Internal::Interface {
 
@@ -18,6 +19,12 @@ struct EngineOptions {
   // Only meaningful when predicate_evaluation == MintermTree; inert otherwise.
   Optimizations::AtomOrderingStrategy
     atom_ordering = Optimizations::AtomOrderingStrategy::AsDiscovered;
+
+  // How the minterm-tree optimization treats string equality/inequality
+  // against a literal. Only meaningful when predicate_evaluation ==
+  // MintermTree; inert otherwise.
+  Optimizations::StringEqualityStrategy
+    string_equality = Optimizations::StringEqualityStrategy::Opaque;
 };
 
 }  // namespace CORE::Internal::Interface
