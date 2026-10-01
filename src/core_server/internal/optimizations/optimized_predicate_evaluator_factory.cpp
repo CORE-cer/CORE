@@ -33,14 +33,16 @@ bool is_minterm_tree_available() {
 
 std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
   PredicateEvaluationStrategy strategy,
-  const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates) {
+  const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
+  AtomOrderingStrategy atom_ordering) {
   switch (strategy) {
     case PredicateEvaluationStrategy::Default:
       return nullptr;
 
     case PredicateEvaluationStrategy::MintermTree: {
 #ifdef CORE_ENABLE_MINTERM_OPTIMIZATION
-      auto evaluator = std::make_shared<MintermTree::MintermTreeEvaluator>(predicates);
+      auto evaluator = std::make_shared<MintermTree::MintermTreeEvaluator>(
+        predicates, MintermTree::MintermTreeEvaluator::kMaxLeavesPerTree, atom_ordering);
 
       // Make the run self-documenting so a benchmark can confirm the
       // optimization was really active. (There is no logger when no server

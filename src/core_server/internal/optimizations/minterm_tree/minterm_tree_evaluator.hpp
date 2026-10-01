@@ -16,7 +16,9 @@
 
 #include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/minterm_tree/atom_extractor.hpp"
+#include "core_server/internal/optimizations/minterm_tree/atom_ordering.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_generator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/physical_predicate_z3_algebra.hpp"
 #include "core_server/internal/optimizations/minterm_tree/physical_predicate_z3_translator.hpp"
@@ -96,12 +98,17 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // `predicates` is the query's full predicate list; bit i of the result
   // corresponds to predicates[i]. The evaluator co-owns the predicates, so it
   // stays valid however the caller's copies come and go. `max_leaves_per_tree`
-  // is only lowered by tests, to exercise the fallback cheaply.
+  // is only lowered by tests, to exercise the fallback cheaply. `atom_ordering`
+  // defaults to AsDiscovered (today's behaviour, unchanged); it comes after
+  // max_leaves_per_tree so no existing call site that only passes a cap needs
+  // to change.
   explicit MintermTreeEvaluator(
     const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
-    size_t max_leaves_per_tree = kMaxLeavesPerTree)
+    size_t max_leaves_per_tree = kMaxLeavesPerTree,
+    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered)
       : predicates_(predicates),
         max_leaves_per_tree_(max_leaves_per_tree),
+        atom_ordering_(atom_ordering),
         translator_(ctx_),
         algebra_(ctx_) {
     build();
@@ -159,6 +166,14 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     return it == reduced_nodes_per_type_.end() ? 0 : it->second;
   }
 
+  // The atoms admitting event_type, as to_string(), in the order they were
+  // actually refined in (whatever AtomOrderingStrategy produced it). Empty if
+  // the type has no tree.
+  std::vector<std::string> debug_atom_order(Types::UniqueEventTypeId event_type) const {
+    auto it = atom_order_per_type_.find(event_type);
+    return it == atom_order_per_type_.end() ? std::vector<std::string>{} : it->second;
+  }
+
   // True if `event_type` has no tree and is evaluated directly (SAFETY NET).
   bool uses_direct_evaluation(Types::UniqueEventTypeId event_type) const {
     return direct_event_types_.contains(event_type);
@@ -174,6 +189,12 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
                       + std::to_string(total_leaves_) + " leaves in total (largest "
                       + std::to_string(max_leaves_) + ", "
                       + std::to_string(reduced_nodes_) + " reduced)";
+    // Only mentioned when non-default, so the printed text for the default
+    // strategy (AsDiscovered) stays byte-identical to before this option
+    // existed - no existing exact-text test needs to change for it.
+    if (atom_ordering_ == AtomOrderingStrategy::MostSharedAttributesFirst) {
+      out += "; atom ordering: most-shared-attributes-first";
+    }
     for (const auto& [event_type, reason] : direct_event_types_) {
       out += "; event type " + std::to_string(event_type) + " evaluated directly ("
              + reason + ")";
@@ -252,6 +273,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // the predicates outlive everything that points into them.
   std::vector<std::shared_ptr<CEA::PhysicalPredicate>> predicates_;
   size_t max_leaves_per_tree_;
+  AtomOrderingStrategy atom_ordering_;
   z3::context ctx_;
   PhysicalPredicateZ3Translator translator_;
   PhysicalPredicateZ3Algebra algebra_;
@@ -275,6 +297,9 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // Per event type: how many internal nodes MintermTreeNode::reduce()
   // collapsed for that type's tree. Absent for a type with no tree.
   std::unordered_map<Types::UniqueEventTypeId, size_t> reduced_nodes_per_type_;
+  // Per event type: the atoms, as to_string(), in the order they were refined
+  // in (see debug_atom_order). Testing only.
+  std::unordered_map<Types::UniqueEventTypeId, std::vector<std::string>> atom_order_per_type_;
 
   void build() {
     // Step 1: decide which predicates the trees handle. A predicate that admits
@@ -479,6 +504,38 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       }
       return;
     }
+
+    // Step 2b: optionally reorder the atoms before refining. The final leaf
+    // count never depends on this order (see atom_ordering.hpp), but which
+    // leaves end up siblings does, and reduce() (step 5b below) only merges
+    // siblings - so a better order can leave it with more to collapse.
+    if (atom_ordering_ == AtomOrderingStrategy::MostSharedAttributesFirst) {
+      std::vector<std::set<std::pair<Types::UniqueEventTypeId, size_t>>> keys;
+      keys.reserve(selected_formulas.size());
+      for (const z3::expr& formula : selected_formulas) {
+        keys.push_back(translator_.attribute_keys_of(formula));
+      }
+      std::vector<size_t> order = order_by_shared_keys(keys);
+
+      std::vector<CEA::PhysicalPredicate*> reordered_atoms;
+      std::vector<z3::expr> reordered_formulas;
+      reordered_atoms.reserve(order.size());
+      reordered_formulas.reserve(order.size());
+      for (size_t index : order) {
+        reordered_atoms.push_back(selected_atoms[index]);
+        reordered_formulas.push_back(selected_formulas[index]);
+      }
+      selected_atoms = std::move(reordered_atoms);
+      selected_formulas = std::move(reordered_formulas);
+    }
+
+    // Record the order atoms are actually refined in, whatever the strategy,
+    // for debug_atom_order() (tests only; never read at runtime).
+    std::vector<std::string> atom_order;
+    atom_order.reserve(selected_atoms.size());
+    for (CEA::PhysicalPredicate* atom : selected_atoms)
+      atom_order.push_back(atom->to_string());
+    atom_order_per_type_[event_type] = std::move(atom_order);
 
     // Step 3: refine a tree with the atoms.
     std::unique_ptr<MintermTreeNode<z3::expr>> tree = buildMintermTree<z3::expr>(

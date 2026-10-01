@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
@@ -30,13 +31,16 @@ struct PredicateEvaluator {
   PredicateEvaluator(
     std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& unique_predicates,
     Optimizations::PredicateEvaluationStrategy strategy =
-      Optimizations::PredicateEvaluationStrategy::Default) {
+      Optimizations::PredicateEvaluationStrategy::Default,
+    Optimizations::AtomOrderingStrategy atom_ordering =
+      Optimizations::AtomOrderingStrategy::AsDiscovered) {
     predicates.reserve(unique_predicates.size());
     for (auto& unique_pred : unique_predicates) {
       predicates.push_back(std::move(unique_pred));
     }
     optimized_evaluator = Optimizations::make_optimized_predicate_evaluator(strategy,
-                                                                            predicates);
+                                                                            predicates,
+                                                                            atom_ordering);
   }
 
   Bitset operator()(Types::EventWrapper& event) {

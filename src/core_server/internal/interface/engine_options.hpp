@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 
 namespace CORE::Internal::Interface {
@@ -12,6 +13,11 @@ struct EngineOptions {
   // How each query computes its per-event predicate Bitset.
   Optimizations::PredicateEvaluationStrategy
     predicate_evaluation = Optimizations::PredicateEvaluationStrategy::Default;
+
+  // How the minterm-tree optimization orders atoms before building a tree.
+  // Only meaningful when predicate_evaluation == MintermTree; inert otherwise.
+  Optimizations::AtomOrderingStrategy
+    atom_ordering = Optimizations::AtomOrderingStrategy::AsDiscovered;
 };
 
 }  // namespace CORE::Internal::Interface

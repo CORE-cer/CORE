@@ -8,7 +8,9 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <set>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <unordered_map>
 #include <unordered_set>
@@ -96,6 +98,26 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
   // Whether `atom` could not be modeled (for at least one event type).
   bool is_opaque(const CEA::PhysicalPredicate* atom) const {
     return opaque_atoms_.contains(atom);
+  }
+
+  // The attribute keys (event type, position) a translated formula reads, found
+  // by walking its Z3 AST and recognizing the names this translator itself
+  // gives attribute symbols: attribute_symbol ("attr_<type>_<pos>_i"/"_r"),
+  // nan_flag ("nan_<type>_<pos>") and conversion_symbol ("conv_<type>_<pos>") -
+  // all three name the SAME attribute when type and pos agree, so an int and a
+  // real symbol for the same position fold into one key. Anything else (a
+  // literal, an opaque_<n> boolean, ...) contributes nothing.
+  //
+  // Used only to choose a build-time atom order (minterm_tree/atom_ordering.hpp)
+  // - never for evaluation. That matters: a mistake in this parsing could only
+  // make the heuristic less effective, never wrong, since the "same Bitset as
+  // the baseline" invariant does not depend on it in any way.
+  std::set<std::pair<Types::UniqueEventTypeId, size_t>>
+  attribute_keys_of(const z3::expr& formula) const {
+    std::set<std::pair<Types::UniqueEventTypeId, size_t>> keys;
+    std::unordered_set<unsigned> visited_ids;
+    collect_attribute_keys(formula, keys, visited_ids);
+    return keys;
   }
 
   // The Z3 variables that stand for an event's attribute values. They are
@@ -384,6 +406,72 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
       throw z3::exception("int and real operands must be converted explicitly");
     }
     return {lhs, rhs};
+  }
+
+  // ---- attribute_keys_of helpers ---------------------------------------------
+
+  // Recurses through `e`'s Z3 AST collecting attribute keys from leaf symbols,
+  // memoized by Z3's own expression id so a sub-expression Z3 shares internally
+  // (e.g. an attribute reused by an ite() in int_attribute_as_double) is only
+  // visited once.
+  void collect_attribute_keys(const z3::expr& e,
+                              std::set<std::pair<Types::UniqueEventTypeId, size_t>>& keys,
+                              std::unordered_set<unsigned>& visited_ids) const {
+    if (!visited_ids.insert(e.id()).second) return;
+
+    if (e.num_args() == 0) {
+      // A leaf: either one of our named attribute/nan/conversion symbols, or
+      // something else entirely (a literal, true/false, an opaque_<n> boolean).
+      // decl().name() is only meaningful for an actual constant, not a numeral.
+      if (e.is_const() && !e.is_numeral()) {
+        std::optional<std::pair<Types::UniqueEventTypeId, size_t>> key = parse_attribute_key(
+          e.decl().name().str());
+        if (key.has_value()) keys.insert(*key);
+      }
+      return;
+    }
+    for (unsigned i = 0; i < e.num_args(); i++) {
+      collect_attribute_keys(e.arg(i), keys, visited_ids);
+    }
+  }
+
+  // Recognizes "attr_<type>_<pos>_i", "attr_<type>_<pos>_r", "nan_<type>_<pos>"
+  // and "conv_<type>_<pos>" (exactly the names attribute_symbol / nan_flag /
+  // conversion_symbol give out above) and recovers (type, pos). Anything else
+  // (including "opaque_<n>", a literal's internal name, ...) is nullopt.
+  static std::optional<std::pair<Types::UniqueEventTypeId, size_t>>
+  parse_attribute_key(const std::string& name) {
+    for (std::string_view prefix : {"attr_", "nan_", "conv_"}) {
+      if (name.size() <= prefix.size() || name.compare(0, prefix.size(), prefix) != 0) {
+        continue;
+      }
+      std::string_view rest(name.data() + prefix.size(), name.size() - prefix.size());
+      size_t separator = rest.find('_');
+      if (separator == std::string_view::npos) continue;  // no "<pos>" part at all
+
+      std::string_view type_part = rest.substr(0, separator);
+      std::string_view pos_part = rest.substr(separator + 1);
+      // attr_'s pos part has a trailing "_i"/"_r"; nan_/conv_'s does not.
+      size_t suffix = pos_part.find('_');
+      if (suffix != std::string_view::npos) pos_part = pos_part.substr(0, suffix);
+
+      uint64_t type_value = 0;
+      size_t pos_value = 0;
+      auto [type_end, type_error] = std::from_chars(type_part.data(),
+                                                    type_part.data() + type_part.size(),
+                                                    type_value);
+      auto [pos_end, pos_error] = std::from_chars(pos_part.data(),
+                                                  pos_part.data() + pos_part.size(),
+                                                  pos_value);
+      bool type_fully_parsed = type_error == std::errc{}
+                               && type_end == type_part.data() + type_part.size();
+      bool pos_fully_parsed = pos_error == std::errc{}
+                              && pos_end == pos_part.data() + pos_part.size();
+      if (!type_fully_parsed || !pos_fully_parsed) continue;
+
+      return std::make_pair(static_cast<Types::UniqueEventTypeId>(type_value), pos_value);
+    }
+    return std::nullopt;
   }
 };
 

@@ -33,6 +33,7 @@
 #include "core_client/client.hpp"
 #include "core_client/message_handler.hpp"
 #include "core_server/internal/interface/engine_options.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
 #include "core_server/library/server.hpp"
@@ -111,7 +112,9 @@ class PyOfflineServerWrapper {
  public:
   explicit PyOfflineServerWrapper(
     Internal::Optimizations::PredicateEvaluationStrategy predicate_evaluation =
-      Internal::Optimizations::PredicateEvaluationStrategy::Default) {
+      Internal::Optimizations::PredicateEvaluationStrategy::Default,
+    Internal::Optimizations::AtomOrderingStrategy atom_ordering =
+      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered) {
     uint16_t base = next_port.fetch_add(3);
     Library::ServerConfig::FixedPorts ports{base, static_cast<uint16_t>(base + 1)};
     Library::ServerConfig config{ports,
@@ -120,7 +123,8 @@ class PyOfflineServerWrapper {
                                  "",
                                  "",
                                  "",
-                                 Internal::Interface::EngineOptions{predicate_evaluation}};
+                                 Internal::Interface::EngineOptions{predicate_evaluation,
+                                                                    atom_ordering}};
     server = std::make_unique<Library::OfflineServer>(std::move(config));
     client = std::make_unique<Client>("tcp://localhost", base);
   }
@@ -261,7 +265,9 @@ class PyOnlineServerWrapper {
     uint16_t stream_listener_port = 5001,
     uint16_t starting_query_port = 5002,
     Internal::Optimizations::PredicateEvaluationStrategy predicate_evaluation =
-      Internal::Optimizations::PredicateEvaluationStrategy::Default)
+      Internal::Optimizations::PredicateEvaluationStrategy::Default,
+    Internal::Optimizations::AtomOrderingStrategy atom_ordering =
+      Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
       : router_port(router_port),
         stream_listener_port(stream_listener_port),
         starting_query_port(starting_query_port) {
@@ -272,7 +278,8 @@ class PyOnlineServerWrapper {
                                  "",
                                  "",
                                  "",
-                                 Internal::Interface::EngineOptions{predicate_evaluation}};
+                                 Internal::Interface::EngineOptions{predicate_evaluation,
+                                                                    atom_ordering}};
     server = std::make_unique<Library::OnlineServer>(std::move(config));
   }
 
@@ -299,6 +306,13 @@ NB_MODULE(pycer, m) {
         nb::enum_<Internal::Optimizations::PredicateEvaluationStrategy>(m, "PyPredicateEvaluation")
             .value("DEFAULT", Internal::Optimizations::PredicateEvaluationStrategy::Default)
             .value("MINTERM_TREE", Internal::Optimizations::PredicateEvaluationStrategy::MintermTree);
+
+        // How the minterm-tree optimization orders atoms before building a tree;
+        // only meaningful together with MINTERM_TREE above.
+        nb::enum_<Internal::Optimizations::AtomOrderingStrategy>(m, "PyAtomOrdering")
+            .value("AS_DISCOVERED", Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
+            .value("MOST_SHARED_ATTRIBUTES_FIRST",
+                   Internal::Optimizations::AtomOrderingStrategy::MostSharedAttributesFirst);
 
         nb::enum_<Types::ValueTypes>(m, "PyValueTypes")
             .value("INT64", Types::ValueTypes::INT64)
@@ -471,8 +485,10 @@ NB_MODULE(pycer, m) {
             }, nb::keep_alive<0, 1>());
 
         nb::class_<PyOfflineServerWrapper>(m, "PyOfflineServer")
-            .def(nb::init<Internal::Optimizations::PredicateEvaluationStrategy>(),
-                 nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default)
+            .def(nb::init<Internal::Optimizations::PredicateEvaluationStrategy,
+                         Internal::Optimizations::AtomOrderingStrategy>(),
+                 nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default,
+                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
             .def("declare_stream", &PyOfflineServerWrapper::declare_stream)
             .def("declare_option", &PyOfflineServerWrapper::declare_option)
             .def("add_query", &PyOfflineServerWrapper::add_query)
@@ -481,11 +497,16 @@ NB_MODULE(pycer, m) {
             .def("get_output", &PyOfflineServerWrapper::get_output);
 
         nb::class_<PyOnlineServerWrapper>(m, "PyOnlineServer")
-            .def(nb::init<uint16_t, uint16_t, uint16_t, Internal::Optimizations::PredicateEvaluationStrategy>(),
+            .def(nb::init<uint16_t,
+                         uint16_t,
+                         uint16_t,
+                         Internal::Optimizations::PredicateEvaluationStrategy,
+                         Internal::Optimizations::AtomOrderingStrategy>(),
                  nb::arg("router_port") = 5000,
                  nb::arg("stream_listener_port") = 5001,
                  nb::arg("starting_query_port") = 5002,
-                 nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default)
+                 nb::arg("predicate_evaluation") = Internal::Optimizations::PredicateEvaluationStrategy::Default,
+                 nb::arg("atom_ordering") = Internal::Optimizations::AtomOrderingStrategy::AsDiscovered)
             .def_prop_ro("router_port", &PyOnlineServerWrapper::get_router_port)
             .def_prop_ro("stream_listener_port", &PyOnlineServerWrapper::get_stream_listener_port)
             .def("shutdown", &PyOnlineServerWrapper::shutdown,
