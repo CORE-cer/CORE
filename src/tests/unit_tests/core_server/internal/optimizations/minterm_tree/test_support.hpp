@@ -98,9 +98,10 @@ class ParityChecker {
 
   explicit ParityChecker(
     std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates,
-    size_t max_leaves_per_tree = MintermTreeEvaluator::kMaxLeavesPerTree)
+    size_t max_leaves_per_tree = MintermTreeEvaluator::kMaxLeavesPerTree,
+    AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered)
       : baseline(std::move(predicates)),
-        minterm(baseline.predicates, max_leaves_per_tree) {
+        minterm(baseline.predicates, max_leaves_per_tree, atom_ordering) {
     // Debugging aid: CORE_PRINT_MINTERM_TREES=1 shows the trees every test builds.
     if (print_trees_requested()) {
       std::cout << "\n" << minterm.trees_to_string() << std::endl;

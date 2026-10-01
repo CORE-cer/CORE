@@ -19,6 +19,7 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/interface/engine_options.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/event.hpp"
@@ -95,6 +96,33 @@ TEST_CASE("Copies of a PredicateEvaluator share one optimized evaluator",
   Evaluation::PredicateEvaluator copy = original;
   REQUIRE(copy.optimized_evaluator != nullptr);
   REQUIRE(copy.optimized_evaluator == original.optimized_evaluator);
+}
+
+TEST_CASE("AtomOrderingStrategy reaches the evaluator through EngineOptions",
+          "[MintermTreeFactory][Optimizations]") {
+  // make_predicates()'s two atoms share an attribute, exactly the shape the
+  // ordering heuristic reorders - this exercises the wiring end to end (Z3-free
+  // here: the heuristic's own effect on tree shape is checked directly against
+  // MintermTreeEvaluator in minterm_tree/minterm_tree_atom_ordering.cpp).
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+  Evaluation::PredicateEvaluator baseline(make_predicates());
+  Evaluation::PredicateEvaluator optimized(make_predicates(),
+                                           PredicateEvaluationStrategy::MintermTree,
+                                           AtomOrderingStrategy::MostSharedAttributesFirst);
+  REQUIRE(optimized.optimized_evaluator != nullptr);
+  for (int64_t value : {10, 50, 51, 100, 101, 500}) {
+    auto event = make_int_event(value);
+    INFO("value = " << value);
+    REQUIRE(optimized(event) == baseline(event));
+  }
+
+  // The same, reached through EngineOptions/Backend rather than directly.
+  Interface::EngineOptions options;
+  options.predicate_evaluation = PredicateEvaluationStrategy::MintermTree;
+  options.atom_ordering = AtomOrderingStrategy::MostSharedAttributesFirst;
+  REQUIRE_NOTHROW(Interface::Backend<>(options));
 }
 
 TEST_CASE("A Backend fails fast when the requested optimization is not built in",
