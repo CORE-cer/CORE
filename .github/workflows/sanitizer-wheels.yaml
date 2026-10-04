@@ -44,8 +44,8 @@ jobs:
           rm /tmp/llvm-apt.key
           printf '%s\n' \
             'Types: deb' \
-            'URIs: https://apt.llvm.org/noble/' \
-            'Suites: llvm-toolchain-noble-21' \
+            'URIs: https://apt.llvm.org/jammy/' \
+            'Suites: llvm-toolchain-jammy-21' \
             'Components: main' \
             'Architectures: amd64' \
             'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
