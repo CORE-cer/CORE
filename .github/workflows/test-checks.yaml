@@ -34,15 +34,25 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -89,15 +99,25 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21 libclang-rt-21-dev
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -147,15 +167,25 @@ jobs:
           echo "ACTIONS_RUNTIME_TOKEN=${ACTIONS_RUNTIME_TOKEN}" >> "$GITHUB_ENV"
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21 libclang-rt-21-dev
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -204,15 +234,25 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21 libclang-rt-21-dev
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -265,15 +305,25 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21 libclang-rt-21-dev
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -322,15 +372,25 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21 libclang-rt-21-dev
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -383,15 +443,25 @@ jobs:
           create-symlink: true
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -453,15 +523,25 @@ jobs:
       - uses: astral-sh/setup-uv@v7.3.0
 
       - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2.0.9
-        with:
-          version: "21.1.8"
-
-      - name: Install libtinfo5 for clang
         run: |
-          sudo apt update
-          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y lsb-release gnupg software-properties-common curl
+          sudo install -d -m 0755 /etc/apt/keyrings
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error https://apt.llvm.org/llvm-snapshot.gpg.key -o /tmp/llvm-apt.key
+          echo "8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d  /tmp/llvm-apt.key" | sha256sum --check -
+          test "$(gpg --show-keys --with-colons /tmp/llvm-apt.key | awk -F: '$1 == "fpr" { print $10; exit }')" = "6084F3CF814B57C1CF12EFD515CF4D18AF4F7421"
+          sudo gpg --dearmor --yes --output /etc/apt/keyrings/llvm-apt.gpg /tmp/llvm-apt.key
+          rm /tmp/llvm-apt.key
+          printf '%s\n' \
+            'Types: deb' \
+            'URIs: https://apt.llvm.org/noble/' \
+            'Suites: llvm-toolchain-noble-21' \
+            'Components: main' \
+            'Architectures: amd64' \
+            'Signed-By: /etc/apt/keyrings/llvm-apt.gpg' | sudo tee /etc/apt/sources.list.d/llvm.sources > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y clang-21 clang-format-21 clang-tidy-21
+          echo "/usr/lib/llvm-21/bin" >> "$GITHUB_PATH"
 
       - name: Set up GCC
         run: |
@@ -477,8 +557,13 @@ jobs:
       - name: Build pycer wheel
         run: uv build --wheel ${{ matrix.build_config_settings }}
 
+      - name: Install pycer wheel
+        run: |
+          uv sync --locked --no-install-project --no-build
+          uv pip install --no-build --no-deps --python .venv/bin/python dist/*.whl
+
       - name: Verify pycer import
-        run: uv run python -c "import pycer; print('pycer loaded successfully')"
+        run: .venv/bin/python -c "import pycer; print('pycer loaded successfully')"
 
       - name: Run e2e integration tests
-        run: uv run pytest tests/e2e/ -v --server-mode offline
+        run: .venv/bin/pytest tests/e2e/ -v --server-mode offline
