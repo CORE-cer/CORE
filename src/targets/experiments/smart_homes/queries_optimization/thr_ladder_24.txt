@@ -1,0 +1,30 @@
+SELECT * FROM S
+WHERE (LOAD as T1; LOAD as T2; LOAD as T3; LOAD as T4; LOAD as T5; LOAD as T6; LOAD as T7; LOAD as T8; LOAD as T9; LOAD as T10; LOAD as T11; LOAD as T12; LOAD as T13; LOAD as T14; LOAD as T15; LOAD as T16; LOAD as T17; LOAD as T18; LOAD as T19; LOAD as T20; LOAD as T21; LOAD as T22; LOAD as T23; LOAD as T24)
+FILTER
+    T1[value > 225] AND
+    T2[value > 250] AND
+    T3[value > 275] AND
+    T4[value > 300] AND
+    T5[value > 325] AND
+    T6[value > 350] AND
+    T7[value > 375] AND
+    T8[value > 400] AND
+    T9[value > 425] AND
+    T10[value > 450] AND
+    T11[value > 475] AND
+    T12[value > 500] AND
+    T13[value > 525] AND
+    T14[value > 550] AND
+    T15[value > 575] AND
+    T16[value > 600] AND
+    T17[value > 625] AND
+    T18[value > 650] AND
+    T19[value > 675] AND
+    T20[value > 700] AND
+    T21[value > 725] AND
+    T22[value > 750] AND
+    T23[value > 775] AND
+    T24[value > 800]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

@@ -1,0 +1,10 @@
+SELECT * FROM S
+WHERE (LOAD as E1; LOAD as E2; LOAD as E3; LOAD as E4)
+FILTER
+    E1[household_id = 11] AND
+    E2[household_id = 1] AND
+    E3[household_id = 7] AND
+    E4[household_id = 16]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

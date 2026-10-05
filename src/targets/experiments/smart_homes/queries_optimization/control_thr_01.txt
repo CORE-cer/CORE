@@ -1,0 +1,7 @@
+SELECT * FROM S
+WHERE (LOAD as T1)
+FILTER
+    T1[value > 200]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000
