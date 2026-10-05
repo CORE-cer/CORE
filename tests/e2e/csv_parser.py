@@ -6,7 +6,10 @@ import pycer
 
 
 def parse_csv(
-    csv_path: str | Path, stream_info: pycer.PyStreamInfo
+    csv_path: str | Path,
+    stream_info: pycer.PyStreamInfo,
+    shift_attr: str | None = None,
+    shift: int = 0,
 ) -> tuple[list[pycer.PyEvent], list[int]]:
     """Parse a CSV file into PyEvent objects based on stream schema.
 
@@ -20,6 +23,10 @@ def parse_csv(
 
     Returns (events, delays_ns) where delays_ns[i] is the nanosecond delay
     to apply *before* sending events[i].
+
+    shift_attr / shift add `shift` to the named INT64 attribute of every event
+    (used by the benchmark to cycle a dataset with shifted timestamps). The
+    default leaves values unchanged.
     """
     event_lookup: dict[str, tuple[int, list[pycer.PyAttributeInfo]]] = {}
     for event_info in stream_info.events_info:
@@ -61,7 +68,10 @@ def parse_csv(
                 vtype = attr.value_type
 
                 if vtype == pycer.INT64:
-                    values.append(pycer.PyIntValue(int(raw_val)))
+                    int_val = int(raw_val)
+                    if attr.name == shift_attr:
+                        int_val += shift
+                    values.append(pycer.PyIntValue(int_val))
                 elif vtype == pycer.DOUBLE:
                     values.append(pycer.PyDoubleValue(float(raw_val)))
                 elif vtype == pycer.STRING_VIEW:
