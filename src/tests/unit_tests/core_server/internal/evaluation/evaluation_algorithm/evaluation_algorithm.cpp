@@ -17,6 +17,124 @@
 // NOLINTBEGIN(bugprone-chained-comparison)
 namespace CORE::Internal::Evaluation::UnitTests {
 
+TEST_CASE("CHECK query parsing verification") {
+  Internal::Interface::Backend<> backend;
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string core_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft\n"
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 5 EVENTS\n"
+    "CONSUME BY NONE";
+
+  CEQL::Query parsed_query = backend.parse_sent_query("CHECK { " + core_query + " }");
+  
+  // Verify the parser set output_mode correctly
+  REQUIRE(parsed_query.output_mode == CEQL::OutputMode::Exists);
+}
+
+TEST_CASE("CHECK query with handler initialization") {
+  Internal::Interface::Backend<> backend;
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string core_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft\n"
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 5 EVENTS\n"
+    "CONSUME BY NONE";
+
+  CEQL::Query parsed_query = backend.parse_sent_query("CHECK { " + core_query + " }");
+  
+  // Verify output_mode before creating handler
+  REQUIRE(parsed_query.output_mode == CEQL::OutputMode::Exists);
+  
+  auto handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference(), parsed_query));
+  
+  // Verify output_mode is still set after creating handler and before declare_query
+  REQUIRE(parsed_query.output_mode == CEQL::OutputMode::Exists);
+}
+
+TEST_CASE("CHECK returns false until match and true when matched") {
+  // Result handler bool path test
+  // Purpose: verify CHECK result is passed through the handler API
+  // Test a simple query that matches when a single MSFT event is seen
+  Internal::Interface::Backend<> backend;
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string core_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft\n"
+    "FILTER msft[name='MSFT']\n"
+    "WITHIN 10 EVENTS\n"
+    "CONSUME BY NONE";
+
+  CEQL::Query parsed_query = backend.parse_sent_query("CHECK { " + core_query + " }");
+
+  auto handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference(), parsed_query));
+  DirectOutputTestResultHandler& handler = *handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(handler_ptr));
+
+  // Send an event that doesn't match the pattern (not MSFT)
+  Types::Event event = {0, {std::make_shared<Types::StringValue>("INTL"),
+                            std::make_shared<Types::IntValue>(50)}};
+  backend.send_event_to_queries(0, event);
+  REQUIRE(handler.get_bool() == false);
+
+  // Send the matching event (MSFT)
+  event = {0, {std::make_shared<Types::StringValue>("MSFT"),
+               std::make_shared<Types::IntValue>(100)}};
+  backend.send_event_to_queries(0, event);
+  REQUIRE(handler.get_bool() == true);
+}
+
+TEST_CASE("CHECK query dispatches to bool output path") {
+  Internal::Interface::Backend<> backend;
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string core_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
+    "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
+    "    AND intel[name='INTL']\n"
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 5 EVENTS\n"
+    "CONSUME BY NONE";
+
+  CEQL::Query parsed_query = backend.parse_sent_query("CHECK { " + core_query + " }");
+
+  auto handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference(), parsed_query));
+  DirectOutputTestResultHandler& handler = *handler_ptr;
+
+  backend.declare_query(std::move(parsed_query), std::move(handler_ptr));
+
+  Types::Event event = {0, {std::make_shared<Types::StringValue>("MSFT"),
+                            std::make_shared<Types::IntValue>(101)}};
+  backend.send_event_to_queries(0, event);
+  REQUIRE(handler.get_bool() == false);
+
+  event = {0, {std::make_shared<Types::StringValue>("MSFT"),
+               std::make_shared<Types::IntValue>(102)}};
+  backend.send_event_to_queries(0, event);
+  REQUIRE(handler.get_bool() == false);
+
+  event = {0, {std::make_shared<Types::StringValue>("INTL"),
+               std::make_shared<Types::IntValue>(80)}};
+  backend.send_event_to_queries(0, event);
+  REQUIRE(handler.get_bool() == false);
+
+  event = {0, {std::make_shared<Types::StringValue>("AMZN"),
+               std::make_shared<Types::IntValue>(1900)}};
+  backend.send_event_to_queries(0, event);
+
+  REQUIRE(handler.get_bool() == true);
+}
+
 TEST_CASE("Evaluation on the example stream of the papers with CHECK operator") {
   Internal::Interface::Backend<> backend;
 
