@@ -59,6 +59,14 @@ class QueryParser {
     // Parse the input
     antlr4::tree::ParseTree* tree = parser.parse();
 
+    bool has_check = false;
+    for (auto tok : tokens.getTokens()) {
+      if (tok->getType() == CEQLQueryLexer::K_CHECK) {
+        has_check = true;
+        break;
+      }
+    }
+
     FromVisitor from_visitor(catalog);
     from_visitor.visit(tree);
     CEQL::From from = from_visitor.get_parsed_from();
@@ -97,7 +105,8 @@ class QueryParser {
             std::move(partition_by),
             std::move(within),
             std::move(consume),
-            std::move(limit)};
+            std::move(limit),
+            has_check ? CEQL::OutputMode::Exists : CEQL::OutputMode::Enumerate};
   }
 };
 
