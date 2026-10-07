@@ -28,6 +28,7 @@ class GenericQuery {
   uint64_t current_stream_position = 0;
   Internal::QueryCatalog query_catalog;
   std::unique_ptr<Library::Components::ResultHandler> result_handler;
+  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
 
   // Receiver for tuples
   std::atomic<bool> stop_condition = false;
@@ -51,7 +52,11 @@ class GenericQuery {
 
   void init(Internal::CEQL::Query&& query) {
     create_query(std::move(query));
-    start();
+    if (output_mode == CEQL::OutputMode::Exists) {
+      start_check();
+    } else {
+      start();
+    }
   }
 
   virtual ~GenericQuery() {};
@@ -83,14 +88,35 @@ class GenericQuery {
         if (!event.has_value()) {
           continue;
         }
-        std::optional<tECS::Enumerator> output = process_event(std::move(event.value()));
+        auto output = process_event(std::move(event.value())); 
         (*result_handler)(std::move(output));
       }
       // Drain remaining events after stop is signaled
       Types::EventWrapper event;
       while (blocking_event_queue.try_dequeue(event)) {
-        std::optional<tECS::Enumerator> output = process_event(std::move(event));
+        auto output = process_event(std::move(event));
         (*result_handler)(std::move(output));
+      }
+    });
+  }
+
+  void start_check() {
+    worker_thread = std::thread([&]() {
+      result_handler->set_query_catalog(query_catalog);
+      result_handler->start();
+
+      while (!stop_condition) {
+        std::optional<Types::EventWrapper> event = get_event();
+        if (!event.has_value()) continue;
+
+        bool matched = process_event_check(std::move(event.value()));
+        (*result_handler)(matched);
+      }
+
+      Types::EventWrapper event;
+      while (blocking_event_queue.try_dequeue(event)) {
+        bool matched = process_event_check(std::move(event));
+        (*result_handler)(matched);
       }
     });
   }
@@ -105,6 +131,8 @@ class GenericQuery {
     return std::move(event);
   }
 
-  virtual std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) = 0;
+  virtual Library::Components::QueryResult process_event(Types::EventWrapper&& event) = 0;
+
+  virtual bool process_event_check(Types::EventWrapper&& event) = 0;
 };
 }  // namespace CORE::Internal::Interface::Module::Query

@@ -11,6 +11,10 @@
 #include "within.hpp"
 
 namespace CORE::Internal::CEQL {
+enum class OutputMode {
+  Enumerate,
+  Exists
+};
 struct Query {
   Select select;  // TODO Projection
   From from;      // TODO: Routing.
@@ -19,6 +23,24 @@ struct Query {
   Within within;
   ConsumeBy consume_by;
   Limit limit;
+  OutputMode output_mode = OutputMode::Enumerate;
+
+  Query(Select&& select,
+        From&& from,
+        Where&& where,
+        PartitionBy&& partition_by,
+        Within&& within,
+        ConsumeBy&& consume_by,
+        Limit&& limit,
+        OutputMode&& output_mode)
+      : select(std::move(select)),
+        from(std::move(from)),
+        where(std::move(where)),
+        partition_by(std::move(partition_by)),
+        within(std::move(within)),
+        consume_by(std::move(consume_by)),
+        limit(std::move(limit)),
+        output_mode(std::move(output_mode)) {}
 
   Query(Select&& select,
         From&& from,
@@ -33,7 +55,8 @@ struct Query {
         partition_by(std::move(partition_by)),
         within(std::move(within)),
         consume_by(std::move(consume_by)),
-        limit(std::move(limit)) {}
+        limit(std::move(limit)),
+        output_mode(std::move(OutputMode::Enumerate)) {}
 
   Query(const Query& other)
       : select(other.select.clone()),
@@ -42,7 +65,8 @@ struct Query {
         partition_by(other.partition_by),
         within(other.within),
         consume_by(other.consume_by),
-        limit(other.limit) {}
+        limit(other.limit),
+        output_mode(other.output_mode) {}
 
   Query(Query&& other) noexcept = default;
 
