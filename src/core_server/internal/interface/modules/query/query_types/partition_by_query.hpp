@@ -85,8 +85,6 @@ class PartitionByQuery : public GenericQuery {
   // Dynamic evaluator managing multiple internal evaluators (one per partition)
   std::unique_ptr<DynamicEvaluator> evaluator;
 
-  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
-
   std::unordered_map<TupleValuesKey, size_t, ValueVectorHash>
     partition_by_attrs_to_evaluator_idx;
 
@@ -109,8 +107,7 @@ class PartitionByQuery : public GenericQuery {
  private:
   void create_query(Internal::CEQL::Query&& query) override {
 
-    this->output_mode = query.output_mode;
-
+    GenericQuery::output_mode = query.output_mode;
     // Stage 1: Transform predicates into physical predicates for tuple evaluation
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);

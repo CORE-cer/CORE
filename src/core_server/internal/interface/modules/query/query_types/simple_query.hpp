@@ -25,7 +25,6 @@ class SimpleQuery : public GenericQuery {
   friend GenericQuery;
   // Underlying evaluator for tuples
   std::unique_ptr<SingleEvaluator> evaluator;
-  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
 
  public:
   SimpleQuery(
@@ -43,6 +42,7 @@ class SimpleQuery : public GenericQuery {
  private:
   void create_query(Internal::CEQL::Query&& query) override {
 
+    GenericQuery::output_mode = query.output_mode;
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
