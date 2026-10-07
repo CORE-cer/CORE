@@ -56,7 +56,7 @@ class PartitionByQuery : public GenericQuery {
     bool operator==(const TupleValuesKey& other) const {
       if (attribute_values.size() != other.attribute_values.size()) return false;
       for (size_t i = 0; i < attribute_values.size(); i++) {
-        if (*(attribute_values[i]) != *(other.attribute_values[i])) return false;
+        if (!(*(attribute_values[i]) == *(other.attribute_values[i]))) return false;
       }
       return true;
     }
@@ -85,6 +85,8 @@ class PartitionByQuery : public GenericQuery {
   // Dynamic evaluator managing multiple internal evaluators (one per partition)
   std::unique_ptr<DynamicEvaluator> evaluator;
 
+  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
+
   std::unordered_map<TupleValuesKey, size_t, ValueVectorHash>
     partition_by_attrs_to_evaluator_idx;
 
@@ -106,6 +108,9 @@ class PartitionByQuery : public GenericQuery {
 
  private:
   void create_query(Internal::CEQL::Query&& query) override {
+
+    this->output_mode = query.output_mode;
+
     // Stage 1: Transform predicates into physical predicates for tuple evaluation
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
@@ -141,7 +146,7 @@ class PartitionByQuery : public GenericQuery {
                                                    this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {
+  Library::Components::QueryResult process_event(Types::EventWrapper&& event) override {
     std::optional<std::vector<uint64_t>>* tuple_indexes;
     // Check cache for attribute indices - most events hit this path after warmup
     if (auto it = event_id_to_tuple_idx.find(event.get_unique_event_type_id());
@@ -154,13 +159,38 @@ class PartitionByQuery : public GenericQuery {
 
     // Early exit if this event type lacks required partition attributes
     if (!tuple_indexes->has_value()) {
-      return {};
+      return Library::Components::QueryResult::from_enumerator(std::nullopt);
     }
 
     // Find or create evaluator for this partition and delegate processing
     size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
       event, tuple_indexes->value());
-    return evaluator->process_event(std::move(event), evaluator_idx);
+    
+    auto enumerator = evaluator->process_event(std::move(event), evaluator_idx);
+    return Library::Components::QueryResult::from_enumerator(std::move(enumerator));
+  }
+
+  bool process_event_check(Types::EventWrapper&& event) override {
+    std::optional<std::vector<uint64_t>>* tuple_indexes;
+    // Check cache for attribute indices - most events hit this path after warmup
+    if (auto it = event_id_to_tuple_idx.find(event.get_unique_event_type_id());
+        it != event_id_to_tuple_idx.end()) [[likely]] {
+      tuple_indexes = &(it->second);
+    } else {
+      // First occurrence of this event type - determine and cache attribute indices
+      tuple_indexes = find_tuple_indexes(event);
+    }
+
+    // Early exit if this event type lacks required partition attributes
+    if (!tuple_indexes->has_value()) {
+      return false;
+    }
+
+    // Find or create evaluator for this partition and delegate processing
+    size_t evaluator_idx = find_or_create_evaluator_index_from_tuple_indexes(
+      event, tuple_indexes->value());
+
+    return evaluator->process_event_check(std::move(event), evaluator_idx);
   }
 
   /**

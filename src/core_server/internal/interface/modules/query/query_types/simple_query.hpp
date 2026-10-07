@@ -25,6 +25,7 @@ class SimpleQuery : public GenericQuery {
   friend GenericQuery;
   // Underlying evaluator for tuples
   std::unique_ptr<SingleEvaluator> evaluator;
+  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
 
  public:
   SimpleQuery(
@@ -41,6 +42,8 @@ class SimpleQuery : public GenericQuery {
 
  private:
   void create_query(Internal::CEQL::Query&& query) override {
+
+    this->output_mode = query.output_mode;
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 
@@ -69,8 +72,13 @@ class SimpleQuery : public GenericQuery {
                                                   this->query_catalog);
   }
 
-  std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {
-    return evaluator->process_event(std::move(event));
+  Library::Components::QueryResult process_event(Types::EventWrapper&& event) override {
+    auto enumerator = evaluator->process_event(std::move(event));
+    return Library::Components::QueryResult::from_enumerator(std::move(enumerator));
+  }
+
+  bool process_event_check(Types::EventWrapper&& event) override {
+    return evaluator->process_event_check(std::move(event));
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query

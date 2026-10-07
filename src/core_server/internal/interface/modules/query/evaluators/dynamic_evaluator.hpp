@@ -158,6 +158,32 @@ class DynamicEvaluator : public GenericEvaluator {
     return std::move(enumerator);
   }
 
+  bool process_event_check(Types::EventWrapper&& event, size_t evaluator_idx) {
+    uint64_t time = event_time(event);
+    EvaluatorStorageWrapper evaluator_wrapper = get_or_create_evaluator(evaluator_idx, time);
+
+    bool matched = evaluator_wrapper.get_evaluator().evaluator->next_check(
+      std::move(event), time);
+
+    // keep same LRU / save semantics as non-CHECK path
+    if (evaluator_wrapper.evaluator.has_value()
+        && !evaluator_wrapper.evaluator->evaluator->is_empty()) {
+      evaluator_wrapper =
+          save_evaluator(time, std::move(evaluator_wrapper.evaluator.value()));
+    }
+
+    // same early-return / lifecycle behavior as non-CHECK path
+    if (evaluator_wrapper.evaluator.has_value()
+        && evaluator_wrapper.evaluator->evaluator->is_empty()) {
+      return false;
+    }
+
+    // no materialized enumerator to reset from, but partition semantics should still remain
+
+    // keep same partition/state bookkeeping, but return bool
+    return matched;
+  }
+
   /**
    * Tries to get the evaluator from created evaluators. In case it doesn't exist, create a new one
    */
@@ -209,7 +235,7 @@ class DynamicEvaluator : public GenericEvaluator {
   }
 
   /**
-   * Removes evaluators that are empty due to time window contrains or expands if it can't remove any
+   * Removes evaluators that are empty due to time window constrains or expands if it can't remove any
    */
   void clean_or_expand_evaluator_storage(uint64_t current_time) {
     ZoneScopedN("Interface::DynamicEvaluator::clean_or_expand_evaluator_storage");

@@ -41,8 +41,12 @@ class SingleEvaluator : public GenericEvaluator {
   std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) {
     ZoneScopedN("Interface::SingleEvaluator::process_event");
     uint64_t time = event_time(event);
-
     return evaluator.next(std::move(event), time);
+  }
+
+  bool process_event_check(Types::EventWrapper&& event) {
+    uint64_t time = event_time(event);
+    return evaluator.next_check(std::move(event), time);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query
