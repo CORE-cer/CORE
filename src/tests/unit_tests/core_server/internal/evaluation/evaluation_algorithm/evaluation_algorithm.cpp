@@ -16,6 +16,93 @@
 
 // NOLINTBEGIN(bugprone-chained-comparison)
 namespace CORE::Internal::Evaluation::UnitTests {
+
+TEST_CASE("Evaluation on the example stream of the papers with CHECK operator") {
+  Internal::Interface::Backend<> backend;
+
+  Types::StreamInfo stream_info = basic_stock_declaration(backend);
+
+  std::string core_query =
+    "SELECT * FROM Stock\n"
+    "WHERE SELL as msft; SELL as intel; SELL as amzn\n"
+    "FILTER msft[name='MSFT'] AND msft[price > 100]\n"
+    "    AND intel[name='INTL']\n"
+    "    AND amzn[name='AMZN'] AND amzn[price < 2000]\n"
+    "WITHIN 5 EVENTS\n"
+    "CONSUME BY NONE";
+
+  std::string check_query = "CHECK{" + core_query + "}";
+
+  CEQL::Query parsed_query = backend.parse_sent_query(check_query);
+
+  auto result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+    QueryCatalog(backend.get_catalog_reference(), parsed_query));
+  DirectOutputTestResultHandler& result_handler = *result_handler_ptr;
+
+  INFO("CHECK query: " + check_query);
+  INFO("Stream: " + stream_info.name);
+
+  backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+
+  Types::Event event;
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(101)}};
+  INFO("SELL MSFT 101");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(102)}};
+  INFO("SELL MSFT 102");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("SELL INTL 80");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {1,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(80)}};
+  INFO("BUY INTL 80");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1900)}};
+  INFO("SELL AMZN 1900");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == true);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("MSFT"),
+            std::make_shared<Types::IntValue>(104)}};
+  INFO("SELL MSFT 104");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("INTL"),
+            std::make_shared<Types::IntValue>(81)}};
+  INFO("SELL INTL 81");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == false);
+
+  event = {0,
+           {std::make_shared<Types::StringValue>("AMZN"),
+            std::make_shared<Types::IntValue>(1920)}};
+  INFO("SELL AMZN 1920");
+  backend.send_event_to_queries(0, event);
+  REQUIRE(result_handler.get_bool() == true);
+}
+  
 TEST_CASE("Evaluation on the example stream of the papers") {
   Internal::Interface::Backend<> backend;
 

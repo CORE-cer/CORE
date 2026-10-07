@@ -27,18 +27,49 @@ class DirectOutputTestResultHandler : public Library::Components::ResultHandler 
   std::condition_variable cv;
   std::mutex output_mutex;
   Types::Enumerator output;
+  bool check_result = false;  // Add bool storage
+  bool is_check_mode = false;
 
  public:
   DirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler(
-          Library::Components::ResultHandlerType::CUSTOM) {}
+          Library::Components::ResultHandlerType::CUSTOM) {
+            this->set_query_catalog(query_catalog);
+          }
+
+  void handle_check_result(bool matched) override {
+    std::unique_lock lk(output_mutex);
+    cv.wait(lk, [this] { return !ready; });
+    check_result = matched;
+    is_check_mode = true;
+    ready = true;
+    lk.unlock();
+    cv.notify_one();
+  }
+
+  bool get_bool() {
+    std::unique_lock lk(output_mutex);
+    cv.wait_for(lk, std::chrono::milliseconds(500), [this] { return ready; });
+    bool result = check_result;
+    ready = false;
+    lk.unlock();
+    cv.notify_one();
+    return result;
+  }
 
   void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
+    Library::Components::QueryResult&& result) override {
     Types::Enumerator enumerator;
-    if (internal_enumerator.has_value()) {
-      enumerator = get_query_catalog().convert_enumerator(
-        std::move(internal_enumerator.value()));
+    if (result.kind == Library::Components::QueryResult::Kind::Exists) {
+      // For tests, a bool exists result can be represented as an empty or non-empty enumerator
+      if (result.matched) {
+        enumerator = Types::Enumerator{};
+      }
+    } else if (result.kind == Library::Components::QueryResult::Kind::Enumerate) {
+      if (result.enumerator.has_value()) {
+        enumerator = get_query_catalog().convert_enumerator(
+          std::move(result.enumerator.value()));
+      }
     }
     std::unique_lock lk(output_mutex);
 
@@ -79,18 +110,48 @@ class IndirectOutputTestResultHandler : public Library::Components::ResultHandle
   std::condition_variable cv;
   std::mutex output_mutex;
   Types::Enumerator output;
+  bool check_result = false;  // Add bool storage
+  bool is_check_mode = false;
 
  public:
   IndirectOutputTestResultHandler(const QueryCatalog& query_catalog)
       : CORE::Library::Components::ResultHandler(
-          Library::Components::ResultHandlerType::CUSTOM) {}
+          Library::Components::ResultHandlerType::CUSTOM) {
+            this->set_query_catalog(query_catalog);
+          }
 
+  void handle_check_result(bool matched) override {
+    std::unique_lock lk(output_mutex);
+    cv.wait(lk, [this] { return !ready; });
+    check_result = matched;
+    is_check_mode = true;
+    ready = true;
+    lk.unlock();
+    cv.notify_one();
+  }
+
+  bool get_bool() {
+    std::unique_lock lk(output_mutex);
+    cv.wait_for(lk, std::chrono::milliseconds(500), [this] { return ready; });
+    bool result = check_result;
+    ready = false;
+    lk.unlock();
+    cv.notify_one();
+    return result;
+  }
+  
   void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
+    Library::Components::QueryResult&& result) override {
     Types::Enumerator enumerator;
-    if (internal_enumerator.has_value()) {
-      enumerator = get_query_catalog().convert_enumerator(
-        std::move(internal_enumerator.value()));
+    if (result.kind == Library::Components::QueryResult::Kind::Exists) {
+      if (result.matched) {
+        enumerator = Types::Enumerator{};
+      }
+    } else if (result.kind == Library::Components::QueryResult::Kind::Enumerate) {
+      if (result.enumerator.has_value()) {
+        enumerator = get_query_catalog().convert_enumerator(
+          std::move(result.enumerator.value()));
+      }
     }
     std::unique_lock lk(output_mutex);
 
