@@ -5,7 +5,7 @@ options {
 }
 
 parse
- : (core_query | error )* EOF
+ : (check_query | core_query | error )* EOF
  ;
 
 error
@@ -13,6 +13,10 @@ error
    {
      throw new RuntimeException("UNEXPECTED_CHAR=" + $UNEXPECTED_CHAR.text);
    }
+ ;
+
+check_query
+ : K_CHECK LEFT_CURLY_BRACKET core_query RIGHT_CURLY_BRACKET
  ;
 
 core_query

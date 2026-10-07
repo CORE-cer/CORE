@@ -23,6 +23,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitCheck_query(CEQLQueryParser::Check_queryContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext *ctx) override {
     return visitChildren(ctx);
   }

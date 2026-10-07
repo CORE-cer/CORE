@@ -23,6 +23,8 @@ public:
 
     virtual std::any visitError(CEQLQueryParser::ErrorContext *context) = 0;
 
+    virtual std::any visitCheck_query(CEQLQueryParser::Check_queryContext *context) = 0;
+
     virtual std::any visitCore_query(CEQLQueryParser::Core_queryContext *context) = 0;
 
     virtual std::any visitSs_all(CEQLQueryParser::Ss_allContext *context) = 0;

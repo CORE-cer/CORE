@@ -5,6 +5,7 @@ K_AND       : A N D;
 K_ANY       : A N Y;
 K_AS        : A S;
 K_BY        : B Y;
+K_CHECK     : C H E C K;
 K_CONSUME   : C O N S U M E;
 K_LIMIT   : L I M I T;
 K_DISTINCT  : D I S T I N C T;

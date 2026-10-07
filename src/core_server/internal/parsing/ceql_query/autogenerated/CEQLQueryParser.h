@@ -12,33 +12,34 @@
 class  CEQLQueryParser : public antlr4::Parser {
 public:
   enum {
-    K_ALL = 1, K_AND = 2, K_ANY = 3, K_AS = 4, K_BY = 5, K_CONSUME = 6, 
-    K_LIMIT = 7, K_DISTINCT = 8, K_EVENT = 9, K_EVENTS = 10, K_FILTER = 11, 
-    K_FROM = 12, K_HOURS = 13, K_IN = 14, K_LAST = 15, K_LIKE = 16, K_MAX = 17, 
-    K_MINUTES = 18, K_NEXT = 19, K_NONE = 20, K_NOT = 21, K_OR = 22, K_PARTITION = 23, 
-    K_RANGE = 24, K_SECONDS = 25, K_SELECT = 26, K_STREAM = 27, K_STRICT = 28, 
-    K_UNLESS = 29, K_WHERE = 30, K_WITHIN = 31, PERCENT = 32, PLUS = 33, 
-    MINUS = 34, STAR = 35, SLASH = 36, LE = 37, LEQ = 38, GE = 39, GEQ = 40, 
-    EQ = 41, NEQ = 42, SEMICOLON = 43, COLON = 44, COMMA = 45, DOUBLE_DOT = 46, 
-    LEFT_PARENTHESIS = 47, RIGHT_PARENTHESIS = 48, LEFT_SQUARE_BRACKET = 49, 
-    RIGHT_SQUARE_BRACKET = 50, LEFT_CURLY_BRACKET = 51, RIGHT_CURLY_BRACKET = 52, 
-    COLON_PLUS = 53, IDENTIFIER = 54, DOUBLE_LITERAL = 55, INTEGER_LITERAL = 56, 
-    NUMERICAL_EXPONENT = 57, STRING_LITERAL = 58, SINGLE_LINE_COMMENT = 59, 
-    MULTILINE_COMMENT = 60, SPACES = 61, UNEXPECTED_CHAR = 62
+    K_ALL = 1, K_AND = 2, K_ANY = 3, K_AS = 4, K_BY = 5, K_CHECK = 6, K_CONSUME = 7, 
+    K_LIMIT = 8, K_DISTINCT = 9, K_EVENT = 10, K_EVENTS = 11, K_FILTER = 12, 
+    K_FROM = 13, K_HOURS = 14, K_IN = 15, K_LAST = 16, K_LIKE = 17, K_MAX = 18, 
+    K_MINUTES = 19, K_NEXT = 20, K_NONE = 21, K_NOT = 22, K_OR = 23, K_PARTITION = 24, 
+    K_RANGE = 25, K_SECONDS = 26, K_SELECT = 27, K_STREAM = 28, K_STRICT = 29, 
+    K_UNLESS = 30, K_WHERE = 31, K_WITHIN = 32, PERCENT = 33, PLUS = 34, 
+    MINUS = 35, STAR = 36, SLASH = 37, LE = 38, LEQ = 39, GE = 40, GEQ = 41, 
+    EQ = 42, NEQ = 43, SEMICOLON = 44, COLON = 45, COMMA = 46, DOUBLE_DOT = 47, 
+    LEFT_PARENTHESIS = 48, RIGHT_PARENTHESIS = 49, LEFT_SQUARE_BRACKET = 50, 
+    RIGHT_SQUARE_BRACKET = 51, LEFT_CURLY_BRACKET = 52, RIGHT_CURLY_BRACKET = 53, 
+    COLON_PLUS = 54, IDENTIFIER = 55, DOUBLE_LITERAL = 56, INTEGER_LITERAL = 57, 
+    NUMERICAL_EXPONENT = 58, STRING_LITERAL = 59, SINGLE_LINE_COMMENT = 60, 
+    MULTILINE_COMMENT = 61, SPACES = 62, UNEXPECTED_CHAR = 63
   };
 
   enum {
-    RuleParse = 0, RuleError = 1, RuleCore_query = 2, RuleSelection_strategy = 3, 
-    RuleList_of_variables = 4, RuleFrom_clause = 5, RuleCel_formula = 6, 
-    RulePartition_list = 7, RuleAttribute_list = 8, RuleConsumption_policy = 9, 
-    RuleLimit = 10, RuleFilter = 11, RulePredicate = 12, RuleString_literal = 13, 
-    RuleMath_expr = 14, RuleValue_seq = 15, RuleNumber_seq = 16, RuleString_seq = 17, 
-    RuleTime_window = 18, RuleEvent_span = 19, RuleTime_span = 20, RuleHour_span = 21, 
-    RuleMinute_span = 22, RuleSecond_span = 23, RuleCustom_span = 24, RuleNamed_event = 25, 
-    RuleS_event_name_with_projection = 26, RuleS_event_name = 27, RuleEvent_name = 28, 
-    RuleAtomic_cel_formula = 29, RuleStream_name = 30, RuleList_of_attribute_names = 31, 
-    RuleAttribute_name = 32, RuleInteger = 33, RuleDouble = 34, RuleNumber = 35, 
-    RuleString = 36, RuleAny_name = 37, RuleKeyword = 38
+    RuleParse = 0, RuleError = 1, RuleCheck_query = 2, RuleCore_query = 3, 
+    RuleSelection_strategy = 4, RuleList_of_variables = 5, RuleFrom_clause = 6, 
+    RuleCel_formula = 7, RulePartition_list = 8, RuleAttribute_list = 9, 
+    RuleConsumption_policy = 10, RuleLimit = 11, RuleFilter = 12, RulePredicate = 13, 
+    RuleString_literal = 14, RuleMath_expr = 15, RuleValue_seq = 16, RuleNumber_seq = 17, 
+    RuleString_seq = 18, RuleTime_window = 19, RuleEvent_span = 20, RuleTime_span = 21, 
+    RuleHour_span = 22, RuleMinute_span = 23, RuleSecond_span = 24, RuleCustom_span = 25, 
+    RuleNamed_event = 26, RuleS_event_name_with_projection = 27, RuleS_event_name = 28, 
+    RuleEvent_name = 29, RuleAtomic_cel_formula = 30, RuleStream_name = 31, 
+    RuleList_of_attribute_names = 32, RuleAttribute_name = 33, RuleInteger = 34, 
+    RuleDouble = 35, RuleNumber = 36, RuleString = 37, RuleAny_name = 38, 
+    RuleKeyword = 39
   };
 
   explicit CEQLQueryParser(antlr4::TokenStream *input);
@@ -60,6 +61,7 @@ public:
 
   class ParseContext;
   class ErrorContext;
+  class Check_queryContext;
   class Core_queryContext;
   class Selection_strategyContext;
   class List_of_variablesContext;
@@ -103,6 +105,8 @@ public:
     ParseContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *EOF();
+    std::vector<Check_queryContext *> check_query();
+    Check_queryContext* check_query(size_t i);
     std::vector<Core_queryContext *> core_query();
     Core_queryContext* core_query(size_t i);
     std::vector<ErrorContext *> error();
@@ -128,6 +132,22 @@ public:
   };
 
   ErrorContext* error();
+
+  class  Check_queryContext : public antlr4::ParserRuleContext {
+  public:
+    Check_queryContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_CHECK();
+    antlr4::tree::TerminalNode *LEFT_CURLY_BRACKET();
+    Core_queryContext *core_query();
+    antlr4::tree::TerminalNode *RIGHT_CURLY_BRACKET();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  Check_queryContext* check_query();
 
   class  Core_queryContext : public antlr4::ParserRuleContext {
   public:
