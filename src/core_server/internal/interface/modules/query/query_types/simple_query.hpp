@@ -43,7 +43,6 @@ class SimpleQuery : public GenericQuery {
  private:
   void create_query(Internal::CEQL::Query&& query) override {
 
-    this->output_mode = query.output_mode;
     Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
       this->query_catalog);
 

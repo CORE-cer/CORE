@@ -44,14 +44,22 @@ class ResultHandler {
     return query_catalog.value();
   }
 
-  void operator()(std::optional<Internal::tECS::Enumerator>&& enumerator) {
-    handle_complex_event(std::move(enumerator));
+  virtual void start() {}
+
+  virtual void handle_complex_event(QueryResult&& result) = 0;
+
+  virtual void handle_check_result(bool matched) {
+    // Default no-op implementation for backward compatibility
+    (void)matched;
   }
 
-  virtual void start() = 0;
+  void operator()(QueryResult&& result) {
+    handle_complex_event(std::move(result));
+  }
 
-  virtual void
-  handle_complex_event(std::optional<Internal::tECS::Enumerator>&& enumerator) = 0;
+  void operator()(bool matched) {
+    handle_check_result(matched);
+  }
 
   ResultHandlerType get_result_handler_type() const { return result_handler_type; }
 
@@ -64,15 +72,20 @@ class OfflineResultHandler : public ResultHandler {
  public:
   OfflineResultHandler() : ResultHandler(ResultHandlerType::OFFLINE) {}
 
-  void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
+  void handle_complex_event(QueryResult&& result) override {
     ZoneScopedN("OfflineResultHandler::handle_complex_event");
-    if (!internal_enumerator.has_value()) {
-      return;
+    if (result.kind == QueryResult::Kind::Enumerate) {
+      if (result.enumerator.has_value()) {
+        for (const auto& complex_event : result.enumerator.value()) {
+          std::cout << complex_event.to_string<true>() << "\n";
+        }
+      }
     }
-    for (const auto& complex_event : internal_enumerator.value()) {
-      std::cout << complex_event.to_string<true>() << "\n";
-    }
+  }
+
+  void handle_check_result(bool matched) override {
+    ZoneScopedN("OfflineResultHandler::handle_check_result");
+    std::cout << (matched ? "true" : "false") << "\n";
   }
 
   void start() override {}
@@ -97,17 +110,24 @@ class OnlineResultHandler : public ResultHandler {
     LOG_INFO(logger, "Starting broadcaster at port {}", port);
   }
 
-  void handle_complex_event(
-    std::optional<Internal::tECS::Enumerator>&& internal_enumerator) override {
+  void handle_complex_event(QueryResult&& result) override {
     Types::Enumerator enumerator;
-    if (internal_enumerator.has_value()) {
-      enumerator = get_query_catalog().convert_enumerator(
-        std::move(internal_enumerator.value()));
+    if (result.kind == QueryResult::Kind::Enumerate) {
+      if (result.enumerator.has_value()) {
+        enumerator = get_query_catalog().convert_enumerator(
+          std::move(result.enumerator.value()));
+      }
     }
     std::string serialized_enumerator{
       Internal::CerealSerializer<Types::Enumerator>::serialize(enumerator)};
 
     broadcaster->broadcast(serialized_enumerator);
+  }
+
+  void handle_check_result(bool matched) override {
+    std::string serialized_result{
+      Internal::CerealSerializer<bool>::serialize(matched)};
+    broadcaster->broadcast(serialized_result);
   }
 
   // Returns the port as the identifier
