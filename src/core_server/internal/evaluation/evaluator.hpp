@@ -66,6 +66,8 @@ class Evaluator {
 
   CEQL::ConsumeBy::ConsumptionPolicy consumption_policy;
   CEQL::Limit enumeration_limit;
+  CEQL::OutputMode output_mode = CEQL::OutputMode::Enumerate;
+
 
   // Last tuple time seen by the evaluator.
   uint64_t last_tuple_time = 0;
@@ -116,6 +118,10 @@ class Evaluator {
     return false;
   }
 
+  void set_output_mode(CEQL::OutputMode mode) {
+    output_mode = mode;
+  }
+  
   std::optional<tECS::Enumerator>
   next(Types::EventWrapper&& event, uint64_t current_time) {
     ZoneScopedN("Evaluator::next");
@@ -147,6 +153,7 @@ class Evaluator {
 #endif
       return {};
     }
+    // Update time-window expiration: This defines which historical state is now expired
     last_tuple_time = current_time;
     // current_time is j in the algorithm.
     event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
@@ -155,25 +162,31 @@ class Evaluator {
                  event_time_of_expiration.load());
     LOG_TRACE_L2(logger, "Time window is set to {}", time_window);
 
+    // Optional reset (tied to consumption policies like ANY or PARTITION)
     if (should_reset.load()) {
       reset();
       should_reset.store(false);
     }
 
+    // Evaluate the predicates for the current event
     Bitset predicates_satisfied = tuple_evaluator(event);
+    // Clear current working state
     current_union_list_map = {};
     current_ordered_keys = {};
     final_states.clear();
     actual_time = current_time;
+    // Initialize the automaton from the initial state
     UnionList ul = tecs->new_ulist(
       tecs->new_bottom(std::move(event.clone()), current_time));
     State* q0 = get_initial_state();
     exec_trans(event, q0, std::move(ul), predicates_satisfied, current_time);
 
+    // Propagate the event through all historic states
     for (State* p : historic_ordered_keys) {
       assert(historic_union_list_map.contains(p));
       UnionList& actual_ul = historic_union_list_map[p];
       if (is_ul_out_time_window(actual_ul)) {
+        // If expired, discard, i.e. unpin the union list to free resources
         tecs->unpin(actual_ul);
       } else {
         remove_out_of_time_nodes_ul(actual_ul);
@@ -190,9 +203,11 @@ class Evaluator {
     historic_ordered_keys = std::move(current_ordered_keys);
     current_iteration++;
 
+    // Detect accepting states
     bool has_output = !final_states.empty();
 
-    if (has_output) {
+    // produce output if any
+    if (has_output) {      
       LOG_TRACE_L2(logger, "Outputting in Evaluator");
       tECS::Enumerator enumerator = output();
       assert(enumeration_limit.result_limit == 0
@@ -224,6 +239,90 @@ class Evaluator {
       std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count(),
       event.get_primary_time().val);
     return {};
+  }
+
+  bool next_check(Types::EventWrapper&& event, uint64_t current_time) {
+    ZoneScopedN("Evaluator::next");
+
+    LOG_TRACE_L3(logger,
+                 "Received tuple with timestamp {} in Evaluator::next",
+                 event.get_primary_time().val);
+#if QUILL_COMPILE_ACTIVE_LOG_LEVEL <= QUILL_LOG_LEVEL_TRACE_L2
+    LOG_TRACE_L2(logger,
+                 "Event type ID: {}",
+                 event.get_event_reference().get_event_type_id());
+    for (const auto& attr : event.get_event_reference().attributes) {
+      LOG_TRACE_L2(logger, "Attribute: {}", attr->to_string());
+    }
+    auto start_time = std::chrono::steady_clock::now();
+#endif
+    // Check tuples are being sent in ascending order.
+    if (current_time < last_tuple_time) [[unlikely]] {
+      std::string attributes = event.get_event_reference().to_string();
+      LOG_CRITICAL(logger,
+                   "Received tuple with timestamp {} in Evaluator::next, "
+                   "but the last tuple time was {}. Attributes: {}. Ignoring event.",
+                   current_time,
+                   last_tuple_time,
+                   attributes);
+#ifdef CORE_DEBUG
+      std::this_thread::sleep_for(std::chrono::nanoseconds(500000000));
+      assert(false && "Received tuple out of order in Evaluator::next");
+#endif
+      return {};
+    }
+    // Update time-window expiration: This defines which historical state is now expired
+    last_tuple_time = current_time;
+    // current_time is j in the algorithm.
+    event_time_of_expiration = current_time < time_window ? 0 : current_time - time_window;
+    LOG_TRACE_L2(logger,
+                 "Event time of expiration set to {}",
+                 event_time_of_expiration.load());
+    LOG_TRACE_L2(logger, "Time window is set to {}", time_window);
+
+    // Optional reset (tied to consumption policies like ANY or PARTITION)
+    if (should_reset.load()) {
+      reset();
+      should_reset.store(false);
+    }
+
+    // Evaluate the predicates for the current event
+    Bitset predicates_satisfied = tuple_evaluator(event);
+    // Clear current working state
+    current_union_list_map = {};
+    current_ordered_keys = {};
+    final_states.clear();
+    actual_time = current_time;
+    // Initialize the automaton from the initial state
+    UnionList ul = tecs->new_ulist(
+      tecs->new_bottom(std::move(event.clone()), current_time));
+    State* q0 = get_initial_state();
+    exec_trans(event, q0, std::move(ul), predicates_satisfied, current_time);
+
+    // Propagate the event through all historic states
+    for (State* p : historic_ordered_keys) {
+      assert(historic_union_list_map.contains(p));
+      UnionList& actual_ul = historic_union_list_map[p];
+      if (is_ul_out_time_window(actual_ul)) {
+        // If expired, discard, i.e. unpin the union list to free resources
+        tecs->unpin(actual_ul);
+      } else {
+        remove_out_of_time_nodes_ul(actual_ul);
+        exec_trans(event,
+                   p,
+                   std::move(actual_ul),
+                   predicates_satisfied,
+                   current_time);  // Send the tuple in exec_trans.
+      }
+    }
+    // Update the evicted states.
+    cea.state_manager.unpin_states(historic_ordered_keys);
+    historic_union_list_map = std::move(current_union_list_map);
+    historic_ordered_keys = std::move(current_ordered_keys);
+    current_iteration++;
+
+    // Detect accepting states
+    return !final_states.empty();
   }
 
  private:
