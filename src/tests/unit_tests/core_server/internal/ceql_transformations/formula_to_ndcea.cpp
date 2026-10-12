@@ -3,7 +3,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/internal/catch_decomposer.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -14,6 +16,8 @@
 #include "core_server/internal/coordination/catalog.hpp"
 #include "core_server/internal/coordination/query_catalog.hpp"
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "core_server/internal/parsing/ceql_query/parser.hpp"
 #include "shared/datatypes/bitset.hpp"
@@ -518,4 +522,92 @@ TEST_CASE("Not event with sequence 3", "[CEQL To LogicalCEA]") {
   REQUIRE(cea.final_states == 0b1000100000);
 
 }  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests
+
+CEA::LogicalCEA build_logical_cea(Catalog& catalog, std::string clause) {
+  auto query = Parsing::QueryParser::parse_query(create_query(clause), catalog);
+  QueryCatalog query_catalog(catalog, query);
+  AnnotatePredicatesWithNewPhysicalPredicates transformer(query_catalog);
+  query = transformer(std::move(query));
+  auto visitor = FormulaToLogicalCEA(query_catalog);
+  query.where.formula->accept_visitor(visitor);
+  return visitor.current_cea;
+}
+
+// Whether a NOT automaton reads an event with the given predicate evaluation.
+bool not_cea_reads(const CEA::LogicalCEA& cea, uint64_t evaluation) {
+  REQUIRE(cea.amount_of_states == 2);
+  REQUIRE(cea.initial_states == 0b1);
+  REQUIRE(cea.final_states == 0b10);
+  REQUIRE(cea.transitions[1].empty());
+  bool reads = false;
+  for (const auto& [predicate, marks, target] : cea.transitions[0]) {
+    REQUIRE(marks.none());
+    REQUIRE(target == 1);
+    reads = reads || predicate.is_satisfied_by(Bitset::from_ulong(evaluation, 8));
+  }
+  return reads;
+}
+
+TEST_CASE("Not negates the whole OR of filters", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::AttributeInfo Int("Int", Types::ValueTypes::INT64);
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {Int}}}});
+  // Bit 1 is the event type H, bits 2 and 3 are the filters.
+  auto cea = build_logical_cea(catalog, "NOT (H FILTER H[Int > 2] OR H[Int < 0])");
+  INFO(cea.to_string());
+  for (uint64_t evaluation = 0; evaluation < 16; evaluation++) {
+    bool is_h = (evaluation & 0b10) != 0;
+    bool satisfies_a_filter = (evaluation & 0b1100) != 0;
+    INFO("Evaluation: " + std::to_string(evaluation));
+    REQUIRE(not_cea_reads(cea, evaluation) == !(is_h && satisfies_a_filter));
+  }
+}
+
+TEST_CASE("Not negates an OR of event types", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}, {"T", {}}}});
+  // Bits 1 and 2 are the event types H and T.
+  auto not_cea = build_logical_cea(catalog, "NOT (H OR T)");
+  INFO(not_cea.to_string());
+  for (uint64_t evaluation = 0; evaluation < 16; evaluation++) {
+    bool is_h_or_t = (evaluation & 0b110) != 0;
+    INFO("Evaluation: " + std::to_string(evaluation));
+    REQUIRE(not_cea_reads(not_cea, evaluation) == !is_h_or_t);
+  }
+}
+
+TEST_CASE("Not of an empty atomic formula reads every event", "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
+  auto cea = build_logical_cea(catalog, "NOT ((H AS x) AND H)");
+  INFO(cea.to_string());
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(std::get<0>(cea.transitions[0][0]).type == CEA::PredicateSet::Tautology);
+  REQUIRE(not_cea_reads(cea, 0));
+}
+
+TEST_CASE("Not normalizes epsilon transitions of the atomic formula",
+          "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
+  auto cea = CEA::NegateExpected()(
+    CEA::AddUniqueInitialState()(build_logical_cea(catalog, "H")));
+  INFO(cea.to_string());
+  REQUIRE(cea.transitions[0].size() == 1);
+  REQUIRE(cea.transitions[0][0]
+          == std::make_tuple(CEA::PredicateSet(Bitset::from_ulong(0b10),
+                                               Bitset::from_ulong(0b00)),
+                             0b00,
+                             1));
+}
+
+TEST_CASE("Not rejects automata that capture more than one event",
+          "[CEQL To LogicalCEA]") {
+  Catalog catalog;
+  Types::StreamInfo stream_info = catalog.add_stream_type({"S", {{"H", {}}}});
+  REQUIRE_THROWS_AS(CEA::NegateExpected()(build_logical_cea(catalog, "H : H")),
+                    std::logic_error);
+  REQUIRE_THROWS_AS(CEA::NegateExpected()(build_logical_cea(catalog, "H+")),
+                    std::logic_error);
+}
 }  // namespace CORE::Internal::CEQL::UnitTests::FormulaToLogicalCEATests

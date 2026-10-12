@@ -1075,11 +1075,55 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  Atomic_cel_formula_andContext : public Atomic_cel_formulaContext {
+  public:
+    Atomic_cel_formula_andContext(Atomic_cel_formulaContext *ctx);
+
+    std::vector<Atomic_cel_formulaContext *> atomic_cel_formula();
+    Atomic_cel_formulaContext* atomic_cel_formula(size_t i);
+    antlr4::tree::TerminalNode *K_AND();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  Atomic_cel_formula_rContext : public Atomic_cel_formulaContext {
   public:
     Atomic_cel_formula_rContext(Atomic_cel_formulaContext *ctx);
 
     S_event_nameContext *s_event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Atomic_cel_formula_asContext : public Atomic_cel_formulaContext {
+  public:
+    Atomic_cel_formula_asContext(Atomic_cel_formulaContext *ctx);
+
+    Atomic_cel_formulaContext *atomic_cel_formula();
+    antlr4::tree::TerminalNode *K_AS();
+    Event_nameContext *event_name();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Atomic_cel_formula_orContext : public Atomic_cel_formulaContext {
+  public:
+    Atomic_cel_formula_orContext(Atomic_cel_formulaContext *ctx);
+
+    std::vector<Atomic_cel_formulaContext *> atomic_cel_formula();
+    Atomic_cel_formulaContext* atomic_cel_formula(size_t i);
+    antlr4::tree::TerminalNode *K_OR();
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  Par_atomic_cel_formulaContext : public Atomic_cel_formulaContext {
+  public:
+    Par_atomic_cel_formulaContext(Atomic_cel_formulaContext *ctx);
+
+    antlr4::tree::TerminalNode *LEFT_PARENTHESIS();
+    Atomic_cel_formulaContext *atomic_cel_formula();
+    antlr4::tree::TerminalNode *RIGHT_PARENTHESIS();
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };

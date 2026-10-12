@@ -287,7 +287,23 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitAtomic_cel_formula_and(CEQLQueryParser::Atomic_cel_formula_andContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAtomic_cel_formula_r(CEQLQueryParser::Atomic_cel_formula_rContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitAtomic_cel_formula_as(CEQLQueryParser::Atomic_cel_formula_asContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitAtomic_cel_formula_or(CEQLQueryParser::Atomic_cel_formula_orContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitPar_atomic_cel_formula(CEQLQueryParser::Par_atomic_cel_formulaContext *ctx) override {
     return visitChildren(ctx);
   }
 

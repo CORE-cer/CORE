@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -48,6 +49,11 @@ struct GetAllASVariablesVisitor : public FormulaVisitor {
   void visit(ProjectionFormula& formula) override { return; }
 
   void visit(OrFormula& formula) override {
+    formula.left->accept_visitor(*this);
+    formula.right->accept_visitor(*this);
+  }
+
+  void visit(AndFormula& formula) override {
     formula.left->accept_visitor(*this);
     formula.right->accept_visitor(*this);
   }

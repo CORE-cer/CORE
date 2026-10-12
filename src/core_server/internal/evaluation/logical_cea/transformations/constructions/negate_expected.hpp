@@ -1,58 +1,152 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
+#include <set>
+#include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/logical_cea_transformer.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/add_unique_initial_state.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_epsilon_transitions.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_unreachable_states.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/optimizations/remove_useless_states.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "shared/datatypes/bitset.hpp"
 
 namespace CORE::Internal::CEA {
 
+/**
+ * Builds the automaton of the not-operator !α of an atomic formula α: it reads
+ * a single event e_i, marking no variables, iff α captures no complex event at
+ * position i.
+ *
+ * The constructions used to build α (e.g. Union, Intersection) may leave
+ * epsilon transitions and unreachable or useless states, so α is first
+ * normalized like in the CEA construction. Afterwards α must be single-step:
+ * every transition leaves the unique initial state and goes directly to a
+ * final state without outgoing transitions. Then α captures e_i iff the
+ * disjunction P1 ∨ ... ∨ Pn of the predicates of those transitions holds, and
+ * !α is the negation of that disjunction, with one transition per disjunct of
+ * its disjunctive normal form.
+ */
 class NegateExpected final : public LogicalCEATransformer {
  public:
-  using VariablesToMark = Bitset;
   using NodeId = uint64_t;
-  using Transition = std::tuple<PredicateSet, VariablesToMark, NodeId>;
 
   LogicalCEA eval(LogicalCEA&& cea) override {
-    LogicalCEA out = LogicalCEA(cea);
-    std::vector<std::vector<Transition>> new_transitions{};
-    // Revisaremos cada una de las transiciones de salida de cada nodo
-    // Para esto recorreremos todos los nodos y sus respectivas transiciones
-    for (uint64_t node_id = 0; node_id < out.transitions.size(); ++node_id) {
-      // Acá almacenamos lista de transiciones del nodo inicial
-      auto& node_transitions = out.transitions[node_id];
-      // Creamos una nueva lista con las transiciones del nuevo CEA
-      new_transitions.push_back({});
-      // Recorremos cada una de las transiciones del nodo actual
-      for (Transition& transition : node_transitions) {
-        // Obtenemos el predicate, la mascara y el nodo de destino
-        PredicateSet old_predicate_set = std::get<0>(transition);
-        Bitset old_mask = old_predicate_set.mask;
-        VariablesToMark variables_to_mark = std::get<1>(transition);
-        NodeId old_node_id = std::get<2>(transition);
+    std::vector<PredicateSet> disjuncts = get_single_step_predicates(std::move(cea));
+    LogicalCEA out(2);
+    for (const PredicateSet& predicate : negate_disjunction(disjuncts)) {
+      out.transitions[0].push_back(std::make_tuple(predicate, Bitset(), 1));
+    }
+    out.initial_states = Bitset::with_bit(0, 2);
+    out.final_states = Bitset::with_bit(1, 2);
+    return out;
+  }
 
-        // Iterate over set bits in the mask
-        for (auto i = old_mask.find_first(); i != Bitset::npos;
-             i = old_mask.find_next(i)) {
-          // Create a single-bit mask for this position
-          Bitset current_vector = Bitset::with_bit(i, old_mask.size());
-          // EL nuevo expected debe ser 0 (empty bitset = all zeros)
-          Bitset new_expected(old_mask.size());
-          // Creamos un nuevo Predicate con la máscara de un solo bit
-          // y con el nuevo expected (0)
-          PredicateSet new_predicate_set(current_vector, new_expected);
-          // Agregamos una nueva transición con el mismo nodo objetivo
-          new_transitions[node_id].push_back(
-            {new_predicate_set, new_expected, old_node_id});
+ private:
+  static std::vector<PredicateSet> get_single_step_predicates(LogicalCEA&& cea) {
+    // clang-format off
+    cea = RemoveUnreachableStates()(
+          RemoveUselessStates()(
+          RemoveEpsilonTransitions()(
+          AddUniqueInitialState()(std::move(cea)))));
+    // clang-format on
+    std::vector<NodeId> initial_states = cea.get_initial_states();
+    // If no final state is reachable, every state is useless and α is empty.
+    if (initial_states.empty()) {
+      return {};
+    }
+    assert(initial_states.size() == 1);
+    NodeId initial_state = initial_states[0];
+    if (is_set(cea.final_states, initial_state)) {
+      throw std::logic_error("NOT requires an atomic formula, but it accepts no events.");
+    }
+    std::vector<PredicateSet> out;
+    for (const auto& [predicate, marks, target] : cea.transitions[initial_state]) {
+      if (!is_set(cea.final_states, target) || !cea.transitions[target].empty()) {
+        throw std::logic_error(
+          "NOT requires an atomic formula, but it captures more than one event.");
+      }
+      out.push_back(predicate);
+    }
+    return out;
+  }
+
+  /**
+   * ¬(P1 ∨ ... ∨ Pn) = ¬P1 ∧ ... ∧ ¬Pn, where each ¬Pi is the disjunction of
+   * the single-bit literals that contradict Pi. The conjunction is distributed
+   * over those disjunctions to obtain a disjunction of PredicateSets.
+   */
+  static std::vector<PredicateSet>
+  negate_disjunction(const std::vector<PredicateSet>& disjuncts) {
+    std::set<PredicateSet> conjunctions = {PredicateSet(PredicateSet::Tautology)};
+    for (const PredicateSet& disjunct : disjuncts) {
+      if (disjunct.type == PredicateSet::Contradiction) {
+        continue;
+      }
+      if (disjunct.type == PredicateSet::Tautology) {
+        return {};
+      }
+      std::set<PredicateSet> next_conjunctions;
+      for (auto bit = disjunct.mask.find_first(); bit != Bitset::npos;
+           bit = disjunct.mask.find_next(bit)) {
+        Bitset literal_mask = Bitset::with_bit(bit, disjunct.mask.size());
+        Bitset literal_value = disjunct.predicates.test(bit)
+                                 ? Bitset(disjunct.mask.size())
+                                 : literal_mask;
+        PredicateSet literal(literal_mask, literal_value);
+        for (const PredicateSet& conjunction : conjunctions) {
+          PredicateSet combined = conjunction & literal;
+          if (combined.type != PredicateSet::Contradiction) {
+            next_conjunctions.insert(combined);
+          }
         }
       }
+      conjunctions = remove_implied(next_conjunctions);
     }
-    out.transitions = new_transitions;
+    return {conjunctions.begin(), conjunctions.end()};
+  }
+
+  // Drops every conjunction that implies another one, since it does not add
+  // new events to the disjunction.
+  static std::set<PredicateSet>
+  remove_implied(const std::set<PredicateSet>& conjunctions) {
+    std::set<PredicateSet> out;
+    for (const PredicateSet& candidate : conjunctions) {
+      bool is_implied = false;
+      for (const PredicateSet& other : conjunctions) {
+        if (!(other == candidate) && implies(candidate, other)) {
+          is_implied = true;
+          break;
+        }
+      }
+      if (!is_implied) {
+        out.insert(candidate);
+      }
+    }
     return out;
+  }
+
+  static bool implies(const PredicateSet& stronger, const PredicateSet& weaker) {
+    if (weaker.type == PredicateSet::Tautology) {
+      return true;
+    }
+    if (stronger.type == PredicateSet::Tautology) {
+      return false;
+    }
+    bool weaker_mask_is_contained = (weaker.mask & stronger.mask) == weaker.mask;
+    bool agrees_on_weaker_mask = ((stronger.predicates ^ weaker.predicates) & weaker.mask)
+                                   .none();
+    return weaker_mask_is_contained && agrees_on_weaker_mask;
+  }
+
+  static bool is_set(const Bitset& states, NodeId state) {
+    return state < states.size() && states.test(state);
   }
 };
 
