@@ -1,0 +1,11 @@
+{
+  "name": "core-dev-tools",
+  "private": true,
+  "description": "Development tooling for CORE. Not part of the engine build.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.14.1"
+  }
+}

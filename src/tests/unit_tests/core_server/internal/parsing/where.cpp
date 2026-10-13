@@ -11,6 +11,7 @@
 #include <string>
 #include <utility>
 
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -127,6 +128,53 @@ TEST_CASE("not event", "[Where]") {
   auto query = create_where_query("NOT ( T )");
   auto expected_formula = make_unique<NotEventTypeFormula>(
     make_unique<EventTypeFormula>("T"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("not of atomic or", "[Where]") {
+  auto query = create_where_query("NOT ( H OR T )");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<OrFormula>(make_unique<EventTypeFormula>("H"),
+                           make_unique<EventTypeFormula>("T")));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("not of atomic and", "[Where]") {
+  auto query = create_where_query("NOT ( H AND T )");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<AndFormula>(make_unique<EventTypeFormula>("H"),
+                            make_unique<EventTypeFormula>("T")));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("not of atomic as", "[Where]") {
+  auto query = create_where_query("NOT ( (H OR T) AS x )");
+  auto expected_formula = make_unique<NotEventTypeFormula>(
+    make_unique<AsFormula>(make_unique<OrFormula>(make_unique<EventTypeFormula>("H"),
+                                                  make_unique<EventTypeFormula>("T")),
+                           "x"));
+  auto formula = parse_formula(query);
+  INFO("Expected: " + expected_formula->to_string());
+  INFO("Got: " + formula->to_string());
+  REQUIRE(formula->equals(expected_formula.get()));
+}
+
+TEST_CASE("not of atomic formula follows the cel formula precedence", "[Where]") {
+  auto query = create_where_query("NOT ( H OR T AND S AS x )");
+  auto expected_formula = make_unique<NotEventTypeFormula>(make_unique<OrFormula>(
+    make_unique<EventTypeFormula>("H"),
+    make_unique<AndFormula>(make_unique<EventTypeFormula>("T"),
+                            make_unique<AsFormula>(make_unique<EventTypeFormula>("S"),
+                                                   "x"))));
   auto formula = parse_formula(query);
   INFO("Expected: " + expected_formula->to_string());
   INFO("Got: " + formula->to_string());

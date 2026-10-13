@@ -1,6 +1,8 @@
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -657,6 +659,130 @@ TEST_CASE("Evaluation of NOT query with +") {
   REQUIRE(output.complex_events[1].events.size() == 2);
   REQUIRE(is_the_same_as(output.complex_events[1].events[0], 1, "MSFT", 101));
   REQUIRE(is_the_same_as(output.complex_events[1].events[1], 0, "AMZN", 102));
+}
+
+namespace {
+constexpr uint64_t SELL = 0;
+constexpr uint64_t BUY = 1;
+
+struct NotQueryRunner {
+  Internal::Interface::Backend<> backend;
+  DirectOutputTestResultHandler* result_handler = nullptr;
+
+  explicit NotQueryRunner(const std::string& where_clause) {
+    primary_time_stock_declaration(backend);
+    CEQL::Query parsed_query = backend.parse_sent_query(
+      "SELECT * FROM Stock\nWHERE " + where_clause + "\nCONSUME BY NONE");
+    auto result_handler_ptr = std::make_unique<DirectOutputTestResultHandler>(
+      QueryCatalog(backend.get_catalog_reference(), parsed_query));
+    result_handler = result_handler_ptr.get();
+    backend.declare_query(std::move(parsed_query), std::move(result_handler_ptr));
+  }
+
+  Types::Enumerator last_output;
+
+  // Sends a stock event and returns the amount of complex events it outputs.
+  std::size_t send(uint64_t event_type, std::string name, int64_t price, int64_t time) {
+    Types::Event event = {event_type,
+                          {std::make_shared<Types::StringValue>(std::move(name)),
+                           std::make_shared<Types::IntValue>(price)},
+                          Types::IntValue(time)};
+    backend.send_event_to_queries(0, event);
+    last_output = result_handler->get_enumerator();
+    return last_output.complex_events.size();
+  }
+
+  // Whether the last event sent output exactly one complex event with the
+  // given interval and amount of captured events.
+  bool last_output_is(uint64_t start, uint64_t end, std::size_t amount_of_events) const {
+    return last_output.complex_events.size() == 1
+           && last_output.complex_events[0].start == start
+           && last_output.complex_events[0].end == end
+           && last_output.complex_events[0].events.size() == amount_of_events;
+  }
+};
+}  // namespace
+
+TEST_CASE("Evaluation of NOT negates the whole OR of filters") {
+  NotQueryRunner runner("NOT(SELL FILTER SELL[name='MSFT'] OR SELL[price > 100])");
+
+  INFO(
+    "SELL MSFT 50 satisfies the first filter, so it is captured by the atomic formula");
+  REQUIRE(runner.send(SELL, "MSFT", 50, 0) == 0);
+  INFO(
+    "SELL INTL 500 satisfies the second filter, so it is captured by the atomic formula");
+  REQUIRE(runner.send(SELL, "INTL", 500, 1) == 0);
+  INFO("SELL INTL 50 satisfies no filter");
+  REQUIRE(runner.send(SELL, "INTL", 50, 2) == 1);
+  REQUIRE(runner.last_output_is(2, 2, 0));
+  INFO("BUY MSFT 500 is not a SELL");
+  REQUIRE(runner.send(BUY, "MSFT", 500, 3) == 1);
+  REQUIRE(runner.last_output_is(3, 3, 0));
+}
+
+TEST_CASE("Evaluation of NOT of an OR of event types") {
+  NotQueryRunner runner("NOT(BUY OR SELL FILTER SELL[price > 100])");
+
+  REQUIRE(runner.send(BUY, "MSFT", 50, 0) == 0);
+  REQUIRE(runner.send(SELL, "MSFT", 500, 1) == 0);
+  REQUIRE(runner.send(SELL, "MSFT", 50, 2) == 1);
+  REQUIRE(runner.last_output_is(2, 2, 0));
+}
+
+TEST_CASE("Evaluation of NOT of an AND of filtered events") {
+  NotQueryRunner runner(
+    "NOT((SELL FILTER SELL[price > 100]) AND (SELL FILTER SELL[name='MSFT']))");
+
+  REQUIRE(runner.send(SELL, "MSFT", 500, 0) == 0);
+  REQUIRE(runner.send(SELL, "MSFT", 50, 1) == 1);
+  REQUIRE(runner.last_output_is(1, 1, 0));
+  REQUIRE(runner.send(SELL, "INTL", 500, 2) == 1);
+  REQUIRE(runner.last_output_is(2, 2, 0));
+  REQUIRE(runner.send(BUY, "MSFT", 500, 3) == 1);
+  REQUIRE(runner.last_output_is(3, 3, 0));
+}
+
+TEST_CASE("Evaluation of NOT of an AND capturing different variables") {
+  // Both sides never capture the same complex event, since only the left one
+  // binds s. Hence, the atomic formula is empty and NOT captures every event.
+  NotQueryRunner runner("NOT((SELL AS s) AND SELL)");
+
+  REQUIRE(runner.send(SELL, "MSFT", 500, 0) == 1);
+  REQUIRE(runner.last_output_is(0, 0, 0));
+  REQUIRE(runner.send(BUY, "MSFT", 500, 1) == 1);
+  REQUIRE(runner.last_output_is(1, 1, 0));
+}
+
+TEST_CASE("Evaluation of NOT with a filter over an AS variable") {
+  NotQueryRunner runner("BUY : NOT(SELL AS s FILTER s[name='MSFT'])");
+
+  REQUIRE(runner.send(BUY, "MSFT", 100, 0) == 0);
+  REQUIRE(runner.send(SELL, "MSFT", 100, 1) == 0);
+  REQUIRE(runner.send(BUY, "INTL", 100, 2) == 0);
+  REQUIRE(runner.send(SELL, "INTL", 100, 3) == 1);
+  INFO("Only the BUY is captured: the event read by NOT binds no variable");
+  REQUIRE(runner.last_output_is(2, 3, 1));
+  REQUIRE(
+    is_the_same_as(runner.last_output.complex_events[0].events[0], BUY, "INTL", 100));
+}
+
+TEST_CASE("Evaluation of NOT of an event type captures single unbound events") {
+  NotQueryRunner runner("NOT(SELL)");
+
+  REQUIRE(runner.send(SELL, "MSFT", 101, 0) == 0);
+  REQUIRE(runner.send(SELL, "MSFT", 102, 1) == 0);
+  REQUIRE(runner.send(SELL, "INTL", 80, 2) == 0);
+  REQUIRE(runner.send(BUY, "INTL", 80, 3) == 1);
+  REQUIRE(runner.last_output_is(3, 3, 0));
+  REQUIRE(runner.send(SELL, "AMZN", 100, 4) == 0);
+  REQUIRE(runner.send(BUY, "AMZN", 2000, 5) == 1);
+  REQUIRE(runner.last_output_is(5, 5, 0));
+}
+
+TEST_CASE("NOT rejects formulas that are not atomic") {
+  REQUIRE_THROWS(NotQueryRunner("NOT(BUY : SELL)"));
+  REQUIRE_THROWS(NotQueryRunner("NOT(BUY+)"));
+  REQUIRE_THROWS(NotQueryRunner("NOT(NOT(SELL))"));
 }
 }  // namespace CORE::Internal::Evaluation::UnitTests
 

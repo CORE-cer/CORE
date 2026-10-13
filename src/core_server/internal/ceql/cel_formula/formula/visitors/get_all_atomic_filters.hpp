@@ -4,6 +4,7 @@
 
 #include "core_server/internal/ceql/cel_formula/filters/atomic_filter.hpp"
 #include "core_server/internal/ceql/cel_formula/filters/visitors/append_all_atomic_filters.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -37,6 +38,8 @@ class GetAllAtomicFilters : public FormulaVisitor {
   void visit(ProjectionFormula& formula) override {return;}
   void visit(AsFormula& formula)         override {formula.formula->accept_visitor(*this);}
   void visit(OrFormula& formula)         override {formula.left->accept_visitor(*this);
+                                                   formula.right->accept_visitor(*this);}
+  void visit(AndFormula& formula)        override {formula.left->accept_visitor(*this);
                                                    formula.right->accept_visitor(*this);}
   void visit(ContiguousIterationFormula& formula) override {formula.formula->accept_visitor(*this);}
   void visit(NotEventTypeFormula& formula) override {formula.not_formula->accept_visitor(*this);}

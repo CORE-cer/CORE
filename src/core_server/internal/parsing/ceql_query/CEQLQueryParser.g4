@@ -173,8 +173,12 @@ event_name
  ;
 
 atomic_cel_formula
- : s_event_name                                   # atomic_cel_formula_r
- | atomic_cel_formula K_FILTER filter             # atomic_cel_formula_filter
+ : LEFT_PARENTHESIS atomic_cel_formula RIGHT_PARENTHESIS   # par_atomic_cel_formula
+ | s_event_name                                            # atomic_cel_formula_r
+ | atomic_cel_formula K_AS event_name                      # atomic_cel_formula_as
+ | atomic_cel_formula K_AND atomic_cel_formula             # atomic_cel_formula_and
+ | atomic_cel_formula K_OR atomic_cel_formula              # atomic_cel_formula_or
+ | atomic_cel_formula K_FILTER filter                      # atomic_cel_formula_filter
  ;
 
 stream_name

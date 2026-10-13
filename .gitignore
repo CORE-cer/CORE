@@ -44,3 +44,6 @@ expected_results/
 
 # vcpkg
 vcpkg/
+
+# Node dev tooling (OpenSpec CLI, installed with pnpm)
+node_modules/

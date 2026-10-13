@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -161,6 +162,43 @@ class WhereVisitor : public CEQLQueryParserBaseVisitor {
         get_event_info_from_specific_stream(stream_name, event_name, streams_events));
       formula = std::make_unique<CEQL::EventTypeFormula>(stream_name, event_name);
     }
+    return {};
+  }
+
+  virtual std::any visitPar_atomic_cel_formula(
+    CEQLQueryParser::Par_atomic_cel_formulaContext* ctx) override {
+    visit(ctx->atomic_cel_formula());
+    return {};
+  }
+
+  virtual std::any
+  visitAtomic_cel_formula_as(CEQLQueryParser::Atomic_cel_formula_asContext* ctx) override {
+    visit(ctx->atomic_cel_formula());
+    formula = std::make_unique<CEQL::AsFormula>(std::move(formula),
+                                                ctx->event_name()->getText());
+    as_events_names.push_back(ctx->event_name()->getText());
+    filter_visitor.add_as_events_to_map(ctx->event_name()->getText(), as_events_info);
+    as_events_info.clear();
+    return {};
+  }
+
+  virtual std::any visitAtomic_cel_formula_and(
+    CEQLQueryParser::Atomic_cel_formula_andContext* ctx) override {
+    visit(ctx->atomic_cel_formula()[0]);
+    auto first_formula = std::move(formula);
+    visit(ctx->atomic_cel_formula()[1]);
+    formula = std::make_unique<CEQL::AndFormula>(std::move(first_formula),
+                                                 std::move(formula));
+    return {};
+  }
+
+  virtual std::any
+  visitAtomic_cel_formula_or(CEQLQueryParser::Atomic_cel_formula_orContext* ctx) override {
+    visit(ctx->atomic_cel_formula()[0]);
+    auto first_formula = std::move(formula);
+    visit(ctx->atomic_cel_formula()[1]);
+    formula = std::make_unique<CEQL::OrFormula>(std::move(first_formula),
+                                                std::move(formula));
     return {};
   }
 

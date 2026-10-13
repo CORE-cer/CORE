@@ -155,7 +155,15 @@ public:
 
     virtual std::any visitAtomic_cel_formula_filter(CEQLQueryParser::Atomic_cel_formula_filterContext *context) = 0;
 
+    virtual std::any visitAtomic_cel_formula_and(CEQLQueryParser::Atomic_cel_formula_andContext *context) = 0;
+
     virtual std::any visitAtomic_cel_formula_r(CEQLQueryParser::Atomic_cel_formula_rContext *context) = 0;
+
+    virtual std::any visitAtomic_cel_formula_as(CEQLQueryParser::Atomic_cel_formula_asContext *context) = 0;
+
+    virtual std::any visitAtomic_cel_formula_or(CEQLQueryParser::Atomic_cel_formula_orContext *context) = 0;
+
+    virtual std::any visitPar_atomic_cel_formula(CEQLQueryParser::Par_atomic_cel_formulaContext *context) = 0;
 
     virtual std::any visitStream_name(CEQLQueryParser::Stream_nameContext *context) = 0;
 

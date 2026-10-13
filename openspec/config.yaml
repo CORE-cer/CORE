@@ -1,0 +1,29 @@
+schema: spec-driven
+
+# Constraints an agent cannot infer by reading the code.
+context: |
+  CORE implements the CEQL query language defined in the papers under docs/papers/.
+  Those papers are the source of truth for what a query means; the code is not.
+  Where CORE extends or deviates from a paper, a spec must say so explicitly.
+
+  Use OpenSpec for changes to query syntax, query semantics, query validation or a
+  public API (pycer, client and server). Refactors, performance work and bug fixes
+  that restore already specified behavior do not need a change.
+
+  A `scenario` block is YAML with four keys: `declare` is the stream declaration,
+  `query` the full CEQL query, `stream` the events in arrival order, each written
+  as the event type followed by its attribute values, and `expect` the complex
+  events the query outputs over the whole stream, each as
+  [start, end, {variable: [positions]}]. Positions are 0-based indexes into
+  `stream`, and only variables that bind an event are listed. Use `expect: error`
+  when the query must be rejected.
+
+rules:
+  proposal:
+    - State whether the change alters what any query means.
+  specs:
+    - For query semantics, cite the paper and section in docs/papers/ that defines the behavior, and state any extension or deviation from it.
+    - Give every query-semantics scenario a fenced `scenario` block with a concrete stream, the query and the expected complex events.
+  tasks:
+    - Add a test for every scenario in the spec deltas.
+    - End with the checks AGENTS.md requires before committing.

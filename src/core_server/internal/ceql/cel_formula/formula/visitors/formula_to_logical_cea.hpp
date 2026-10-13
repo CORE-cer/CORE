@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "core_server/internal/ceql/cel_formula/filters/visitors/apply_filters_to_logical_cea.hpp"
+#include "core_server/internal/ceql/cel_formula/formula/and_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/as_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_iteration_formula.hpp"
 #include "core_server/internal/ceql/cel_formula/formula/contiguous_sequencing_formula.hpp"
@@ -24,6 +25,7 @@
 #include "core_server/internal/evaluation/logical_cea/logical_cea.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_iteration.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/contiguous_sequencing.hpp"
+#include "core_server/internal/evaluation/logical_cea/transformations/constructions/intersection.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/mark_variable.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/negate_expected.hpp"
 #include "core_server/internal/evaluation/logical_cea/transformations/constructions/non_contiguous_iteration.hpp"
@@ -76,6 +78,14 @@ class FormulaToLogicalCEA : public FormulaVisitor {
     formula.right->accept_visitor(*this);
     CEA::LogicalCEA right_cea = std::move(current_cea);
     current_cea = CEA::Union()(left_cea, right_cea);
+  }
+
+  void visit(AndFormula& formula) override {
+    formula.left->accept_visitor(*this);
+    CEA::LogicalCEA left_cea = std::move(current_cea);
+    formula.right->accept_visitor(*this);
+    CEA::LogicalCEA right_cea = std::move(current_cea);
+    current_cea = CEA::Intersection()(left_cea, right_cea);
   }
 
   void visit(NonContiguousSequencingFormula& formula) override {
