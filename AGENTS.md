@@ -86,6 +86,18 @@ Formatting and static analysis rules are defined in `.clang-format` and `.clang-
 - **Never push directly to main** — always use feature branches and pull requests
 - **Before committing**: Run `scripts/clang_format_all_files.sh` and `scripts/build_and_test.sh` at minimum
 
+## Specs
+
+Specs live in `openspec/` and are managed with [OpenSpec](https://github.com/Fission-AI/OpenSpec). The papers in `docs/papers/` define what a query means; `openspec/specs/` records the behavior CORE implements, including where it extends or deviates from them.
+
+- **Needs a change in `openspec/changes/`**: query syntax, query semantics, query validation, or a public API (pycer, client and server)
+- **Does not**: refactors, performance work, and bug fixes that restore already specified behavior
+- **Install the CLI**: `pnpm install` installs the version pinned in `package.json` into `node_modules/` (Node 20.19 or newer). There is no global install: always run it as `pnpm openspec <command>`, including where a skill or doc says plain `openspec <command>`
+- **Workflow**: explore, propose, apply, then archive, which merges the change's spec deltas into `openspec/specs/`. Claude Code has these as skills in `.claude/skills/`; for other tools run `pnpm openspec init --tools <tool>`
+- **Before committing a change**: `pnpm openspec validate --all --strict`
+
+Project rules for the generated artifacts are in `openspec/config.yaml`.
+
 ## Python Bindings
 
 Build the `pycer` Python package using the build script:
