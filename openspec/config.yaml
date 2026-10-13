@@ -10,6 +10,14 @@ context: |
   public API (pycer, client and server). Refactors, performance work and bug fixes
   that restore already specified behavior do not need a change.
 
+  A `scenario` block is YAML with four keys: `declare` is the stream declaration,
+  `query` the full CEQL query, `stream` the events in arrival order, each written
+  as the event type followed by its attribute values, and `expect` the complex
+  events the query outputs over the whole stream, each as
+  [start, end, {variable: [positions]}]. Positions are 0-based indexes into
+  `stream`, and only variables that bind an event are listed. Use `expect: error`
+  when the query must be rejected.
+
 rules:
   proposal:
     - State whether the change alters what any query means.
