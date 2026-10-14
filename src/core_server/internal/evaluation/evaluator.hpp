@@ -297,24 +297,28 @@ class Evaluator {
     UnionList ul = tecs->new_ulist(
       tecs->new_bottom(std::move(event.clone()), current_time));
     State* q0 = get_initial_state();
-    exec_trans(event, q0, std::move(ul), predicates_satisfied, current_time);
+    exec_trans_check(event, 
+      q0, 
+      // std::move(ul), 
+      predicates_satisfied, 
+      current_time);
 
     // Propagate the event through all historic states
     for (State* p : historic_ordered_keys) {
-      assert(historic_union_list_map.contains(p));
-      UnionList& actual_ul = historic_union_list_map[p];
-      if (is_ul_out_time_window(actual_ul)) {
-        // If expired, discard, i.e. unpin the union list to free resources
-        tecs->unpin(actual_ul);
-      } else {
-        remove_out_of_time_nodes_ul(actual_ul);
-        exec_trans(event,
-                   p,
-                   std::move(actual_ul),
-                   predicates_satisfied,
-                   current_time);  // Send the tuple in exec_trans.
-      }
+      // assert(historic_union_list_map.contains(p));
+      // UnionList& actual_ul = historic_union_list_map[p];
+      // if (is_ul_out_time_window(actual_ul)) {
+      //   // If expired, discard, i.e. unpin the union list to free resources
+      //   tecs->unpin(actual_ul);
+      // } else {
+        // remove_out_of_time_nodes_ul(actual_ul);
+      exec_trans_check(event,
+                 p,
+                 // std::move(actual_ul),
+                 predicates_satisfied,
+                 current_time);  // Send the tuple in exec_trans_check.
     }
+    // }
     // Update the evicted states.
     cea.state_manager.unpin_states(historic_ordered_keys);
     historic_union_list_map = std::move(current_union_list_map);
@@ -414,6 +418,67 @@ class Evaluator {
     if (!recycle_ulist) {
       tecs->unpin(ul);
     }
+  }
+
+  void exec_trans_check(Types::EventWrapper& event,
+                  State* p,
+                  // UnionList&& ul,
+                  Bitset& t,
+                  uint64_t current_time) {
+    // exec_trans_check places all the code of add into exec_trans_check.
+    ZoneScopedN("Evaluator::exec_trans_check");
+    LOG_TRACE_L3(logger,
+                 "Received tuple with timestamp {} in Evaluator::exec_trans_check",
+                 event.get_primary_time().val);
+    assert(p != nullptr);
+    State::TransitionTargetStatesWithMarkings
+      next_states_with_markings = cea.next(p, t, current_iteration);
+    // bool recycle_ulist = false;
+    Bitset empty_marked_variables;
+    for (auto& [state, marked_variables] :
+         next_states_with_markings.state_marked_variables_pair) {
+      assert(state != nullptr);
+      if (state->is_empty) {
+        continue;
+      }
+      if (marked_variables != empty_marked_variables) {
+        // Node* new_node = tecs->new_extend(tecs->merge(ul),
+        //                                   event,
+        //                                   current_time,
+        //                                   marked_variables);
+        // if (current_union_list_map.contains(state)) {
+        //   current_union_list_map[state] = tecs->insert(std::move(
+        //                                                  current_union_list_map[state]),
+        //                                                new_node);
+        // } else {
+        // UnionList new_ulist = tecs->new_ulist(new_node);
+        current_ordered_keys.push_back(state);
+        cea.state_manager.pin_state(state);
+        // current_union_list_map[state] = new_ulist;
+        if (state->is_final) {
+          final_states.push_back(state);
+        }
+        // }
+      } else {
+        // if (current_union_list_map.contains(state)) {
+        //   Node* new_node = tecs->merge(ul);
+        //   current_union_list_map[state] = tecs->insert(std::move(
+        //                                                  current_union_list_map[state]),
+        //                                                new_node);
+        // } else {
+        current_ordered_keys.push_back(state);
+        cea.state_manager.pin_state(state);
+        // current_union_list_map[state] = ul;
+        // recycle_ulist = true;
+        if (state->is_final) {
+          final_states.push_back(state);
+        }
+        // }
+      }
+    }
+    // if (!recycle_ulist) {
+    //   tecs->unpin(ul);
+    // }
   }
 
   // Change to tECS::Enumerator.
