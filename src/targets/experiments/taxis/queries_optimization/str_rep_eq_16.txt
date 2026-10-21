@@ -1,0 +1,23 @@
+SELECT * FROM S
+WHERE (TRIP as P1; TRIP as P2; TRIP as P3; TRIP as P4; TRIP as P5; TRIP as P6; TRIP as P7; TRIP as P8; TRIP as P9; TRIP as P10; TRIP as P11; TRIP as P12; TRIP as P13; TRIP as P14; TRIP as P15; TRIP as P16; TRIP as G1)
+FILTER
+    P1[payment_type = 'XXX'] AND
+    P2[payment_type = 'XXX'] AND
+    P3[payment_type = 'XXX'] AND
+    P4[payment_type = 'XXX'] AND
+    P5[payment_type = 'XXX'] AND
+    P6[payment_type = 'XXX'] AND
+    P7[payment_type = 'XXX'] AND
+    P8[payment_type = 'XXX'] AND
+    P9[payment_type = 'XXX'] AND
+    P10[payment_type = 'XXX'] AND
+    P11[payment_type = 'XXX'] AND
+    P12[payment_type = 'XXX'] AND
+    P13[payment_type = 'XXX'] AND
+    P14[payment_type = 'XXX'] AND
+    P15[payment_type = 'XXX'] AND
+    P16[payment_type = 'XXX'] AND
+    G1[total_amount < 0]
+WITHIN 1000 EVENTS
+CONSUME BY ANY
+LIMIT 1000

@@ -1,0 +1,23 @@
+SELECT * FROM S
+WHERE (TRIP as Z1; TRIP as Z2; TRIP as Z3; TRIP as Z4; TRIP as Z5; TRIP as Z6; TRIP as Z7; TRIP as Z8; TRIP as Z9; TRIP as Z10; TRIP as Z11; TRIP as Z12; TRIP as Z13; TRIP as Z14; TRIP as Z15; TRIP as Z16; TRIP as G1)
+FILTER
+    Z1[pickup_zone = 'East Harlem North'] AND
+    Z2[pickup_zone = 'Clinton East'] AND
+    Z3[pickup_zone = 'Times Sq/Theatre District'] AND
+    Z4[pickup_zone = 'Upper East Side South'] AND
+    Z5[pickup_zone = 'Two Bridges/Seward Park'] AND
+    Z6[pickup_zone = 'Midtown North'] AND
+    Z7[pickup_zone = 'TriBeCa/Civic Center'] AND
+    Z8[pickup_zone = 'Yorkville West'] AND
+    Z9[pickup_zone = 'Soundview/Castle Hill'] AND
+    Z10[pickup_zone = 'East New York'] AND
+    Z11[pickup_zone = 'Central Harlem North'] AND
+    Z12[pickup_zone = 'West Concourse'] AND
+    Z13[pickup_zone = 'Jamaica Estates'] AND
+    Z14[pickup_zone = 'Battery Park City'] AND
+    Z15[pickup_zone = 'Westchester Village/Unionport'] AND
+    Z16[pickup_zone = 'Randalls Island'] AND
+    G1[total_amount < 0]
+WITHIN 1000 EVENTS
+CONSUME BY ANY
+LIMIT 1000
