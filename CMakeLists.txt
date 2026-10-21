@@ -261,6 +261,9 @@ file(GLOB_RECURSE THIRD_PARTY_LIBRARIES_TESTS
 
 add_executable(tests ${UNIT_TESTING_FILES})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain core)
+# Lets a test resolve repo-relative fixture paths (e.g. the real smart_homes
+# dataset and query files) regardless of the working directory it's run from.
+target_compile_definitions(tests PRIVATE CORE_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 #
 add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
 target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)

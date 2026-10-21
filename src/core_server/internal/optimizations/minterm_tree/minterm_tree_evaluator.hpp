@@ -152,6 +152,31 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     return result;
   }
 
+  // Debug-only: walks the tree exactly like operator() does for this event,
+  // but returns how many decisions were taken instead of the result Bitset.
+  // Mirrors operator()'s tree-walk branch line for line; never called from
+  // operator() itself, so the hot, timed path stays exactly as it was. Exists
+  // only for the ground-truth path-length validation
+  // (minterm_tree_path_length.cpp), which checks the average of this value
+  // over real events against tests/benchmark/path_length_model.py's
+  // analytical estimate of the same quantity. Returns 0 if this event type
+  // has no tree (falls back to direct evaluation, or no optimizable
+  // predicate admits it) - neither case arises for the queries this is
+  // actually run on, but a tree-less event type has no decisions to count
+  // either way.
+  size_t debug_path_length(Types::EventWrapper& event) {
+    Types::UniqueEventTypeId event_type = event.get_unique_event_type_id();
+    auto tree = trees_.find(event_type);
+    if (tree == trees_.end()) return 0;
+    size_t steps = 0;
+    MintermTreeNode<z3::expr>* node = tree->second.get();
+    while (!node->isLeaf()) {
+      steps++;
+      node = (*node->split_atom)(event) ? node->left.get() : node->right.get();
+    }
+    return steps;
+  }
+
   // Number of leaves in the tree built for `event_type` (0 if none). Lets tests
   // show that correlated atoms do not blow up into every combination.
   size_t debug_leaf_count(Types::UniqueEventTypeId event_type) {
