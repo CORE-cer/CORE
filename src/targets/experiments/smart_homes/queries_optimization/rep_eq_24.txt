@@ -1,0 +1,30 @@
+SELECT * FROM S
+WHERE (LOAD as E1; LOAD as E2; LOAD as E3; LOAD as E4; LOAD as E5; LOAD as E6; LOAD as E7; LOAD as E8; LOAD as E9; LOAD as E10; LOAD as E11; LOAD as E12; LOAD as E13; LOAD as E14; LOAD as E15; LOAD as E16; LOAD as E17; LOAD as E18; LOAD as E19; LOAD as E20; LOAD as E21; LOAD as E22; LOAD as E23; LOAD as E24)
+FILTER
+    E1[household_id = 99] AND
+    E2[household_id = 99] AND
+    E3[household_id = 99] AND
+    E4[household_id = 99] AND
+    E5[household_id = 99] AND
+    E6[household_id = 99] AND
+    E7[household_id = 99] AND
+    E8[household_id = 99] AND
+    E9[household_id = 99] AND
+    E10[household_id = 99] AND
+    E11[household_id = 99] AND
+    E12[household_id = 99] AND
+    E13[household_id = 99] AND
+    E14[household_id = 99] AND
+    E15[household_id = 99] AND
+    E16[household_id = 99] AND
+    E17[household_id = 99] AND
+    E18[household_id = 99] AND
+    E19[household_id = 99] AND
+    E20[household_id = 99] AND
+    E21[household_id = 99] AND
+    E22[household_id = 99] AND
+    E23[household_id = 99] AND
+    E24[household_id = 99]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

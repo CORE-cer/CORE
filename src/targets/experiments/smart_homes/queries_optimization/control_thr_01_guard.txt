@@ -1,0 +1,8 @@
+SELECT * FROM S
+WHERE (LOAD as T1; LOAD as G1)
+FILTER
+    T1[value > 200] AND
+    G1[household_id = 99]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

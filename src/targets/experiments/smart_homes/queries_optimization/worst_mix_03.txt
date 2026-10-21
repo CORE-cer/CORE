@@ -1,0 +1,10 @@
+SELECT * FROM S
+WHERE (LOAD as A1; LOAD as A2; LOAD as A3; LOAD as G1)
+FILTER
+    A1[household_id = 11] AND
+    A2[plug_id = 0] AND
+    A3[value > 225] AND
+    G1[household_id = 99]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000
