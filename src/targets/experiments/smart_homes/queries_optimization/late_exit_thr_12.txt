@@ -1,0 +1,19 @@
+SELECT * FROM S
+WHERE (LOAD as T1; LOAD as T2; LOAD as T3; LOAD as T4; LOAD as T5; LOAD as T6; LOAD as T7; LOAD as T8; LOAD as T9; LOAD as T10; LOAD as T11; LOAD as T12; LOAD as G1)
+FILTER
+    T1[value > 0.8090] AND
+    T2[value > 1.1690] AND
+    T3[value > 1.6390] AND
+    T4[value > 1.7530] AND
+    T5[value > 1.8760] AND
+    T6[value > 1.9210] AND
+    T7[value > 1.9890] AND
+    T8[value > 2.0290] AND
+    T9[value > 2.0910] AND
+    T10[value > 2.1470] AND
+    T11[value > 2.1940] AND
+    T12[value > 2.2380] AND
+    G1[household_id = 99]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000
