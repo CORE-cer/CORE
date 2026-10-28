@@ -62,7 +62,8 @@ Types::UniqueEventTypeId declare_smart_homes(Catalog& catalog) {
   load_attrs.emplace_back("value", Types::ValueTypes::DOUBLE);
   load_attrs.emplace_back("plug_id", Types::ValueTypes::INT64);
   load_attrs.emplace_back("household_id", Types::ValueTypes::INT64);
-  Types::StreamInfo info = catalog.add_stream_type({"S", {{"LOAD", std::move(load_attrs)}}});
+  Types::StreamInfo info = catalog.add_stream_type(
+    {"S", {{"LOAD", std::move(load_attrs)}}});
   return info.events_info.at(0).id;
 }
 
@@ -114,7 +115,8 @@ read_smart_homes_events(const std::string& csv_path, Types::UniqueEventTypeId ev
   while (std::getline(in, line)) {
     if (line.empty()) continue;
     std::stringstream ss(line);
-    std::string event_type_name, id_s, plug_timestamp_s, value_s, plug_id_s, household_id_s;
+    std::string event_type_name, id_s, plug_timestamp_s, value_s, plug_id_s,
+      household_id_s;
     std::getline(ss, event_type_name, ',');
     std::getline(ss, id_s, ',');
     std::getline(ss, plug_timestamp_s, ',');
@@ -129,15 +131,13 @@ read_smart_homes_events(const std::string& csv_path, Types::UniqueEventTypeId ev
     attrs.push_back(std::make_unique<Types::IntValue>(std::stoll(plug_id_s)));
     attrs.push_back(std::make_unique<Types::IntValue>(std::stoll(household_id_s)));
 
-    events.push_back(
-      std::make_shared<const Types::Event>(event_type, std::move(attrs)));
+    events.push_back(std::make_shared<const Types::Event>(event_type, std::move(attrs)));
   }
   return events;
 }
 
-double average_path_length(
-  const std::vector<std::shared_ptr<const Types::Event>>& events,
-  MintermTreeEvaluator& evaluator) {
+double average_path_length(const std::vector<std::shared_ptr<const Types::Event>>& events,
+                           MintermTreeEvaluator& evaluator) {
   size_t total = 0;
   for (const auto& event : events) {
     Types::EventWrapper wrapper(event);
@@ -156,8 +156,8 @@ TEST_CASE("Ground-truth L bar matches the analytical estimate, within reason",
   Types::UniqueEventTypeId event_type = declare_smart_homes(probe_catalog);
 
   INFO("Parsing the real 1,000,000-row dataset once for every query below");
-  std::vector<std::shared_ptr<const Types::Event>> events =
-    read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+  std::vector<std::shared_ptr<const Types::Event>>
+    events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
   REQUIRE(events.size() == 1'000'000);
 
   // One representative query per family: a ladder, a mix, the best case, the
