@@ -46,6 +46,7 @@ class QueryCatalog {
   std::map<std::string, std::set<Types::ValueTypes>> possible_attribute_types;
   std::map<std::string, std::set<Types::UniqueEventTypeId>> event_types_with_attribute;
   std::map<Types::UniqueEventTypeId, std::size_t> unique_event_id_to_events_info_idx;
+  std::map<std::string, bool> attribute_to_nullable;  // TODO: not sure about this
 
   // Marking ids are assigned to all valid event, event and stream name pairs, together with AS variables
   MarkingId next_marking_id = 0;

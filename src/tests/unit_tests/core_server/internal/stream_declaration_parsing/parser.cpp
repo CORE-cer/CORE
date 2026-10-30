@@ -49,4 +49,28 @@ TEST_CASE("Correct stream declaration parsing") {
   REQUIRE(third_event.attributes_info[0].name == "ID");
   REQUIRE(third_event.attributes_info[0].value_type == Types::ValueTypes::INT64);
 }
+
+TEST_CASE("Correct stream declaration parsing with null attributes") {
+  Catalog catalog;
+  Parsing::StreamParser parser;
+  std::string stream_str =
+    "CREATE STREAM MySensor {\n"
+    "EVENT Temp { ID:int, Value1:string, Value2:boolean NULL},\n"
+    "}";
+  Types::StreamInfoParsed stream = parser.parse_stream(create_stream(), catalog);
+  REQUIRE(stream.name == "MySensor");
+
+  Types::EventInfoParsed first_event = stream.events_info[0];
+
+  REQUIRE(first_event.name == "Temp");
+  REQUIRE(first_event.attributes_info[0].name == "ID");
+  REQUIRE(first_event.attributes_info[0].value_type == Types::ValueTypes::INT64);
+  REQUIRE(first_event.attributes_info[0].nullable == false);
+  REQUIRE(first_event.attributes_info[1].name == "Value1");
+  REQUIRE(first_event.attributes_info[1].value_type == Types::ValueTypes::STRING_VIEW);
+  REQUIRE(first_event.attributes_info[0].nullable == false);
+  REQUIRE(first_event.attributes_info[2].name == "Value2");
+  REQUIRE(first_event.attributes_info[2].value_type == Types::ValueTypes::BOOL);
+  REQUIRE(first_event.attributes_info[0].nullable == true);
+}
 }  // namespace CORE::Internal::CEQL::UnitTests

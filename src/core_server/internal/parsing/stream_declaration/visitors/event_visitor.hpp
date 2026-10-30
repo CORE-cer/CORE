@@ -59,7 +59,8 @@ class EventVisitor : public StreamDeclarationParserBaseVisitor {
       throw std::runtime_error("Invalid datatype " + datatype_string);
     }
     Types::ValueTypes value_type = value_type_it->second;
-    Types::AttributeInfo attribute(attribute_name, value_type);
+    bool nullable = ctx->null() != nullptr;
+    Types::AttributeInfo attribute(attribute_name, value_type, nullable);
     check_if_attribute_already_exists(attributes_info, attribute);
     attributes_info.push_back(attribute);
     return {};

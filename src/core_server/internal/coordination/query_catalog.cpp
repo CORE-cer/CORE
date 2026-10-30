@@ -542,6 +542,7 @@ void QueryCatalog::add_event_type(Types::EventInfo event_info_obj) noexcept {
   for (auto& attribute : event_info_obj.attributes_info) {
     possible_attribute_types[attribute.name].insert(attribute.value_type);
     event_types_with_attribute[attribute.name].insert(unique_event_id);
+    attribute_to_nullable[attribute.name] = attribute.nullable;
   }
   events_info.push_back(event_info_obj);  // Add to member events_info
 }
