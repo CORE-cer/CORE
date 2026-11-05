@@ -1,0 +1,10 @@
+SELECT * FROM S
+WHERE (LOAD as E1)
+FILTER
+    E1[((value * 3.0 + household_id) * 2.0 - plug_id) / 4.0 > 1000000] AND
+    E1[((value * 3.0 + household_id) * 2.0 - plug_id) / 4.0 > 1000000] AND
+    E1[((value * 3.0 + household_id) * 2.0 - plug_id) / 4.0 > 1000000] AND
+    E1[((value * 3.0 + household_id) * 2.0 - plug_id) / 4.0 > 1000000]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

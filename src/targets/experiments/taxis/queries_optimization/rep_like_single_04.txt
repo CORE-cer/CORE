@@ -1,0 +1,10 @@
+SELECT * FROM S
+WHERE (TRIP as Z1)
+FILTER
+    Z1[pickup_zone LIKE 'nonexistent_zone_xyz_12345'] AND
+    Z1[pickup_zone LIKE 'nonexistent_zone_xyz_12345'] AND
+    Z1[pickup_zone LIKE 'nonexistent_zone_xyz_12345'] AND
+    Z1[pickup_zone LIKE 'nonexistent_zone_xyz_12345']
+WITHIN 1000 EVENTS
+CONSUME BY ANY
+LIMIT 1000
