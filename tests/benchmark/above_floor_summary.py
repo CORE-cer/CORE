@@ -202,12 +202,18 @@ def summarize_file(
             delta_reliable = abs(delta_mean_us) > z * delta_sem_us
 
             ratio_reliable = (
-                abs(base_above_mean) > z * base_above_sem
-                and abs(tree_above_mean) > z * tree_above_sem
+                base_above_mean > z * base_above_sem
+                and tree_above_mean > z * tree_above_sem
             )
             if ratio_reliable:
-                above_ratio = base_above_mean / tree_above_mean if tree_above_mean != 0 else float("inf")
+                above_ratio = base_above_mean / tree_above_mean
                 ratio_str = f"{above_ratio:6.2f}x"
+            elif tree_above_mean <= 0 and abs(tree_above_mean) > z * tree_above_sem:
+                # Reliably at-or-below its own floor: a well-defined but
+                # meaningless ratio (checked directly - this produced ratios
+                # like -37x on rep_eq_single, not a bug in the arithmetic,
+                # just a case the magnitude-only check didn't rule out).
+                ratio_str = "   (tree finished at/below its own floor - ratio not meaningful)"
             else:
                 ratio_str = "   (not distinguishable from the floor's own noise)"
 
