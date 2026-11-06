@@ -45,57 +45,59 @@ void streamdeclarationparserParserInitialize() {
     std::vector<std::string>{
       "parse", "error", "core_stmt", "core_declaration", "stream_declaration", 
       "event_list", "event_declaration", "attribute_dec_list", "attribute_declaration", 
-      "datatype", "event_name", "stream_name", "attribute_name", "any_name", 
-      "keyword"
+      "datatype", "null", "event_name", "stream_name", "attribute_name", 
+      "any_name", "keyword"
     },
     std::vector<std::string>{
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-      "", "", "", "", "", "", "", "", "", "", "", "", "", "", "'%'", "'+'", 
-      "'-'", "'*'", "'/'", "'<'", "'<='", "'>'", "'>='", "", "", "'int'", 
-      "'string'", "'double'", "'long'", "'boolean'", "'primary_time'", "';'", 
-      "','", "'..'", "'('", "')'", "'['", "']'", "'{'", "'}'", "':'"
+      "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "'%'", 
+      "'+'", "'-'", "'*'", "'/'", "'<'", "'<='", "'>'", "'>='", "", "", 
+      "'int'", "'string'", "'double'", "'long'", "'boolean'", "'primary_time'", 
+      "';'", "','", "'..'", "'('", "')'", "'['", "']'", "'{'", "'}'", "':'"
     },
     std::vector<std::string>{
       "", "K_ALL", "K_AND", "K_ANY", "K_AS", "K_BY", "K_CONSUME", "K_CREATE", 
       "K_DISTINCT", "K_EVENT", "K_EVENTS", "K_FILTER", "K_FROM", "K_HOURS", 
       "K_IN", "K_LAST", "K_LIKE", "K_MAX", "K_MINUTES", "K_NEXT", "K_NONE", 
       "K_NOT", "K_OR", "K_PARTITION", "K_SECONDS", "K_SELECT", "K_STREAM", 
-      "K_STRICT", "K_UNLESS", "K_WHERE", "K_WITHIN", "PERCENT", "PLUS", 
-      "MINUS", "STAR", "SLASH", "LE", "LEQ", "GE", "GEQ", "EQ", "NEQ", "INT", 
-      "STRING", "DOUBLE", "LONG", "BOOLEAN", "PRIMARY_TIME", "SEMICOLON", 
-      "COMMA", "DOUBLE_DOT", "LEFT_PARENTHESIS", "RIGHT_PARENTHESIS", "LEFT_SQUARE_BRACKET", 
-      "RIGHT_SQUARE_BRACKET", "LEFT_CURLY_BRACKET", "RIGHT_CURLY_BRACKET", 
-      "COLON", "IDENTIFIER", "FLOAT_LITERAL", "INTEGER_LITERAL", "NUMERICAL_EXPONENT", 
-      "STRING_LITERAL", "REGEXP", "SINGLE_LINE_COMMENT", "MULTILINE_COMMENT", 
-      "SPACES", "UNEXPECTED_CHAR"
+      "K_STRICT", "K_UNLESS", "K_WHERE", "K_WITHIN", "K_NULL", "PERCENT", 
+      "PLUS", "MINUS", "STAR", "SLASH", "LE", "LEQ", "GE", "GEQ", "EQ", 
+      "NEQ", "INT", "STRING", "DOUBLE", "LONG", "BOOLEAN", "PRIMARY_TIME", 
+      "SEMICOLON", "COMMA", "DOUBLE_DOT", "LEFT_PARENTHESIS", "RIGHT_PARENTHESIS", 
+      "LEFT_SQUARE_BRACKET", "RIGHT_SQUARE_BRACKET", "LEFT_CURLY_BRACKET", 
+      "RIGHT_CURLY_BRACKET", "COLON", "IDENTIFIER", "FLOAT_LITERAL", "INTEGER_LITERAL", 
+      "NUMERICAL_EXPONENT", "STRING_LITERAL", "REGEXP", "SINGLE_LINE_COMMENT", 
+      "MULTILINE_COMMENT", "SPACES", "UNEXPECTED_CHAR"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,67,95,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
-  	7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
-  	1,0,1,0,5,0,33,8,0,10,0,12,0,36,9,0,1,0,1,0,1,1,1,1,1,1,1,2,1,2,1,3,1,
-  	3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,5,1,5,1,5,5,5,57,8,5,10,5,12,5,60,9,5,
-  	1,6,1,6,1,6,1,6,1,6,1,6,1,7,1,7,1,7,1,7,5,7,72,8,7,10,7,12,7,75,9,7,3,
-  	7,77,8,7,1,8,1,8,1,8,1,8,1,9,1,9,1,10,1,10,1,11,1,11,1,12,1,12,1,13,1,
-  	13,1,14,1,14,1,14,0,0,15,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,0,2,
-  	3,0,42,44,46,47,58,58,1,0,1,30,84,0,34,1,0,0,0,2,39,1,0,0,0,4,42,1,0,
-  	0,0,6,44,1,0,0,0,8,46,1,0,0,0,10,53,1,0,0,0,12,61,1,0,0,0,14,76,1,0,0,
-  	0,16,78,1,0,0,0,18,82,1,0,0,0,20,84,1,0,0,0,22,86,1,0,0,0,24,88,1,0,0,
-  	0,26,90,1,0,0,0,28,92,1,0,0,0,30,33,3,4,2,0,31,33,3,2,1,0,32,30,1,0,0,
-  	0,32,31,1,0,0,0,33,36,1,0,0,0,34,32,1,0,0,0,34,35,1,0,0,0,35,37,1,0,0,
-  	0,36,34,1,0,0,0,37,38,5,0,0,1,38,1,1,0,0,0,39,40,5,67,0,0,40,41,6,1,-1,
-  	0,41,3,1,0,0,0,42,43,3,6,3,0,43,5,1,0,0,0,44,45,3,8,4,0,45,7,1,0,0,0,
-  	46,47,5,7,0,0,47,48,5,26,0,0,48,49,3,22,11,0,49,50,5,55,0,0,50,51,3,10,
-  	5,0,51,52,5,56,0,0,52,9,1,0,0,0,53,58,3,12,6,0,54,55,5,49,0,0,55,57,3,
-  	12,6,0,56,54,1,0,0,0,57,60,1,0,0,0,58,56,1,0,0,0,58,59,1,0,0,0,59,11,
-  	1,0,0,0,60,58,1,0,0,0,61,62,5,9,0,0,62,63,3,20,10,0,63,64,5,55,0,0,64,
-  	65,3,14,7,0,65,66,5,56,0,0,66,13,1,0,0,0,67,77,1,0,0,0,68,73,3,16,8,0,
-  	69,70,5,49,0,0,70,72,3,16,8,0,71,69,1,0,0,0,72,75,1,0,0,0,73,71,1,0,0,
-  	0,73,74,1,0,0,0,74,77,1,0,0,0,75,73,1,0,0,0,76,67,1,0,0,0,76,68,1,0,0,
-  	0,77,15,1,0,0,0,78,79,3,24,12,0,79,80,5,57,0,0,80,81,3,18,9,0,81,17,1,
-  	0,0,0,82,83,7,0,0,0,83,19,1,0,0,0,84,85,3,26,13,0,85,21,1,0,0,0,86,87,
-  	3,26,13,0,87,23,1,0,0,0,88,89,3,26,13,0,89,25,1,0,0,0,90,91,5,58,0,0,
-  	91,27,1,0,0,0,92,93,7,1,0,0,93,29,1,0,0,0,5,32,34,58,73,76
+  	4,1,68,101,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
+  	7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,
+  	14,2,15,7,15,1,0,1,0,5,0,35,8,0,10,0,12,0,38,9,0,1,0,1,0,1,1,1,1,1,1,
+  	1,2,1,2,1,3,1,3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,5,1,5,1,5,5,5,59,8,5,10,
+  	5,12,5,62,9,5,1,6,1,6,1,6,1,6,1,6,1,6,1,7,1,7,1,7,1,7,5,7,74,8,7,10,7,
+  	12,7,77,9,7,3,7,79,8,7,1,8,1,8,1,8,1,8,3,8,85,8,8,1,9,1,9,1,10,1,10,1,
+  	11,1,11,1,12,1,12,1,13,1,13,1,14,1,14,1,15,1,15,1,15,0,0,16,0,2,4,6,8,
+  	10,12,14,16,18,20,22,24,26,28,30,0,2,3,0,43,45,47,48,59,59,1,0,1,31,90,
+  	0,36,1,0,0,0,2,41,1,0,0,0,4,44,1,0,0,0,6,46,1,0,0,0,8,48,1,0,0,0,10,55,
+  	1,0,0,0,12,63,1,0,0,0,14,78,1,0,0,0,16,80,1,0,0,0,18,86,1,0,0,0,20,88,
+  	1,0,0,0,22,90,1,0,0,0,24,92,1,0,0,0,26,94,1,0,0,0,28,96,1,0,0,0,30,98,
+  	1,0,0,0,32,35,3,4,2,0,33,35,3,2,1,0,34,32,1,0,0,0,34,33,1,0,0,0,35,38,
+  	1,0,0,0,36,34,1,0,0,0,36,37,1,0,0,0,37,39,1,0,0,0,38,36,1,0,0,0,39,40,
+  	5,0,0,1,40,1,1,0,0,0,41,42,5,68,0,0,42,43,6,1,-1,0,43,3,1,0,0,0,44,45,
+  	3,6,3,0,45,5,1,0,0,0,46,47,3,8,4,0,47,7,1,0,0,0,48,49,5,7,0,0,49,50,5,
+  	26,0,0,50,51,3,24,12,0,51,52,5,56,0,0,52,53,3,10,5,0,53,54,5,57,0,0,54,
+  	9,1,0,0,0,55,60,3,12,6,0,56,57,5,50,0,0,57,59,3,12,6,0,58,56,1,0,0,0,
+  	59,62,1,0,0,0,60,58,1,0,0,0,60,61,1,0,0,0,61,11,1,0,0,0,62,60,1,0,0,0,
+  	63,64,5,9,0,0,64,65,3,22,11,0,65,66,5,56,0,0,66,67,3,14,7,0,67,68,5,57,
+  	0,0,68,13,1,0,0,0,69,79,1,0,0,0,70,75,3,16,8,0,71,72,5,50,0,0,72,74,3,
+  	16,8,0,73,71,1,0,0,0,74,77,1,0,0,0,75,73,1,0,0,0,75,76,1,0,0,0,76,79,
+  	1,0,0,0,77,75,1,0,0,0,78,69,1,0,0,0,78,70,1,0,0,0,79,15,1,0,0,0,80,81,
+  	3,26,13,0,81,82,5,58,0,0,82,84,3,18,9,0,83,85,3,20,10,0,84,83,1,0,0,0,
+  	84,85,1,0,0,0,85,17,1,0,0,0,86,87,7,0,0,0,87,19,1,0,0,0,88,89,5,31,0,
+  	0,89,21,1,0,0,0,90,91,3,28,14,0,91,23,1,0,0,0,92,93,3,28,14,0,93,25,1,
+  	0,0,0,94,95,3,28,14,0,95,27,1,0,0,0,96,97,5,59,0,0,97,29,1,0,0,0,98,99,
+  	7,1,0,0,99,31,1,0,0,0,6,34,36,60,75,78,84
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -197,23 +199,23 @@ StreamDeclarationParser::ParseContext* StreamDeclarationParser::parse() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(34);
+    setState(36);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == StreamDeclarationParser::K_CREATE
 
     || _la == StreamDeclarationParser::UNEXPECTED_CHAR) {
-      setState(32);
+      setState(34);
       _errHandler->sync(this);
       switch (_input->LA(1)) {
         case StreamDeclarationParser::K_CREATE: {
-          setState(30);
+          setState(32);
           core_stmt();
           break;
         }
 
         case StreamDeclarationParser::UNEXPECTED_CHAR: {
-          setState(31);
+          setState(33);
           error();
           break;
         }
@@ -221,11 +223,11 @@ StreamDeclarationParser::ParseContext* StreamDeclarationParser::parse() {
       default:
         throw NoViableAltException(this);
       }
-      setState(36);
+      setState(38);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
-    setState(37);
+    setState(39);
     match(StreamDeclarationParser::EOF);
    
   }
@@ -274,7 +276,7 @@ StreamDeclarationParser::ErrorContext* StreamDeclarationParser::error() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(39);
+    setState(41);
     antlrcpp::downCast<ErrorContext *>(_localctx)->unexpected_charToken = match(StreamDeclarationParser::UNEXPECTED_CHAR);
 
          throw new RuntimeException("UNEXPECTED_CHAR=" + (antlrcpp::downCast<ErrorContext *>(_localctx)->unexpected_charToken != nullptr ? antlrcpp::downCast<ErrorContext *>(_localctx)->unexpected_charToken->getText() : ""));
@@ -326,7 +328,7 @@ StreamDeclarationParser::Core_stmtContext* StreamDeclarationParser::core_stmt() 
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(42);
+    setState(44);
     core_declaration();
    
   }
@@ -375,7 +377,7 @@ StreamDeclarationParser::Core_declarationContext* StreamDeclarationParser::core_
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(44);
+    setState(46);
     stream_declaration();
    
   }
@@ -444,17 +446,17 @@ StreamDeclarationParser::Stream_declarationContext* StreamDeclarationParser::str
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(46);
-    match(StreamDeclarationParser::K_CREATE);
-    setState(47);
-    match(StreamDeclarationParser::K_STREAM);
     setState(48);
-    stream_name();
+    match(StreamDeclarationParser::K_CREATE);
     setState(49);
-    match(StreamDeclarationParser::LEFT_CURLY_BRACKET);
+    match(StreamDeclarationParser::K_STREAM);
     setState(50);
-    event_list();
+    stream_name();
     setState(51);
+    match(StreamDeclarationParser::LEFT_CURLY_BRACKET);
+    setState(52);
+    event_list();
+    setState(53);
     match(StreamDeclarationParser::RIGHT_CURLY_BRACKET);
    
   }
@@ -516,17 +518,17 @@ StreamDeclarationParser::Event_listContext* StreamDeclarationParser::event_list(
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(53);
+    setState(55);
     event_declaration();
-    setState(58);
+    setState(60);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == StreamDeclarationParser::COMMA) {
-      setState(54);
+      setState(56);
       match(StreamDeclarationParser::COMMA);
-      setState(55);
+      setState(57);
       event_declaration();
-      setState(60);
+      setState(62);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
@@ -593,15 +595,15 @@ StreamDeclarationParser::Event_declarationContext* StreamDeclarationParser::even
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(61);
-    match(StreamDeclarationParser::K_EVENT);
-    setState(62);
-    event_name();
     setState(63);
-    match(StreamDeclarationParser::LEFT_CURLY_BRACKET);
+    match(StreamDeclarationParser::K_EVENT);
     setState(64);
-    attribute_dec_list();
+    event_name();
     setState(65);
+    match(StreamDeclarationParser::LEFT_CURLY_BRACKET);
+    setState(66);
+    attribute_dec_list();
+    setState(67);
     match(StreamDeclarationParser::RIGHT_CURLY_BRACKET);
    
   }
@@ -662,7 +664,7 @@ StreamDeclarationParser::Attribute_dec_listContext* StreamDeclarationParser::att
     exitRule();
   });
   try {
-    setState(76);
+    setState(78);
     _errHandler->sync(this);
     switch (_input->LA(1)) {
       case StreamDeclarationParser::RIGHT_CURLY_BRACKET: {
@@ -673,17 +675,17 @@ StreamDeclarationParser::Attribute_dec_listContext* StreamDeclarationParser::att
 
       case StreamDeclarationParser::IDENTIFIER: {
         enterOuterAlt(_localctx, 2);
-        setState(68);
+        setState(70);
         attribute_declaration();
-        setState(73);
+        setState(75);
         _errHandler->sync(this);
         _la = _input->LA(1);
         while (_la == StreamDeclarationParser::COMMA) {
-          setState(69);
+          setState(71);
           match(StreamDeclarationParser::COMMA);
-          setState(70);
+          setState(72);
           attribute_declaration();
-          setState(75);
+          setState(77);
           _errHandler->sync(this);
           _la = _input->LA(1);
         }
@@ -722,6 +724,10 @@ StreamDeclarationParser::DatatypeContext* StreamDeclarationParser::Attribute_dec
   return getRuleContext<StreamDeclarationParser::DatatypeContext>(0);
 }
 
+StreamDeclarationParser::NullContext* StreamDeclarationParser::Attribute_declarationContext::null() {
+  return getRuleContext<StreamDeclarationParser::NullContext>(0);
+}
+
 
 size_t StreamDeclarationParser::Attribute_declarationContext::getRuleIndex() const {
   return StreamDeclarationParser::RuleAttribute_declaration;
@@ -738,6 +744,7 @@ std::any StreamDeclarationParser::Attribute_declarationContext::accept(tree::Par
 StreamDeclarationParser::Attribute_declarationContext* StreamDeclarationParser::attribute_declaration() {
   Attribute_declarationContext *_localctx = _tracker.createInstance<Attribute_declarationContext>(_ctx, getState());
   enterRule(_localctx, 16, StreamDeclarationParser::RuleAttribute_declaration);
+  size_t _la = 0;
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -748,12 +755,20 @@ StreamDeclarationParser::Attribute_declarationContext* StreamDeclarationParser::
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(78);
-    attribute_name();
-    setState(79);
-    match(StreamDeclarationParser::COLON);
     setState(80);
+    attribute_name();
+    setState(81);
+    match(StreamDeclarationParser::COLON);
+    setState(82);
     datatype();
+    setState(84);
+    _errHandler->sync(this);
+
+    _la = _input->LA(1);
+    if (_la == StreamDeclarationParser::K_NULL) {
+      setState(83);
+      null();
+    }
    
   }
   catch (RecognitionException &e) {
@@ -822,16 +837,65 @@ StreamDeclarationParser::DatatypeContext* StreamDeclarationParser::datatype() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(82);
+    setState(86);
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 288472268709822464) != 0))) {
+      ((1ULL << _la) & 576944537419644928) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {
       _errHandler->reportMatch(this);
       consume();
     }
+   
+  }
+  catch (RecognitionException &e) {
+    _errHandler->reportError(this, e);
+    _localctx->exception = std::current_exception();
+    _errHandler->recover(this, _localctx->exception);
+  }
+
+  return _localctx;
+}
+
+//----------------- NullContext ------------------------------------------------------------------
+
+StreamDeclarationParser::NullContext::NullContext(ParserRuleContext *parent, size_t invokingState)
+  : ParserRuleContext(parent, invokingState) {
+}
+
+tree::TerminalNode* StreamDeclarationParser::NullContext::K_NULL() {
+  return getToken(StreamDeclarationParser::K_NULL, 0);
+}
+
+
+size_t StreamDeclarationParser::NullContext::getRuleIndex() const {
+  return StreamDeclarationParser::RuleNull;
+}
+
+
+std::any StreamDeclarationParser::NullContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<StreamDeclarationParserVisitor*>(visitor))
+    return parserVisitor->visitNull(this);
+  else
+    return visitor->visitChildren(this);
+}
+
+StreamDeclarationParser::NullContext* StreamDeclarationParser::null() {
+  NullContext *_localctx = _tracker.createInstance<NullContext>(_ctx, getState());
+  enterRule(_localctx, 20, StreamDeclarationParser::RuleNull);
+
+#if __cplusplus > 201703L
+  auto onExit = finally([=, this] {
+#else
+  auto onExit = finally([=] {
+#endif
+    exitRule();
+  });
+  try {
+    enterOuterAlt(_localctx, 1);
+    setState(88);
+    match(StreamDeclarationParser::K_NULL);
    
   }
   catch (RecognitionException &e) {
@@ -868,7 +932,7 @@ std::any StreamDeclarationParser::Event_nameContext::accept(tree::ParseTreeVisit
 
 StreamDeclarationParser::Event_nameContext* StreamDeclarationParser::event_name() {
   Event_nameContext *_localctx = _tracker.createInstance<Event_nameContext>(_ctx, getState());
-  enterRule(_localctx, 20, StreamDeclarationParser::RuleEvent_name);
+  enterRule(_localctx, 22, StreamDeclarationParser::RuleEvent_name);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -879,7 +943,7 @@ StreamDeclarationParser::Event_nameContext* StreamDeclarationParser::event_name(
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(84);
+    setState(90);
     any_name();
    
   }
@@ -917,7 +981,7 @@ std::any StreamDeclarationParser::Stream_nameContext::accept(tree::ParseTreeVisi
 
 StreamDeclarationParser::Stream_nameContext* StreamDeclarationParser::stream_name() {
   Stream_nameContext *_localctx = _tracker.createInstance<Stream_nameContext>(_ctx, getState());
-  enterRule(_localctx, 22, StreamDeclarationParser::RuleStream_name);
+  enterRule(_localctx, 24, StreamDeclarationParser::RuleStream_name);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -928,7 +992,7 @@ StreamDeclarationParser::Stream_nameContext* StreamDeclarationParser::stream_nam
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(86);
+    setState(92);
     any_name();
    
   }
@@ -966,7 +1030,7 @@ std::any StreamDeclarationParser::Attribute_nameContext::accept(tree::ParseTreeV
 
 StreamDeclarationParser::Attribute_nameContext* StreamDeclarationParser::attribute_name() {
   Attribute_nameContext *_localctx = _tracker.createInstance<Attribute_nameContext>(_ctx, getState());
-  enterRule(_localctx, 24, StreamDeclarationParser::RuleAttribute_name);
+  enterRule(_localctx, 26, StreamDeclarationParser::RuleAttribute_name);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -977,7 +1041,7 @@ StreamDeclarationParser::Attribute_nameContext* StreamDeclarationParser::attribu
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(88);
+    setState(94);
     any_name();
    
   }
@@ -1015,7 +1079,7 @@ std::any StreamDeclarationParser::Any_nameContext::accept(tree::ParseTreeVisitor
 
 StreamDeclarationParser::Any_nameContext* StreamDeclarationParser::any_name() {
   Any_nameContext *_localctx = _tracker.createInstance<Any_nameContext>(_ctx, getState());
-  enterRule(_localctx, 26, StreamDeclarationParser::RuleAny_name);
+  enterRule(_localctx, 28, StreamDeclarationParser::RuleAny_name);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -1026,7 +1090,7 @@ StreamDeclarationParser::Any_nameContext* StreamDeclarationParser::any_name() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(90);
+    setState(96);
     match(StreamDeclarationParser::IDENTIFIER);
    
   }
@@ -1129,6 +1193,10 @@ tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_NOT() {
   return getToken(StreamDeclarationParser::K_NOT, 0);
 }
 
+tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_NULL() {
+  return getToken(StreamDeclarationParser::K_NULL, 0);
+}
+
 tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_OR() {
   return getToken(StreamDeclarationParser::K_OR, 0);
 }
@@ -1180,7 +1248,7 @@ std::any StreamDeclarationParser::KeywordContext::accept(tree::ParseTreeVisitor 
 
 StreamDeclarationParser::KeywordContext* StreamDeclarationParser::keyword() {
   KeywordContext *_localctx = _tracker.createInstance<KeywordContext>(_ctx, getState());
-  enterRule(_localctx, 28, StreamDeclarationParser::RuleKeyword);
+  enterRule(_localctx, 30, StreamDeclarationParser::RuleKeyword);
   size_t _la = 0;
 
 #if __cplusplus > 201703L
@@ -1192,10 +1260,10 @@ StreamDeclarationParser::KeywordContext* StreamDeclarationParser::keyword() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(92);
+    setState(98);
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 2147483646) != 0))) {
+      ((1ULL << _la) & 4294967294) != 0))) {
     _errHandler->recoverInline(this);
     }
     else {

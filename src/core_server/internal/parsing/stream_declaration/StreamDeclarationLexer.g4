@@ -30,6 +30,7 @@ K_STRICT    : S T R I C T;
 K_UNLESS    : U N L E S S;
 K_WHERE     : W H E R E;
 K_WITHIN    : W I T H I N;
+K_NULL      : N U L L;
 
 PERCENT : '%';
 PLUS    : '+';

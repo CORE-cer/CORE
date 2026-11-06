@@ -17,23 +17,23 @@ public:
     K_FROM = 12, K_HOURS = 13, K_IN = 14, K_LAST = 15, K_LIKE = 16, K_MAX = 17, 
     K_MINUTES = 18, K_NEXT = 19, K_NONE = 20, K_NOT = 21, K_OR = 22, K_PARTITION = 23, 
     K_SECONDS = 24, K_SELECT = 25, K_STREAM = 26, K_STRICT = 27, K_UNLESS = 28, 
-    K_WHERE = 29, K_WITHIN = 30, PERCENT = 31, PLUS = 32, MINUS = 33, STAR = 34, 
-    SLASH = 35, LE = 36, LEQ = 37, GE = 38, GEQ = 39, EQ = 40, NEQ = 41, 
-    INT = 42, STRING = 43, DOUBLE = 44, LONG = 45, BOOLEAN = 46, PRIMARY_TIME = 47, 
-    SEMICOLON = 48, COMMA = 49, DOUBLE_DOT = 50, LEFT_PARENTHESIS = 51, 
-    RIGHT_PARENTHESIS = 52, LEFT_SQUARE_BRACKET = 53, RIGHT_SQUARE_BRACKET = 54, 
-    LEFT_CURLY_BRACKET = 55, RIGHT_CURLY_BRACKET = 56, COLON = 57, IDENTIFIER = 58, 
-    FLOAT_LITERAL = 59, INTEGER_LITERAL = 60, NUMERICAL_EXPONENT = 61, STRING_LITERAL = 62, 
-    REGEXP = 63, SINGLE_LINE_COMMENT = 64, MULTILINE_COMMENT = 65, SPACES = 66, 
-    UNEXPECTED_CHAR = 67
+    K_WHERE = 29, K_WITHIN = 30, K_NULL = 31, PERCENT = 32, PLUS = 33, MINUS = 34, 
+    STAR = 35, SLASH = 36, LE = 37, LEQ = 38, GE = 39, GEQ = 40, EQ = 41, 
+    NEQ = 42, INT = 43, STRING = 44, DOUBLE = 45, LONG = 46, BOOLEAN = 47, 
+    PRIMARY_TIME = 48, SEMICOLON = 49, COMMA = 50, DOUBLE_DOT = 51, LEFT_PARENTHESIS = 52, 
+    RIGHT_PARENTHESIS = 53, LEFT_SQUARE_BRACKET = 54, RIGHT_SQUARE_BRACKET = 55, 
+    LEFT_CURLY_BRACKET = 56, RIGHT_CURLY_BRACKET = 57, COLON = 58, IDENTIFIER = 59, 
+    FLOAT_LITERAL = 60, INTEGER_LITERAL = 61, NUMERICAL_EXPONENT = 62, STRING_LITERAL = 63, 
+    REGEXP = 64, SINGLE_LINE_COMMENT = 65, MULTILINE_COMMENT = 66, SPACES = 67, 
+    UNEXPECTED_CHAR = 68
   };
 
   enum {
     RuleParse = 0, RuleError = 1, RuleCore_stmt = 2, RuleCore_declaration = 3, 
     RuleStream_declaration = 4, RuleEvent_list = 5, RuleEvent_declaration = 6, 
     RuleAttribute_dec_list = 7, RuleAttribute_declaration = 8, RuleDatatype = 9, 
-    RuleEvent_name = 10, RuleStream_name = 11, RuleAttribute_name = 12, 
-    RuleAny_name = 13, RuleKeyword = 14
+    RuleNull = 10, RuleEvent_name = 11, RuleStream_name = 12, RuleAttribute_name = 13, 
+    RuleAny_name = 14, RuleKeyword = 15
   };
 
   explicit StreamDeclarationParser(antlr4::TokenStream *input);
@@ -63,6 +63,7 @@ public:
   class Attribute_dec_listContext;
   class Attribute_declarationContext;
   class DatatypeContext;
+  class NullContext;
   class Event_nameContext;
   class Stream_nameContext;
   class Attribute_nameContext;
@@ -200,6 +201,7 @@ public:
     Attribute_nameContext *attribute_name();
     antlr4::tree::TerminalNode *COLON();
     DatatypeContext *datatype();
+    NullContext *null();
 
 
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
@@ -225,6 +227,19 @@ public:
   };
 
   DatatypeContext* datatype();
+
+  class  NullContext : public antlr4::ParserRuleContext {
+  public:
+    NullContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *K_NULL();
+
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  NullContext* null();
 
   class  Event_nameContext : public antlr4::ParserRuleContext {
   public:
@@ -303,6 +318,7 @@ public:
     antlr4::tree::TerminalNode *K_NEXT();
     antlr4::tree::TerminalNode *K_NONE();
     antlr4::tree::TerminalNode *K_NOT();
+    antlr4::tree::TerminalNode *K_NULL();
     antlr4::tree::TerminalNode *K_OR();
     antlr4::tree::TerminalNode *K_PARTITION();
     antlr4::tree::TerminalNode *K_SECONDS();
