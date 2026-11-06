@@ -205,17 +205,29 @@ def summarize_file(
                 base_above_mean > z * base_above_sem
                 and tree_above_mean > z * tree_above_sem
             )
+            above_ratio = base_above_mean / tree_above_mean if tree_above_mean != 0 else None
+
+            # Two different reasons a ratio can fail the reliability check,
+            # worth telling apart rather than lumping into one message: if
+            # the delta itself isn't reliable either, there's genuinely not
+            # enough signal yet ("too small"); if the delta IS reliable but
+            # the ratio still isn't, the effect is real but one side (almost
+            # always the tree's, since that's the side the optimization is
+            # trying to shrink toward zero) is too close to its own floor to
+            # divide by soundly ("not reliable") - checked directly: this is
+            # exactly the rep_eq_single case that printed -37x before the
+            # sign check was added.
             if ratio_reliable:
-                above_ratio = base_above_mean / tree_above_mean
                 ratio_str = f"{above_ratio:6.2f}x"
-            elif tree_above_mean <= 0 and abs(tree_above_mean) > z * tree_above_sem:
-                # Reliably at-or-below its own floor: a well-defined but
-                # meaningless ratio (checked directly - this produced ratios
-                # like -37x on rep_eq_single, not a bug in the arithmetic,
-                # just a case the magnitude-only check didn't rule out).
-                ratio_str = "   (tree finished at/below its own floor - ratio not meaningful)"
+                ratio_category = "reliable"
+            elif not delta_reliable:
+                shown = f"{above_ratio:.2f}x" if above_ratio is not None else "n/a"
+                ratio_str = f"({shown}, too small to trust)"
+                ratio_category = "too_small"
             else:
-                ratio_str = "   (not distinguishable from the floor's own noise)"
+                shown = f"{above_ratio:.2f}x" if above_ratio is not None else "n/a"
+                ratio_str = f"({shown}, not reliable)"
+                ratio_category = "not_reliable"
 
             flag = "" if delta_reliable else "  [delta within noise of zero]"
             print(
