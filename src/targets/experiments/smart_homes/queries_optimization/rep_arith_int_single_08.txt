@@ -1,0 +1,14 @@
+SELECT * FROM S
+WHERE (LOAD as E1)
+FILTER
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999] AND
+    E1[household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + household_id + plug_id > 999999999]
+WITHIN 2 [plug_timestamp]
+CONSUME BY ANY
+LIMIT 1000

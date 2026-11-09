@@ -11,13 +11,25 @@
 // events, is a direct measurement of that pybind-boundary overhead - see
 // guides/thesis-findings/06-open-questions-and-limits.md (2026-11-09).
 //
-// Scoped to 3 representative queries, not the full 53, to validate the
-// harness before any larger replication:
-//   - rep_eq_24 (smart_homes, cheap scalar events)
+// Scoped to a handful of representative queries, not the full 53, to
+// validate the harness before any larger replication:
+//   - floor_01 (both datasets - the same single-alias, single-predicate
+//     floor compile_vs_processing.py uses, so above_floor_summary.py can
+//     do its usual same-session floor subtraction on this CSV too)
+//   - rep_eq_24 (smart_homes, cheap scalar events, the project's best
+//     documented win: 24 identical atoms collapsing to 2 leaves)
 //   - thr_ladder_24 (smart_homes, cheap scalar events, real per-event work)
+//   - rep_arith_int_single_{08,24} (smart_homes, backlog item 19: the same
+//     2-leaf collapse as rep_eq, but each atom is a 20-term int64_t
+//     addition chain instead of a bare comparison - stays inside Z3's
+//     modeled subset, unlike item 16's accidentally-opaque double
+//     arithmetic, see physical_predicate_z3_translator.hpp:51-58)
 //   - rep_like_single_08 (taxis, string-heavy events - the clearest
 //     expected gap, since taxis events carry several heap-allocated
 //     strings that are expensive to deep-copy)
+//
+// 15 repeats per (query, strategy), matching the project's standard
+// (tests/benchmark/above_floor_summary.py's own docstring).
 //
 // Writes a CSV in compile_vs_processing.py's own schema
 // (dataset,query,strategy,repeat,event_count,compile_time_s,
@@ -296,7 +308,7 @@ void write_csv(const std::string& path, const std::vector<Row>& rows) {
   }
 }
 
-constexpr int kRepeats = 5;
+constexpr int kRepeats = 15;
 
 // Runs one query against one dataset's events for both strategies, appending
 // rows to `rows`. Returns nothing; REQUIREs event counts and cross-strategy
@@ -377,7 +389,11 @@ TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
     std::vector<std::shared_ptr<const Types::Event>>
       events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
 
-    for (const std::string& name : {"rep_eq_24.txt", "thr_ladder_24.txt"}) {
+    for (const std::string& name : {"floor_01.txt",
+                                    "rep_eq_24.txt",
+                                    "thr_ladder_24.txt",
+                                    "rep_arith_int_single_08.txt",
+                                    "rep_arith_int_single_24.txt"}) {
       std::string query_text = read_file(base + "/queries_optimization/" + name);
       run_query("smart_homes", name, query_text, events, 1'000'000, rows);
     }
@@ -393,9 +409,10 @@ TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
     std::vector<std::shared_ptr<const Types::Event>>
       events = read_taxis_events(base + "/taxi_data.csv", event_type);
 
-    std::string name = "rep_like_single_08.txt";
-    std::string query_text = read_file(base + "/queries_optimization/" + name);
-    run_query("taxis", name, query_text, events, 585'762, rows);
+    for (const std::string& name : {"floor_01.txt", "rep_like_single_08.txt"}) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      run_query("taxis", name, query_text, events, 585'762, rows);
+    }
   }
 
   std::string out_path = root + "/tests/benchmark/results/pure_cpp_throughput.csv";
