@@ -52,6 +52,18 @@
 // minterm_tree strategy requires Z3):
 //   ./build/Debug-opt/tests "[PureCppThroughput]"
 
+// quill/Backend.h (for quill::Backend::stop()) must come before any header
+// that pulls in the ANTLR runtime (core_server/internal/ceql/query/query.hpp,
+// below): ANTLR's Recognizer.h #undefs the standard EOF macro to define its
+// own CEQLQueryLexer::EOF member, and once that happens earlier in this
+// translation unit, quill's bundled fmt headers (which need the real EOF
+// macro from <cstdio>) fail to compile. setup.hpp only pulls in
+// quill/Logger.h, not this - python_binding.cpp includes it separately for
+// the same quill::Backend::stop() call.
+// clang-format off
+#include "quill/Backend.h"
+// clang-format on
+
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
@@ -182,19 +194,21 @@ class ThroughputEngine {
 class ListenerEngine {
  public:
   explicit ListenerEngine(PredicateEvaluationStrategy strategy)
-      : backend_(options_for(strategy)), listener_(backend_, backend_mutex_) {}
+      : backend_(std::in_place, options_for(strategy)) {
+    listener_.emplace(*backend_, backend_mutex_);
+  }
 
   Types::StreamInfo add_stream_type(Types::StreamInfoParsed&& parsed) {
-    return backend_.add_stream_type(std::move(parsed));
+    return backend_->add_stream_type(std::move(parsed));
   }
 
   std::pair<CountingResultHandler*, double> add_query(const std::string& text) {
     auto start = std::chrono::steady_clock::now();
-    CEQL::Query parsed_query = backend_.parse_sent_query(text);
+    CEQL::Query parsed_query = backend_->parse_sent_query(text);
     auto handler = std::make_unique<CountingResultHandler>(
-      QueryCatalog(backend_.get_catalog_reference(), parsed_query));
+      QueryCatalog(backend_->get_catalog_reference(), parsed_query));
     CountingResultHandler* raw = handler.get();
-    backend_.declare_query(std::move(parsed_query), std::move(handler));
+    backend_->declare_query(std::move(parsed_query), std::move(handler));
     double compile_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now()
                                                           - start)
                               .count();
@@ -203,25 +217,50 @@ class ListenerEngine {
 
   // One Stream per event, matching send_events's own per-event receive_stream
   // call (python_binding.cpp:162-170) exactly - not batched into one Stream
-  // for all events, which is not what the real path ever does.
-  double send_all(Types::StreamTypeId stream_id,
-                  const std::vector<std::shared_ptr<Types::Event>>& events) {
+  // for all events, which is not what the real path ever does. Then tears
+  // the backend down and stops Quill's backend thread INSIDE the timed
+  // region, matching get_output()'s own per-repeat teardown
+  // (python_binding.cpp:172-186) exactly - without this, nothing ever drains
+  // Quill's queue across repeats in this harness (unlike the real path,
+  // which rebuilds a fresh server and calls get_output() every single
+  // repeat), which the first attempt at this found was confounding the
+  // result with an accumulating backlog rather than measuring the
+  // logging-path difference cleanly (see
+  // guides/thesis-findings/06-open-questions-and-limits.md, 2026-11-09).
+  // `handler` must be read before teardown: it's owned by backend_'s own
+  // query storage, so it's destroyed along with backend_.reset() below.
+  std::pair<double, size_t>
+  send_all_and_teardown(Types::StreamTypeId stream_id,
+                        const std::vector<std::shared_ptr<Types::Event>>& events,
+                        CountingResultHandler* handler) {
     auto start = std::chrono::steady_clock::now();
     for (const auto& event : events) {
-      listener_.receive_stream(Types::Stream{stream_id, {event}});
+      listener_->receive_stream(Types::Stream{stream_id, {event}});
     }
-    return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    size_t matches = handler->matches();
+    // listener_ only holds references to backend_/backend_mutex_, so
+    // dropping it first, then backend_, is always safe - the reverse order
+    // would leave backend_ dangling while listener_ still exists.
+    listener_.reset();
+    backend_.reset();
+    quill::Backend::stop();
+    double processing_time_s = std::chrono::duration<double>(
+                                 std::chrono::steady_clock::now() - start)
+                                 .count();
+    return {processing_time_s, matches};
   }
 
  private:
   // Member order matters: OfflineServer builds its logger before its backend
   // (server.hpp:35-39), so "root" is already at TraceL3 by the time Backend's
   // own constructor calls get_logger("root"). Declaration order here mirrors
-  // that.
+  // that. backend_/listener_ are optional so send_all_and_teardown can
+  // destroy them mid-repeat, before the next repeat's constructor rebuilds
+  // them from scratch - matching a fresh PyOfflineServer every repeat.
   quill::Logger* logger_ = Logging::enable_logging_rotating();
-  Interface::Backend<false> backend_;
+  std::optional<Interface::Backend<false>> backend_;
   std::mutex backend_mutex_;
-  Library::Components::OfflineStreamsListener listener_;
+  std::optional<Library::Components::OfflineStreamsListener> listener_;
 };
 
 template <class Engine>
@@ -456,9 +495,11 @@ void run_query_via_listener(const std::string& dataset_name,
                                         : declare_taxis_stream(engine);
 
       auto [handler, compile_time_s] = engine.add_query(query_text);
-      double processing_time_s = engine.send_all(stream_info.id, events);
+      auto [processing_time_s,
+            matches] = engine.send_all_and_teardown(stream_info.id, events, handler);
+      // handler is a dangling pointer from here on (destroyed inside
+      // send_all_and_teardown along with backend_) - never dereferenced again.
 
-      size_t matches = handler->matches();
       std::string matches_baseline;
       if (strategy_name == "baseline_via_listener") {
         if (repeat == 1) baseline_matches = matches;
