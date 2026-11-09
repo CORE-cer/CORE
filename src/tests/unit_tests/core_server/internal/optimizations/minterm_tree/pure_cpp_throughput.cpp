@@ -68,6 +68,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -229,25 +230,48 @@ class ListenerEngine {
   // guides/thesis-findings/06-open-questions-and-limits.md, 2026-11-09).
   // `handler` must be read before teardown: it's owned by backend_'s own
   // query storage, so it's destroyed along with backend_.reset() below.
+  //
+  // Timed in two separate phases rather than one, to show *where* the time
+  // actually goes: Quill's backend thread drains its queue concurrently
+  // while events are sent (confirmed from quill/backend/BackendWorker.h -
+  // UnboundedSPSCQueue.h's production is wait-free, so a fast producer never
+  // blocks, it just outruns the consumer), but Backend::stop() joins that
+  // thread, which first runs _exit()'s while(true) drain-everything loop
+  // (BackendWorker.h:408-436) before returning - so whatever backlog never
+  // got drained concurrently during the loop gets fully, synchronously
+  // processed here instead. If that's the real mechanism, baseline's loop
+  // time should stay close to its direct-path number while its teardown
+  // time absorbs the rest; minterm_tree's split should be far less lopsided,
+  // since its slower per-event cost gives the backend thread more real time
+  // to keep up concurrently. See
+  // guides/thesis-findings/06-open-questions-and-limits.md (2026-11-09).
   std::pair<double, size_t>
   send_all_and_teardown(Types::StreamTypeId stream_id,
                         const std::vector<std::shared_ptr<Types::Event>>& events,
                         CountingResultHandler* handler) {
-    auto start = std::chrono::steady_clock::now();
+    auto loop_start = std::chrono::steady_clock::now();
     for (const auto& event : events) {
       listener_->receive_stream(Types::Stream{stream_id, {event}});
     }
+    double loop_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now()
+                                                       - loop_start)
+                           .count();
+
     size_t matches = handler->matches();
+
+    auto teardown_start = std::chrono::steady_clock::now();
     // listener_ only holds references to backend_/backend_mutex_, so
     // dropping it first, then backend_, is always safe - the reverse order
     // would leave backend_ dangling while listener_ still exists.
     listener_.reset();
     backend_.reset();
     quill::Backend::stop();
-    double processing_time_s = std::chrono::duration<double>(
-                                 std::chrono::steady_clock::now() - start)
-                                 .count();
-    return {processing_time_s, matches};
+    double teardown_time_s = std::chrono::duration<double>(
+                               std::chrono::steady_clock::now() - teardown_start)
+                               .count();
+
+    std::cout << "  loop=" << loop_time_s << "s  teardown=" << teardown_time_s << "s\n";
+    return {loop_time_s + teardown_time_s, matches};
   }
 
  private:
@@ -482,12 +506,21 @@ void run_query_via_listener(const std::string& dataset_name,
   INFO(dataset_name << " / " << query_name << " (via listener)");
   REQUIRE(events.size() == expected_event_count);
 
+  // Lets a single strategy run alone (e.g. under its own `perf stat`
+  // invocation, matching how backlog item 17 already profiled rep_like_single
+  // one strategy at a time - guides/backlog.md): CORE_LISTENER_STRATEGY_FILTER
+  // set to "baseline" or "minterm_tree" skips the other; unset runs both.
+  const char* strategy_filter = std::getenv("CORE_LISTENER_STRATEGY_FILTER");
+
   std::optional<size_t> baseline_matches;
   for (auto [strategy, strategy_name] :
        {std::pair{PredicateEvaluationStrategy::Default,
                   std::string("baseline_via_listener")},
         std::pair{PredicateEvaluationStrategy::MintermTree,
                   std::string("minterm_tree_via_listener")}}) {
+    if (strategy_filter != nullptr && strategy_name.rfind(strategy_filter, 0) != 0) {
+      continue;
+    }
     for (int repeat = 1; repeat <= kRepeats; repeat++) {
       ListenerEngine engine(strategy);
       Types::StreamInfo stream_info = (dataset_name == "smart_homes")
@@ -503,8 +536,10 @@ void run_query_via_listener(const std::string& dataset_name,
       std::string matches_baseline;
       if (strategy_name == "baseline_via_listener") {
         if (repeat == 1) baseline_matches = matches;
-      } else if (repeat == 1) {
-        REQUIRE(baseline_matches.has_value());
+      } else if (repeat == 1 && baseline_matches.has_value()) {
+        // Only checked when baseline actually ran in this invocation -
+        // CORE_LISTENER_STRATEGY_FILTER can scope a run to minterm_tree
+        // alone, with no baseline to compare against.
         matches_baseline = (matches == *baseline_matches) ? "True" : "False";
         REQUIRE(matches_baseline == "True");
       }
