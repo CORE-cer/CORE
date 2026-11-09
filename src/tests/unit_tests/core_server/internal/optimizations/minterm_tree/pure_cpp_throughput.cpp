@@ -60,6 +60,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -75,12 +76,15 @@
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
+#include "core_server/library/components/stream_listeners/offline/offline_streams_listener.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/datatypes/stream.hpp"
 #include "shared/datatypes/value.hpp"
+#include "shared/logging/setup.hpp"
 
 namespace CORE::Internal::Optimizations::MintermTree::UnitTests {
 
@@ -152,7 +156,7 @@ class ThroughputEngine {
   // handed over by reference, not through a pybind boundary), no join
   // afterwards (there is no output-writing thread to join).
   double send_all(Types::StreamTypeId stream_id,
-                  const std::vector<std::shared_ptr<const Types::Event>>& events) {
+                  const std::vector<std::shared_ptr<Types::Event>>& events) {
     auto start = std::chrono::steady_clock::now();
     for (const auto& event : events) {
       backend_.send_event_to_queries(stream_id, Types::EventWrapper(event));
@@ -164,7 +168,64 @@ class ThroughputEngine {
   Interface::Backend<> backend_;
 };
 
-Types::StreamInfo declare_smart_homes_stream(ThroughputEngine& engine) {
+// Drives the engine the same way OfflineServer actually does (server.hpp:32-63),
+// minus the Router/ZMQ pieces that only matter for the client-command protocol,
+// not event ingestion: a Backend<false> (the real server's NoLogging=false - see
+// backend.hpp:50-52 - which leaves the shared "root" Quill logger at whatever
+// enable_logging_rotating() below sets it to, TraceL3, instead of ThroughputEngine's
+// Backend<> = Backend<true>, which sets it to Debug via enable_logging_stdout()),
+// and OfflineStreamsListener (offline_streams_listener.hpp), which ThroughputEngine's
+// send_all bypasses entirely. Exists to test whether that difference - not pybind,
+// not CPU pinning, both already ruled out - explains why this harness's rep_eq_24
+// result contradicts the Python-measured one (see
+// guides/thesis-findings/06-open-questions-and-limits.md, 2026-11-09).
+class ListenerEngine {
+ public:
+  explicit ListenerEngine(PredicateEvaluationStrategy strategy)
+      : backend_(options_for(strategy)), listener_(backend_, backend_mutex_) {}
+
+  Types::StreamInfo add_stream_type(Types::StreamInfoParsed&& parsed) {
+    return backend_.add_stream_type(std::move(parsed));
+  }
+
+  std::pair<CountingResultHandler*, double> add_query(const std::string& text) {
+    auto start = std::chrono::steady_clock::now();
+    CEQL::Query parsed_query = backend_.parse_sent_query(text);
+    auto handler = std::make_unique<CountingResultHandler>(
+      QueryCatalog(backend_.get_catalog_reference(), parsed_query));
+    CountingResultHandler* raw = handler.get();
+    backend_.declare_query(std::move(parsed_query), std::move(handler));
+    double compile_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now()
+                                                          - start)
+                              .count();
+    return {raw, compile_time_s};
+  }
+
+  // One Stream per event, matching send_events's own per-event receive_stream
+  // call (python_binding.cpp:162-170) exactly - not batched into one Stream
+  // for all events, which is not what the real path ever does.
+  double send_all(Types::StreamTypeId stream_id,
+                  const std::vector<std::shared_ptr<Types::Event>>& events) {
+    auto start = std::chrono::steady_clock::now();
+    for (const auto& event : events) {
+      listener_.receive_stream(Types::Stream{stream_id, {event}});
+    }
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+  }
+
+ private:
+  // Member order matters: OfflineServer builds its logger before its backend
+  // (server.hpp:35-39), so "root" is already at TraceL3 by the time Backend's
+  // own constructor calls get_logger("root"). Declaration order here mirrors
+  // that.
+  quill::Logger* logger_ = Logging::enable_logging_rotating();
+  Interface::Backend<false> backend_;
+  std::mutex backend_mutex_;
+  Library::Components::OfflineStreamsListener listener_;
+};
+
+template <class Engine>
+Types::StreamInfo declare_smart_homes_stream(Engine& engine) {
   std::vector<Types::AttributeInfo> load_attrs;
   load_attrs.emplace_back("id", Types::ValueTypes::INT64);
   load_attrs.emplace_back("plug_timestamp", Types::ValueTypes::INT64);
@@ -177,7 +238,8 @@ Types::StreamInfo declare_smart_homes_stream(ThroughputEngine& engine) {
 // The real taxis schema (declaration.core), reproduced here the same way
 // minterm_tree_path_length.cpp reproduces smart_homes's: it's short and
 // changing it unnoticed here would be a bigger problem than this duplication.
-Types::StreamInfo declare_taxis_stream(ThroughputEngine& engine) {
+template <class Engine>
+Types::StreamInfo declare_taxis_stream(Engine& engine) {
   std::vector<Types::AttributeInfo> trip_attrs;
   trip_attrs.emplace_back("id", Types::ValueTypes::INT64);
   trip_attrs.emplace_back("medallion", Types::ValueTypes::STRING_VIEW);
@@ -208,9 +270,9 @@ std::string read_file(const std::string& path) {
 
 // smart_homes_data.csv's fixed format:
 // event_type,id,plug_timestamp,value,plug_id,household_id.
-std::vector<std::shared_ptr<const Types::Event>>
+std::vector<std::shared_ptr<Types::Event>>
 read_smart_homes_events(const std::string& csv_path, Types::UniqueEventTypeId event_type) {
-  std::vector<std::shared_ptr<const Types::Event>> events;
+  std::vector<std::shared_ptr<Types::Event>> events;
   std::ifstream in(csv_path);
   REQUIRE(in.is_open());
   std::string line;
@@ -234,7 +296,7 @@ read_smart_homes_events(const std::string& csv_path, Types::UniqueEventTypeId ev
     attrs.push_back(std::make_unique<Types::IntValue>(std::stoll(plug_id_s)));
     attrs.push_back(std::make_unique<Types::IntValue>(std::stoll(household_id_s)));
 
-    events.push_back(std::make_shared<const Types::Event>(event_type, std::move(attrs)));
+    events.push_back(std::make_shared<Types::Event>(event_type, std::move(attrs)));
   }
   return events;
 }
@@ -246,9 +308,9 @@ read_smart_homes_events(const std::string& csv_path, Types::UniqueEventTypeId ev
 // Python's tests/e2e/csv_parser.py); none of these fields contain commas
 // (checked directly against the real file), so a plain split is enough,
 // the same approach read_smart_homes_events already takes.
-std::vector<std::shared_ptr<const Types::Event>>
+std::vector<std::shared_ptr<Types::Event>>
 read_taxis_events(const std::string& csv_path, Types::UniqueEventTypeId event_type) {
-  std::vector<std::shared_ptr<const Types::Event>> events;
+  std::vector<std::shared_ptr<Types::Event>> events;
   std::ifstream in(csv_path);
   REQUIRE(in.is_open());
   std::string line;
@@ -279,7 +341,7 @@ read_taxis_events(const std::string& csv_path, Types::UniqueEventTypeId event_ty
     attrs.push_back(std::make_unique<Types::DoubleValue>(std::stod(fields[15])));
     attrs.push_back(std::make_unique<Types::DoubleValue>(std::stod(fields[16])));
 
-    events.push_back(std::make_shared<const Types::Event>(event_type, std::move(attrs)));
+    events.push_back(std::make_shared<Types::Event>(event_type, std::move(attrs)));
   }
   return events;
 }
@@ -316,7 +378,7 @@ constexpr int kRepeats = 15;
 void run_query(const std::string& dataset_name,
                const std::string& query_name,
                const std::string& query_text,
-               const std::vector<std::shared_ptr<const Types::Event>>& events,
+               const std::vector<std::shared_ptr<Types::Event>>& events,
                size_t expected_event_count,
                std::vector<Row>& rows) {
   INFO(dataset_name << " / " << query_name);
@@ -368,6 +430,60 @@ void run_query(const std::string& dataset_name,
   }
 }
 
+// Same shape as run_query, but through ListenerEngine (Backend<false> +
+// OfflineStreamsListener) instead of ThroughputEngine - see ListenerEngine's
+// own comment for why. Strategy names get a "_via_listener" suffix so the
+// output CSV stays self-describing next to run_query's rows.
+void run_query_via_listener(const std::string& dataset_name,
+                            const std::string& query_name,
+                            const std::string& query_text,
+                            const std::vector<std::shared_ptr<Types::Event>>& events,
+                            size_t expected_event_count,
+                            std::vector<Row>& rows) {
+  INFO(dataset_name << " / " << query_name << " (via listener)");
+  REQUIRE(events.size() == expected_event_count);
+
+  std::optional<size_t> baseline_matches;
+  for (auto [strategy, strategy_name] :
+       {std::pair{PredicateEvaluationStrategy::Default,
+                  std::string("baseline_via_listener")},
+        std::pair{PredicateEvaluationStrategy::MintermTree,
+                  std::string("minterm_tree_via_listener")}}) {
+    for (int repeat = 1; repeat <= kRepeats; repeat++) {
+      ListenerEngine engine(strategy);
+      Types::StreamInfo stream_info = (dataset_name == "smart_homes")
+                                        ? declare_smart_homes_stream(engine)
+                                        : declare_taxis_stream(engine);
+
+      auto [handler, compile_time_s] = engine.add_query(query_text);
+      double processing_time_s = engine.send_all(stream_info.id, events);
+
+      size_t matches = handler->matches();
+      std::string matches_baseline;
+      if (strategy_name == "baseline_via_listener") {
+        if (repeat == 1) baseline_matches = matches;
+      } else if (repeat == 1) {
+        REQUIRE(baseline_matches.has_value());
+        matches_baseline = (matches == *baseline_matches) ? "True" : "False";
+        REQUIRE(matches_baseline == "True");
+      }
+
+      rows.push_back({dataset_name,
+                      query_name,
+                      strategy_name,
+                      repeat,
+                      events.size(),
+                      compile_time_s,
+                      processing_time_s,
+                      matches_baseline});
+      std::cout << dataset_name << "/" << query_name << " [" << strategy_name
+                << "] repeat " << repeat << ": compile " << compile_time_s
+                << "s, processing " << processing_time_s << "s, matches " << matches
+                << "\n";
+    }
+  }
+}
+
 }  // namespace
 
 TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
@@ -386,7 +502,7 @@ TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
     Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
 
     INFO("Parsing the real smart_homes dataset once for both queries below");
-    std::vector<std::shared_ptr<const Types::Event>>
+    std::vector<std::shared_ptr<Types::Event>>
       events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
 
     for (const std::string& name : {"floor_01.txt",
@@ -406,7 +522,7 @@ TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
     Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
 
     INFO("Parsing the real taxis dataset once");
-    std::vector<std::shared_ptr<const Types::Event>>
+    std::vector<std::shared_ptr<Types::Event>>
       events = read_taxis_events(base + "/taxi_data.csv", event_type);
 
     for (const std::string& name : {"floor_01.txt", "rep_like_single_08.txt"}) {
@@ -416,6 +532,45 @@ TEST_CASE("Pure-C++ throughput: engine cost without the pybind boundary",
   }
 
   std::string out_path = root + "/tests/benchmark/results/pure_cpp_throughput.csv";
+  write_csv(out_path, rows);
+  std::cout << "Wrote " << rows.size() << " rows to " << out_path << "\n";
+}
+
+// Tests the logging/listener-path lead directly: does routing through
+// Backend<false> + OfflineStreamsListener, exactly like OfflineServer does,
+// change rep_eq_24's result? See ListenerEngine's comment and
+// guides/thesis-findings/06-open-questions-and-limits.md (2026-11-09) for the
+// full reasoning. Scoped to rep_eq_24 only - the sharpest instance of the
+// contradiction, not a full re-sweep.
+TEST_CASE("Pure-C++ throughput via the real listener path: does it change rep_eq_24?",
+          "[.][PureCppThroughputViaListener]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+  std::vector<Row> rows;
+
+  const std::string base = root + "/src/targets/experiments/smart_homes";
+  ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+  Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+  Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+  INFO("Parsing the real smart_homes dataset once");
+  std::vector<std::shared_ptr<Types::Event>>
+    events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+  std::string query_text = read_file(base + "/queries_optimization/rep_eq_24.txt");
+  run_query_via_listener("smart_homes",
+                         "rep_eq_24.txt",
+                         query_text,
+                         events,
+                         1'000'000,
+                         rows);
+
+  std::string out_path = root
+                         + "/tests/benchmark/results/"
+                           "pure_cpp_throughput_via_listener.csv";
   write_csv(out_path, rows);
   std::cout << "Wrote " << rows.size() << " rows to " << out_path << "\n";
 }
