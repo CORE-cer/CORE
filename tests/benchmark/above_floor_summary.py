@@ -52,6 +52,10 @@ and well below the 20%+ seen in the contaminated one) means that strategy's
 floor is unusable for this file, and above-floor numbers for it are skipped
 with a warning rather than silently computed from a broken floor.
 
+Also reports throughput (events/sec) for baseline and each tree strategy -
+the reciprocal of the same processing_time_s already measured, no new data
+needed, but the framing a 2026-11-09 meeting note asked for specifically.
+
 Usage:
     .venv/bin/python tests/benchmark/above_floor_summary.py <results.csv> [...] \
         [--floor-query floor_01.txt] [--dataset smart_homes] [--z 2.0]
@@ -178,8 +182,12 @@ def summarize_file(
         base_above_mean = base_mean - floor_base_mean
         base_above_sem = math.hypot(base_sem, floor_base_sem)
 
+        base_throughput = event_count / base_mean if base_mean > 0 else float("inf")
         print(f"\n  === {query} (n={event_count:,} events) ===")
-        print(f"    baseline: proc={base_mean:.4f}s  above_floor={base_above_mean:+.4f}s (SEM {base_above_sem:.4f}s)")
+        print(
+            f"    baseline: proc={base_mean:.4f}s  above_floor={base_above_mean:+.4f}s (SEM {base_above_sem:.4f}s)  "
+            f"throughput={base_throughput:,.0f} events/s"
+        )
 
         for strategy in sorted(s for s in by_strategy if s != BASELINE):
             if strategy not in floor:
@@ -196,6 +204,7 @@ def summarize_file(
 
             raw_ratio = base_mean / tree_mean if tree_mean > 0 else float("inf")
             raw_delta_us = (base_mean - tree_mean) / event_count * 1e6
+            tree_throughput = event_count / tree_mean if tree_mean > 0 else float("inf")
 
             delta_mean_us = (base_above_mean - tree_above_mean) / event_count * 1e6
             delta_sem_us = math.hypot(base_above_sem, tree_above_sem) / event_count * 1e6
@@ -233,7 +242,9 @@ def summarize_file(
             print(
                 f"    {strategy:30s} raw={raw_ratio:5.2f}x  delta={raw_delta_us:+7.4f}us/evt   "
                 f"above_delta={delta_mean_us:+7.4f} ± {z * delta_sem_us:.4f} us/evt (95% CI)   "
-                f"above_ratio={ratio_str}{flag}"
+                f"above_ratio={ratio_str}{flag}\n"
+                f"{'':34s}throughput={tree_throughput:,.0f} events/s "
+                f"(baseline {base_throughput:,.0f} events/s)"
             )
 
 
