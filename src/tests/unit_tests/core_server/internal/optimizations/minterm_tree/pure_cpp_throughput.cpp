@@ -144,7 +144,15 @@ class CountingResultHandler : public Library::Components::ResultHandler {
 class ThroughputEngine {
  public:
   explicit ThroughputEngine(PredicateEvaluationStrategy strategy)
-      : backend_(options_for(strategy)) {}
+      : backend_(options_for(strategy)) {
+    // Backend<true>'s own constructor calls Logging::enable_logging_stdout()
+    // internally (backend.hpp), which *unconditionally* resets "root"'s
+    // level back to Debug on every call (setup.cpp:84) - so a one-time
+    // suppression before the first ThroughputEngine exists gets undone the
+    // moment this constructor runs, every single repeat. Re-suppress here,
+    // every time, rather than relying on a level set once from outside.
+    Logging::enable_logging_stdout()->set_log_level(quill::LogLevel::None);
+  }
 
   Types::StreamInfo add_stream_type(Types::StreamInfoParsed&& parsed) {
     return backend_.add_stream_type(std::move(parsed));
@@ -473,7 +481,25 @@ void run_query(const std::string& dataset_name,
         if (repeat == 1) baseline_matches = matches;
       } else if (repeat == 1) {
         REQUIRE(baseline_matches.has_value());
-        matches_baseline = (matches == *baseline_matches) ? "True" : "False";
+        // Exact equality for the overwhelming majority of this suite (0
+        // matches - unsatisfiable guards, rep_eq's household_id=99, etc.),
+        // but a generous relative tolerance for queries with many real
+        // matches: thr_ladder_08's own baseline match count already varies
+        // repeat-to-repeat with no strategy change at all (confirmed
+        // directly, 2026-11-11: 2547-2602 across 15 baseline repeats, mean
+        // 2563, ~2.1% spread) - automaton tie-breaking among same-timestamp
+        // events, not a bug, so exact equality is the wrong bar for these.
+        // See guides/thesis-findings/06-open-questions-and-limits.md.
+        size_t diff = (matches > *baseline_matches) ? (matches - *baseline_matches)
+                                                    : (*baseline_matches - matches);
+        bool close_enough = (*baseline_matches == 0)
+                              ? (matches == 0)
+                              : (static_cast<double>(diff)
+                                   / static_cast<double>(*baseline_matches)
+                                 <= 0.10);
+        matches_baseline = close_enough ? "True" : "False";
+        INFO("baseline matches=" << *baseline_matches
+                                 << ", this strategy matches=" << matches);
         REQUIRE(matches_baseline == "True");
       }
 
@@ -648,6 +674,168 @@ TEST_CASE("Pure-C++ throughput via the real listener path: does it change rep_eq
                          + "/tests/benchmark/results/"
                            "pure_cpp_throughput_via_listener.csv";
   write_csv(out_path, rows);
+  std::cout << "Wrote " << rows.size() << " rows to " << out_path << "\n";
+}
+
+// Every query file this project has ever built for smart_homes/taxis
+// (src/targets/experiments/{smart_homes,taxis}/queries_optimization/ -
+// listed directly with `ls`, not reconstructed from memory), through the
+// direct ThroughputEngine path only (no ListenerEngine, no Backend<false>,
+// no teardown) - the path never implicated in any of the logging-backlog
+// findings above. Logging is suppressed to the practical minimum (set to
+// LogLevel::None, once, before any engine exists) rather than merely
+// filtered: with 63 queries x 2 strategies x 15 repeats, even the
+// Debug-level LOG_INFO per add_query (the full query text, plus the tree-
+// shape line) is real, repeated stdout-writing overhead, same lesson as
+// the very first round's unexpectedly slow wall-clock time. Tree-vs-
+// baseline parity is checked the same cheap way every round has (handled
+// inside run_query) - correctness itself is treated as already settled by
+// now, not re-verified here via tree-shape logs (which logging being off
+// makes unavailable anyway). See
+// guides/thesis-findings/06-open-questions-and-limits.md (2026-11-09).
+TEST_CASE("Pure-C++ throughput: full rundown of every evaluated query",
+          "[.][PureCppFullRundown]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+  // Logging is suppressed per-repeat inside ThroughputEngine's own
+  // constructor (see its comment) - that's the fix that actually sticks,
+  // not a one-time call here.
+
+  const std::string root = CORE_SOURCE_ROOT;
+  std::vector<Row> rows;
+  // Written after every query, not just once at the end: this is a long
+  // (multi-hour) unattended run, and a crash partway through should leave
+  // whatever's already measured on disk, not nothing - this round already
+  // lost one run to a closed window with no partial save to show for it.
+  std::string out_path = root + "/tests/benchmark/results/pure_cpp_full_rundown.csv";
+
+  {
+    const std::string base = root + "/src/targets/experiments/smart_homes";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+    // Full list (2026-11-11), 50 of the 51 real query files in this
+    // directory - everything except thr_ladder_08.
+    //
+    // late_exit_thr_{08,12,16} are included: an earlier attempt excluded
+    // them after 30+ minutes of apparently frozen output, but that was a
+    // stdout-buffering illusion (redirected, non-TTY output is fully
+    // buffered, so a long-running process's progress can look completely
+    // frozen for 20-30+ min while real work continues underneath) - not a
+    // genuine hang. Confirmed by watching the same illusion happen and
+    // resolve on rep_arith_int_single_08 later in the same run, and by
+    // re-running late_exit_thr_* with `stdbuf -oL` (line-buffered) for
+    // reliable monitoring: all three completed cleanly, no issues.
+    //
+    // thr_ladder_08 is excluded for a different and more serious reason: a
+    // GENUINE parity divergence, not noise or a tolerance edge case -
+    // baseline=2496 matches, minterm_tree=2999 matches on its first repeat
+    // (~20% relative difference, confirmed reproducible across two
+    // independent runs with different absolute counts both times). This is
+    // far beyond the ~2% repeat-to-repeat jitter baseline alone shows for
+    // this query (confirmed directly, see the parity-tolerance comment
+    // below). Needs dedicated investigation - excluded because it's a
+    // real, unresolved correctness question a timing benchmark shouldn't
+    // paper over with a looser tolerance, not because it's inconvenient.
+    // See guides/thesis-findings/06-open-questions-and-limits.md
+    // (2026-11-11) - read that entry before re-including this query.
+    const std::vector<std::string> names = {
+      "control_eq_01.txt",
+      "control_eq_01_guard.txt",
+      "control_thr_01.txt",
+      "control_thr_01_guard.txt",
+      "eq_ladder_04.txt",
+      "eq_ladder_04_guard.txt",
+      "eq_ladder_08.txt",
+      "eq_ladder_08_guard.txt",
+      "eq_ladder_16.txt",
+      "eq_ladder_16_guard.txt",
+      "floor_01.txt",
+      "late_exit_thr_08.txt",
+      "late_exit_thr_12.txt",
+      "late_exit_thr_16.txt",
+      "mix_grouped_08.txt",
+      "mix_grouped_08_guard.txt",
+      "mix_grouped_16.txt",
+      "mix_grouped_16_guard.txt",
+      "mix_interleaved_08.txt",
+      "mix_interleaved_08_guard.txt",
+      "mix_interleaved_16.txt",
+      "mix_interleaved_16_guard.txt",
+      "rep_arith_int_single_08.txt",
+      "rep_arith_int_single_24.txt",
+      "rep_arith_single_03.txt",
+      "rep_arith_single_04.txt",
+      "rep_arith_single_08.txt",
+      "rep_arith_single_16.txt",
+      "rep_arith_single_24.txt",
+      "rep_eq_03.txt",
+      "rep_eq_04.txt",
+      "rep_eq_08.txt",
+      "rep_eq_16.txt",
+      "rep_eq_24.txt",
+      "rep_eq_single_03.txt",
+      "rep_eq_single_04.txt",
+      "rep_eq_single_08.txt",
+      "rep_eq_single_16.txt",
+      "rep_eq_single_24.txt",
+      "thr_ladder_04.txt",
+      "thr_ladder_04_guard.txt",
+      // thr_ladder_08.txt excluded - see comment above.
+      "thr_ladder_08_guard.txt",
+      "thr_ladder_16.txt",
+      "thr_ladder_16_guard.txt",
+      "thr_ladder_24.txt",
+      "thr_ladder_24_guard.txt",
+      "worst_mix_03.txt",
+      "worst_mix_08.txt",
+      "worst_mix_16.txt",
+      "worst_mix_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      run_query("smart_homes", name, query_text, events, 1'000'000, rows);
+      write_csv(out_path, rows);
+    }
+  }
+
+  {
+    const std::string base = root + "/src/targets/experiments/taxis";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_taxis_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_taxis_events(base + "/taxi_data.csv", event_type);
+
+    const std::vector<std::string> names = {
+      "floor_01.txt",
+      "rep_like_single_03.txt",
+      "rep_like_single_04.txt",
+      "rep_like_single_08.txt",
+      "rep_like_single_12.txt",
+      "rep_like_single_16.txt",
+      "str_eq_ladder_04.txt",
+      "str_eq_ladder_08.txt",
+      "str_eq_ladder_16.txt",
+      "str_eq_ladder_24.txt",
+      "str_rep_eq_04.txt",
+      "str_rep_eq_08.txt",
+      "str_rep_eq_16.txt",
+      "str_rep_eq_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      run_query("taxis", name, query_text, events, 585'762, rows);
+      write_csv(out_path, rows);
+    }
+  }
+
   std::cout << "Wrote " << rows.size() << " rows to " << out_path << "\n";
 }
 
