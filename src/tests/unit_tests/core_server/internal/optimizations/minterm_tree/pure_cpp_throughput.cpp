@@ -291,6 +291,66 @@ void check_direct_matches_throughput(
   REQUIRE(close_enough);
 }
 
+// A full-corpus bug hunt, not a narrow sanity check: compares DirectEvaluator
+// against ThroughputEngine (read race-free, same pattern as
+// check_direct_matches_throughput above) across every query in this
+// project's corpus, for both strategies - deliberately including
+// thr_ladder_08.txt, which PureCppFullRundown excludes for a real,
+// unresolved reason (see its own comment in throughput_engine.cpp): baseline
+// and minterm_tree disagreed by ~20% there, and it's an open question
+// whether that's a real engine bug or an artifact of the quarantine-bound
+// path's own measurement issues. Uses CHECK, not REQUIRE, so one divergence
+// doesn't stop the sweep from covering the rest of the corpus - Catch2's own
+// summary lists every failure found, not just the first.
+void sweep_check_direct_vs_throughput(
+  const std::string& dataset_name,
+  const std::string& query_name,
+  const std::string& query_text,
+  const std::vector<std::shared_ptr<Types::Event>>& events,
+  size_t expected_event_count,
+  PredicateEvaluationStrategy strategy,
+  const std::string& strategy_name) {
+  INFO(dataset_name << " / " << query_name << " [" << strategy_name << "] (sweep)");
+  REQUIRE(events.size() == expected_event_count);
+
+  // Same race-free read as check_direct_matches_throughput above - see its
+  // own comment for why a real std::thread::join() (via the engine's
+  // destructor) is required instead of reading handler->matches() right
+  // after send_all() returns.
+  size_t via_throughput = 0;
+  {
+    std::optional<ThroughputEngine> engine(std::in_place, strategy);
+    Types::StreamInfo stream_info = (dataset_name == "smart_homes")
+                                      ? declare_smart_homes_stream(*engine)
+                                      : declare_taxis_stream(*engine);
+    engine->add_query(query_text, &via_throughput);
+    engine->send_all(stream_info.id, events);
+    engine.reset();
+  }
+
+  DirectEvaluator direct;
+  Types::StreamInfo direct_stream_info = (dataset_name == "smart_homes")
+                                           ? declare_smart_homes_stream(direct)
+                                           : declare_taxis_stream(direct);
+  (void)direct_stream_info;  // DirectEvaluator doesn't route by stream id - one stream only
+  direct.add_query(query_text, strategy);
+  direct.send_all(events);
+  size_t via_direct = direct.matches();
+
+  std::cout << dataset_name << "/" << query_name << " [" << strategy_name
+            << "]: via_throughput=" << via_throughput << ", via_direct=" << via_direct
+            << "\n";
+  // Same 10%-relative-tolerance rule as everywhere else in this file.
+  size_t diff = (via_direct > via_throughput) ? (via_direct - via_throughput)
+                                              : (via_throughput - via_direct);
+  bool close_enough = (via_throughput == 0)
+                        ? (via_direct == 0)
+                        : (static_cast<double>(diff) / static_cast<double>(via_throughput)
+                           <= 0.10);
+  INFO("via_throughput=" << via_throughput << ", via_direct=" << via_direct);
+  CHECK(close_enough);
+}
+
 }  // namespace
 
 // The rep_eq tangent (2026-11-12 meeting notes): does minterm_tree ever win
@@ -389,6 +449,145 @@ TEST_CASE("DirectEvaluator parity: does it agree with the quarantine-bound path?
        {"control_eq_01.txt", "floor_01.txt", "eq_ladder_04.txt", "thr_ladder_04.txt"}) {
     std::string query_text = read_file(base + "/queries_optimization/" + name);
     check_direct_matches_throughput("smart_homes", name, query_text, events, 1'000'000);
+  }
+}
+
+// A full-corpus, both-strategies parity sweep - generalizes
+// DirectEvaluatorParity above to catch (1) any further DirectEvaluator wiring
+// bugs across query shapes the narrow 4-query check never touched (taxis/
+// string events, multi-alias sequences with real match volume, the
+// minterm_tree strategy generally), and (2) specifically settle whether
+// thr_ladder_08.txt's known ~20% baseline-vs-minterm_tree divergence
+// (excluded from PureCppFullRundown - see its own comment in
+// throughput_engine.cpp) still appears when both strategies are read through
+// the race-free, synchronous DirectEvaluator path, or whether it's an
+// artifact of the quarantine-bound path's own measurement issues. Uses CHECK
+// throughout (via sweep_check_direct_vs_throughput), so the whole corpus gets
+// covered in one run even though at least one divergence is expected.
+//
+// Same query lists as PureCppFullRundown (throughput_engine.cpp), with
+// thr_ladder_08.txt added back in - that's the one query this sweep most
+// needs to cover.
+//
+//   ./build/Debug-opt/tests "[DirectEvaluatorParitySweep]"
+TEST_CASE("DirectEvaluator parity sweep: full corpus, both strategies",
+          "[.][DirectEvaluatorParitySweep]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+
+  auto strategies = {std::pair{PredicateEvaluationStrategy::Default,
+                               std::string("baseline")},
+                     std::pair{PredicateEvaluationStrategy::MintermTree,
+                               std::string("minterm_tree")}};
+
+  {
+    const std::string base = root + "/src/targets/experiments/smart_homes";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+    // Same list as PureCppFullRundown (throughput_engine.cpp), with
+    // thr_ladder_08.txt added back - see this test's own top comment.
+    const std::vector<std::string> names = {
+      "control_eq_01.txt",
+      "control_eq_01_guard.txt",
+      "control_thr_01.txt",
+      "control_thr_01_guard.txt",
+      "eq_ladder_04.txt",
+      "eq_ladder_04_guard.txt",
+      "eq_ladder_08.txt",
+      "eq_ladder_08_guard.txt",
+      "eq_ladder_16.txt",
+      "eq_ladder_16_guard.txt",
+      "floor_01.txt",
+      "late_exit_thr_08.txt",
+      "late_exit_thr_12.txt",
+      "late_exit_thr_16.txt",
+      "mix_grouped_08.txt",
+      "mix_grouped_08_guard.txt",
+      "mix_grouped_16.txt",
+      "mix_grouped_16_guard.txt",
+      "mix_interleaved_08.txt",
+      "mix_interleaved_08_guard.txt",
+      "mix_interleaved_16.txt",
+      "mix_interleaved_16_guard.txt",
+      "rep_arith_int_single_08.txt",
+      "rep_arith_int_single_24.txt",
+      "rep_arith_single_03.txt",
+      "rep_arith_single_04.txt",
+      "rep_arith_single_08.txt",
+      "rep_arith_single_16.txt",
+      "rep_arith_single_24.txt",
+      "rep_eq_03.txt",
+      "rep_eq_04.txt",
+      "rep_eq_08.txt",
+      "rep_eq_16.txt",
+      "rep_eq_24.txt",
+      "rep_eq_single_03.txt",
+      "rep_eq_single_04.txt",
+      "rep_eq_single_08.txt",
+      "rep_eq_single_16.txt",
+      "rep_eq_single_24.txt",
+      "thr_ladder_04.txt",
+      "thr_ladder_04_guard.txt",
+      "thr_ladder_08.txt",
+      "thr_ladder_08_guard.txt",
+      "thr_ladder_16.txt",
+      "thr_ladder_16_guard.txt",
+      "thr_ladder_24.txt",
+      "thr_ladder_24_guard.txt",
+      "worst_mix_03.txt",
+      "worst_mix_08.txt",
+      "worst_mix_16.txt",
+      "worst_mix_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      for (auto [strategy, strategy_name] : strategies) {
+        sweep_check_direct_vs_throughput(
+          "smart_homes", name, query_text, events, 1'000'000, strategy, strategy_name);
+      }
+    }
+  }
+
+  {
+    const std::string base = root + "/src/targets/experiments/taxis";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_taxis_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_taxis_events(base + "/taxi_data.csv", event_type);
+
+    const std::vector<std::string> names = {
+      "floor_01.txt",
+      "rep_like_single_03.txt",
+      "rep_like_single_04.txt",
+      "rep_like_single_08.txt",
+      "rep_like_single_12.txt",
+      "rep_like_single_16.txt",
+      "str_eq_ladder_04.txt",
+      "str_eq_ladder_08.txt",
+      "str_eq_ladder_16.txt",
+      "str_eq_ladder_24.txt",
+      "str_rep_eq_04.txt",
+      "str_rep_eq_08.txt",
+      "str_rep_eq_16.txt",
+      "str_rep_eq_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      for (auto [strategy, strategy_name] : strategies) {
+        sweep_check_direct_vs_throughput(
+          "taxis", name, query_text, events, 585'762, strategy, strategy_name);
+      }
+    }
   }
 }
 
