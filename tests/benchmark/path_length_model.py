@@ -1,4 +1,5 @@
-"""Analytical path-length model (backlog item 1, 2026-10-19 round).
+"""Analytical path-length model (backlog item 1, 2026-10-19 round; separated-
+timing re-fit, Round 3, 2026-11-17).
 
 Estimates L̄ (average number of minterm-tree decisions walked per event) for
 each query from its tree dump plus the dataset's measured per-atom
@@ -7,22 +8,37 @@ result. Fits measured per-event delta (baseline - tree, from an existing
 results CSV) against L̄ and against n (the atom count), to show which one
 actually predicts the data.
 
-Deliberately uses only the "guard-clean" queries (the 2026-10-19 follow-up
-round's 22 queries: all 13 guard twins, rep_eq_*, worst_mix_*, floor_01),
-never the plain originals - several of those have real output and their
-processing time is contaminated by match-formatting cost (see
-guides/thesis-findings/03-benchmarking-methodology.md), which would pollute
-the fit for reasons unrelated to path length.
+Only uses queries with zero real output (checked directly from the CSV's own
+`matches` column, not a filename heuristic - see is_output_clean) - several
+queries have real matches and their processing time is contaminated by
+match-formatting cost (see guides/thesis-findings/03-benchmarking-methodology.md),
+which would pollute the fit for reasons unrelated to path length. This
+replaces the original round's name-based "guard-clean" filter
+(`_guard.txt`/`rep_eq_`/`worst_mix_`/`floor_01`), which happened to agree
+with matches==0 for every query that existed at the time but would wrongly
+exclude `late_exit_thr_*` (zero output via its own built-in
+`household_id=99` guard, not a `_guard.txt` twin) - exactly the family this
+round's refit needs to include.
+
+Runs the fit twice: once against `total_time_s` deltas (the original, fused
+metric, reproduced here on the current query set for comparison) and once
+against `predicate_time_s` deltas (Round 3's separated-timing metric - see
+DirectEvaluator::send_all_split, pure_cpp_throughput.cpp). The point of the
+second fit is to check whether isolating predicate time resolves
+`late_exit_thr_*`'s previously-unexplained miss (see "The out-of-sample
+prediction did not hold" in guides/thesis-findings/05-the-path-length-model.md) -
+its dominant cost is automaton bookkeeping, not predicate evaluation, so the
+fused metric was swamped by a cost the model never modeled, but the
+predicate-only metric shouldn't be.
 
 Usage:
     .venv/bin/python tests/benchmark/path_length_model.py \
         <tree_dump_log> <results_csv>
 
 tree_dump_log: a quill log file produced by running every query in
-queries_optimization/ once under CORE_PRINT_MINTERM_TREES=1 (see
-dump_all_trees.py in this round's scratchpad for how it was produced -
-loops the folder, builds each with MINTERM_TREE, calls get_output() to
-flush the async logger).
+queries_optimization/ once under CORE_PRINT_MINTERM_TREES=1 - see
+TreeDumpAllQueries in pure_cpp_throughput.cpp for how Round 3 produced it
+(the original round's dump_all_trees.py scratchpad script is long gone).
 """
 
 import bisect
@@ -37,12 +53,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SMART_HOMES = PROJECT_ROOT / "src/targets/experiments/smart_homes"
 QUERIES_DIR = SMART_HOMES / "queries_optimization"
 
-# Only these are used for the fit - see module docstring.
-GUARD_CLEAN_PREFIXES = ("rep_eq_", "worst_mix_", "floor_01")
-
-
-def is_guard_clean(name: str) -> bool:
-    return name.endswith("_guard.txt") or name.startswith(GUARD_CLEAN_PREFIXES)
 
 
 # ---- Tree-dump parsing -----------------------------------------------------
@@ -152,8 +162,17 @@ def extract_all_trees(
             f"found {len(starts)} 'Event type 0:' blocks but expected "
             f"{len(query_order)} (one per query) - log/query-list mismatch"
         )
-    trees = {}
+    # A query whose tree hit the leaf cap is evaluated directly instead (see
+    # minterm_tree_evaluator.hpp's print_trees: "Event type 0: evaluated
+    # directly (...)" with no tree printed after it at all) - trees[name] is
+    # None for these; the model has nothing to compute L̄ from, so callers
+    # must skip them rather than treat None as a tree.
+    trees: dict[str, "Node | None"] = {}
     for name, start in zip(query_order, starts):
+        line = msg_lines[start]
+        if ": evaluated directly (" in line:
+            trees[name] = None
+            continue
         root, _ = parse_tree(msg_lines, start + 1)
         trees[name] = root
     return trees, n_real
@@ -259,14 +278,29 @@ def l_bar(root: Node, sel: Selectivity) -> float:
 # ---- CSV join + regression --------------------------------------------------
 
 
-def load_deltas(csv_path: Path) -> dict[str, tuple[float, int]]:
-    """query -> (delta_per_event_us, event_count), strategy=minterm_tree vs baseline."""
-    rows = list(csv.DictReader(open(csv_path, newline="")))
+def load_rows(csv_path: Path) -> list[dict]:
+    return list(csv.DictReader(open(csv_path, newline="")))
+
+
+def clean_queries(rows: list[dict]) -> set[str]:
+    """Queries with zero real output, checked directly from the CSV's own
+    matches column across every row (both strategies, every repeat) - see
+    module docstring for why this replaced the old filename heuristic."""
+    by_query: dict[str, list[int]] = {}
+    for r in rows:
+        by_query.setdefault(r["query"], []).append(int(r["matches"]))
+    return {q for q, ms in by_query.items() if all(m == 0 for m in ms)}
+
+
+def load_deltas(rows: list[dict], time_column: str) -> dict[str, tuple[float, int]]:
+    """query -> (delta_per_event_us, event_count), strategy=minterm_tree vs
+    baseline, for whichever timing column is given (predicate_time_s or
+    total_time_s - see module docstring)."""
     by_query: dict[str, dict[str, list[float]]] = {}
     event_counts: dict[str, int] = {}
     for r in rows:
         by_query.setdefault(r["query"], {}).setdefault(r["strategy"], []).append(
-            float(r["processing_time_s"])
+            float(r[time_column])
         )
         event_counts[r["query"]] = int(r["event_count"])
     out = {}
@@ -343,44 +377,54 @@ def simple_linreg(xs: list[float], ys: list[float]) -> tuple[float, float, float
     return slope, intercept, r2
 
 
-def main():
-    if len(sys.argv) != 3:
-        print(f"usage: {sys.argv[0]} <tree_dump_log> <results_csv>", file=sys.stderr)
-        sys.exit(1)
-    log_path, csv_path = Path(sys.argv[1]), Path(sys.argv[2])
+def run_fit(label: str, time_column: str, query_order, trees, n_real, sel, csv_rows):
+    clean = clean_queries(csv_rows)
+    deltas = load_deltas(csv_rows, time_column)
 
-    query_files = sorted(glob.glob(str(QUERIES_DIR / "*.txt")))
-    query_order = [Path(f).name for f in query_files]
-    trees, n_real = extract_all_trees(log_path, query_order)
-
-    sel = Selectivity(SMART_HOMES / "smart_homes_data.csv")
-    deltas = load_deltas(csv_path)
-
+    print(f"\n{'=' * 70}\n{label}  (delta from {time_column})\n{'=' * 70}")
     print(f"{'query':30s} {'n':>3s} {'L̄':>8s} {'delta(us)':>10s}")
     rows = []
+    skipped_no_tree = []
     for name in query_order:
-        if not is_guard_clean(name) or name not in deltas:
+        if name not in clean or name not in deltas:
             continue
         root = trees[name]
+        if root is None:
+            # Leaf-cap fallback (evaluated directly, no tree built) - L̄ is
+            # undefined, not zero; the model doesn't describe this case.
+            skipped_no_tree.append(name)
+            continue
         n = n_real[name]
-        lbar = l_bar(root, sel)
+        try:
+            lbar = l_bar(root, sel)
+        except ValueError:
+            # An atom shape expected_depth/parse_atom doesn't know how to
+            # estimate selectivity for (e.g. rep_arith_*'s arithmetic
+            # expressions - a different physical-predicate kind than the
+            # attr-OP-value atoms this estimator was built for). Not a bug -
+            # just a query this round's matches==0 filter newly admits that
+            # the existing L̄ estimator was never extended to cover.
+            skipped_no_tree.append(f"{name} (unsupported atom shape)")
+            continue
         delta_us, _ = deltas[name]
         rows.append((name, n, lbar, delta_us))
-        print(f"{name:30s} {n:3d} {lbar:8.3f} {delta_us:10.4f}")
+        flag = "  <-- late_exit_thr_*" if name.startswith("late_exit_thr_") else ""
+        print(f"{name:30s} {n:3d} {lbar:8.3f} {delta_us:10.4f}{flag}")
 
     ns = [r[1] for r in rows]
     lbars = [r[2] for r in rows]
     deltas_us = [r[3] for r in rows]
 
-    print(f"\n{len(rows)} queries used (guard-clean set only)")
+    print(f"\n{len(rows)} queries used (zero-output set)")
+    if skipped_no_tree:
+        print(
+            f"skipped (leaf-cap fallback, no tree to measure L̄ from): "
+            f"{', '.join(skipped_no_tree)}"
+        )
     slope_l, intercept_l, r2_l = simple_linreg(lbars, deltas_us)
     slope_n, intercept_n, r2_n = simple_linreg(ns, deltas_us)
-    print(f"\ndelta ~ L̄ alone:  slope={slope_l:.4f}  intercept={intercept_l:.4f}  R²={r2_l:.4f}")
+    print(f"delta ~ L̄ alone:  slope={slope_l:.4f}  intercept={intercept_l:.4f}  R²={r2_l:.4f}")
     print(f"delta ~ n alone:   slope={slope_n:.4f}  intercept={intercept_n:.4f}  R²={r2_n:.4f}")
-    print(
-        "(neither alone is the right test of the model - it predicts delta from BOTH "
-        "together: delta ~= n*c_predicate - L̄*c_node, not delta ~= f(L̄) alone)"
-    )
 
     # The actual model: delta = a*n + b*L̄ + c, where a estimates c_predicate
     # and -b estimates c_node (b should come out negative: more walking
@@ -394,18 +438,57 @@ def main():
         f"\n  R²                   = {r2_model:.4f}"
     )
 
-    # A simpler one-variable reduction, valid if c_predicate ~= c_node: delta
-    # should then track (n - L̄) directly.
-    n_minus_l = [n - l for n, l in zip(ns, lbars)]
-    slope_nl, intercept_nl, r2_nl = simple_linreg(n_minus_l, deltas_us)
-    print(
-        f"\ndelta ~ (n - L̄), the c_predicate≈c_node simplification:"
-        f"\n  slope={slope_nl:.4f}  intercept={intercept_nl:.4f}  R²={r2_nl:.4f}"
+    # late_exit_thr_* predicted-vs-measured, from this fit's own coefficients -
+    # the direct answer to "does separating the timing resolve its miss?"
+    for r in rows:
+        if r[0].startswith("late_exit_thr_"):
+            name, n, lbar, measured = r
+            predicted = a * n + b * lbar + c
+            print(
+                f"\n{name}: predicted delta = {predicted:.4f} us, "
+                f"measured = {measured:.4f} us, residual = {measured - predicted:.4f} us"
+            )
+
+    return rows, (a, -b, c, r2_model)
+
+
+def main():
+    if len(sys.argv) != 3:
+        print(f"usage: {sys.argv[0]} <tree_dump_log> <results_csv>", file=sys.stderr)
+        sys.exit(1)
+    log_path, csv_path = Path(sys.argv[1]), Path(sys.argv[2])
+
+    query_files = sorted(glob.glob(str(QUERIES_DIR / "*.txt")))
+    query_order = [Path(f).name for f in query_files]
+    trees, n_real = extract_all_trees(log_path, query_order)
+
+    sel = Selectivity(SMART_HOMES / "smart_homes_data.csv")
+    csv_rows = load_rows(csv_path)
+
+    fused_rows, fused_fit = run_fit(
+        "Fused total_time_s (original metric)", "total_time_s",
+        query_order, trees, n_real, sel, csv_rows,
+    )
+    pred_rows, pred_fit = run_fit(
+        "Separated predicate_time_s (Round 3)", "predicate_time_s",
+        query_order, trees, n_real, sel, csv_rows,
     )
 
-    # rep_eq closed-form sanity check: L=1 for every n, so delta should fit
-    # (n-1) * c_predicate with the intercept pinned near 0.
-    rep_rows = [r for r in rows if r[0].startswith("rep_eq_")]
+    print(f"\n{'=' * 70}\nSummary\n{'=' * 70}")
+    print(
+        f"fused:      c_predicate={fused_fit[0]:.4f}  c_node={fused_fit[1]:.4f}  "
+        f"intercept={fused_fit[2]:.4f}  R²={fused_fit[3]:.4f}"
+    )
+    print(
+        f"predicate:  c_predicate={pred_fit[0]:.4f}  c_node={pred_fit[1]:.4f}  "
+        f"intercept={pred_fit[2]:.4f}  R²={pred_fit[3]:.4f}"
+    )
+
+    # rep_eq closed-form sanity check (unaffected by the metric choice in
+    # spirit, but run against whichever rows the predicate-time fit used,
+    # since that's this round's metric of record): L=1 for every n, so delta
+    # should fit (n-1) * c_predicate with the intercept pinned near 0.
+    rep_rows = [r for r in pred_rows if r[0].startswith("rep_eq_")]
     if rep_rows:
         xs = [r[1] - 1 for r in rep_rows]  # (n - 1)
         ys = [r[3] for r in rep_rows]

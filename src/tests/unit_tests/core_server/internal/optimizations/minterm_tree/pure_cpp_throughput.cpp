@@ -27,11 +27,14 @@
 #include "quill/Backend.h"
 // clang-format on
 
+#include <algorithm>
 #include <atomic>
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -108,6 +111,15 @@ class DirectEvaluator {
     auto predicates = std::move(transformer.physical_predicates);
 
     Evaluation::PredicateEvaluator tuple_evaluator(std::move(predicates), strategy);
+    // A cheap copy (two shared_ptrs - see PredicateEvaluator's own fields) kept
+    // purely so send_all_split can time predicate evaluation standalone, in
+    // addition to (not instead of) the real one moved into evaluator_ below.
+    // Safe to call independently of the real one: OptimizedPredicateEvaluator's
+    // own interface contract requires no per-event mutable state (copies are
+    // already shared this way per PARTITION BY partition in production), and
+    // EventWrapper/Event do no caching, so neither copy's timing is biased by
+    // the other having already run.
+    timing_predicate_evaluator_ = tuple_evaluator;
 
     CEQL::FormulaToLogicalCEA visitor(*query_catalog_);
     parsed_query.where.formula->accept_visitor(visitor);
@@ -153,6 +165,43 @@ class DirectEvaluator {
 
   size_t matches() const { return handler_->matches(); }
 
+  struct SplitTiming {
+    double predicate_time_s;
+    double automaton_time_s;
+    double total_time_s;
+  };
+
+  // Times predicate evaluation and the automaton/window/CONSUME BY bookkeeping
+  // separately, instead of only their fused total (what send_all measures).
+  // Per event: times a standalone call to timing_predicate_evaluator_ (see its
+  // own comment in add_query for why this is safe) for predicate time, then
+  // times the real, unmodified evaluator_->process_event() call for the fused
+  // total; automaton time is the difference. total_time_s is returned too, not
+  // just used internally, so it can be cross-checked against send_all's own
+  // number on the same query - expect it to run somewhat slower than send_all
+  // (predicate evaluation happens twice per event here, plus extra
+  // steady_clock::now() calls), which is expected overhead, not a bug.
+  SplitTiming send_all_split(const std::vector<std::shared_ptr<Types::Event>>& events) {
+    double predicate_time_s = 0.0;
+    double total_time_s = 0.0;
+    for (const auto& event : events) {
+      Types::EventWrapper predicate_wrapper(event);
+      auto t0 = std::chrono::steady_clock::now();
+      (void)(*timing_predicate_evaluator_)(predicate_wrapper);
+      auto t1 = std::chrono::steady_clock::now();
+
+      Types::EventWrapper wrapper(event);
+      std::optional<tECS::Enumerator> output = evaluator_->process_event(
+        std::move(wrapper));
+      auto t2 = std::chrono::steady_clock::now();
+
+      handler_->handle_complex_event(std::move(output));
+      predicate_time_s += std::chrono::duration<double>(t1 - t0).count();
+      total_time_s += std::chrono::duration<double>(t2 - t1).count();
+    }
+    return {predicate_time_s, total_time_s - predicate_time_s, total_time_s};
+  }
+
  private:
   Catalog catalog_;
   std::unique_ptr<QueryCatalog> query_catalog_;
@@ -160,6 +209,7 @@ class DirectEvaluator {
   CEQL::Within::TimeWindow time_window_;
   std::unique_ptr<Interface::Module::Query::SingleEvaluator> evaluator_;
   std::unique_ptr<CountingResultHandler> handler_;
+  std::optional<Evaluation::PredicateEvaluator> timing_predicate_evaluator_;
 };
 
 // Same shape as run_query, but through DirectEvaluator instead of
@@ -349,6 +399,197 @@ void sweep_check_direct_vs_throughput(
                            <= 0.10);
   INFO("via_throughput=" << via_throughput << ", via_direct=" << via_direct);
   CHECK(close_enough);
+}
+
+// Validates DirectEvaluator::send_all_split (the predicate-vs-automaton timing
+// split) before committing to a full-corpus run with it. Deliberately small
+// and fast - not the full corpus, 5 repeats not 15. Covers three regimes:
+//   - rep_eq_{03,24,100}.txt: already well-understood (flat 2-leaf tree
+//     regardless of n). Automaton time should be small and roughly constant
+//     across all three sizes and both strategies; predicate time should
+//     reproduce the already-known shape (baseline scaling with n,
+//     minterm_tree flat).
+//   - late_exit_thr_{08,12,16}.txt: backlog item 15's own flagged family
+//     (every predicate true for nearly every event, by design - a 9-alias
+//     sequential pattern). Predicate time should be unremarkable; automaton
+//     time should be large/dominant - if so, this is the first direct
+//     confirmation of item 15's long-standing suspicion, not just an
+//     inference from a confounded fused total.
+//   - eq_ladder_04.txt, thr_ladder_04.txt: already-trusted, moderate-match-
+//     volume queries, as a middle-ground sanity point between the two
+//     extremes above.
+// No CSV - this is throwaway validation output, read directly rather than
+// parsed. The qualitative predictions above are not asserted here (they are
+// a read-the-numbers judgment call, not a crisp pass/fail) - only the hard
+// correctness invariants are REQUIRE'd.
+void run_split_timing_validation(const std::string& query_name,
+                                 const std::string& query_text,
+                                 const std::vector<std::shared_ptr<Types::Event>>& events,
+                                 size_t expected_event_count) {
+  constexpr int kValidationRepeats = 5;
+  INFO("smart_homes / " << query_name << " (split timing validation)");
+  REQUIRE(events.size() == expected_event_count);
+
+  for (auto [strategy, strategy_name] :
+       {std::pair{PredicateEvaluationStrategy::Default, std::string("baseline")},
+        std::pair{PredicateEvaluationStrategy::MintermTree, std::string("minterm_tree")}}) {
+    // A plain DirectEvaluator (the already-trusted send_all path), to confirm
+    // send_all_split's match count agrees with it - the extra standalone
+    // predicate-evaluation call must change nothing about correctness.
+    size_t plain_matches;
+    {
+      DirectEvaluator plain;
+      Types::StreamInfo stream_info = declare_smart_homes_stream(plain);
+      (void)stream_info;
+      plain.add_query(query_text, strategy);
+      plain.send_all(events);
+      plain_matches = plain.matches();
+    }
+
+    for (int repeat = 1; repeat <= kValidationRepeats; repeat++) {
+      DirectEvaluator engine;
+      Types::StreamInfo stream_info = declare_smart_homes_stream(engine);
+      (void)stream_info;
+      double compile_time_s = engine.add_query(query_text, strategy);
+      DirectEvaluator::SplitTiming timing = engine.send_all_split(events);
+      size_t matches = engine.matches();
+
+      if (repeat == 1) {
+        INFO("plain_matches=" << plain_matches << ", split_matches=" << matches);
+        REQUIRE(matches == plain_matches);
+      }
+
+      // Guard against an arithmetic slip - trivially true by construction
+      // (automaton_time_s is defined as total - predicate), checked with a
+      // tight relative tolerance rather than exact == to allow for ordinary
+      // floating-point rounding.
+      double sum = timing.predicate_time_s + timing.automaton_time_s;
+      double diff = (sum > timing.total_time_s) ? (sum - timing.total_time_s)
+                                                : (timing.total_time_s - sum);
+      double tolerance_base = (timing.total_time_s > 1.0) ? timing.total_time_s : 1.0;
+      REQUIRE(diff <= 1e-9 * tolerance_base);
+
+      std::cout << "smart_homes/" << query_name << " [" << strategy_name << "] repeat "
+                << repeat << ": compile " << compile_time_s << "s, predicate "
+                << timing.predicate_time_s << "s, automaton " << timing.automaton_time_s
+                << "s, total " << timing.total_time_s << "s, matches " << matches << "\n";
+    }
+  }
+}
+
+// Round 2's CSV schema - distinct from Row above, which only has one fused
+// timing column (processing_time_s). matches is recorded directly (not via a
+// baseline-comparison flag like Row's matches_baseline) since this round's
+// point is the timing breakdown, not re-litigating correctness the way
+// run_query/run_query_direct's rows do - the baseline-vs-minterm_tree parity
+// check still happens in run_query_split below, just isn't itself a column.
+struct SplitRow {
+  std::string dataset;
+  std::string query;
+  std::string strategy;
+  int repeat;
+  size_t event_count;
+  double compile_time_s;
+  double predicate_time_s;
+  double automaton_time_s;
+  double total_time_s;
+  size_t matches;
+};
+
+void write_split_csv(const std::string& path, const std::vector<SplitRow>& rows) {
+  std::ofstream out(path);
+  REQUIRE(out.is_open());
+  out << "dataset,query,strategy,repeat,event_count,compile_time_s,predicate_time_s,"
+         "automaton_time_s,total_time_s,matches\n";
+  for (const SplitRow& row : rows) {
+    out << row.dataset << "," << row.query << "," << row.strategy << "," << row.repeat
+        << "," << row.event_count << "," << row.compile_time_s << ","
+        << row.predicate_time_s << "," << row.automaton_time_s << "," << row.total_time_s
+        << "," << row.matches << "\n";
+  }
+}
+
+// write_split_csv always overwrites the whole file from the rows it's given -
+// fine for SplitTimingFullCorpus, which keeps every row it has ever written in
+// its own `rows` vector, but wrong for adding a few more queries on top of an
+// existing file written by a separate run. Appends only (no header - the file
+// already has one), for exactly that case (see SplitTimingLateExitThr below).
+void append_split_csv(const std::string& path, const std::vector<SplitRow>& rows) {
+  std::ofstream out(path, std::ios::app);
+  REQUIRE(out.is_open());
+  for (const SplitRow& row : rows) {
+    out << row.dataset << "," << row.query << "," << row.strategy << "," << row.repeat
+        << "," << row.event_count << "," << row.compile_time_s << ","
+        << row.predicate_time_s << "," << row.automaton_time_s << "," << row.total_time_s
+        << "," << row.matches << "\n";
+  }
+}
+
+// Same shape as run_query_direct, but records predicate/automaton/total
+// separately (via send_all_split) instead of one fused processing_time_s -
+// Round 2 of the predicate-vs-automaton split (see run_split_timing_validation
+// above for Round 1, which validated send_all_split itself).
+void run_query_split(const std::string& dataset_name,
+                     const std::string& query_name,
+                     const std::string& query_text,
+                     const std::vector<std::shared_ptr<Types::Event>>& events,
+                     size_t expected_event_count,
+                     std::vector<SplitRow>& rows) {
+  constexpr int kSplitRepeats = 5;
+  INFO(dataset_name << " / " << query_name << " (split)");
+  REQUIRE(events.size() == expected_event_count);
+
+  std::optional<size_t> baseline_matches;
+  for (auto [strategy, strategy_name] :
+       {std::pair{PredicateEvaluationStrategy::Default, std::string("baseline")},
+        std::pair{PredicateEvaluationStrategy::MintermTree, std::string("minterm_tree")}}) {
+    for (int repeat = 1; repeat <= kSplitRepeats; repeat++) {
+      DirectEvaluator engine;
+      Types::StreamInfo stream_info = (dataset_name == "smart_homes")
+                                        ? declare_smart_homes_stream(engine)
+                                        : declare_taxis_stream(engine);
+      (void)stream_info;  // DirectEvaluator doesn't route by stream id - one stream only
+
+      double compile_time_s = engine.add_query(query_text, strategy);
+      DirectEvaluator::SplitTiming timing = engine.send_all_split(events);
+      size_t matches = engine.matches();
+
+      if (strategy_name == "baseline") {
+        if (repeat == 1) baseline_matches = matches;
+      } else if (repeat == 1) {
+        REQUIRE(baseline_matches.has_value());
+        // Same 10%-relative-tolerance rule as run_query_direct - see its own
+        // comment for why exact equality is the wrong bar for queries with
+        // real match volume.
+        size_t diff = (matches > *baseline_matches) ? (matches - *baseline_matches)
+                                                    : (*baseline_matches - matches);
+        bool close_enough = (*baseline_matches == 0)
+                              ? (matches == 0)
+                              : (static_cast<double>(diff)
+                                   / static_cast<double>(*baseline_matches)
+                                 <= 0.10);
+        INFO("baseline matches=" << *baseline_matches
+                                 << ", this strategy matches=" << matches);
+        REQUIRE(close_enough);
+      }
+
+      rows.push_back({dataset_name,
+                      query_name,
+                      strategy_name,
+                      repeat,
+                      events.size(),
+                      compile_time_s,
+                      timing.predicate_time_s,
+                      timing.automaton_time_s,
+                      timing.total_time_s,
+                      matches});
+      std::cout << dataset_name << "/" << query_name << " [" << strategy_name
+                << "] repeat " << repeat << ": compile " << compile_time_s
+                << "s, predicate " << timing.predicate_time_s << "s, automaton "
+                << timing.automaton_time_s << "s, total " << timing.total_time_s
+                << "s, matches " << matches << "\n";
+    }
+  }
 }
 
 }  // namespace
@@ -589,6 +830,260 @@ TEST_CASE("DirectEvaluator parity sweep: full corpus, both strategies",
       }
     }
   }
+}
+
+// Round 1 of the predicate-vs-automaton timing split: builds and validates
+// DirectEvaluator::send_all_split on a small, fast, targeted set before any
+// full-corpus run uses it - see run_split_timing_validation's own comment for
+// which queries and why.
+//
+//   ./build/Debug-opt/tests "[SplitTimingValidation]"
+TEST_CASE("DirectEvaluator split timing: validate predicate vs. automaton separation",
+          "[.][SplitTimingValidation]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+  const std::string base = root + "/src/targets/experiments/smart_homes";
+
+  ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+  Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+  Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+  std::vector<std::shared_ptr<Types::Event>>
+    events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+  for (const std::string& name : {"rep_eq_03.txt",
+                                  "rep_eq_24.txt",
+                                  "rep_eq_100.txt",
+                                  "late_exit_thr_08.txt",
+                                  "late_exit_thr_12.txt",
+                                  "late_exit_thr_16.txt",
+                                  "eq_ladder_04.txt",
+                                  "thr_ladder_04.txt"}) {
+    std::string query_text = read_file(base + "/queries_optimization/" + name);
+    run_split_timing_validation(name, query_text, events, 1'000'000);
+  }
+}
+
+// Round 2 of the predicate-vs-automaton timing split: the full corpus (same
+// lists as DirectEvaluatorParitySweep), both strategies, 5 repeats, writing
+// predicate_time_s/automaton_time_s/total_time_s/compile_time_s per row
+// instead of one fused processing_time_s. late_exit_thr_{08,12,16}.txt are
+// deliberately excluded here - Round 1 (SplitTimingValidation) already
+// measured them with this exact method (5 repeats, both strategies); re-
+// running them would cost ~15-20 minutes for no new information, since they
+// are by far the most expensive family found so far (automaton time 40-88s
+// per single repeat). Merge Round 1's three rows for that family into this
+// round's CSV by hand before building the artifact.
+//
+// Written after every query, not just once at the end, so a run stopped
+// partway through still leaves usable data (same defensive pattern
+// PureCppFullRundown uses, for the same reason - this is a long run).
+//
+//   ./build/Debug-opt/tests "[SplitTimingFullCorpus]"
+TEST_CASE("DirectEvaluator split timing: full corpus", "[.][SplitTimingFullCorpus]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+  std::vector<SplitRow> rows;
+  std::string out_path = root + "/tests/benchmark/results/split_timing_full_corpus.csv";
+
+  {
+    const std::string base = root + "/src/targets/experiments/smart_homes";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+    // Same list as DirectEvaluatorParitySweep, minus late_exit_thr_{08,12,16}.txt
+    // (reused from Round 1 instead - see this test's own top comment).
+    const std::vector<std::string> names = {
+      "control_eq_01.txt",
+      "control_eq_01_guard.txt",
+      "control_thr_01.txt",
+      "control_thr_01_guard.txt",
+      "eq_ladder_04.txt",
+      "eq_ladder_04_guard.txt",
+      "eq_ladder_08.txt",
+      "eq_ladder_08_guard.txt",
+      "eq_ladder_16.txt",
+      "eq_ladder_16_guard.txt",
+      "floor_01.txt",
+      "mix_grouped_08.txt",
+      "mix_grouped_08_guard.txt",
+      "mix_grouped_16.txt",
+      "mix_grouped_16_guard.txt",
+      "mix_interleaved_08.txt",
+      "mix_interleaved_08_guard.txt",
+      "mix_interleaved_16.txt",
+      "mix_interleaved_16_guard.txt",
+      "rep_arith_int_single_08.txt",
+      "rep_arith_int_single_24.txt",
+      "rep_arith_single_03.txt",
+      "rep_arith_single_04.txt",
+      "rep_arith_single_08.txt",
+      "rep_arith_single_16.txt",
+      "rep_arith_single_24.txt",
+      "rep_eq_03.txt",
+      "rep_eq_04.txt",
+      "rep_eq_08.txt",
+      "rep_eq_16.txt",
+      "rep_eq_24.txt",
+      "rep_eq_50.txt",
+      "rep_eq_100.txt",
+      "rep_eq_150.txt",
+      "rep_eq_200.txt",
+      "rep_eq_single_03.txt",
+      "rep_eq_single_04.txt",
+      "rep_eq_single_08.txt",
+      "rep_eq_single_16.txt",
+      "rep_eq_single_24.txt",
+      "thr_ladder_04.txt",
+      "thr_ladder_04_guard.txt",
+      "thr_ladder_08.txt",
+      "thr_ladder_08_guard.txt",
+      "thr_ladder_16.txt",
+      "thr_ladder_16_guard.txt",
+      "thr_ladder_24.txt",
+      "thr_ladder_24_guard.txt",
+      "worst_mix_03.txt",
+      "worst_mix_08.txt",
+      "worst_mix_16.txt",
+      "worst_mix_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      run_query_split("smart_homes", name, query_text, events, 1'000'000, rows);
+      write_split_csv(out_path, rows);
+    }
+  }
+
+  {
+    const std::string base = root + "/src/targets/experiments/taxis";
+    ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+    Types::StreamInfo probe_stream = declare_taxis_stream(probe);
+    Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+    std::vector<std::shared_ptr<Types::Event>>
+      events = read_taxis_events(base + "/taxi_data.csv", event_type);
+
+    const std::vector<std::string> names = {
+      "floor_01.txt",
+      "rep_like_single_03.txt",
+      "rep_like_single_04.txt",
+      "rep_like_single_08.txt",
+      "rep_like_single_12.txt",
+      "rep_like_single_16.txt",
+      "str_eq_ladder_04.txt",
+      "str_eq_ladder_08.txt",
+      "str_eq_ladder_16.txt",
+      "str_eq_ladder_24.txt",
+      "str_rep_eq_04.txt",
+      "str_rep_eq_08.txt",
+      "str_rep_eq_16.txt",
+      "str_rep_eq_24.txt",
+    };
+    for (const std::string& name : names) {
+      std::string query_text = read_file(base + "/queries_optimization/" + name);
+      run_query_split("taxis", name, query_text, events, 585'762, rows);
+      write_split_csv(out_path, rows);
+    }
+  }
+
+  std::cout << "Wrote " << rows.size() << " rows to " << out_path << "\n";
+}
+
+// Round 1's late_exit_thr_{08,12,16} numbers (the backlog-item-15 finding -
+// automaton time 10-12x predicate time) were only ever printed to a
+// scratchpad log, never written to a CSV (SplitTimingValidation never calls
+// write_split_csv) - and that log has since been cleared by session
+// rotation. Re-measures the same 3 queries and appends them to
+// SplitTimingFullCorpus's own CSV (append_split_csv, not write_split_csv -
+// this must not clobber the 660 rows already there), so this family isn't
+// missing from the combined dataset backlog item 1's refit needs.
+//
+//   ./build/Debug-opt/tests "[SplitTimingLateExitThr]"
+TEST_CASE("DirectEvaluator split timing: late_exit_thr_* (re-run, append)",
+          "[.][SplitTimingLateExitThr]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+  const std::string base = root + "/src/targets/experiments/smart_homes";
+  std::string out_path = root + "/tests/benchmark/results/split_timing_full_corpus.csv";
+
+  ThroughputEngine probe(PredicateEvaluationStrategy::Default);
+  Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+  Types::UniqueEventTypeId event_type = probe_stream.events_info.at(0).id;
+
+  std::vector<std::shared_ptr<Types::Event>>
+    events = read_smart_homes_events(base + "/smart_homes_data.csv", event_type);
+
+  for (const std::string& name :
+       {"late_exit_thr_08.txt", "late_exit_thr_12.txt", "late_exit_thr_16.txt"}) {
+    std::string query_text = read_file(base + "/queries_optimization/" + name);
+    std::vector<SplitRow> rows;
+    run_query_split("smart_homes", name, query_text, events, 1'000'000, rows);
+    append_split_csv(out_path, rows);
+    std::cout << "Appended " << rows.size() << " rows for " << name << " to " << out_path
+              << "\n";
+  }
+}
+
+// A tree-dump log for backlog item 1's path-length model
+// (tests/benchmark/path_length_model.py,
+// guides/thesis-findings/05-the-path-length-model.md): builds every
+// smart_homes query once with MintermTree strategy - no event processing
+// needed, just the build - with logging toggled to Info only around each
+// build (the same pattern RepEqSweep uses above), so
+// optimized_predicate_evaluator_factory.cpp's own LOG_INFO line prints the
+// tree. Iterates in sorted-filename order to match path_length_model.py's
+// own sorted(glob.glob(...)), which zips query names with the blocks it
+// finds in the log in that order - a mismatch there silently misattributes
+// every tree from that point on.
+//
+//   CORE_PRINT_MINTERM_TREES=1 ./build/Debug-opt/tests "[TreeDumpAllQueries]"
+TEST_CASE("Dump minterm trees for every smart_homes query", "[.][TreeDumpAllQueries]") {
+  if (!is_minterm_tree_available()) {
+    SKIP("The minterm-tree optimization is not built into this configuration");
+  }
+
+  const std::string root = CORE_SOURCE_ROOT;
+  const std::string base = root + "/src/targets/experiments/smart_homes";
+  const std::string queries_dir = base + "/queries_optimization";
+
+  std::vector<std::string> names;
+  for (const auto& entry : std::filesystem::directory_iterator(queries_dir)) {
+    if (entry.path().extension() == ".txt") {
+      names.push_back(entry.path().filename().string());
+    }
+  }
+  std::sort(names.begin(), names.end());
+  // All 55 files there are real queries (confirmed when this test was
+  // written) - a count mismatch means a stray non-query file landed in this
+  // directory, which would silently desync the Python parser's zip.
+  REQUIRE(names.size() == 55);
+
+  quill::Logger* logger = Logging::enable_logging_stdout();
+  for (const std::string& name : names) {
+    std::string query_text = read_file(queries_dir + "/" + name);
+    logger->set_log_level(quill::LogLevel::Info);
+    {
+      DirectEvaluator probe;
+      Types::StreamInfo probe_stream = declare_smart_homes_stream(probe);
+      (void)probe_stream;
+      probe.add_query(query_text, PredicateEvaluationStrategy::MintermTree);
+    }
+    logger->set_log_level(quill::LogLevel::None);
+  }
+  std::cout << "Dumped trees for " << names.size() << " queries\n";
 }
 
 }  // namespace CORE::Internal::Optimizations::MintermTree::UnitTests
