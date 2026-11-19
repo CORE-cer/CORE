@@ -27,7 +27,7 @@ Build-script flags shared by all of the above (`scripts/common.sh`): `-b <type>`
 
 ### C++ phase timing (Tracy, `core_bench`)
 
-`core_bench` (`src/tests/benchmarking/`) runs one query with one strategy through the real evaluation path, one run per process. With a `--profiling` build, `tests/benchmark/tracy_runs.py` captures each run as a `.tracy` file and `tests/benchmark/tracy_to_csv.py` turns them into per-zone and per-phase CSVs (compile, predicate evaluation, transitions, tECS, window, output). **Benchmark Release builds only** — Debug here is `-O0`. A profiling binary waits at exit for a profiler (`TRACY_NO_EXIT`), so always run it through `tracy_runs.py`. Full reference: `guides/benchmarking/08-tracy-profiling.md`.
+`core_bench` (`src/tests/benchmarking/`) runs one query with one strategy through the real evaluation path, one run per process. With a `--profiling` build, `tests/benchmark/tracy_runs.py` captures each run as a `.tracy` file and `tests/benchmark/tracy_to_csv.py` turns them into per-zone and per-phase CSVs (compile, predicate evaluation, transitions, tECS, window, output). **Benchmark Release builds only** — Debug here is `-O0`. A profiling binary waits at exit for a profiler (`TRACY_NO_EXIT`), so always run it through `tracy_runs.py`. `core_bench --dump-tree` only builds the query and prints its minterm trees; `tests/benchmark/path_length_model.py` calls it once per query. Full reference: `guides/benchmarking/08-tracy-profiling.md`.
 
 ### Optional optimizations (minterm tree)
 

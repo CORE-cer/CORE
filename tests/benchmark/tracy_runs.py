@@ -246,7 +246,9 @@ def main() -> None:
         if summary is not None:
             row.update({k: v for k, v in summary.items() if k in FIELDS})
             row["status"] = status
-        exp = expected.get(dataset, {}).get(query)
+        # expected_results holds full-file counts, so a run cut short with
+        # --max-events cannot be checked against it.
+        exp = expected.get(dataset, {}).get(query) if args.max_events == 0 else None
         if exp is not None and status == "ok":
             row["expected_matches"] = exp
             row["verified"] = str(int(row["matches"]) == exp)

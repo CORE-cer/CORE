@@ -13,10 +13,15 @@
 //                 second copy of the predicate evaluator), kept to validate the
 //                 methods against each other (guides/backlog.md item 23).
 //
+// --dump-tree     builds the query only (no events, no timing) with the minterm
+//                 trees printed through the engine's own log line
+//                 (optimized_predicate_evaluator_factory.cpp, CORE_PRINT_MINTERM_TREES),
+//                 for tests/benchmark/path_length_model.py.
+//
 // Usage:
 //   core_bench --dataset smart_homes --query rep_eq_24.txt --strategy minterm_tree
 //              [--query-dir queries_optimization|queries] [--method plain|split]
-//              [--max-events 200000] [--repeat 1] [--out-json run.json]
+//              [--max-events 200000] [--repeat 1] [--out-json run.json] [--dump-tree]
 // Exit codes: 0 ok, 1 error, 3 query not supported yet (e.g. PARTITION BY).
 // See guides/benchmarking/08-tracy-profiling.md.
 
@@ -27,6 +32,7 @@
 #include <argparse/argparse.hpp>
 #include <chrono>
 #include <cstddef>
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -67,7 +73,7 @@ struct StrategyConfig {
   StringEqualityStrategy string_equality;
 };
 
-// Same strategy names as tests/benchmark/compile_vs_processing.py.
+// Strategy names, as used by tests/benchmark/tracy_runs.py --strategies.
 StrategyConfig strategy_from_name(const std::string& name) {
   using PES = PredicateEvaluationStrategy;
   using AOS = AtomOrderingStrategy;
@@ -148,6 +154,10 @@ int run(int argc, char** argv) {
   program.add_argument("--out-json")
     .default_value(std::string{})
     .help("also write the JSON summary to this file");
+  program.add_argument("--dump-tree")
+    .default_value(false)
+    .implicit_value(true)
+    .help("only build the query and print its minterm trees (no events, no timing)");
   program.parse_args(argc, argv);
 
   const std::string dataset = program.get<std::string>("--dataset");
@@ -178,6 +188,28 @@ int run(int argc, char** argv) {
   Bench::BenchEvaluator engine;
   CORE::Types::StreamInfo stream_info = engine.declare_stream(
     Bench::read_file(base + "/declaration.core"));
+
+  if (program.get<bool>("--dump-tree")) {
+    // The tree is printed by the factory's own LOG_INFO lines while the query
+    // compiles, so logging is switched on only around add_query and flushed
+    // before exiting (quill's backend thread writes asynchronously).
+    setenv("CORE_PRINT_MINTERM_TREES", "1", /*overwrite=*/1);
+    logger->set_log_level(quill::LogLevel::Info);
+    int code = 0;
+    try {
+      engine.add_query(query_text,
+                       config.strategy,
+                       config.atom_ordering,
+                       config.string_equality,
+                       /*keep_split_copy=*/false);
+    } catch (const Bench::UnsupportedQuery& error) {
+      std::cerr << "core_bench: " << error.what() << std::endl;
+      code = 3;
+    }
+    logger->flush_log();
+    logger->set_log_level(quill::LogLevel::None);
+    return code;
+  }
 
   std::vector<std::shared_ptr<CORE::Types::Event>> all_events;
   {

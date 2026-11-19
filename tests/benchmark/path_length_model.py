@@ -20,32 +20,36 @@ exclude `late_exit_thr_*` (zero output via its own built-in
 `household_id=99` guard, not a `_guard.txt` twin) - exactly the family this
 round's refit needs to include.
 
-Runs the fit twice: once against `total_time_s` deltas (the original, fused
-metric, reproduced here on the current query set for comparison) and once
-against `predicate_time_s` deltas (Round 3's separated-timing metric - see
-DirectEvaluator::send_all_split, pure_cpp_throughput.cpp). The point of the
-second fit is to check whether isolating predicate time resolves
-`late_exit_thr_*`'s previously-unexplained miss (see "The out-of-sample
-prediction did not hold" in guides/thesis-findings/05-the-path-length-model.md) -
-its dominant cost is automaton bookkeeping, not predicate evaluation, so the
-fused metric was swamped by a cost the model never modeled, but the
-predicate-only metric shouldn't be.
+Runs the fit twice, on the core_bench pipeline's Release results (a
+run_overnight.sh results directory):
+  * total: plain-chrono `loop_s` from s1_corpus_chrono/manifest.csv (the
+    ground truth for totals, see guides/benchmarking/08-tracy-profiling.md,
+    "Which method to use");
+  * predicate: corrected Tracy `predicate_corr_s` from
+    s2_corpus_tracy/tracy_phases.csv (the phase split).
+The predicate fit is the one that matters for `late_exit_thr_*`, whose
+dominant cost is automaton bookkeeping rather than predicate evaluation (see
+"The out-of-sample prediction did not hold" in
+guides/thesis-findings/05-the-path-length-model.md).
 
 Usage:
     .venv/bin/python tests/benchmark/path_length_model.py \
-        <tree_dump_log> <results_csv>
+        --results tests/benchmark/results/overnight/20261118 \
+        [--build-dir build/Release-opt] [--tree-log <existing dump>]
 
-tree_dump_log: a quill log file produced by running every query in
-queries_optimization/ once under CORE_PRINT_MINTERM_TREES=1 - see
-TreeDumpAllQueries in pure_cpp_throughput.cpp for how Round 3 produced it
-(the original round's dump_all_trees.py scratchpad script is long gone).
+The tree dump is produced by running `core_bench --dump-tree` once per query
+in queries_optimization/ (sorted order, which the parser relies on) and is
+saved as <results>/tree_dump_smart_homes.log. --tree-log reuses an existing
+dump instead.
 """
 
 import bisect
 import csv
 import glob
 import re
+import argparse
 import statistics as st
+import subprocess
 import sys
 from pathlib import Path
 
@@ -282,6 +286,37 @@ def load_rows(csv_path: Path) -> list[dict]:
     return list(csv.DictReader(open(csv_path, newline="")))
 
 
+def load_pipeline_rows(results: Path) -> tuple[list[dict], list[dict]]:
+    """smart_homes rows from a run_overnight.sh results directory, renamed to
+    the columns this model reads: (total rows with `total_time_s` = plain
+    chrono loop_s, predicate rows with `predicate_time_s` = corrected Tracy
+    predicate_corr_s). Both keep query/strategy/event_count/matches."""
+    total = []
+    for r in load_rows(results / "s1_corpus_chrono" / "manifest.csv"):
+        if r["dataset"] == "smart_homes" and r["status"] == "ok":
+            total.append({**r, "total_time_s": r["loop_s"]})
+    predicate = []
+    for r in load_rows(results / "s2_corpus_tracy" / "tracy_phases.csv"):
+        if r["dataset"] == "smart_homes":
+            predicate.append({**r, "predicate_time_s": r["predicate_corr_s"]})
+    return total, predicate
+
+
+def dump_trees(build_dir: Path, query_order: list[str], out_path: Path) -> Path:
+    """Runs core_bench --dump-tree for every query, in query_order (the order
+    extract_all_trees zips names with blocks), into one log file."""
+    core_bench = build_dir / "core_bench"
+    with open(out_path, "w") as out:
+        for name in query_order:
+            result = subprocess.run(
+                [str(core_bench), "--dataset", "smart_homes", "--query", name,
+                 "--strategy", "minterm_tree", "--dump-tree"],
+                capture_output=True, text=True, check=True,
+            )
+            out.write(result.stdout)
+    return out_path
+
+
 def clean_queries(rows: list[dict]) -> set[str]:
     """Queries with zero real output, checked directly from the CSV's own
     matches column across every row (both strategies, every repeat) - see
@@ -453,25 +488,31 @@ def run_fit(label: str, time_column: str, query_order, trees, n_real, sel, csv_r
 
 
 def main():
-    if len(sys.argv) != 3:
-        print(f"usage: {sys.argv[0]} <tree_dump_log> <results_csv>", file=sys.stderr)
-        sys.exit(1)
-    log_path, csv_path = Path(sys.argv[1]), Path(sys.argv[2])
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--results", type=Path, required=True,
+                        help="a run_overnight.sh results directory (needs S1 and S2)")
+    parser.add_argument("--build-dir", type=Path, default=PROJECT_ROOT / "build/Release-opt",
+                        help="where core_bench lives (for the tree dump)")
+    parser.add_argument("--tree-log", type=Path,
+                        help="reuse this tree dump instead of running core_bench")
+    args = parser.parse_args()
 
     query_files = sorted(glob.glob(str(QUERIES_DIR / "*.txt")))
     query_order = [Path(f).name for f in query_files]
+    log_path = args.tree_log or dump_trees(
+        args.build_dir, query_order, args.results / "tree_dump_smart_homes.log")
     trees, n_real = extract_all_trees(log_path, query_order)
 
     sel = Selectivity(SMART_HOMES / "smart_homes_data.csv")
-    csv_rows = load_rows(csv_path)
+    total_rows, predicate_rows = load_pipeline_rows(args.results)
 
     fused_rows, fused_fit = run_fit(
-        "Fused total_time_s (original metric)", "total_time_s",
-        query_order, trees, n_real, sel, csv_rows,
+        "Total time (plain chrono loop_s)", "total_time_s",
+        query_order, trees, n_real, sel, total_rows,
     )
     pred_rows, pred_fit = run_fit(
-        "Separated predicate_time_s (Round 3)", "predicate_time_s",
-        query_order, trees, n_real, sel, csv_rows,
+        "Predicate time (Tracy predicate_corr_s)", "predicate_time_s",
+        query_order, trees, n_real, sel, predicate_rows,
     )
 
     print(f"\n{'=' * 70}\nSummary\n{'=' * 70}")
