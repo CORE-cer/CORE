@@ -5,7 +5,9 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tracy/Tracy.hpp>
 #include <utility>
+#include <vector>
 
 #include "core_server/internal/ceql/cel_formula/formula/visitors/formula_to_logical_cea.hpp"
 #include "core_server/internal/ceql/query/query.hpp"
@@ -14,6 +16,7 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/det_cea/det_cea.hpp"
 #include "core_server/internal/evaluation/enumeration/tecs/enumerator.hpp"
+#include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
@@ -42,38 +45,62 @@ class SimpleQuery : public GenericQuery {
 
  private:
   void create_query(Internal::CEQL::Query&& query, const EngineOptions& options) override {
-    Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
-      this->query_catalog);
-
-    query = transformer(std::move(query));
-
-    auto predicates = std::move(transformer.physical_predicates);
+    // Each compile step is its own Tracy zone (Compile::*, the same names
+    // core_bench's BenchEvaluator::add_query uses), so the real server path can
+    // be profiled step by step. Two ZoneScopedN may never share a scope, hence
+    // one block per zone, with the results declared before the blocks.
+    std::vector<std::unique_ptr<Internal::CEA::PhysicalPredicate>> predicates;
+    {
+      ZoneScopedN("Compile::annotate_predicates");
+      Internal::CEQL::AnnotatePredicatesWithNewPhysicalPredicates transformer(
+        this->query_catalog);
+      query = transformer(std::move(query));
+      predicates = std::move(transformer.physical_predicates);
+    }
 
     // The strategy decides whether events are evaluated with the original loop
     // or with an optimized evaluator that is built once here, for this query.
-    auto tuple_evaluator = Internal::Evaluation::PredicateEvaluator(
-      std::move(predicates),
-      options.predicate_evaluation,
-      options.atom_ordering,
-      options.string_equality);
-
-    auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
-    query.where.formula->accept_visitor(visitor);
-    if (!query.select.is_star) {
-      query.select.formula->accept_visitor(visitor);
+    std::optional<Internal::Evaluation::PredicateEvaluator> tuple_evaluator;
+    {
+      ZoneScopedN("Compile::predicate_evaluator");
+      tuple_evaluator.emplace(std::move(predicates),
+                              options.predicate_evaluation,
+                              options.atom_ordering,
+                              options.string_equality);
     }
 
-    Internal::CEA::DetCEA cea(Internal::CEA::CEA(std::move(visitor.current_cea)));
+    std::optional<Internal::CEA::CEA> nondet_cea;
+    {
+      ZoneScopedN("Compile::formula_to_logical_cea");
+      auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);
+      query.where.formula->accept_visitor(visitor);
+      if (!query.select.is_star) {
+        query.select.formula->accept_visitor(visitor);
+      }
+      {
+        ZoneScopedN("Compile::cea");
+        nondet_cea.emplace(std::move(visitor.current_cea));
+      }
+    }
+
+    std::optional<Internal::CEA::DetCEA> cea;
+    {
+      ZoneScopedN("Compile::det_cea");
+      cea.emplace(std::move(*nondet_cea));
+    }
 
     this->time_window = query.within.time_window;
 
-    evaluator = std::make_unique<SingleEvaluator>(std::move(cea),
-                                                  std::move(tuple_evaluator),
-                                                  this->time_of_expiration,
-                                                  query.consume_by.policy,
-                                                  query.limit,
-                                                  this->time_window,
-                                                  this->query_catalog);
+    {
+      ZoneScopedN("Compile::evaluator");
+      evaluator = std::make_unique<SingleEvaluator>(std::move(*cea),
+                                                    std::move(*tuple_evaluator),
+                                                    this->time_of_expiration,
+                                                    query.consume_by.policy,
+                                                    query.limit,
+                                                    this->time_window,
+                                                    this->query_catalog);
+    }
   }
 
   std::optional<tECS::Enumerator> process_event(Types::EventWrapper&& event) override {

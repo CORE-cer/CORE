@@ -182,7 +182,6 @@ class BasePolicy {
 
   void start() {
     worker_thread = std::thread([&]() {
-      ZoneScopedN("BasePolicy::start::worker_thread");  //NOLINT
       while (!stop_condition) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         try_add_tuples_to_send_queue();
