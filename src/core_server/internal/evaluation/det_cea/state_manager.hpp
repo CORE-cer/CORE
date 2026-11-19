@@ -14,6 +14,7 @@
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
 #include "shared/datatypes/bitset.hpp"
+#include "shared/profiling/zones.hpp"
 #include "state.hpp"
 
 namespace CORE::Internal::CEA::Det {
@@ -72,6 +73,7 @@ class StateManager {
   }
 
   void unpin_states(const std::vector<State*>& evicted_states) {
+    ZoneScopedN("StateManager::unpin_states");
     for (State* state : evicted_states) {
       state->unpin();
       if (state->is_evictable()) {
@@ -91,6 +93,7 @@ class StateManager {
   }
 
   State* create_or_return_existing_state(Bitset bitset, CEA& cea) {
+    CORE_ZONE_FINE("StateManager::create_state");
     auto it = states_bitset_to_index.find(bitset);
     if (it != states_bitset_to_index.end()) {
       assert(it->second < states.size());

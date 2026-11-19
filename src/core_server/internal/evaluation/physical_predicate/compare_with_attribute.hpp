@@ -9,7 +9,6 @@
 #include <set>
 #include <string>
 #include <string_view>
-#include <tracy/Tracy.hpp>
 #include <type_traits>
 
 #include "cassert"
@@ -19,6 +18,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -75,7 +75,7 @@ class CompareWithAttribute : public PhysicalPredicate {
   size_t right_position() const { return second_pos; }
 
   bool eval(Types::EventWrapper& event) override {
-    ZoneScopedN("CompareWithAttribute::eval()");
+    CORE_ZONE_FINE("CompareWithAttribute::eval()");
     const typename ToCoreType<LeftValueType>::type&
       pos1 = event.get_attribute_at_index<typename ToCoreType<LeftValueType>::type>(
         first_pos);

@@ -21,6 +21,13 @@ Key scripts:
 | `scripts/install_dependencies.sh` | Install vcpkg dependencies |
 | `scripts/build_grammar.sh` | Regenerate ANTLR grammar files |
 | `scripts/build_pycer.sh` | Build Python bindings wheel (supports `-s address`/`-s thread` for sanitizers, `-b Debug`/`-b Release` for build type, `-o` for the optional optimizations) |
+| `scripts/build_tracy_tools.sh` | Build `tracy-capture` / `tracy-csvexport` into `build/tracy-tools/bin/` (needed for Tracy phase timing, see below) |
+
+Build-script flags shared by all of the above (`scripts/common.sh`): `-b <type>`, `-o`, `-s <sanitizer>`, `--profiling` / `--profiling-fine` (Tracy zones; these builds go to their own `build/<type>[-opt]-prof[-fine]` dir), `--target <cmake target>` (build only that target, e.g. `core_bench`).
+
+### C++ phase timing (Tracy, `core_bench`)
+
+`core_bench` (`src/tests/benchmarking/`) runs one query with one strategy through the real evaluation path, one run per process. With a `--profiling` build, `tests/benchmark/tracy_runs.py` captures each run as a `.tracy` file and `tests/benchmark/tracy_to_csv.py` turns them into per-zone and per-phase CSVs (compile, predicate evaluation, transitions, tECS, window, output). **Benchmark Release builds only** — Debug here is `-O0`. A profiling binary waits at exit for a profiler (`TRACY_NO_EXIT`), so always run it through `tracy_runs.py`. Full reference: `guides/benchmarking/08-tracy-profiling.md`.
 
 ### Optional optimizations (minterm tree)
 
@@ -30,7 +37,7 @@ Experimental optimizations live in `src/core_server/internal/optimizations/` and
 - **Runtime switch**: a server chooses how predicates are evaluated with `EngineOptions.predicate_evaluation` (C++) or `pycer.PyOfflineServer(predicate_evaluation=pycer.PyPredicateEvaluation.MINTERM_TREE)` / `PyOnlineServer(..., predicate_evaluation=...)` (Python). The default is the original evaluation; requesting `MINTERM_TREE` on a build without `-o` raises an error at server construction.
 - **Optional atom ordering**: when `MINTERM_TREE` is active, `EngineOptions.atom_ordering` (C++) or the `atom_ordering=` kwarg (`pycer.PyAtomOrdering.MOST_SHARED_ATTRIBUTES_FIRST`, Python) can reorder atoms before a tree is built, which can shrink the tree once combined with the leaf-merging pass below. Defaults to `AS_DISCOVERED` (today's order, no behaviour change).
 - **Optional string-literal equality**: when `MINTERM_TREE` is active, `EngineOptions.string_equality` (C++) or the `string_equality=` kwarg (`pycer.PyStringEquality.INTERNED_EQUALITY`, Python) models `attr = "literal"`/`attr != "literal"` by interning each distinct literal to an integer, instead of leaving it opaque. Exact, not approximate; `LIKE`/regex and string ordering comparisons stay opaque either way. Defaults to `OPAQUE` (today's behaviour, no change).
-- **Re-run the tests through the optimization**: C++ unit suite with `CORE_TEST_PREDICATE_EVALUATION=minterm_tree ./build/Debug-opt/tests`; e2e with `uv run pytest tests/e2e/ -v --server-mode offline --predicate-evaluation minterm_tree` (pycer built with `scripts/build_pycer.sh -o`). Results must be identical to the default.
+- **Re-run the tests through the optimization**: C++ unit suite with `CORE_TEST_PREDICATE_EVALUATION=minterm_tree ./build/Debug-opt/tests`; e2e with `.venv/bin/pytest tests/e2e/ -v --server-mode offline --predicate-evaluation minterm_tree` (pycer built with `scripts/build_pycer.sh -o`) — **use `.venv/bin/pytest`, not `uv run pytest`: the latter silently rebuilds pycer without `-o`** (see tier 4 below for why). Results must be identical to the default.
 - `scripts/clang_tidy_check_all_files.sh` skips the Z3-dependent files unless `-o` is passed.
 - **What the `[Optimizations]` tests cover** (`src/tests/unit_tests/core_server/internal/optimizations/`). The baseline `PredicateEvaluator` is the ground truth everywhere: the tests compare the optimized output with it, or check an internal property of the module.
   - `tree_core/` (no Z3, so it also runs in the default build): the generic tree, algebra defaults, atom extractor and the speculation-safety analysis, checked against a toy algebra whose answers are brute-forced.
@@ -73,7 +80,7 @@ Use the appropriate tier based on where you are in the development cycle:
    LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) .venv/bin/pytest tests/e2e/ -v -s -k "q1_ or q10_"
    ```
    Runs e2e query tests through sanitizer-instrumented C++ code for memory/threading bug detection.
-   - Do NOT use `uv run` — it silently rebuilds pycer without sanitizer flags. Use `.venv/bin/pytest` directly instead.
+   - Do NOT use `uv run` — it silently re-runs `uv sync` with no config settings at all, rebuilding pycer with neither sanitizer flags nor `-o` (confirmed by direct test: this produced 98/98 e2e failures reading as "the minterm-tree optimization was requested but this build does not include it", not a real regression). Use `.venv/bin/pytest` directly instead, for sanitizers *and* whenever `-o`/`--predicate-evaluation minterm_tree` is involved.
    - `LD_PRELOAD` is needed because clang doesn't add the sanitizer runtime to pycer.so's NEEDED entries. It force-loads the runtime before Python loads the extension.
    - Use `-k "q1_ or q10_"` to run a subset of tests — sanitizer e2e tests are slow.
    - **Pass suppression files** when running e2e tests — `scripts/common.sh` sets these for build scripts, but pytest runs outside that shell. Use `TSAN_OPTIONS="suppressions=tsan_suppressions.txt"` or `ASAN_OPTIONS="suppressions=asan_suppressions.txt"` as needed.

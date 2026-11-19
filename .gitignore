@@ -39,6 +39,9 @@ src/targets/experiments/taxis/benchmark.csv
 # personal reference docs (see guides/README.md)
 /guides/
 
+# raw local benchmark output (tests/benchmark/compile_vs_processing.py)
+/tests/benchmark/results/
+
 .direnv
 
 events_*

@@ -67,12 +67,37 @@ message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
 Set(FETCHCONTENT_QUIET FALSE)
 
+# --- Profiling (Tracy) ---------------------------------------------------------
+# PROFILING turns the ZoneScopedN markers spread through the engine into real
+# Tracy zones; off, they compile to nothing. PROFILING_FINE additionally enables
+# CORE_ZONE_FINE markers (src/shared/profiling/zones.hpp): per-atom, per-tECS-op
+# zones that fire so often their own overhead distorts the coarse numbers, so
+# they are opt-in. See guides/benchmarking/08-tracy-profiling.md.
+option(PROFILING "Enable Tracy profiling zones" OFF)
+option(PROFILING_FINE "Also enable fine-grained (high-frequency) Tracy zones" OFF)
+if(PROFILING_FINE AND NOT PROFILING)
+  message(FATAL_ERROR "PROFILING_FINE requires PROFILING=ON")
+endif()
+
 # Tracy must be configured BEFORE FetchContent_MakeAvailable so that
 # its CMakeLists.txt sees the correct TRACY_ENABLE value.
 if (PROFILING)
   set(TRACY_ENABLE ON CACHE BOOL "Enable Tracy" FORCE)
+  # The process waits at exit until a profiler has received all data, so a
+  # headless tracy-capture never loses the tail of a run.
   set(TRACY_NO_EXIT ON CACHE BOOL "No Exit Tracy" FORCE)
-  set(TRACY_DEBUGINFOD ON CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+  # Only explicit zones are wanted: no sampling, system tracing or call stacks,
+  # which add background threads and noise to what is a timing measurement.
+  # (Call stacks were also what needed debuginfod, i.e. libdebuginfod-dev.)
+  set(TRACY_DEBUGINFOD OFF CACHE BOOL "Use DEBUGINFOD Tracy" FORCE)
+  set(TRACY_NO_SAMPLING ON CACHE BOOL "Disable call stack sampling" FORCE)
+  set(TRACY_NO_SYSTEM_TRACING ON CACHE BOOL "Disable systrace sampling" FORCE)
+  set(TRACY_NO_CONTEXT_SWITCH ON CACHE BOOL "Disable context switch capture" FORCE)
+  set(TRACY_NO_CALLSTACK ON CACHE BOOL "Disable call stack functionality" FORCE)
+  set(TRACY_NO_FRAME_IMAGE ON CACHE BOOL "Disable frame images" FORCE)
+  set(TRACY_NO_VSYNC_CAPTURE ON CACHE BOOL "Disable vsync capture" FORCE)
+  set(TRACY_ONLY_LOCALHOST ON CACHE BOOL "Only listen on localhost" FORCE)
+  set(TRACY_NO_BROADCAST ON CACHE BOOL "No client discovery broadcast" FORCE)
 else()
   set(TRACY_ENABLE OFF CACHE BOOL "Disable Tracy" FORCE)
 endif()
@@ -149,7 +174,10 @@ set_target_properties(core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(core PUBLIC antlr4_static cereal::cereal cppzmq Boost::boost Threads::Threads re2::re2 quill::quill TracyClient readerwriterqueue::readerwriterqueue argparse::argparse)
 if (PROFILING)
   message("Profiling enabled")
-  target_link_libraries(core PUBLIC debuginfod)
+endif()
+if (PROFILING_FINE)
+  message("Fine-grained profiling zones enabled")
+  target_compile_definitions(core PUBLIC CORE_PROFILING_FINE)
 endif()
 
 if(CORE_ENABLE_MINTERM_OPTIMIZATION)
@@ -267,6 +295,15 @@ target_compile_definitions(tests PRIVATE CORE_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 #
 add_executable(third_party_tests ${THIRD_PARTY_LIBRARIES_TESTS})
 target_link_libraries(third_party_tests PRIVATE Catch2::Catch2WithMain core)
+
+# Standalone benchmark driver (no Catch2): one query, one strategy, one repeat
+# per process, so each run can be captured as its own Tracy trace. Lives outside
+# src/tests/unit_tests/ so the tests glob above never picks it up. Builds in
+# every configuration; asking it for minterm_tree without -o fails at runtime,
+# exactly like the engine itself.
+add_executable(core_bench src/tests/benchmarking/core_bench.cpp)
+target_link_libraries(core_bench PRIVATE core)
+target_compile_definitions(core_bench PRIVATE CORE_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 
 # These tests need their own main (None at the moment)
 #add_executable(custom-main-tests test.cpp test-main.cpp)

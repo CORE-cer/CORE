@@ -25,6 +25,7 @@
 #include "quill/Logger.h"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 #include "tracy/Tracy.hpp"
 
 namespace CORE::Internal::Evaluation {
@@ -161,27 +162,33 @@ class Evaluator {
     }
 
     Bitset predicates_satisfied = tuple_evaluator(event);
-    current_union_list_map = {};
-    current_ordered_keys = {};
-    final_states.clear();
-    actual_time = current_time;
-    UnionList ul = tecs->new_ulist(
-      tecs->new_bottom(std::move(event.clone()), current_time));
+    UnionList ul;
+    {
+      ZoneScopedN("Evaluator::init_iteration");
+      current_union_list_map = {};
+      current_ordered_keys = {};
+      final_states.clear();
+      actual_time = current_time;
+      ul = tecs->new_ulist(tecs->new_bottom(std::move(event.clone()), current_time));
+    }
     State* q0 = get_initial_state();
     exec_trans(event, q0, std::move(ul), predicates_satisfied, current_time);
 
-    for (State* p : historic_ordered_keys) {
-      assert(historic_union_list_map.contains(p));
-      UnionList& actual_ul = historic_union_list_map[p];
-      if (is_ul_out_time_window(actual_ul)) {
-        tecs->unpin(actual_ul);
-      } else {
-        remove_out_of_time_nodes_ul(actual_ul);
-        exec_trans(event,
-                   p,
-                   std::move(actual_ul),
-                   predicates_satisfied,
-                   current_time);  // Send the tuple in exec_trans.
+    {
+      ZoneScopedN("Evaluator::historic_loop");
+      for (State* p : historic_ordered_keys) {
+        assert(historic_union_list_map.contains(p));
+        UnionList& actual_ul = historic_union_list_map[p];
+        if (is_ul_out_time_window(actual_ul)) {
+          tecs->unpin(actual_ul);
+        } else {
+          remove_out_of_time_nodes_ul(actual_ul);
+          exec_trans(event,
+                     p,
+                     std::move(actual_ul),
+                     predicates_satisfied,
+                     current_time);  // Send the tuple in exec_trans.
+        }
       }
     }
     // Update the evicted states.
@@ -230,6 +237,7 @@ class Evaluator {
   State* get_initial_state() { return cea.initial_state; }
 
   void reset() {
+    ZoneScopedN("Evaluator::reset");
     LOG_TRACE_L3(logger, "Resetting historic states in Evaluator");
     cea.state_manager.unpin_states(historic_ordered_keys);
     historic_ordered_keys.clear();
@@ -239,12 +247,12 @@ class Evaluator {
   }
 
   bool is_ul_out_time_window(const UnionList& ul) {
-    ZoneScopedN("Evaluator::is_ul_out_time_window");
+    CORE_ZONE_FINE("Evaluator::is_ul_out_time_window");
     return (ul.at(0)->maximum_start < event_time_of_expiration);
   }
 
   void remove_out_of_time_nodes_ul(UnionList& ul) {
-    ZoneScopedN("Evaluator::remove_dead_nodes_ul");
+    CORE_ZONE_FINE("Evaluator::remove_out_of_time_nodes_ul");
     for (auto it = ul.begin(); it != ul.end();) {
       Node* ul_node = *it;
       if (ul_node->maximum_start < event_time_of_expiration) {

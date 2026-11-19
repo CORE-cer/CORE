@@ -3,7 +3,6 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
-#include <tracy/Tracy.hpp>
 #include <unordered_map>
 #include <utility>
 
@@ -13,6 +12,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
 
@@ -35,7 +35,7 @@ class GenericEvaluator {
 
  protected:
   uint64_t event_time(Types::EventWrapper& event) {
-    ZoneScopedN("Interface::GenericEvaluator::tuple_time");
+    CORE_ZONE_FINE("Interface::GenericEvaluator::tuple_time");
     int64_t time;
     switch (time_window.mode) {
       case CEQL::Within::TimeWindowMode::NONE:

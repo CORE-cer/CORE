@@ -4,7 +4,6 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <tracy/Tracy.hpp>
 #include <utility>
 #include <vector>
 
@@ -13,6 +12,7 @@
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -35,7 +35,7 @@ class AndPredicate : public PhysicalPredicate {
   ~AndPredicate() override = default;
 
   bool eval(Types::EventWrapper& event) override {
-    ZoneScopedN("AndPredicate::eval()");
+    CORE_ZONE_FINE("AndPredicate::eval()");
     for (auto& predicate : predicates) {
       if (!(predicate->eval(event))) {
         return false;

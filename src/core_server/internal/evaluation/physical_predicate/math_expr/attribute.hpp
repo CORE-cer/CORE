@@ -5,7 +5,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <tracy/Tracy.hpp>
 #include <type_traits>
 
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
@@ -14,6 +13,7 @@
 #include "math_expr.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -37,7 +37,7 @@ class Attribute : public MathExpr<GlobalType> {
   ~Attribute() override = default;
 
   GlobalType eval(Types::EventWrapper& event) override {
-    ZoneScopedN("Attribute::eval(event)");
+    CORE_ZONE_FINE("Attribute::eval(event)");
     const typename ToCoreType<LocalType>::type&
       val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
     if constexpr (std::is_same_v<GlobalType, LocalType>) {

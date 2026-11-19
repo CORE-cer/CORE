@@ -13,6 +13,7 @@
 #include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/Logger.h"
+#include "shared/profiling/zones.hpp"
 #include "time_list_manager.hpp"
 
 namespace CORE::Internal::tECS {
@@ -57,6 +58,7 @@ class NodeManager {
 
   template <class... Args>
   Node* alloc(Args&&... args) {
+    CORE_ZONE_FINE("NodeManager::alloc");
     LOG_BACKTRACE(logger,
                   "Adding node to node_manager, currently at {} nodes used with {} nodes "
                   "recycled",
@@ -112,6 +114,7 @@ class NodeManager {
 
  private:
   Node* get_node_to_recycle_or_increase_mempool_size_if_necessary() {
+    CORE_ZONE_FINE("NodeManager::recycle_or_grow");
     if (!minipool_head->is_full()) {
       return nullptr;
     }
@@ -130,6 +133,7 @@ class NodeManager {
   }
 
   void increase_mempool_size() {
+    CORE_ZONE_FINE("NodeManager::grow");
     LOG_DEBUG(logger, "Increasing size of memory pool");
     NodePool* new_minipool = new NodePool(minipool_head->size() * 2);
     minipool_head->set_next(new_minipool);

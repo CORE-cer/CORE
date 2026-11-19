@@ -12,6 +12,7 @@
 #include "core_server/internal/evaluation/cea/cea.hpp"
 #include "core_server/internal/evaluation/predicate_set.hpp"
 #include "shared/datatypes/bitset.hpp"
+#include "shared/profiling/zones.hpp"
 #include "state.hpp"
 #include "state_manager.hpp"
 
@@ -79,6 +80,9 @@ class DetCEA {
   compute_next_states(State* state,
                       const Bitset& evaluation,
                       const uint64_t& current_iteration) {
+    // Reached only on a transition-cache miss (State::next), i.e. when lazy
+    // determinization actually has to compute a new transition.
+    CORE_ZONE_FINE("DetCEA::determinize");
     std::vector<RawStates> computed_raw_states = std::move(
       compute_next_raw_states(state, evaluation));
     std::vector<State*> next_states;

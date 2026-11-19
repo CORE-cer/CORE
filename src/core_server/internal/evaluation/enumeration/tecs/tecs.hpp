@@ -10,6 +10,7 @@
 #include "node_manager.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 #include "time_reservator.hpp"
 
 namespace CORE::Internal::tECS {
@@ -70,6 +71,7 @@ class tECS {
                                  Types::EventWrapper& event,
                                  uint64_t timestamp,
                                  Bitset marked_variables) {
+    CORE_ZONE_FINE("tECS::new_extend");
     return node_manager.alloc(node, event.clone(), timestamp, std::move(marked_variables));
   }
 
@@ -110,6 +112,7 @@ class tECS {
 
   /// Inserts the node in the ulist, maintaining the max-sorted invariant.
   [[nodiscard]] UnionList insert(UnionList&& ulist, Node* node) {
+    CORE_ZONE_FINE("tECS::insert");
     assert_required_properties_of_union_list(ulist);
     assert(node->max() <= ulist[0]->max());
     if (ulist.size() == 1) {
@@ -159,6 +162,7 @@ class tECS {
    |           nk-1   nk                                  |
    +-----------------------------------------------------*/
   Node* merge(UnionList& ulist) {
+    CORE_ZONE_FINE("tECS::merge");
     assert_required_properties_of_union_list(ulist);
     Node* tail = ulist.back();
     for (auto rit = ulist.rbegin() + 1; rit != ulist.rend(); ++rit) {

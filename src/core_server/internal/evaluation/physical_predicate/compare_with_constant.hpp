@@ -7,7 +7,6 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <tracy/Tracy.hpp>
 #include <type_traits>
 
 #include "cassert"
@@ -17,6 +16,7 @@
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -51,7 +51,7 @@ class CompareWithConstant : public PhysicalPredicate {
   auto constant() const { return constant_val; }
 
   bool eval(Types::EventWrapper& event) override {
-    ZoneScopedN("CompareWithConstant::eval()");
+    CORE_ZONE_FINE("CompareWithConstant::eval()");
     const typename ToCoreType<ValueType>::type&
       attribute_val = event.get_attribute_at_index<typename ToCoreType<ValueType>::type>(
         pos_to_compare);

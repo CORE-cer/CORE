@@ -30,6 +30,7 @@
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::Optimizations::MintermTree {
 
@@ -121,28 +122,37 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   MintermTreeEvaluator& operator=(const MintermTreeEvaluator&) = delete;
 
   Bitset operator()(Types::EventWrapper& event) override {
+    ZoneScopedN("MintermTree::eval");
     Bitset result(predicates_.size());
 
     // Predicates that admit any event type are always evaluated directly.
-    for (const auto& [index, predicate] : catch_all_) {
-      if ((*predicate)(event)) result.set(index);
+    {
+      CORE_ZONE_FINE("MintermTree::catch_all");
+      for (const auto& [index, predicate] : catch_all_) {
+        if ((*predicate)(event)) result.set(index);
+      }
     }
 
     Types::UniqueEventTypeId event_type = event.get_unique_event_type_id();
 
     auto tree = trees_.find(event_type);
     if (tree != trees_.end()) {
+      CORE_ZONE_FINE("MintermTree::tree_walk");
       // Walk down the tree: each internal node's atom decides left or right.
+
       MintermTreeNode<z3::expr>* node = tree->second.get();
+
       while (!node->isLeaf()) {
         node = (*node->split_atom)(event) ? node->left.get() : node->right.get();
       }
+
       // The leaf already knows which predicates hold in its region.
       result |= node->satisfied_predicates;
       return result;
     }
 
     if (direct_event_types_.contains(event_type)) {
+      CORE_ZONE_FINE("MintermTree::direct_fallback");
       // No tree for this event type (see SAFETY NET): evaluate as the baseline.
       for (size_t index : optimizable_indices_) {
         if ((*predicates_[index])(event)) result.set(index);
@@ -335,6 +345,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   std::unordered_map<Types::UniqueEventTypeId, std::vector<std::string>> atom_order_per_type_;
 
   void build() {
+    ZoneScopedN("MintermTree::build");
     // Step 1: decide which predicates the trees handle. A predicate that admits
     // any event type, or that contains an atom doing so, cannot be tied to one
     // event type's tree, so it is evaluated directly.
@@ -496,6 +507,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // Steps 2-5b of the build phase for one event type.
   void build_tree_for_event_type(Types::UniqueEventTypeId event_type,
                                  const std::vector<CEA::PhysicalPredicate*>& atoms) {
+    ZoneScopedN("MintermTree::build_type");
     for (size_t index : optimizable_indices_) {
       if (!tree_can_reproduce(predicates_[index].get(), event_type, /*gated=*/true)) {
         use_direct_evaluation(event_type, "predicate shape the tree cannot reproduce");
@@ -503,30 +515,33 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       }
     }
 
-    // Step 2: the atoms that can apply to this event type, as Z3 formulas.
     std::vector<CEA::PhysicalPredicate*> selected_atoms;
     std::vector<z3::expr> selected_formulas;
-    for (CEA::PhysicalPredicate* atom : atoms) {
-      if (!atom->admissible_event_types.contains(event_type)) continue;
-      selected_atoms.push_back(atom);
-      selected_formulas.push_back(translator_.translate_atom(atom, event_type));
-    }
-
-    // Which predicates can fire for this event type, as Z3 formulas. Computed
-    // once here rather than once per leaf.
     std::vector<std::pair<size_t, z3::expr>> predicate_formulas;
-    for (size_t index : optimizable_indices_) {
-      const CEA::PhysicalPredicate* predicate = predicates_[index].get();
-      // A predicate that admits every event type (a weakly typed Or, see
-      // direct_evaluation_reason) applies here too: its formula is false unless
-      // one of its atoms names this event type.
-      if (!predicate->admits_any_event_type
-          && !predicate->admissible_event_types.contains(event_type)) {
-        continue;
+    {
+      ZoneScopedN("MintermTree::z3_translate");
+      // Step 2: the atoms that can apply to this event type, as Z3 formulas.
+      for (CEA::PhysicalPredicate* atom : atoms) {
+        if (!atom->admissible_event_types.contains(event_type)) continue;
+        selected_atoms.push_back(atom);
+        selected_formulas.push_back(translator_.translate_atom(atom, event_type));
       }
-      predicate_formulas.emplace_back(index,
-                                      translator_.translate_formula(predicate,
-                                                                    event_type));
+
+      // Which predicates can fire for this event type, as Z3 formulas. Computed
+      // once here rather than once per leaf.
+      for (size_t index : optimizable_indices_) {
+        const CEA::PhysicalPredicate* predicate = predicates_[index].get();
+        // A predicate that admits every event type (a weakly typed Or, see
+        // direct_evaluation_reason) applies here too: its formula is false unless
+        // one of its atoms names this event type.
+        if (!predicate->admits_any_event_type
+            && !predicate->admissible_event_types.contains(event_type)) {
+          continue;
+        }
+        predicate_formulas.emplace_back(index,
+                                        translator_.translate_formula(predicate,
+                                                                      event_type));
+      }
     }
 
     if (selected_atoms.empty()) {
@@ -571,21 +586,30 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     atom_order_per_type_[event_type] = std::move(atom_order);
 
     // Step 3: refine a tree with the atoms.
-    std::unique_ptr<MintermTreeNode<z3::expr>> tree = buildMintermTree<z3::expr>(
-      selected_atoms, selected_formulas, algebra_, max_leaves_per_tree_);
+    std::unique_ptr<MintermTreeNode<z3::expr>> tree;
+    {
+      ZoneScopedN("MintermTree::refine");
+      tree = buildMintermTree<z3::expr>(selected_atoms,
+                                        selected_formulas,
+                                        algebra_,
+                                        max_leaves_per_tree_);
+    }
 
     // Step 4: per-leaf bitmask. A leaf sets bit i when its region implies
     // predicate i's formula, i.e. when (leaf AND NOT formula) is unsatisfiable.
     std::vector<MintermTreeNode<z3::expr>*> leaves;
-    tree->collectLeaves(leaves);
-    for (MintermTreeNode<z3::expr>* leaf : leaves) {
-      Bitset bits(predicates_.size());
-      for (const auto& [index, formula] : predicate_formulas) {
-        if (!algebra_.isSat(algebra_.And(leaf->phi, algebra_.Not(formula)))) {
-          bits.set(index);
+    {
+      ZoneScopedN("MintermTree::leaf_bitmasks");
+      tree->collectLeaves(leaves);
+      for (MintermTreeNode<z3::expr>* leaf : leaves) {
+        Bitset bits(predicates_.size());
+        for (const auto& [index, formula] : predicate_formulas) {
+          if (!algebra_.isSat(algebra_.And(leaf->phi, algebra_.Not(formula)))) {
+            bits.set(index);
+          }
         }
+        leaf->satisfied_predicates = std::move(bits);
       }
-      leaf->satisfied_predicates = std::move(bits);
     }
 
     // Step 5b: some leaves agree on every bit after all (e.g. "a AND b" with
@@ -593,7 +617,10 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     // of b) - collapse those sibling pairs. Must run after the bitmasks above
     // are real (see MintermTreeNode::reduce), and strictly before the counts
     // below, which must reflect the tree as it will actually be walked.
-    reduced_nodes_per_type_[event_type] = tree->reduce();
+    {
+      ZoneScopedN("MintermTree::reduce");
+      reduced_nodes_per_type_[event_type] = tree->reduce();
+    }
     reduced_nodes_ += reduced_nodes_per_type_[event_type];
 
     // Some of the leaves collected above may no longer exist after the

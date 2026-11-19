@@ -5,7 +5,6 @@
 #include <set>
 #include <string>
 #include <string_view>
-#include <tracy/Tracy.hpp>
 #include <type_traits>
 
 #include "cassert"
@@ -15,6 +14,7 @@
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "shared/profiling/zones.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -44,7 +44,7 @@ class CompareMathExprs : public PhysicalPredicate {
   const MathExpr<ValueType>& right_expr() const { return *right; }
 
   bool eval(Types::EventWrapper& event) override {
-    ZoneScopedN("CompareMathExprs::eval()");
+    CORE_ZONE_FINE("CompareMathExprs::eval()");
     // std::cout << to_string() << std::endl;
     if constexpr (Comp == ComparisonType::EQUALS) {
       auto xd1 = left->eval(event);

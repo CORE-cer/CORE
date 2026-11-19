@@ -31,6 +31,16 @@ function _setArgs() {
       "--profiling")
         PROFILING=on
         ;;
+      "--profiling-fine")
+        # Fine-grained zones too (see CMakeLists.txt's PROFILING_FINE); implies --profiling.
+        PROFILING=on
+        PROFILING_FINE=on
+        ;;
+      "--target")
+        # Build only this CMake target (e.g. core_bench) instead of everything.
+        shift
+        TARGET=$1
+        ;;
       "-o" | "--optimizations")
         # Build with the optional experimental optimizations (needs Z3).
         OPTIMIZATIONS=on
@@ -45,11 +55,19 @@ function _setArgs() {
 # two kinds of build does not reconfigure everything and re-install the
 # dependencies (Z3) each time.
 function get_build_dir() {
+  local dir="build/${BUILD_TYPE}"
   if [ "$OPTIMIZATIONS" == "on" ]; then
-    echo "build/${BUILD_TYPE}-opt"
-  else
-    echo "build/${BUILD_TYPE}"
+    dir="${dir}-opt"
   fi
+  # Profiling builds get their own directory too: a Tracy-enabled binary waits
+  # at exit for a profiler (TRACY_NO_EXIT), so it must never silently replace a
+  # normal build, and toggling --profiling must not reconfigure everything.
+  if [ "$PROFILING_FINE" == "on" ]; then
+    dir="${dir}-prof-fine"
+  elif [ "$PROFILING" == "on" ]; then
+    dir="${dir}-prof"
+  fi
+  echo "${dir}"
 }
 
 function build() {
@@ -95,6 +113,10 @@ function build() {
   if [ "$PROFILING" == "on" ]; then
     profiling_flag="ON"
   fi
+  local profiling_fine_flag="OFF"
+  if [ "$PROFILING_FINE" == "on" ]; then
+    profiling_fine_flag="ON"
+  fi
 
   # Optional optimizations flag (see CORE_ENABLE_MINTERM_OPTIMIZATION in CMakeLists.txt)
   local optimizations_flag="OFF"
@@ -112,12 +134,17 @@ function build() {
     -DVCPKG_OVERLAY_TRIPLETS="$(pwd)/vcpkg-triplets" \
     -DLOGGING="${LOGGING}" \
     -DPROFILING="${profiling_flag}" \
+    -DPROFILING_FINE="${profiling_fine_flag}" \
     -DCORE_ENABLE_MINTERM_OPTIMIZATION="${optimizations_flag}" \
     ${sanitizer_flags} \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
   # Build
-  cmake --build "${build_dir}" -j "${jobs}"
+  if [ -n "$TARGET" ]; then
+    cmake --build "${build_dir}" -j "${jobs}" --target "${TARGET}"
+  else
+    cmake --build "${build_dir}" -j "${jobs}"
+  fi
 
   build_result=$?
   if [ $build_result -ne 0 ]; then
@@ -133,6 +160,8 @@ SANITIZER=none
 LOGGING=info
 J="all-1"
 PROFILING=off
+PROFILING_FINE=off
+TARGET=""
 OPTIMIZATIONS=off
 export TSAN_OPTIONS="suppressions=tsan_suppressions.txt"
 export ASAN_OPTIONS="suppressions=asan_suppressions.txt"
