@@ -1,18 +1,18 @@
 #pragma once
 
-// Helpers for core_bench (core_bench.cpp): a Catch2-free port of the measurement
-// harness in src/tests/unit_tests/core_server/internal/optimizations/minterm_tree/
-// (pure_cpp_throughput.cpp's DirectEvaluator and pure_cpp_throughput_common.hpp's
-// readers/declarers). Errors throw instead of REQUIRE-ing. The two copies are
-// meant to be consolidated in the planned cleanup round (guides/backlog.md).
+// Helpers for core_bench (core_bench.cpp): the stream declaration, a type-driven
+// CSV reader and BenchEvaluator, which runs one query through the engine's real
+// evaluation path. Errors throw. This replaced the hidden [.] harnesses that
+// lived in the unit-test binary (pure_cpp_throughput.cpp, throughput_engine.cpp),
+// retired in the cleanup round (guides/backlog.md item 21); git history has them.
 //
 // Every Tracy zone below is a plain ZoneScopedN: it is a real zone only in a
 // --profiling build and compiles to nothing otherwise (see
 // guides/benchmarking/08-tracy-profiling.md).
 //
 // Includers must include "quill/Backend.h" before this header: ANTLR's
-// Recognizer.h #undefs EOF, which quill's bundled fmt needs (see
-// pure_cpp_throughput.cpp's include comment for the full story).
+// Recognizer.h #undefs EOF, which quill's bundled fmt needs, so quill must see
+// it first.
 
 #include <atomic>
 #include <chrono>
@@ -80,18 +80,17 @@ class CountingResultHandler : public Library::Components::ResultHandler {
   size_t matches() const { return matches_; }
 };
 
-// Builds the same SingleEvaluator SimpleQuery::create_query builds (simple_query.hpp),
-// then calls process_event() itself, synchronously, once per event: no Backend,
-// no QuarantineManager, no worker threads. Unlike pure_cpp_throughput.cpp's
-// DirectEvaluator it keeps no second copy of the predicate evaluator: the
-// predicate/automaton split comes from Tracy zones inside the real call, not
-// from timing a duplicate evaluation and subtracting.
 // Thrown for queries BenchEvaluator cannot run yet (PARTITION BY needs the
-// routing in PartitionByQuery, see guides/backlog.md item 24).
+// routing in PartitionByQuery, see guides/backlog.md item 28).
 struct UnsupportedQuery : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+// Builds the same SingleEvaluator SimpleQuery::create_query builds (simple_query.hpp),
+// then calls process_event() itself, synchronously, once per event: no Backend,
+// no QuarantineManager, no worker threads. The predicate/automaton split comes
+// from Tracy zones inside the real call; only --method split keeps a second copy
+// of the predicate evaluator (the old copy-and-subtract method).
 class BenchEvaluator {
  public:
   Types::StreamInfo add_stream_type(Types::StreamInfoParsed&& parsed) {
@@ -207,9 +206,9 @@ class BenchEvaluator {
     double process_s;
   };
 
-  // The old copy-and-subtract method, ported line for line from
-  // pure_cpp_throughput.cpp's DirectEvaluator::send_all_split so both methods
-  // can be compared in the same binary: per event, time a standalone call to
+  // The old copy-and-subtract method (ported from the retired DirectEvaluator::
+  // send_all_split), kept so it can be compared with the others in the same
+  // binary (backlog item 23): per event, time a standalone call to
   // the predicate-evaluator copy (predicate_s), then time the real
   // process_event (process_s, which includes wrapping the event and the real
   // predicate evaluation again). "Automaton" is process_s - predicate_s.

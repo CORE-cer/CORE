@@ -4,6 +4,13 @@ Reuses dataset configuration from the e2e test suite and the CSV parser.
 Timing wraps only C++ engine work (send_events/send_event + get_output),
 excluding Python CSV parsing and setup overhead.
 
+This is an engine-wide, end-to-end timing: it goes through pycer, the server's
+quarantine pipeline and its worker threads, and it includes output delivery.
+It is what CI's benchmark.yaml tracks over time. It is not an evaluation-only
+measurement. For predicate and automaton time in pure C++, use core_bench
+(src/tests/benchmarking/) through tests/benchmark/tracy_runs.py; see
+guides/benchmarking/08-tracy-profiling.md.
+
 Usage:
     uv run python tests/benchmark/benchmark_queries.py [--dataset NAME] [--repeats N]
 
