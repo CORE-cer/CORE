@@ -12,6 +12,14 @@
 // --method split  the old copy-and-subtract method (predicate time from timing a
 //                 second copy of the predicate evaluator), kept to validate the
 //                 methods against each other (guides/backlog.md item 23).
+// Replay decomposition (guides/backlog.md item 29,
+// guides/benchmarking/09-replay-decomposition.md), one method per process:
+// --method predicate      P: predicate evaluation only (wrap + evaluate + sink)
+// --method replay         A_out: the automaton fed recorded bitsets, with output
+// --method replay_no_out  A_no_out: the same, output dropped unconverted
+// --method calib          H: wrap + read recorded bitset + sink
+//                 The replay and calib methods record every event's bitset
+//                 first, untimed. Each prints a bitset checksum.
 //
 // --dump-tree     builds the query only (no events, no timing) with the minterm
 //                 trees printed through the engine's own log line
@@ -20,7 +28,8 @@
 //
 // Usage:
 //   core_bench --dataset smart_homes --query rep_eq_24.txt --strategy minterm_tree
-//              [--query-dir queries_optimization|queries] [--method plain|split]
+//              [--query-dir queries_optimization|queries] [--method plain|split|predicate|
+//               replay|replay_no_out|calib]
 //              [--max-events 200000] [--repeat 1] [--out-json run.json] [--dump-tree]
 // Exit codes: 0 ok, 1 error, 3 query not supported yet (e.g. PARTITION BY).
 // See guides/benchmarking/08-tracy-profiling.md.
@@ -32,12 +41,14 @@
 #include <argparse/argparse.hpp>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <tracy/Tracy.hpp>
@@ -48,6 +59,7 @@
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/logging/setup.hpp"
@@ -142,7 +154,9 @@ int run(int argc, char** argv) {
       "minterm_tree_interned_ordered");
   program.add_argument("--method")
     .default_value(std::string{"plain"})
-    .help("plain or split (the old copy-and-subtract method)");
+    .help(
+      "plain, split (the old copy-and-subtract method), or a replay-decomposition "
+      "method: predicate, replay, replay_no_out, calib");
   program.add_argument("--max-events")
     .default_value(std::size_t{0})
     .scan<'u', std::size_t>()
@@ -170,7 +184,9 @@ int run(int argc, char** argv) {
   const std::string out_json = program.get<std::string>("--out-json");
 
   const StrategyConfig config = strategy_from_name(strategy_name);
-  if (method != "plain" && method != "split") {
+  const bool is_replay = method == "replay" || method == "replay_no_out"
+                         || method == "calib";
+  if (method != "plain" && method != "split" && method != "predicate" && !is_replay) {
     throw std::runtime_error("unknown --method " + method);
   }
   auto csv = kDatasetCsv.find(dataset);
@@ -201,7 +217,7 @@ int run(int argc, char** argv) {
                        config.strategy,
                        config.atom_ordering,
                        config.string_equality,
-                       /*keep_split_copy=*/false);
+                       /*keep_predicate_copy=*/false);
     } catch (const Bench::UnsupportedQuery& error) {
       std::cerr << "core_bench: " << error.what() << std::endl;
       code = 3;
@@ -232,7 +248,7 @@ int run(int argc, char** argv) {
                      config.strategy,
                      config.atom_ordering,
                      config.string_equality,
-                     /*keep_split_copy=*/method == "split");
+                     /*keep_predicate_copy=*/method != "plain");
   } catch (const Bench::UnsupportedQuery& error) {
     json << ",\"status\":\"unsupported\",\"reason\":\"" << json_escape(error.what())
          << "\",\"profile_level\":\"" << profile_level() << "\"}";
@@ -248,22 +264,42 @@ int run(int argc, char** argv) {
     if (engine.is_relevant(event->get_event_type_id())) events.push_back(event);
   }
 
+  // Replay methods: every event's bitset is recorded first, outside the timing.
+  std::vector<CORE::Bitset> bitsets;
+  if (is_replay) bitsets = engine.record_bitsets(events);
+
   const auto loop_start = std::chrono::steady_clock::now();
   std::optional<Bench::BenchEvaluator::SplitTiming> split;
+  std::optional<uint64_t> checksum;
   if (method == "split") {
     split = engine.send_all_split(events);
+  } else if (method == "predicate") {
+    checksum = engine.send_predicates_only(events);
+  } else if (method == "calib") {
+    checksum = engine.send_calibration(events, bitsets);
+  } else if (method == "replay" || method == "replay_no_out") {
+    engine.send_all_replay(events, bitsets, /*convert_output=*/method == "replay");
   } else {
     engine.send_all(events);
   }
   const auto loop_end = std::chrono::steady_clock::now();
+  // replay/replay_no_out sink nothing inside the loop; their checksum is taken
+  // afterwards, over the same recorded bitsets.
+  if (!checksum && is_replay) checksum = engine.send_calibration(events, bitsets);
 
   const double compile_s = std::chrono::duration<double>(compile_end - compile_start)
                              .count();
   const double loop_s = std::chrono::duration<double>(loop_end - loop_start).count();
 
   json << ",\"status\":\"ok\",\"dataset_events\":" << all_events.size()
-       << ",\"event_count\":" << events.size() << ",\"matches\":" << engine.matches()
-       << ",\"compile_s\":" << compile_s << ",\"loop_s\":" << loop_s;
+       << ",\"event_count\":" << events.size();
+  // Only methods that run the counting handler know the match count.
+  if (method == "plain" || method == "split" || method == "replay") {
+    json << ",\"matches\":" << engine.matches();
+  }
+  json << ",\"compile_s\":" << compile_s << ",\"loop_s\":" << loop_s;
+  if (checksum)
+    json << ",\"bitset_checksum\":\"" << std::hex << *checksum << std::dec << "\"";
   if (split) {
     json << ",\"split_predicate_s\":" << split->predicate_s
          << ",\"split_process_s\":" << split->process_s;

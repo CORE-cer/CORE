@@ -46,6 +46,7 @@
 #include "core_server/internal/parsing/stream_declaration/parser.hpp"
 #include "core_server/library/components/result_handler/result_handler.hpp"
 #include "core_server/library/components/result_handler/result_handler_types.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/attribute_info.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -105,13 +106,14 @@ class BenchEvaluator {
 
   // Compiles `query_text` into an evaluator, one Tracy zone per step (in the
   // order SimpleQuery::create_query runs them). Must run after add_stream_type.
-  // `keep_split_copy` also keeps a copy of the predicate evaluator for
-  // send_all_split (the old copy-and-subtract method).
+  // `keep_predicate_copy` also keeps a copy of the predicate evaluator, for the
+  // methods that evaluate predicates on their own: send_all_split (the old
+  // copy-and-subtract method), and the replay decomposition below.
   void add_query(const std::string& query_text,
                  Optimizations::PredicateEvaluationStrategy strategy,
                  Optimizations::AtomOrderingStrategy atom_ordering,
                  Optimizations::StringEqualityStrategy string_equality,
-                 bool keep_split_copy) {
+                 bool keep_predicate_copy) {
     ZoneScopedN("Bench::add_query");
     std::optional<CEQL::Query> parsed_query;
     {
@@ -143,9 +145,9 @@ class BenchEvaluator {
                               atom_ordering,
                               string_equality);
     }
-    if (keep_split_copy) {
+    if (keep_predicate_copy) {
       // A cheap copy (shared_ptrs) that send_all_split evaluates on its own.
-      split_copy_ = *tuple_evaluator;
+      predicate_copy_ = *tuple_evaluator;
     }
 
     // Two ZoneScopedN may never share a scope (each declares the same local),
@@ -213,14 +215,14 @@ class BenchEvaluator {
   // process_event (process_s, which includes wrapping the event and the real
   // predicate evaluation again). "Automaton" is process_s - predicate_s.
   SplitTiming send_all_split(const std::vector<std::shared_ptr<Types::Event>>& events) {
-    if (!split_copy_)
-      throw std::logic_error("add_query was called without keep_split_copy");
+    if (!predicate_copy_)
+      throw std::logic_error("add_query was called without keep_predicate_copy");
     double predicate_s = 0.0;
     double process_s = 0.0;
     for (const auto& event : events) {
       Types::EventWrapper predicate_wrapper(event);
       auto t0 = std::chrono::steady_clock::now();
-      (void)(*split_copy_)(predicate_wrapper);
+      (void)(*predicate_copy_)(predicate_wrapper);
       auto t1 = std::chrono::steady_clock::now();
 
       Types::EventWrapper wrapper(event);
@@ -235,6 +237,80 @@ class BenchEvaluator {
     return {predicate_s, process_s};
   }
 
+  // ---- Replay decomposition (guides/backlog.md item 29) --------------------
+  // Each method below is one whole-run loop, timed by core_bench as a single
+  // plain-chrono interval (no timers inside). Every loop wraps each event, as
+  // send_all does. With the recorded bitsets, the four numbers are
+  //   predicate = P - H, automaton = A_no_out - H, output = A_out - A_no_out
+  // (see guides/benchmarking/09-replay-decomposition.md for the derivation and
+  // the correctness checks).
+
+  // Untimed: each event's predicate bitset, computed with the predicate copy.
+  std::vector<Bitset>
+  record_bitsets(const std::vector<std::shared_ptr<Types::Event>>& events) {
+    Evaluation::PredicateEvaluator& predicates = predicate_copy();
+    std::vector<Bitset> bitsets;
+    bitsets.reserve(events.size());
+    for (const auto& event : events) {
+      Types::EventWrapper wrapper(event);
+      bitsets.push_back(predicates(wrapper));
+    }
+    return bitsets;
+  }
+
+  // P: wrap + evaluate predicates + sink. Returns the checksum of the bitsets.
+  uint64_t send_predicates_only(const std::vector<std::shared_ptr<Types::Event>>& events) {
+    Evaluation::PredicateEvaluator& predicates = predicate_copy();
+    uint64_t checksum = kChecksumSeed;
+    for (const auto& event : events) {
+      Types::EventWrapper wrapper(event);
+      checksum = fold_checksum(predicates(wrapper), checksum);
+    }
+    return checksum;
+  }
+
+  // H: wrap + read the recorded bitset + sink. The harness cost the other
+  // loops share; same checksum as send_predicates_only when replay is faithful.
+  uint64_t send_calibration(const std::vector<std::shared_ptr<Types::Event>>& events,
+                            const std::vector<Bitset>& bitsets) {
+    uint64_t checksum = kChecksumSeed;
+    for (size_t i = 0; i < events.size(); i++) {
+      Types::EventWrapper wrapper(events[i]);
+      checksum = fold_checksum(bitsets[i], checksum);
+    }
+    return checksum;
+  }
+
+  // A_out (convert_output = true): wrap + read the recorded bitset + the
+  // automaton + the counting handler, which converts every output.
+  // A_no_out (convert_output = false): the same, but the result is dropped
+  // unconverted, so output conversion is left out.
+  void send_all_replay(const std::vector<std::shared_ptr<Types::Event>>& events,
+                       const std::vector<Bitset>& bitsets,
+                       bool convert_output) {
+    for (size_t i = 0; i < events.size(); i++) {
+      Types::EventWrapper wrapper(events[i]);
+      std::optional<tECS::Enumerator> output = evaluator_->process_event(std::move(wrapper),
+                                                                         bitsets[i]);
+      if (convert_output) {
+        handler_->handle_complex_event(std::move(output));
+      }
+    }
+  }
+
+  // An order- and position-sensitive checksum (FNV-1a style) over the set bits
+  // of each bitset, plus a separator per event. Cheap, and it keeps the
+  // compiler from dropping the predicate-only and calibration loops.
+  static constexpr uint64_t kChecksumSeed = 0xcbf29ce484222325ULL;
+
+  static uint64_t fold_checksum(const Bitset& bitset, uint64_t checksum) {
+    constexpr uint64_t kPrime = 0x100000001b3ULL;
+    for (size_t i = bitset.find_first(); i != Bitset::npos; i = bitset.find_next(i)) {
+      checksum = (checksum ^ (i + 1)) * kPrime;
+    }
+    return (checksum ^ 0xffU) * kPrime;
+  }
+
   // Whether the compiled query reads events of this type at all. The engine
   // only routes relevant event types to a query (base_policy.hpp), so the
   // benchmark filters the same way, before the measured loop.
@@ -245,7 +321,13 @@ class BenchEvaluator {
   size_t matches() const { return handler_->matches(); }
 
  private:
-  std::optional<Evaluation::PredicateEvaluator> split_copy_;
+  Evaluation::PredicateEvaluator& predicate_copy() {
+    if (!predicate_copy_.has_value())
+      throw std::logic_error("add_query was called without keep_predicate_copy");
+    return predicate_copy_.value();
+  }
+
+  std::optional<Evaluation::PredicateEvaluator> predicate_copy_;
   Catalog catalog_;
   std::unique_ptr<QueryCatalog> query_catalog_;
   std::atomic<uint64_t> time_of_expiration_{0};

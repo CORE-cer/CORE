@@ -119,6 +119,26 @@ class Evaluator {
 
   std::optional<tECS::Enumerator>
   next(Types::EventWrapper&& event, uint64_t current_time) {
+    return next_impl(std::move(event), current_time, nullptr);
+  }
+
+  // Same as next(), but with the event's predicate bitset already computed
+  // (benchmark replay, guides/backlog.md item 29): the predicate evaluator is
+  // not called, everything else - order check, reset, transitions, tECS, time
+  // window, output - runs exactly as in next(). The bitset is taken by
+  // reference so the automaton side never pays for a Bitset copy (copying one
+  // allocates; building it is part of predicate evaluation).
+  std::optional<tECS::Enumerator> next_with_bitset(Types::EventWrapper&& event,
+                                                   uint64_t current_time,
+                                                   const Bitset& predicates_satisfied) {
+    return next_impl(std::move(event), current_time, &predicates_satisfied);
+  }
+
+ private:
+  // `recorded` is null on the normal path (predicates evaluated here) and points
+  // at a precomputed bitset on the replay path.
+  std::optional<tECS::Enumerator>
+  next_impl(Types::EventWrapper&& event, uint64_t current_time, const Bitset* recorded) {
     ZoneScopedN("Evaluator::next");
 
     LOG_TRACE_L3(logger,
@@ -161,7 +181,13 @@ class Evaluator {
       should_reset.store(false);
     }
 
-    Bitset predicates_satisfied = tuple_evaluator(event);
+    // Normal path: evaluate here (moved into `evaluated`, no copy). Replay path:
+    // use the recorded bitset; `evaluated` stays empty and costs nothing.
+    Bitset evaluated;
+    if (recorded == nullptr) {
+      evaluated = tuple_evaluator(event);
+    }
+    const Bitset& predicates_satisfied = recorded != nullptr ? *recorded : evaluated;
     UnionList ul;
     {
       ZoneScopedN("Evaluator::init_iteration");
@@ -233,7 +259,6 @@ class Evaluator {
     return {};
   }
 
- private:
   State* get_initial_state() { return cea.initial_state; }
 
   void reset() {
@@ -267,7 +292,7 @@ class Evaluator {
   void exec_trans(Types::EventWrapper& event,
                   State* p,
                   UnionList&& ul,
-                  Bitset& t,
+                  const Bitset& t,
                   uint64_t current_time) {
     // exec_trans places all the code of add into exec_trans.
     ZoneScopedN("Evaluator::exec_trans");

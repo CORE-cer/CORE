@@ -43,7 +43,7 @@ EXPECTED_CACHE = REPO / "tests/benchmark/results/expected_counts"
 FIELDS = ["label", "dataset", "query", "query_dir", "strategy", "method", "repeat",
           "status", "reason", "dataset_events", "event_count", "matches",
           "expected_matches", "verified", "compile_s", "loop_s",
-          "split_predicate_s", "split_process_s", "profile_level", "mode", "build_dir",
+          "split_predicate_s", "split_process_s", "bitset_checksum", "profile_level", "mode", "build_dir",
           "trace", "process_wall_s", "attempts"]
 
 
@@ -168,7 +168,11 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--mode", choices=["tracy", "chrono"], default="tracy")
-    parser.add_argument("--method", choices=["plain", "split"], default="plain")
+    parser.add_argument("--method", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib"], default="plain")
+    parser.add_argument("--methods", nargs="+", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib"],
+                        help="several methods per (query, strategy, repeat), in an order "
+                             "rotated by repeat; overrides --method. The replay "
+                             "decomposition uses: plain predicate replay replay_no_out calib")
     parser.add_argument("--build-dir", type=Path, default=REPO / "build/Release-opt-prof",
                         help="directory holding core_bench")
     parser.add_argument("--tools-dir", type=Path, default=REPO / "build/tracy-tools/bin")
@@ -204,8 +208,9 @@ def main() -> None:
         sys.exit(f"no core_bench in {args.build_dir}")
     if args.mode == "tracy" and not (args.tools_dir / "tracy-capture").exists():
         sys.exit(f"no tracy-capture in {args.tools_dir}; run scripts/build_tracy_tools.sh")
-    if args.mode == "tracy" and args.method == "split":
-        sys.exit("--method split is a chrono measurement; use --mode chrono")
+    methods = args.methods or [args.method]
+    if args.mode == "tracy" and any(m != "plain" for m in methods):
+        sys.exit("only --method plain runs under Tracy; the others are chrono measurements")
 
     out_dir = args.out_dir or (
         REPO / "tests/benchmark/results/tracy"
@@ -213,8 +218,13 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = out_dir / "manifest.csv"
     done = set()
+    fields = FIELDS
     if manifest.exists():
-        done = {r["label"] for r in csv.DictReader(open(manifest))}
+        # Keep an existing manifest's own header (it may predate a newer
+        # column), so resumed rows stay aligned with it.
+        reader = csv.DictReader(open(manifest))
+        fields = reader.fieldnames or FIELDS
+        done = {r["label"] for r in reader}
     else:
         with open(manifest, "w", newline="") as f:
             csv.DictWriter(f, fieldnames=FIELDS).writeheader()
@@ -227,10 +237,17 @@ def main() -> None:
 
     # Repeat-major order: every query/strategy runs once before any runs twice,
     # so slow drift in machine state spreads over all of them instead of one.
-    plan = [(r, d, q, s) for r in range(1, args.repeats + 1)
-            for d, q in items for s in args.strategies]
-    for i, (repeat, dataset, query, strategy) in enumerate(plan, 1):
-        label = run_label(dataset, query, strategy, args.method, repeat)
+    # With several methods, their order rotates with the repeat number, so no
+    # method always runs first (cold) or last after the same neighbour.
+    def rotated(r):
+        k = (r - 1) % len(methods)
+        return methods[k:] + methods[:k]
+
+    plan = [(r, d, q, s, m) for r in range(1, args.repeats + 1)
+            for d, q in items for s in args.strategies for m in rotated(r)]
+    for i, (repeat, dataset, query, strategy, method) in enumerate(plan, 1):
+        args.method = method  # read by attempt() and the manifest row
+        label = run_label(dataset, query, strategy, method, repeat)
         if label in done:
             continue
         status, summary = "not_run", None
@@ -249,11 +266,11 @@ def main() -> None:
         # expected_results holds full-file counts, so a run cut short with
         # --max-events cannot be checked against it.
         exp = expected.get(dataset, {}).get(query) if args.max_events == 0 else None
-        if exp is not None and status == "ok":
+        if exp is not None and status == "ok" and row.get("matches") not in (None, ""):
             row["expected_matches"] = exp
             row["verified"] = str(int(row["matches"]) == exp)
         with open(manifest, "a", newline="") as f:
-            csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore").writerow(row)
+            csv.DictWriter(f, fieldnames=fields, extrasaction="ignore").writerow(row)
         flag = "" if row.get("verified", "True") == "True" else "  <-- MATCH MISMATCH"
         print(f"[{i}/{len(plan)}] {dataset}/{query} {strategy} r{repeat}: {status} "
               f"matches={row.get('matches', '')} loop={row.get('loop_s', '')}{flag}",

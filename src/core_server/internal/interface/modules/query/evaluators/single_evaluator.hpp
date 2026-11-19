@@ -15,6 +15,7 @@
 #include "core_server/internal/evaluation/evaluator.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/generic_evaluator.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::Interface::Module::Query {
@@ -43,6 +44,15 @@ class SingleEvaluator : public GenericEvaluator {
     uint64_t time = event_time(event);
 
     return evaluator.next(std::move(event), time);
+  }
+
+  // Replay path for benchmarks (guides/backlog.md item 29): the event's
+  // predicate bitset was computed beforehand, so only the automaton runs.
+  std::optional<tECS::Enumerator>
+  process_event(Types::EventWrapper&& event, const Bitset& predicates_satisfied) {
+    ZoneScopedN("Interface::SingleEvaluator::process_event");
+    uint64_t time = event_time(event);
+    return evaluator.next_with_bitset(std::move(event), time, predicates_satisfied);
   }
 };
 }  // namespace CORE::Internal::Interface::Module::Query
