@@ -34,12 +34,18 @@
 # nights"): on this laptop the clock follows the package temperature, and a run
 # started hot was ~8% slower than one started cool. So the script
 #   * switches the platform power profile to 'performance' (cooler, steadier
-#     clock). power-profiles-daemon cannot switch back while the CPU governor is
-#     'performance', so it stays there; restore with
-#     `echo balanced | sudo tee /sys/firmware/acpi/platform_profile`. After such
-#     a manual write the daemon is out of step and its own 'set performance'
-#     does nothing, so the script checks the firmware value and warns loudly in
-#     run_info.txt if it is not 'performance' (same command, with performance);
+#     clock) through power-profiles-daemon, then checks the firmware value and
+#     warns loudly in run_info.txt if it is not 'performance'. The daemon sets
+#     the profile *and* the CPUs' energy_performance_preference (EPP), and
+#     intel_pstate refuses any EPP but 'performance' (EBUSY) while the CPU
+#     governor is 'performance'. So with that governor the daemon can switch
+#     *to* performance but not back, and a manual write to platform_profile
+#     leaves it out of step (it keeps reporting its own last profile, and its
+#     'set performance' is then a no-op). Switch the governor to powersave
+#     first, then use powerprofilesctl, then set the governor back:
+#       echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+#       powerprofilesctl set performance      # or balanced, after the run
+#       echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 #   * waits before every stage until the package is below COOL_C (60 C, at most
 #     COOL_MAX_S seconds) and logs the wait;
 #   * logs the machine state (profile, EPP, governors, AC, temperature, load)
@@ -154,8 +160,9 @@ mkdir -p "$OUT"
     echo "platform profile: performance"
   else
     echo "WARNING: platform profile is '$(cat /sys/firmware/acpi/platform_profile 2>/dev/null)'," \
-      "not performance; timings will be slower and noisier. Fix with:" \
-      "echo performance | sudo tee /sys/firmware/acpi/platform_profile"
+      "not performance; timings will be slower and noisier. Fix (see this script's" \
+      "header): governor to powersave, 'powerprofilesctl set performance'," \
+      "governor back to performance"
   fi
   env_info
 } >> "$OUT/run_info.txt" 2>&1
