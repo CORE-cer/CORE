@@ -298,6 +298,22 @@ class BenchEvaluator {
     }
   }
 
+  // One event at a time, for the replay unit test: the event goes through the
+  // real path (`recorded` null) or the replay path (`recorded` set), and its
+  // output, if any, is converted into complex events (empty when none).
+  Types::Enumerator process_and_convert(const std::shared_ptr<Types::Event>& event,
+                                        const Bitset* recorded = nullptr) {
+    Types::EventWrapper wrapper(event);
+    std::optional<tECS::Enumerator> output = recorded != nullptr
+                                               ? evaluator_->process_event(std::move(
+                                                                             wrapper),
+                                                                           *recorded)
+                                               : evaluator_->process_event(
+                                                   std::move(wrapper));
+    if (!output.has_value()) return Types::Enumerator{};
+    return query_catalog_->convert_enumerator(std::move(output.value()));
+  }
+
   // An order- and position-sensitive checksum (FNV-1a style) over the set bits
   // of each bitset, plus a separator per event. Cheap, and it keeps the
   // compiler from dropping the predicate-only and calibration loops.
