@@ -79,6 +79,20 @@ def family(query):
     return re.sub(r"_\d+$", "", base)
 
 
+def size_of(query):
+    """rep_eq_24_guard.txt -> 24; None when the name has no size suffix."""
+    m = re.search(r"_(\d+)(?:_guard)?\.txt$", query)
+    return int(m.group(1)) if m else None
+
+
+def fit_line(xs, ys):
+    """Least-squares slope and intercept of ys against xs."""
+    mx, my = st.mean(xs), st.mean(ys)
+    sxx = sum((x - mx) ** 2 for x in xs)
+    slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    return slope, my - slope * mx
+
+
 def grade(diff, tol):
     diff = abs(diff)
     return "PASS" if diff <= tol else ("WARN" if diff <= 2 * tol else "FAIL")
@@ -369,6 +383,29 @@ def main():
                   f"{m['predicate_ns']:.0f} | {m['automaton_ns']:.0f} | {m['output_ns']:.0f} | "
                   f"{m['predicate_share_pct']:.0f}% | {m['automaton_share_pct']:.0f}% | "
                   f"{m['output_share_pct']:.0f}% | {m['interaction_pct']:+.1f}% |")
+    # Scaling: for every family with at least three sizes, how predicate time
+    # grows per predicate added (the size suffix n is the number of
+    # predicates). A report, not a check: it gives the cost of one more
+    # predicate of each kind, and shows whether the tree stays flat.
+    sized = defaultdict(list)
+    for (d, q, s), res in derived.items():
+        n = size_of(q)
+        if res and n is not None:
+            sized[(f"{d}/{family(q)}", s)].append((n, res["predicate_ns"], res["E_ns"]))
+    scaling = []
+    for (f_name, s), pts in sorted(sized.items()):
+        if len({n for n, _, _ in pts}) < 3:
+            continue
+        ns = [n for n, _, _ in pts]
+        p_slope, p_icept = fit_line(ns, [p for _, p, _ in pts])
+        e_slope, _ = fit_line(ns, [e for _, _, e in pts])
+        scaling.append(f"| {f_name} | {s} | {', '.join(str(n) for n in sorted(ns))} | "
+                       f"{p_slope:.2f} | {p_icept:.0f} | {e_slope:.2f} |")
+    if scaling:
+        md += ["\n## Scaling (least squares over the family's sizes n)\n",
+               "| family | strategy | n | predicate ns per added predicate | predicate "
+               "intercept ns | E ns per added predicate |",
+               "|---|---|---|---|---|---|"] + scaling
     text = "\n".join(md) + "\n"
     (results / "DECOMPOSITION.md").write_text(text)
     print(text)
