@@ -27,7 +27,7 @@ Build-script flags shared by all of the above (`scripts/common.sh`): `-b <type>`
 
 ### C++ phase timing (Tracy, `core_bench`)
 
-`core_bench` (`src/tests/benchmarking/`) runs one query with one strategy through the real evaluation path, one run per process. With a `--profiling` build, `tests/benchmark/tracy_runs.py` captures each run as a `.tracy` file and `tests/benchmark/tracy_to_csv.py` turns them into per-zone and per-phase CSVs (compile, predicate evaluation, transitions, tECS, window, output). **Benchmark Release builds only** — Debug here is `-O0`. A profiling binary waits at exit for a profiler (`TRACY_NO_EXIT`), so always run it through `tracy_runs.py`. `core_bench --dump-tree` only builds the query and prints its minterm trees; `tests/benchmark/path_length_model.py` calls it once per query. Full reference: `guides/benchmarking/08-tracy-profiling.md`.
+`core_bench` (`src/tests/benchmarking/`) runs one query with one strategy through the real evaluation path, one run per process. With a `--profiling` build, `tests/benchmark/tracy_runs.py` captures each run as a `.tracy` file and `tests/benchmark/tracy_to_csv.py` turns them into per-zone and per-phase CSVs (compile, predicate evaluation, transitions, tECS, window, output). **Benchmark Release builds only** — Debug here is `-O0`. A profiling binary waits at exit for a profiler (`TRACY_NO_EXIT`), so always run it through `tracy_runs.py`. `core_bench --dump-tree` only builds the query and prints its minterm trees; `tests/benchmark/path_length_model.py` calls it once per query. `core_bench --method predicate|replay|replay_no_out|calib` (with `plain`) are the replay decomposition: predicate bitsets are recorded once and replayed into the automaton through `Evaluator::next_with_bitset`, so plain chrono yields compile / predicate / automaton / output per query. Run with `tracy_runs.py --methods plain predicate replay replay_no_out calib`, analyse with `tests/benchmark/decompose.py`, which also runs the correctness checks. Reference: `guides/benchmarking/09-replay-decomposition.md`; replay faithfulness is unit-tested by `[Replay]`. Full reference: `guides/benchmarking/08-tracy-profiling.md`.
 
 ### Optional optimizations (minterm tree)
 
@@ -72,6 +72,16 @@ Use the appropriate tier based on where you are in the development cycle:
    uv run pytest tests/e2e/ -v
    ```
    Runs all query datasets (stocks, unordered_stocks, smart_homes, taxis, ordered_bluesky, unordered_bluesky) via `PyOfflineServer` and compares output against expected results. Requires pycer to be built first (`scripts/build_pycer.sh`).
+   - **Memory:** the test holds a query's whole expected and actual output in Python, at roughly 4-5x the size of its expected-output file. `smart_homes/q3_none`/`q4_none` (7.9 / 6.7 GB) are already excluded in `tests/e2e/conftest.py`. On a machine with less than ~32 GB, also deselect the queries above 1 GB, and cap pytest's memory so an overrun kills only pytest. Their match counts are still checked in pure C++ by `core_bench` (`tracy_runs.py --query-dir queries`). The queries to deselect:
+     ```
+     systemd-run --user --scope -p MemoryMax=8G .venv/bin/pytest tests/e2e/ -q \
+       --deselect 'tests/e2e/test_queries.py::test_query[stocks/q3_none.txt]' \
+       --deselect 'tests/e2e/test_queries.py::test_query[stocks/other-q4_none.txt]' \
+       --deselect 'tests/e2e/test_queries.py::test_query[unordered_stocks/q3_none.txt]' \
+       --deselect 'tests/e2e/test_queries.py::test_query[unordered_stocks/other-q4_none.txt]' \
+       --deselect 'tests/e2e/test_queries.py::test_query[smart_homes/q2_none.txt]' \
+       --deselect 'tests/e2e/test_queries.py::test_query[smart_homes/q5_none.txt]'
+     ```
 
 4. **E2E tests with sanitizers** (run alongside tier 3):
    Build pycer with sanitizers and run e2e tests. Example with address sanitizer:

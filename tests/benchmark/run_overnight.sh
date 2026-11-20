@@ -5,6 +5,7 @@
 # already recorded, so a crash or reboot only loses the run in progress.
 #
 #   tests/benchmark/run_overnight.sh [OUT_DIR] [--smoke] [--stages S0,S1,S2,S3,S4]
+#                                    [--compare EARLIER_OUT_DIR]
 #
 # OUT_DIR defaults to tests/benchmark/results/overnight/<YYYYMMDD>. --smoke runs a
 # tiny version of every stage (2 queries, 1 repeat, 20k events) to check the
@@ -20,6 +21,11 @@
 #   S3  synthetic corpus, Tracy fine, 200k events (exact per-event op counts)
 #   S4  the repo's real queries (queries/), chrono then Tracy coarse; match
 #       counts verified against expected_results
+#   S5  replay decomposition (backlog item 29, guides/benchmarking/
+#       09-replay-decomposition.md): corpus, then the real queries, five
+#       core_bench methods each, then decompose.py with its checks. Not in the
+#       default stage list: run it with --stages S5. --compare points at an
+#       earlier run's directory (its S1/S2/S4) for decompose.py's cross-checks.
 #
 # Every timing build must be Release (-O3 -DNDEBUG); the script refuses to start
 # otherwise. Runs under systemd-inhibit so the machine cannot suspend mid-run.
@@ -29,12 +35,14 @@ cd "$(dirname "$0")/../.."
 
 SMOKE=0
 OUT=""
+COMPARE=""
 STAGES="S0,S1,S2,S3,S4"
 ARGS=("$@")
 while [ $# -gt 0 ]; do
   case "$1" in
     --smoke) SMOKE=1 ;;
     --stages) shift; STAGES="$1" ;;
+    --compare) shift; COMPARE="$1" ;;
     *) OUT="$1" ;;
   esac
   shift
@@ -79,7 +87,7 @@ if [ "$SMOKE" = 1 ]; then
   SYN="smart_homes/rep_eq_0[34].txt"
   SYN_TAXIS="taxis/str_rep_eq_04.txt"
   REAL="stocks/q1_*.txt taxis/q1_*.txt"
-  EV=20000; FINE_EV=20000; R_CHRONO=1; R_TRACY=1; R_REAL=1
+  EV=20000; FINE_EV=20000; R_CHRONO=1; R_TRACY=1; R_REAL=1; R_DEC=1
 else
   ITEM23="smart_homes/floor_01.txt smart_homes/rep_eq_24.txt smart_homes/eq_ladder_16.txt
           smart_homes/thr_ladder_08.txt smart_homes/worst_mix_16.txt
@@ -88,7 +96,7 @@ else
   SYN="smart_homes/*"
   SYN_TAXIS="taxis/*"
   REAL="stocks/* smart_homes/* taxis/*"
-  EV=0; FINE_EV=200000; R_CHRONO=5; R_TRACY=3; R_REAL=3
+  EV=0; FINE_EV=200000; R_CHRONO=5; R_TRACY=3; R_REAL=3; R_DEC=3
 fi
 # smart_homes q3_none/q4_none: 7.85/6.67 GB of expected output, excluded like tests/e2e.
 REAL_EXCLUDE="smart_homes/q3_none.txt smart_homes/q4_none.txt"
@@ -154,6 +162,32 @@ if want S4; then
     >> "$OUT/s4_tracy.log" 2>&1
   $PY $CONV "$OUT/s4_real_tracy" --chrono-dir "$OUT/s4_real_chrono" \
     > "$OUT/s4_convert.log" 2>&1
+fi
+
+if want S5; then
+  DEC="plain predicate replay replay_no_out calib"
+  DECOMPOSE=tests/benchmark/decompose.py
+  # Cross-checks only when an earlier run's directories exist.
+  cmp_args() {
+    local args=()
+    [ -n "$COMPARE" ] && [ -f "$COMPARE/$1/manifest.csv" ] && args+=(--compare-chrono "$COMPARE/$1")
+    [ -n "$COMPARE" ] && [ -f "$COMPARE/$2/tracy_phases.csv" ] && args+=(--compare-tracy "$COMPARE/$2")
+    echo "${args[@]}"
+  }
+  stage "S5 replay decomposition, synthetic corpus"
+  $PY $RUNS --mode chrono --build-dir $PLAIN --queries $SYN --methods $DEC \
+    --repeats $R_DEC --max-events $EV --out-dir "$OUT/s5_corpus_decomp" >> "$OUT/s5.log" 2>&1
+  $PY $RUNS --mode chrono --build-dir $PLAIN --queries $SYN_TAXIS --methods $DEC \
+    --strategies baseline minterm_tree minterm_tree_interned --repeats $R_DEC \
+    --max-events $EV --out-dir "$OUT/s5_corpus_decomp" >> "$OUT/s5.log" 2>&1
+  $PY $DECOMPOSE "$OUT/s5_corpus_decomp" $(cmp_args s1_corpus_chrono s2_corpus_tracy) \
+    > "$OUT/s5_corpus_decompose.log" 2>&1
+  stage "S5 replay decomposition, real queries"
+  $PY $RUNS --mode chrono --build-dir $PLAIN --query-dir queries --queries $REAL \
+    --exclude $REAL_EXCLUDE --strategies baseline minterm_tree --methods $DEC \
+    --repeats $R_DEC --max-events $EV --out-dir "$OUT/s5_real_decomp" >> "$OUT/s5.log" 2>&1
+  $PY $DECOMPOSE "$OUT/s5_real_decomp" $(cmp_args s4_real_chrono s4_real_tracy) \
+    > "$OUT/s5_real_decompose.log" 2>&1
 fi
 
 stage "done ($STAGES)"
