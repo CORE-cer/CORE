@@ -1,0 +1,15 @@
+SELECT * FROM S
+WHERE (TRIP as Z1; TRIP as Z2; TRIP as Z3; TRIP as Z4; TRIP as Z5; TRIP as Z6; TRIP as Z7; TRIP as Z8; TRIP as G1)
+FILTER
+    Z1[fare_amount + tip_amount > total_amount - 0.25] AND
+    Z2[fare_amount + tip_amount > total_amount - 0.75] AND
+    Z3[fare_amount + tip_amount > total_amount - 1.25] AND
+    Z4[fare_amount + tip_amount > total_amount - 2.0] AND
+    Z5[fare_amount + tip_amount > total_amount - 3.0] AND
+    Z6[fare_amount + tip_amount > total_amount - 5.0] AND
+    Z7[fare_amount + tip_amount > total_amount - 10.0] AND
+    Z8[fare_amount + tip_amount > total_amount - 15.0] AND
+    G1[total_amount < 0]
+WITHIN 1000 EVENTS
+CONSUME BY ANY
+LIMIT 1000
