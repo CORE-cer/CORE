@@ -44,7 +44,61 @@ FIELDS = ["label", "dataset", "query", "query_dir", "strategy", "method", "repea
           "status", "reason", "dataset_events", "event_count", "matches",
           "expected_matches", "verified", "compile_s", "loop_s",
           "split_predicate_s", "split_process_s", "bitset_checksum", "profile_level", "mode", "build_dir",
-          "trace", "process_wall_s", "attempts"]
+          "trace", "process_wall_s", "attempts",
+          "cpu_mhz", "cpu_mhz_min", "pkg_temp_c_start", "pkg_temp_c_max"]
+
+# Machine state per run (guides/benchmarking/09-replay-decomposition.md, "Drift
+# between nights"): on this laptop the clock follows the package temperature,
+# and a hot run is several % slower, so every run records both. Read from sysfs,
+# no root needed. cpu_mhz is the median, over the run, of the fastest pinned
+# CPU's average clock (the one core_bench's main thread keeps busy), sampled
+# every 0.2 s, so only meaningful for runs longer than about a second.
+SYS_CPU = Path("/sys/devices/system/cpu")
+
+
+def parse_cpu_list(spec: str) -> list[int]:
+    """'2,4' or '2-5' -> [2, 4] / [2, 3, 4, 5]; '' -> every CPU."""
+    if not spec:
+        return sorted(int(p.name[3:]) for p in SYS_CPU.glob("cpu[0-9]*"))
+    cpus = []
+    for part in spec.split(","):
+        lo, _, hi = part.partition("-")
+        cpus += range(int(lo), int(hi or lo) + 1)
+    return cpus
+
+
+def pkg_temp_zone() -> Path | None:
+    for zone in Path("/sys/class/thermal").glob("thermal_zone*"):
+        try:
+            if (zone / "type").read_text().strip() == "x86_pkg_temp":
+                return zone / "temp"
+        except OSError:
+            pass
+    return None
+
+
+PKG_TEMP = pkg_temp_zone()
+
+
+def read_pkg_temp() -> float | None:
+    try:
+        return int(PKG_TEMP.read_text()) / 1000 if PKG_TEMP else None
+    except (OSError, ValueError):
+        return None
+
+
+def read_cpu_mhz(cpus: list[int]) -> float | None:
+    best = None
+    for cpu in cpus:
+        base = SYS_CPU / f"cpu{cpu}/cpufreq"
+        for name in ("cpuinfo_avg_freq", "scaling_cur_freq"):
+            try:
+                khz = int((base / name).read_text())
+            except (OSError, ValueError):
+                continue
+            best = khz / 1000 if best is None else max(best, khz / 1000)
+            break
+    return best
 
 
 def run_label(dataset, query, strategy, method, repeat) -> str:
@@ -121,13 +175,20 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
             capture = subprocess.Popen(
                 [str(args.tools_dir / "tracy-capture"), "-f", "-o", str(trace_path)],
                 stdout=log, stderr=subprocess.STDOUT)
+        temp_start = read_pkg_temp()
         bench = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT)
         start = time.monotonic()
         summary_seen_at = None
         status = None
+        mhz, temps = [], ([temp_start] if temp_start is not None else [])
         while bench.poll() is None:
             time.sleep(0.2)
             now = time.monotonic()
+            if summary_seen_at is None:  # sample only while core_bench is working
+                if (m := read_cpu_mhz(args.pinned_cpus)) is not None:
+                    mhz.append(m)
+                if (t := read_pkg_temp()) is not None:
+                    temps.append(t)
             if summary_seen_at is None and json_path.exists():
                 summary_seen_at = now
             if summary_seen_at is not None and now - summary_seen_at > args.exit_grace:
@@ -151,6 +212,14 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
         return f"exit_{bench.returncode}", None
     summary = json.loads(json_path.read_text())
     summary["process_wall_s"] = round(time.monotonic() - start, 3)
+    if mhz:
+        mhz.sort()
+        summary["cpu_mhz"] = round(mhz[len(mhz) // 2])
+        summary["cpu_mhz_min"] = round(mhz[0])
+    if temp_start is not None:
+        summary["pkg_temp_c_start"] = temp_start
+    if temps:
+        summary["pkg_temp_c_max"] = max(temps)
     if summary.get("status") == "ok" and args.mode == "tracy":
         if not trace_path.exists() or trace_path.stat().st_size == 0:
             return "no_trace", None
@@ -204,6 +273,7 @@ def main() -> None:
     args = parser.parse_args()
 
     args.build_dir = args.build_dir.resolve()
+    args.pinned_cpus = parse_cpu_list(args.taskset)
     if not (args.build_dir / "core_bench").exists():
         sys.exit(f"no core_bench in {args.build_dir}")
     if args.mode == "tracy" and not (args.tools_dir / "tracy-capture").exists():

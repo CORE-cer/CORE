@@ -36,7 +36,11 @@ Then every check from guide 09 is run and graded PASS / WARN / FAIL:
   output_zero        output ~ 0 when the query has no matches
   calib              H is small and agrees across strategies
   vs_chrono          E vs an earlier plain run (--compare-chrono); only when both
-                     runs read the same events (skipped for --max-events slices)
+                     runs read the same events (skipped for --max-events slices).
+                     When both nights have a reference probe (run_overnight.sh's
+                     probe_start/probe_end, found next to each results dir), the
+                     earlier E is first scaled by the probe ratio, so machine
+                     drift between nights is not mistaken for a code change
   vs_tracy_pred      predicate vs Tracy predicate_corr_s (--compare-tracy)
   vs_tracy_out       output vs Tracy output_corr_s (--compare-tracy)
   rep_eq_scaling     baseline predicate grows ~28 ns per predicate on rep_eq_n,
@@ -87,6 +91,28 @@ def load_manifest(path):
 
 def ns_per_event(row, key="loop_s"):
     return float(row[key]) / max(int(row["event_count"]), 1) * 1e9
+
+
+def probe_speed(night_dir):
+    """{(dataset, query, strategy): median ns/event} over a night's probe_start
+    and probe_end (run_overnight.sh), or {} when it has none."""
+    ns = defaultdict(list)
+    for name in ("probe_start", "probe_end"):
+        manifest = night_dir / name / "manifest.csv"
+        if manifest.exists():
+            for r in load_manifest(manifest):
+                ns[(r["dataset"], r["query"], r["strategy"])].append(ns_per_event(r))
+    return {k: st.median(v) for k, v in ns.items()}
+
+
+def probe_ratio(now_dir, then_dir):
+    """Median over the probe queries of now/then speed, or None without both
+    probes (or when they read different events)."""
+    now, then = probe_speed(now_dir), probe_speed(then_dir)
+    common = [k for k in now if k in then]
+    if not common:
+        return None
+    return st.median(now[k] / then[k] for k in common)
 
 
 def summarize(rows):
@@ -231,13 +257,17 @@ def main():
                 k = (r["dataset"], r["query"], r["strategy"])
                 earlier[k].append(ns_per_event(r))
                 earlier_events[k] = int(r["event_count"])
+        # Machine drift between the two nights, from their reference probes.
+        drift = probe_ratio(results.parent, args.compare_chrono.parent)
+        drift_note = (f", earlier scaled by probe ratio {drift:.3f}" if drift
+                      else ", no probe on both nights: unscaled")
         for key, res in sorted(derived.items()):
             if res and key in earlier and earlier_events[key] == res["events"]:
-                then = st.median(earlier[key])
+                then = st.median(earlier[key]) * (drift or 1.0)
                 tol = max(0.10 * then, MIN_TOL_NS)
                 check("vs_chrono", key, grade(res["E_ns"] - then, tol),
                       f"E {res['E_ns']:.1f} vs earlier plain {then:.1f} ns "
-                      f"(tol 10%: the engine split must not slow next() down)")
+                      f"(tol 10%: the engine split must not slow next() down{drift_note})")
     if args.compare_tracy:
         tracy = defaultdict(lambda: defaultdict(list))
         tracy_events = {}
@@ -295,7 +325,20 @@ def main():
 
     md = [f"# Replay decomposition - {results.name}\n",
           "Definitions and checks: guides/benchmarking/09-replay-decomposition.md. "
-          "All numbers ns/event (compile in ms), medians over repeats.\n",
+          "All numbers ns/event (compile in ms), medians over repeats.\n"]
+    # Machine state over the night, when tracy_runs.py recorded it.
+    all_rows = load_manifest(results / "manifest.csv")
+    mhz = [float(r["cpu_mhz"]) for r in all_rows if r.get("cpu_mhz")]
+    temps = [float(r["pkg_temp_c_max"]) for r in all_rows if r.get("pkg_temp_c_max")]
+    if mhz:
+        mhz.sort()
+        md.append(f"Machine: busy-core clock median {st.median(mhz):.0f} MHz "
+                  f"(p10 {mhz[len(mhz) // 10]:.0f}), package max temperature median "
+                  f"{st.median(temps):.0f} C over {len(mhz)} runs.\n")
+    if args.compare_chrono:
+        md.append(f"Probe ratio vs {args.compare_chrono.parent.name}: "
+                  + (f"{drift:.3f} (this night / that night)" if drift else "n/a") + "\n")
+    md += [
           "## Checks\n", "| check | PASS | WARN | FAIL |", "|---|---|---|---|"]
     tally = defaultdict(Counter)
     for c in checks:
