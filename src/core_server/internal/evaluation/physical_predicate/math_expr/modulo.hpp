@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -24,14 +25,20 @@ class Modulo : public MathExpr<Type> {
     return std::make_unique<Modulo<Type>>(left->clone(), right->clone());
   }
 
-  Type eval(Types::EventWrapper& event) override {
+  std::optional<Type> eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Modulo is only valid for arithmetic vals");
       throw std::logic_error("Modulo is only valid for arithmetic vals");
     } else if constexpr (std::is_same_v<Type, double>) {
       throw std::runtime_error("Cannot eval a modulo on double types");
     } else {
-      return left->eval(event) % right->eval(event);
+      auto left_value = left->eval(event);
+      auto right_value = right->eval(event);
+      if (!left_value.has_value() || !right_value.has_value())
+        return std::nullopt;
+      else {
+        return left_value.value() % right_value.value();
+      }
     }
   }
 

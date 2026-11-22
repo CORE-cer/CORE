@@ -8,6 +8,7 @@
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "truth_value.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -34,23 +35,24 @@ class CompareMathExprs : public PhysicalPredicate {
 
   ~CompareMathExprs() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareMathExprs::eval()");
-    // std::cout << to_string() << std::endl;
-    if constexpr (Comp == ComparisonType::EQUALS) {
-      auto xd1 = left->eval(event);
-      auto xd2 = right->eval(event);
-      return xd1 == xd2;
+    auto left_value = left->eval(event);
+    auto right_value = right->eval(event);
+    if (!left_value.has_value() || !right_value.has_value()) {
+      return TruthValue::UNKNOWN;
+    } else if constexpr (Comp == ComparisonType::EQUALS) {
+      return left_value.value() == right_value.value() ? TRUE : FALSE;
     } else if constexpr (Comp == ComparisonType::GREATER)
-      return left->eval(event) > right->eval(event);
+      return left_value.value() > right_value.value() ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return left->eval(event) >= right->eval(event);
+      return left_value.value() >= right_value.value() ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return left->eval(event) <= right->eval(event);
+      return left_value.value() <= right_value.value() ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::LESS)
-      return left->eval(event) < right->eval(event);
+      return left_value.value() < right_value.value() ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return left->eval(event) != right->eval(event);
+      return left_value.value() != right_value.value() ? TRUE : FALSE;
     else
       assert(false && "Operator() not implemented for some ComparisonType");
   }

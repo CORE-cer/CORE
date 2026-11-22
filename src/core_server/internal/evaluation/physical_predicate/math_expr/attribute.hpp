@@ -1,7 +1,9 @@
 #pragma once
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <tracy/Tracy.hpp>
@@ -32,17 +34,19 @@ class Attribute : public MathExpr<GlobalType> {
 
   ~Attribute() override = default;
 
-  GlobalType eval(Types::EventWrapper& event) override {
+  std::optional<GlobalType> eval(Types::EventWrapper& event) override {
     ZoneScopedN("Attribute::eval(event)");
-    const typename ToCoreType<LocalType>::type&
+    std::optional<std::reference_wrapper<const typename ToCoreType<LocalType>::type>>
       val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
-    if constexpr (std::is_same_v<GlobalType, LocalType>) {
-      return val.val;
+    if (!val.has_value()) {
+      return std::nullopt;
+    } else if constexpr (std::is_same_v<GlobalType, LocalType>) {
+      return val->get().val;
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      stored_string = std::to_string(val.val);  // It is not a string already.
+      stored_string = std::to_string(val->get().val);  // It is not a string already.
       return stored_string;
     } else {
-      return static_cast<GlobalType>(val.val);
+      return static_cast<GlobalType>(val->get().val);
     }
   }
 

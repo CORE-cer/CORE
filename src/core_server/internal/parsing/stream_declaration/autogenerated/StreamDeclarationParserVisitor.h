@@ -39,7 +39,7 @@ public:
 
     virtual std::any visitDatatype(StreamDeclarationParser::DatatypeContext *context) = 0;
 
-    virtual std::any visitNull(StreamDeclarationParser::NullContext *context) = 0;
+    virtual std::any visitOptional(StreamDeclarationParser::OptionalContext *context) = 0;
 
     virtual std::any visitEvent_name(StreamDeclarationParser::Event_nameContext *context) = 0;
 

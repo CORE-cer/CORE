@@ -43,25 +43,25 @@ TEST_CASE("Correct event visitor parsing") {
   REQUIRE(event.attributes_info[2].value_type == Types::ValueTypes::BOOL);
 }
 
-TEST_CASE("Correct event visitor parsing with null attributes") {
+TEST_CASE("Correct event visitor parsing with optional attributes") {
   std::string stream =
     "CREATE STREAM MySensor {\n"
-    "EVENT Temp { ID:int, Value1:string, Value2:boolean null }\n"
+    "EVENT Temp { ID:int, Value1:string, Value2:boolean OPTIONAL }\n"
     "}";
   Types::EventInfoParsed event = parse_event(stream);
 
   REQUIRE(event.name == "Temp");
   REQUIRE(event.attributes_info[0].name == "ID");
   REQUIRE(event.attributes_info[0].value_type == Types::ValueTypes::INT64);
-  REQUIRE(event.attributes_info[0].nullable == false);
+  REQUIRE(event.attributes_info[0].optional == false);
 
   REQUIRE(event.attributes_info[1].name == "Value1");
   REQUIRE(event.attributes_info[1].value_type == Types::ValueTypes::STRING_VIEW);
-  REQUIRE(event.attributes_info[1].nullable == false);
+  REQUIRE(event.attributes_info[1].optional == false);
 
   REQUIRE(event.attributes_info[2].name == "Value2");
   REQUIRE(event.attributes_info[2].value_type == Types::ValueTypes::BOOL);
-  REQUIRE(event.attributes_info[1].nullable == true);
+  REQUIRE(event.attributes_info[2].optional == true);
 }
 
 }  // namespace CORE::Internal::CEQL::UnitTests

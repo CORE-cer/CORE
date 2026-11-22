@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "cassert"
+#include "truth_value.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -30,14 +31,24 @@ class OrPredicate : public PhysicalPredicate {
 
   ~OrPredicate() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
+    TruthValue final_value = TruthValue::FALSE;
+
     for (auto& predicate : predicates) {
       // We want to check for event_types individually inside the or.
-      if ((*predicate)(event)) {
-        return true;
+      TruthValue current = (*predicate)(event);
+
+      switch (current) {
+        case TruthValue::UNKNOWN:
+          final_value = TruthValue::UNKNOWN;
+          break;
+        case TruthValue::TRUE:
+          return TruthValue::TRUE;
+        case TruthValue::FALSE:
+          break;
       }
     }
-    return false;
+    return final_value;
   }
 
   std::string to_string() const override {

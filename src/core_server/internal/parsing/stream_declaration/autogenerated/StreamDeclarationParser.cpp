@@ -45,7 +45,7 @@ void streamdeclarationparserParserInitialize() {
     std::vector<std::string>{
       "parse", "error", "core_stmt", "core_declaration", "stream_declaration", 
       "event_list", "event_declaration", "attribute_dec_list", "attribute_declaration", 
-      "datatype", "null", "event_name", "stream_name", "attribute_name", 
+      "datatype", "optional", "event_name", "stream_name", "attribute_name", 
       "any_name", "keyword"
     },
     std::vector<std::string>{
@@ -59,8 +59,8 @@ void streamdeclarationparserParserInitialize() {
       "", "K_ALL", "K_AND", "K_ANY", "K_AS", "K_BY", "K_CONSUME", "K_CREATE", 
       "K_DISTINCT", "K_EVENT", "K_EVENTS", "K_FILTER", "K_FROM", "K_HOURS", 
       "K_IN", "K_LAST", "K_LIKE", "K_MAX", "K_MINUTES", "K_NEXT", "K_NONE", 
-      "K_NOT", "K_OR", "K_PARTITION", "K_SECONDS", "K_SELECT", "K_STREAM", 
-      "K_STRICT", "K_UNLESS", "K_WHERE", "K_WITHIN", "K_NULL", "PERCENT", 
+      "K_NOT", "K_OPTIONAL", "K_OR", "K_PARTITION", "K_SECONDS", "K_SELECT", 
+      "K_STREAM", "K_STRICT", "K_UNLESS", "K_WHERE", "K_WITHIN", "PERCENT", 
       "PLUS", "MINUS", "STAR", "SLASH", "LE", "LEQ", "GE", "GEQ", "EQ", 
       "NEQ", "INT", "STRING", "DOUBLE", "LONG", "BOOLEAN", "PRIMARY_TIME", 
       "SEMICOLON", "COMMA", "DOUBLE_DOT", "LEFT_PARENTHESIS", "RIGHT_PARENTHESIS", 
@@ -86,7 +86,7 @@ void streamdeclarationparserParserInitialize() {
   	1,0,0,0,36,34,1,0,0,0,36,37,1,0,0,0,37,39,1,0,0,0,38,36,1,0,0,0,39,40,
   	5,0,0,1,40,1,1,0,0,0,41,42,5,68,0,0,42,43,6,1,-1,0,43,3,1,0,0,0,44,45,
   	3,6,3,0,45,5,1,0,0,0,46,47,3,8,4,0,47,7,1,0,0,0,48,49,5,7,0,0,49,50,5,
-  	26,0,0,50,51,3,24,12,0,51,52,5,56,0,0,52,53,3,10,5,0,53,54,5,57,0,0,54,
+  	27,0,0,50,51,3,24,12,0,51,52,5,56,0,0,52,53,3,10,5,0,53,54,5,57,0,0,54,
   	9,1,0,0,0,55,60,3,12,6,0,56,57,5,50,0,0,57,59,3,12,6,0,58,56,1,0,0,0,
   	59,62,1,0,0,0,60,58,1,0,0,0,60,61,1,0,0,0,61,11,1,0,0,0,62,60,1,0,0,0,
   	63,64,5,9,0,0,64,65,3,22,11,0,65,66,5,56,0,0,66,67,3,14,7,0,67,68,5,57,
@@ -94,7 +94,7 @@ void streamdeclarationparserParserInitialize() {
   	16,8,0,73,71,1,0,0,0,74,77,1,0,0,0,75,73,1,0,0,0,75,76,1,0,0,0,76,79,
   	1,0,0,0,77,75,1,0,0,0,78,69,1,0,0,0,78,70,1,0,0,0,79,15,1,0,0,0,80,81,
   	3,26,13,0,81,82,5,58,0,0,82,84,3,18,9,0,83,85,3,20,10,0,84,83,1,0,0,0,
-  	84,85,1,0,0,0,85,17,1,0,0,0,86,87,7,0,0,0,87,19,1,0,0,0,88,89,5,31,0,
+  	84,85,1,0,0,0,85,17,1,0,0,0,86,87,7,0,0,0,87,19,1,0,0,0,88,89,5,22,0,
   	0,89,21,1,0,0,0,90,91,3,28,14,0,91,23,1,0,0,0,92,93,3,28,14,0,93,25,1,
   	0,0,0,94,95,3,28,14,0,95,27,1,0,0,0,96,97,5,59,0,0,97,29,1,0,0,0,98,99,
   	7,1,0,0,99,31,1,0,0,0,6,34,36,60,75,78,84
@@ -724,8 +724,8 @@ StreamDeclarationParser::DatatypeContext* StreamDeclarationParser::Attribute_dec
   return getRuleContext<StreamDeclarationParser::DatatypeContext>(0);
 }
 
-StreamDeclarationParser::NullContext* StreamDeclarationParser::Attribute_declarationContext::null() {
-  return getRuleContext<StreamDeclarationParser::NullContext>(0);
+StreamDeclarationParser::OptionalContext* StreamDeclarationParser::Attribute_declarationContext::optional() {
+  return getRuleContext<StreamDeclarationParser::OptionalContext>(0);
 }
 
 
@@ -765,9 +765,9 @@ StreamDeclarationParser::Attribute_declarationContext* StreamDeclarationParser::
     _errHandler->sync(this);
 
     _la = _input->LA(1);
-    if (_la == StreamDeclarationParser::K_NULL) {
+    if (_la == StreamDeclarationParser::K_OPTIONAL) {
       setState(83);
-      null();
+      optional();
     }
    
   }
@@ -858,32 +858,32 @@ StreamDeclarationParser::DatatypeContext* StreamDeclarationParser::datatype() {
   return _localctx;
 }
 
-//----------------- NullContext ------------------------------------------------------------------
+//----------------- OptionalContext ------------------------------------------------------------------
 
-StreamDeclarationParser::NullContext::NullContext(ParserRuleContext *parent, size_t invokingState)
+StreamDeclarationParser::OptionalContext::OptionalContext(ParserRuleContext *parent, size_t invokingState)
   : ParserRuleContext(parent, invokingState) {
 }
 
-tree::TerminalNode* StreamDeclarationParser::NullContext::K_NULL() {
-  return getToken(StreamDeclarationParser::K_NULL, 0);
+tree::TerminalNode* StreamDeclarationParser::OptionalContext::K_OPTIONAL() {
+  return getToken(StreamDeclarationParser::K_OPTIONAL, 0);
 }
 
 
-size_t StreamDeclarationParser::NullContext::getRuleIndex() const {
-  return StreamDeclarationParser::RuleNull;
+size_t StreamDeclarationParser::OptionalContext::getRuleIndex() const {
+  return StreamDeclarationParser::RuleOptional;
 }
 
 
-std::any StreamDeclarationParser::NullContext::accept(tree::ParseTreeVisitor *visitor) {
+std::any StreamDeclarationParser::OptionalContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<StreamDeclarationParserVisitor*>(visitor))
-    return parserVisitor->visitNull(this);
+    return parserVisitor->visitOptional(this);
   else
     return visitor->visitChildren(this);
 }
 
-StreamDeclarationParser::NullContext* StreamDeclarationParser::null() {
-  NullContext *_localctx = _tracker.createInstance<NullContext>(_ctx, getState());
-  enterRule(_localctx, 20, StreamDeclarationParser::RuleNull);
+StreamDeclarationParser::OptionalContext* StreamDeclarationParser::optional() {
+  OptionalContext *_localctx = _tracker.createInstance<OptionalContext>(_ctx, getState());
+  enterRule(_localctx, 20, StreamDeclarationParser::RuleOptional);
 
 #if __cplusplus > 201703L
   auto onExit = finally([=, this] {
@@ -895,7 +895,7 @@ StreamDeclarationParser::NullContext* StreamDeclarationParser::null() {
   try {
     enterOuterAlt(_localctx, 1);
     setState(88);
-    match(StreamDeclarationParser::K_NULL);
+    match(StreamDeclarationParser::K_OPTIONAL);
    
   }
   catch (RecognitionException &e) {
@@ -1193,8 +1193,8 @@ tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_NOT() {
   return getToken(StreamDeclarationParser::K_NOT, 0);
 }
 
-tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_NULL() {
-  return getToken(StreamDeclarationParser::K_NULL, 0);
+tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_OPTIONAL() {
+  return getToken(StreamDeclarationParser::K_OPTIONAL, 0);
 }
 
 tree::TerminalNode* StreamDeclarationParser::KeywordContext::K_OR() {

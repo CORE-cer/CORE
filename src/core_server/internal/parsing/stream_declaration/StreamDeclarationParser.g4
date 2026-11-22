@@ -41,7 +41,7 @@ attribute_dec_list
  ;
 
 attribute_declaration
- : attribute_name ':' datatype null?
+ : attribute_name ':' datatype optional?
  ;
 
 datatype
@@ -53,8 +53,8 @@ datatype
  | IDENTIFIER
  ;
 
-null
- : K_NULL
+optional
+ : K_OPTIONAL
  ;
 
 event_name
@@ -95,7 +95,7 @@ keyword
  | K_NEXT
  | K_NONE
  | K_NOT
- | K_NULL
+ | K_OPTIONAL
  | K_OR
  | K_PARTITION
  | K_SECONDS

@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -25,12 +26,18 @@ class Addition : public MathExpr<Type> {
 
   ~Addition() override = default;
 
-  Type eval(Types::EventWrapper& event) override {
+  std::optional<Type> eval(Types::EventWrapper& event) override {
     if constexpr (!std::is_arithmetic<Type>::value) {
       assert(false && "Addition is only valid for arithmetic vals");
       throw std::logic_error("Addition is only valid for arithmetic vals");
-    } else
-      return left->eval(event) + right->eval(event);
+    } else {
+      auto left_value = left->eval(event);
+      auto right_value = right->eval(event);
+      if (!left_value.has_value() || !right_value.has_value())
+        return std::nullopt;
+      else
+        return left_value.value() + right_value.value();
+    }
   }
 
   std::string to_string() const override {

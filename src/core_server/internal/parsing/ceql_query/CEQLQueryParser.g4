@@ -92,6 +92,7 @@ predicate
  | predicate K_OR predicate                                                                 # or_predicate
  | attribute_name K_LIKE string_literal                                                     # regex_predicate
  | attribute_name ( K_IN | K_NOT K_IN ) value_seq                                           # in_predicate
+ | K_HAS math_expr                                                                          # has_predicate
  | math_expr K_IN K_RANGE LEFT_PARENTHESIS math_expr COMMA math_expr RIGHT_PARENTHESIS      # in_range_predicate
  ;
 
@@ -231,6 +232,7 @@ keyword
  | K_NEXT
  | K_NONE
  | K_NOT
+ | K_HAS
  | K_OR
  | K_PARTITION
  | K_RANGE

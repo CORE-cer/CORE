@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace CORE::Types {
 struct Value {
@@ -277,6 +278,43 @@ struct DateValue final : public Value {
   bool operator==(const Value& other) const override {
     const auto* other_ptr = dynamic_cast<const DateValue*>(&other);
     return other_ptr != nullptr && this->val == other_ptr->val;
+  }
+
+  template <class Archive>
+  void serialize(Archive& archive) {
+    archive(val);
+  }
+};
+
+struct OptionalValue final : public Value {
+  std::unique_ptr<Value> val;
+
+  OptionalValue() {}
+
+  OptionalValue(std::unique_ptr<Value> val) : val(std::move(val)) {}
+
+  ~OptionalValue() override = default;
+
+  std::unique_ptr<Value> clone() const override {
+    return val == nullptr ? std::make_unique<OptionalValue>()
+                          : std::make_unique<OptionalValue>(val->clone());
+  }
+
+  // TODO:
+  std::string to_string() const override {
+    if (val == nullptr) {
+      return "{}";
+    }
+    return val == nullptr ? "{}" : val->to_string();
+  }
+
+  std::string to_json() const override { return "OptionalValue()"; }
+
+  std::string get_type() const override { return "OptionalValue()"; }
+
+  bool operator==(const Value& other) const override {
+    const auto* other_ptr = dynamic_cast<const OptionalValue*>(&other);
+    return other_ptr != nullptr && *this->val == *other_ptr->val;
   }
 
   template <class Archive>

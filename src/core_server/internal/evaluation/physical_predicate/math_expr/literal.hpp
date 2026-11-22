@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -28,7 +29,7 @@ class Literal : public MathExpr<Type> {
     }
   }
 
-  Type eval(Types::EventWrapper& /*event*/) override { return val; }
+  std::optional<Type> eval(Types::EventWrapper& /*event*/) override { return val; }
 
   std::string to_string() const override {
     if constexpr (std::is_same_v<Type, std::string_view>) {

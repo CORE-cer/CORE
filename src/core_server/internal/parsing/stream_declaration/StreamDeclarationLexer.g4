@@ -21,6 +21,7 @@ K_MINUTES   : M I N U T E S?;
 K_NEXT      : N E X T;
 K_NONE      : N O N E;
 K_NOT       : N O T;
+K_OPTIONAL  : O P T I O N A L;
 K_OR        : O R;
 K_PARTITION : P A R T I T I O N;
 K_SECONDS   : S E C O N D S?;
@@ -30,7 +31,6 @@ K_STRICT    : S T R I C T;
 K_UNLESS    : U N L E S S;
 K_WHERE     : W H E R E;
 K_WITHIN    : W I T H I N;
-K_NULL      : N U L L;
 
 PERCENT : '%';
 PLUS    : '+';

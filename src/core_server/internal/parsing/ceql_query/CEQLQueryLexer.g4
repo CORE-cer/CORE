@@ -12,6 +12,7 @@ K_EVENT     : E V E N T;
 K_EVENTS    : E V E N T S;
 K_FILTER    : F I L T E R;
 K_FROM      : F R O M;
+K_HAS       : H A S;
 K_HOURS     : H O U R S?;
 K_IN        : I N;
 K_LAST      : L A S T;

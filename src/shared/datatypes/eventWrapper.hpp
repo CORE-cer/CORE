@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -110,14 +111,28 @@ class EventWrapper {
   }
 
   template <DerivedFromValue T>
-  const T& get_attribute_at_index(std::size_t attribute_index) {
+  std::optional<std::reference_wrapper<const T>>
+  get_attribute_at_index(std::size_t attribute_index) {
     LOG_TRACE_L3(logger,
                  "Getting attribute at index {} from EventWrapper with id {}",
                  attribute_index,
                  id);
     assert(!moved);
     assert(attribute_index < event->attributes.size());
-    return static_cast<const T&>(*(event->attributes)[attribute_index]);
+
+    auto& attribute = event->attributes[attribute_index];
+
+    OptionalValue* optional_val = dynamic_cast<OptionalValue*>(attribute.get());
+
+    if (optional_val == nullptr) {
+      return std::cref(static_cast<const T&>(*attribute));
+    }
+
+    else if (optional_val->val == nullptr) {
+      return std::nullopt;
+    }
+
+    return std::cref(static_cast<const T&>(*optional_val->val));
   }
 
   std::unique_ptr<Types::Value> get_attribute_clone_at_index(std::size_t attribute_index) {

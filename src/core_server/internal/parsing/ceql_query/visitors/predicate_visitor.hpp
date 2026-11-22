@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "core_server/internal/ceql/cel_formula/predicate/and_predicate.hpp"
+#include "core_server/internal/ceql/cel_formula/predicate/has_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/in_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/in_range_predicate.hpp"
 #include "core_server/internal/ceql/cel_formula/predicate/inequality_predicate.hpp"
@@ -136,6 +137,13 @@ class PredicateVisitor : public CEQLQueryParserBaseVisitor {
     if (ctx->K_NOT()) {
       predicate = std::make_unique<CEQL::NotPredicate>(std::move(predicate));
     }
+    return {};
+  }
+
+  std::any visitHas_predicate(CEQLQueryParser::Has_predicateContext* ctx) override {
+    value_visitor.visit(ctx->math_expr());
+    auto value = value_visitor.get_parsed_value();
+    predicate = std::make_unique<CEQL::HasPredicate>(std::move(value));
     return {};
   }
 

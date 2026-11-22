@@ -179,6 +179,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitHas_predicate(CEQLQueryParser::Has_predicateContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitOr_predicate(CEQLQueryParser::Or_predicateContext *ctx) override {
     return visitChildren(ctx);
   }

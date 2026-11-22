@@ -55,7 +55,7 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitNull(StreamDeclarationParser::NullContext *ctx) override {
+  virtual std::any visitOptional(StreamDeclarationParser::OptionalContext *ctx) override {
     return visitChildren(ctx);
   }
 
