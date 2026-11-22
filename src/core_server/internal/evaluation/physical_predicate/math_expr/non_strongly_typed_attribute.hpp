@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -40,7 +42,7 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
 
   ~NonStronglyTypedAttribute() override = default;
 
-  GlobalType eval(Types::EventWrapper& event) override {
+  std::optional<GlobalType> eval(Types::EventWrapper& event) override {
     // It must be determined at the predicate level whether this eval
     // makes sense for the tuple.
     Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
@@ -69,20 +71,22 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
   }
 
   template <typename LocalType>
-  GlobalType eval(Types::EventWrapper& event, size_t pos) {
-    const typename ToCoreType<LocalType>::type&
+  std::optional<GlobalType> eval(Types::EventWrapper& event, size_t pos) {
+    std::optional<std::reference_wrapper<const typename ToCoreType<LocalType>::type>>
       val = event.get_attribute_at_index<typename ToCoreType<LocalType>::type>(pos);
-    if constexpr (std::is_same_v<GlobalType, LocalType>) {
-      return val.val;
+    if (!val.has_value()) {
+      return std::nullopt;
+    } else if constexpr (std::is_same_v<GlobalType, LocalType>) {
+      return val->get().val;
     } else if constexpr (std::is_same_v<GlobalType, std::string_view>) {
-      stored_string = std::to_string(val.val);  // It is not a string already.
+      stored_string = std::to_string(val->get().val);  // It is not a string already.
       return stored_string;
     } else if constexpr (std::is_same_v<LocalType, std::string_view>) {
       assert(false
              && "Local Type is string and global type is not, this should never happen.");
       return {};
     } else {
-      return static_cast<GlobalType>(val.val);
+      return static_cast<GlobalType>(val->get().val);
     }
   }
 

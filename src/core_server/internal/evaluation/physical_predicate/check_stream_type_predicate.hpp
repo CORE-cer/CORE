@@ -4,6 +4,7 @@
 
 #include "cassert"
 #include "core_server/internal/coordination/query_catalog.hpp"
+#include "truth_value.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/aliases/stream_type_id.hpp"
@@ -24,14 +25,14 @@ class CheckStreamTypePredicate : public PhysicalPredicate {
 
   ~CheckStreamTypePredicate() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
     Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
 
     // If errors out, probably sent a tuple that is not in the from for this query
     Types::StreamTypeId tuple_stream_type_id = query_catalog.stream_id_from_unique_event_id(
       unique_event_id);
 
-    return tuple_stream_type_id == stream_type_id;
+    return tuple_stream_type_id == stream_type_id ? TruthValue::TRUE : TruthValue::FALSE;
   }
 
   std::string to_string() const override {

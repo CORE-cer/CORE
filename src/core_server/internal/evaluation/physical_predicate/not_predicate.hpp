@@ -8,6 +8,7 @@
 #include "cassert"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "truth_value.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -28,7 +29,17 @@ class NotPredicate : public PhysicalPredicate {
 
   ~NotPredicate() override = default;
 
-  bool eval(Types::EventWrapper& event) override { return !predicate->eval(event); }
+  TruthValue eval(Types::EventWrapper& event) override {
+    auto pred_value = predicate->eval(event);
+    switch (pred_value) {
+      case FALSE:
+        return TruthValue::TRUE;
+      case UNKNOWN:
+        return TruthValue::UNKNOWN;
+      default:
+        return TruthValue::FALSE;
+    }
+  }
 
   std::string to_string() const override { return "NOT " + predicate->to_string(); }
 };

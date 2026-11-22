@@ -4,6 +4,7 @@
 
 #include "cassert"
 #include "core_server/internal/coordination/query_catalog.hpp"
+#include "truth_value.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -23,14 +24,15 @@ class CheckEventNamePredicate : public PhysicalPredicate {
 
   ~CheckEventNamePredicate() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
     Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
 
     Types::EventNameTypeId
       tuple_event_name_type_id = query_catalog.event_name_id_from_unique_event_id(
         unique_event_id);
 
-    return tuple_event_name_type_id == event_name_type_id;
+    return tuple_event_name_type_id == event_name_type_id ? TruthValue::TRUE
+                                                          : TruthValue::FALSE;
   }
 
   std::string to_string() const override {

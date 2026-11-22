@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <string>
@@ -14,6 +16,7 @@
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "truth_value.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -43,23 +46,25 @@ class CompareWithConstant : public PhysicalPredicate {
 
   ~CompareWithConstant() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithConstant::eval()");
-    const typename ToCoreType<ValueType>::type&
+    std::optional<std::reference_wrapper<const typename ToCoreType<ValueType>::type>>
       attribute_val = event.get_attribute_at_index<typename ToCoreType<ValueType>::type>(
         pos_to_compare);
-    if constexpr (Comp == ComparisonType::EQUALS)
-      return attribute_val.val == constant_val;
+    if (!attribute_val.has_value())
+      return TruthValue::UNKNOWN;
+    else if constexpr (Comp == ComparisonType::EQUALS)
+      return attribute_val->get().val == constant_val ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::GREATER)
-      return attribute_val.val > constant_val;
+      return attribute_val->get().val > constant_val ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-      return attribute_val.val >= constant_val;
+      return attribute_val->get().val >= constant_val ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-      return attribute_val.val <= constant_val;
+      return attribute_val->get().val <= constant_val ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::LESS)
-      return attribute_val.val < constant_val;
+      return attribute_val->get().val < constant_val ? TRUE : FALSE;
     else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-      return attribute_val.val != constant_val;
+      return attribute_val->get().val != constant_val ? TRUE : FALSE;
     else
       assert(false && "Operator() not implemented for some ComparisonType");
   }

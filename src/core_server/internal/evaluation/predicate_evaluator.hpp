@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/truth_value.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -29,7 +30,7 @@ struct PredicateEvaluator {
     ZoneScopedN("PredicateEvaluator::operator()");
     Bitset out_event(predicates.size());
     for (size_t i = 0; i < predicates.size(); i++) {
-      if ((*predicates[i])(event)) {
+      if ((*predicates[i])(event) == CEA::TruthValue::TRUE) {
         out_event.set(i);
       }
     }

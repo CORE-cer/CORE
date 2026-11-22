@@ -6,6 +6,7 @@
 
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
+#include "truth_value.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -25,18 +26,18 @@ class PhysicalPredicate {
 
   PhysicalPredicate() : admits_any_event_type(true) {}
 
-  bool operator()(Types::EventWrapper& event) {
+  // TODO: return bool?
+  TruthValue operator()(Types::EventWrapper& event) {
     // admits_any_event_type is second in the condition because it is rare
     // that the operator() will be used on such a type.
     Types::UniqueEventTypeId unique_event_id = event.get_unique_event_type_id();
     if (admissible_event_types.contains(unique_event_id) || admits_any_event_type) {
-      bool event_eval = eval(event);
-      return event_eval;
+      return eval(event);
     }
-    return false;
+    return TruthValue::FALSE;
   }
 
-  virtual bool eval(Types::EventWrapper& event_wrapper) = 0;
+  virtual TruthValue eval(Types::EventWrapper& event_wrapper) = 0;
 
   std::string complete_info_string() const {
     std::string out = "admits any event type: " + std::to_string(admits_any_event_type)

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <ctime>
 #include <cwchar>
+#include <functional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -14,6 +15,7 @@
 #include "physical_predicate.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
+#include "truth_value.hpp"
 
 namespace CORE::Internal::CEA {
 
@@ -65,31 +67,34 @@ class CompareWithAttribute : public PhysicalPredicate {
 
   ~CompareWithAttribute() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
+  TruthValue eval(Types::EventWrapper& event) override {
     ZoneScopedN("CompareWithAttribute::eval()");
-    const typename ToCoreType<LeftValueType>::type&
+    std::optional<std::reference_wrapper<const typename ToCoreType<LeftValueType>::type>>
       pos1 = event.get_attribute_at_index<typename ToCoreType<LeftValueType>::type>(
         first_pos);
-    const typename ToCoreType<RightValueType>::type&
+    std::optional<std::reference_wrapper<const typename ToCoreType<RightValueType>::type>>
       pos2 = event.get_attribute_at_index<typename ToCoreType<RightValueType>::type>(
         second_pos);
     if constexpr (!std::is_same_v<LeftValueType, RightValueType>
                   && (std::is_same_v<LeftValueType, std::string_view>
                       || std::is_same_v<RightValueType, std::string_view>)) {
-      return false;  // Cannot compare string with non string.
+      return TruthValue::FALSE;  // Cannot compare string with non string.
     } else {
+      if (!pos1.has_value() || !pos2.has_value()) {
+        return TruthValue::UNKNOWN;
+      }
       if constexpr (Comp == ComparisonType::EQUALS)
-        return pos1.val == pos2.val;
+        return pos1->get().val == pos2->get().val ? TRUE : FALSE;
       else if constexpr (Comp == ComparisonType::GREATER)
-        return pos1.val > pos2.val;
+        return pos1->get().val > pos2->get().val ? TRUE : FALSE;
       else if constexpr (Comp == ComparisonType::GREATER_EQUALS)
-        return pos1.val >= pos2.val;
+        return pos1->get().val >= pos2->get().val ? TRUE : FALSE;
       else if constexpr (Comp == ComparisonType::LESS_EQUALS)
-        return pos1.val <= pos2.val;
+        return pos1->get().val <= pos2->get().val ? TRUE : FALSE;
       else if constexpr (Comp == ComparisonType::LESS)
-        return pos1.val < pos2.val;
+        return pos1->get().val < pos2->get().val ? TRUE : FALSE;
       else if constexpr (Comp == ComparisonType::NOT_EQUALS)
-        return pos1.val != pos2.val;
+        return pos1->get().val != pos2->get().val ? TRUE : FALSE;
       else
         assert(false && "Operator() not implemented for some ComparisonType");
     }

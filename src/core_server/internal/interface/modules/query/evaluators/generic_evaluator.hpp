@@ -56,7 +56,8 @@ class GenericEvaluator {
                                                           time_window.attribute_name);
         }
         uint64_t attribute_index = indexes[event_type_id];
-        time = event.get_attribute_at_index<Types::IntValue>(attribute_index).val;
+        // TODO: this should not be null
+        time = event.get_attribute_at_index<Types::IntValue>(attribute_index)->get().val;
         break;
       }
       default:

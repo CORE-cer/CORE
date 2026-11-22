@@ -4,10 +4,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/truth_value.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -29,10 +32,15 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
 
   ~CompareWithRegexStronglyTyped() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
-    const Types::StringValue
+  TruthValue eval(Types::EventWrapper& event) override {
+    std::optional<std::reference_wrapper<const Types::StringValue>>
       attribute_val = event.get_attribute_at_index<Types::StringValue>(pos_to_compare);
-    return re2::RE2::PartialMatch(attribute_val.val, regex_compiled);
+    if (!attribute_val.has_value()) {
+      return TruthValue::UNKNOWN;
+    }
+    return re2::RE2::PartialMatch(attribute_val->get().val, regex_compiled)
+             ? TruthValue::TRUE
+             : TruthValue::FALSE;
   }
 
   std::string to_string() const override {

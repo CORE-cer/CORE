@@ -11,6 +11,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/math_expr/non_strongly_typed_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/truth_value.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
 namespace CORE::Internal::CEA {
@@ -32,8 +33,13 @@ class CompareWithRegexWeaklyTyped : public PhysicalPredicate {
 
   ~CompareWithRegexWeaklyTyped() override = default;
 
-  bool eval(Types::EventWrapper& event) override {
-    return re2::RE2::PartialMatch(left->eval(event), regex_compiled);
+  TruthValue eval(Types::EventWrapper& event) override {
+    std::optional<std::string_view> left_value = left->eval(event);
+    if (!left_value.has_value()) {
+      return TruthValue::UNKNOWN;
+    }
+    return re2::RE2::PartialMatch(left_value.value(), regex_compiled) ? TruthValue::TRUE
+                                                                      : TruthValue::FALSE;
   }
 
   std::string to_string() const override {

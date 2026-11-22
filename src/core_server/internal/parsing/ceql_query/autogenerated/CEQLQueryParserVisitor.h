@@ -101,6 +101,8 @@ public:
 
     virtual std::any visitInequality_predicate(CEQLQueryParser::Inequality_predicateContext *context) = 0;
 
+    virtual std::any visitHas_predicate(CEQLQueryParser::Has_predicateContext *context) = 0;
+
     virtual std::any visitOr_predicate(CEQLQueryParser::Or_predicateContext *context) = 0;
 
     virtual std::any visitString_literal(CEQLQueryParser::String_literalContext *context) = 0;
