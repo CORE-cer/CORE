@@ -180,7 +180,11 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       auto flat = flat_trees_.find(event_type);
       if (flat != flat_trees_.end()) {
         CORE_ZONE_FINE("MintermTree::tree_walk");
-        result |= flat->second.leaf_bits[flat_leaf_index(flat->second, event)];
+        // The atom's truth value comes straight from eval() (see flat_walk).
+        result |= flat->second.leaf_bits[flat_walk</*kCountSteps=*/false>(
+          flat->second, [&event](CEA::PhysicalPredicate* atom, size_t /*index*/) {
+            return atom->eval(event);
+          })];
         return result;
       }
     }
@@ -210,16 +214,21 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // either way.
   //
   // With an array layout it counts the decisions of the array walk instead
-  // (the same walk as flat_leaf_index, counted), so tests can check that every
+  // (the same walk as flat_walk, counted), so tests can check that every
   // layout takes exactly the same number of decisions as the pointer tree.
-  size_t debug_path_length(Types::EventWrapper& event) {
+  size_t debug_path_length(Types::EventWrapper& event) override {
     Types::UniqueEventTypeId event_type = event.get_unique_event_type_id();
     if (tree_layout_ == TreeLayoutStrategy::ArrayCompact
         || tree_layout_ == TreeLayoutStrategy::ArrayImplicit) {
       auto flat = flat_trees_.find(event_type);
       if (flat == flat_trees_.end()) return 0;
       size_t steps = 0;
-      flat_leaf_index</*kCountSteps=*/true>(flat->second, event, &steps);
+      flat_walk</*kCountSteps=*/true>(
+        flat->second,
+        [&event](CEA::PhysicalPredicate* atom, size_t /*index*/) {
+          return atom->eval(event);
+        },
+        &steps);
       return steps;
     }
     auto tree = trees_.find(event_type);
@@ -268,6 +277,109 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       return TreeLayoutStrategy::ArrayCompact;
     }
     return tree_layout_;
+  }
+
+  // ---- Walk benchmark hooks (core_bench --method walk / walk_eval) ---------
+  //
+  // They answer "what does the WALK cost, apart from the atoms?" (backlog
+  // item 26's double check). A decision is the atom's eval() plus a few
+  // instructions of walking; with ~30 ns atoms a layout's effect on those few
+  // instructions is lost in the noise. So core_bench first records, for each
+  // event, the outcome of every atom of its type's tree as one bit of a mask
+  // (debug_atom_mask, untimed), then times the walk with each atom's eval()
+  // replaced by reading its bit (debug_walk_with_masks). That leaves exactly
+  // the traversal: the node loads, the index arithmetic and the loop exit, on
+  // the real trees and the real sequence of outcomes. debug_walk_with_eval
+  // times the same loop with the real atoms, so the difference between the
+  // two is the atoms' share. Never called by the engine.
+
+  // Bit k = the outcome of atom k of this event's type tree (atom ids follow
+  // the order atoms were refined in). nullopt if the type has no tree or more
+  // than 63 atoms (the array walk reads bit id + 1, see tagged_flat_trees_).
+  std::optional<uint64_t> debug_atom_mask(Types::EventWrapper& event) override {
+    auto atoms = atoms_per_type_.find(event.get_unique_event_type_id());
+    if (atoms == atoms_per_type_.end() || atoms->second.size() > 63
+        || !trees_.contains(event.get_unique_event_type_id())) {
+      return std::nullopt;
+    }
+    uint64_t mask = 0;
+    for (size_t k = 0; k < atoms->second.size(); k++) {
+      if (atoms->second[k]->eval(event)) mask |= uint64_t{1} << k;
+    }
+    return mask;
+  }
+
+  // Walks `event_type`'s tree once per mask with the selected layout, reading
+  // each atom's outcome from the mask. Returns the total number of decisions
+  // (equal to the sum of debug_path_length over the same events, which
+  // core_bench checks), so the work cannot be optimized away.
+  size_t debug_walk_with_masks(Types::UniqueEventTypeId event_type,
+                               const std::vector<uint64_t>& masks) override {
+    size_t decisions = 0;
+    if (tree_layout_ == TreeLayoutStrategy::Pointer
+        || tree_layout_ == TreeLayoutStrategy::PointerDirectEval) {
+      const MintermTreeNode<z3::expr>* root = trees_.at(event_type).get();
+      for (uint64_t mask : masks) {
+        decisions += pointer_walk_steps(root,
+                                        [mask](const MintermTreeNode<z3::expr>* node) {
+                                          return ((mask >> node->atom_id) & 1U) != 0;
+                                        });
+      }
+      return decisions;
+    }
+    // The tagged copy: each node's atom field holds (atom id + 1), so reading
+    // the outcome takes exactly the loads the real walk takes to reach the
+    // atom (see tagged_flat_trees_). Bit id + 1 of the shifted mask is atom
+    // id's outcome.
+    const FlatTree& tree = tagged_flat_trees_.at(event_type);
+    for (uint64_t mask : masks) {
+      const uint64_t shifted = mask << 1U;
+      flat_walk</*kCountSteps=*/true>(
+        tree,
+        [shifted](CEA::PhysicalPredicate* tag, size_t /*index*/) {
+          // NOLINTNEXTLINE(performance-no-int-to-ptr): the tag is an id, not a pointer
+          return ((shifted >> reinterpret_cast<uintptr_t>(tag)) & 1U) != 0;
+        },
+        &decisions);
+    }
+    return decisions;
+  }
+
+  // The same loop with the real atoms, called the way each layout calls them
+  // (operator() for Pointer, eval() otherwise). Returns the total decisions.
+  size_t debug_walk_with_eval(Types::UniqueEventTypeId event_type,
+                              std::vector<Types::EventWrapper>& events) override {
+    size_t decisions = 0;
+    if (tree_layout_ == TreeLayoutStrategy::Pointer) {
+      const MintermTreeNode<z3::expr>* root = trees_.at(event_type).get();
+      for (Types::EventWrapper& event : events) {
+        decisions += pointer_walk_steps(root,
+                                        [&event](const MintermTreeNode<z3::expr>* node) {
+                                          return (*node->split_atom)(event);
+                                        });
+      }
+      return decisions;
+    }
+    if (tree_layout_ == TreeLayoutStrategy::PointerDirectEval) {
+      const MintermTreeNode<z3::expr>* root = trees_.at(event_type).get();
+      for (Types::EventWrapper& event : events) {
+        decisions += pointer_walk_steps(root,
+                                        [&event](const MintermTreeNode<z3::expr>* node) {
+                                          return node->split_atom->eval(event);
+                                        });
+      }
+      return decisions;
+    }
+    const FlatTree& tree = flat_trees_.at(event_type);
+    for (Types::EventWrapper& event : events) {
+      flat_walk</*kCountSteps=*/true>(
+        tree,
+        [&event](CEA::PhysicalPredicate* atom, size_t /*index*/) {
+          return atom->eval(event);
+        },
+        &decisions);
+    }
+    return decisions;
   }
 
   // True if `event_type` has no tree and is evaluated directly (SAFETY NET).
@@ -429,9 +541,10 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   };
 
   // ArrayImplicit: slot i of a full binary tree; its children are 2i+1 (atom
-  // true) and 2i+2 (atom false), so no child index is stored. atom == nullptr
-  // marks a leaf, whose bits are leaf_bits[leaf]. Slots under a leaf are never
-  // reached and stay empty.
+  // false) and 2i+2 (atom true), so no child index is stored and the next
+  // slot is simply 2i + 1 + atom(event). atom == nullptr marks a leaf, whose
+  // bits are leaf_bits[leaf]. Slots under a leaf are never reached and stay
+  // empty.
   struct ImplicitSlot {
     CEA::PhysicalPredicate* atom = nullptr;
     int32_t leaf = -1;
@@ -446,33 +559,89 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   };
 
   std::unordered_map<Types::UniqueEventTypeId, FlatTree> flat_trees_;
+  // Walk benchmark only: per event type, its tree's atoms in refine order;
+  // atom k is bit k of debug_atom_mask's mask and every node's atom_id.
+  std::unordered_map<Types::UniqueEventTypeId, std::vector<CEA::PhysicalPredicate*>>
+    atoms_per_type_;
+  // Walk benchmark only (array layouts): a copy of each flat tree in which
+  // every atom pointer is replaced by the tag (atom id + 1), never a real
+  // address. The mask walk reads the tag exactly where the real walk reads
+  // the atom pointer, so both do the same loads in the same order; only the
+  // virtual eval() call becomes a shift. (+1 keeps an implicit leaf, whose
+  // atom is nullptr, distinguishable from atom 0.)
+  std::unordered_map<Types::UniqueEventTypeId, FlatTree> tagged_flat_trees_;
+
+  static FlatTree
+  tag_atoms(FlatTree tree, const std::vector<CEA::PhysicalPredicate*>& atoms) {
+    std::unordered_map<const CEA::PhysicalPredicate*, uintptr_t> tag;
+    for (size_t k = 0; k < atoms.size(); k++) tag.emplace(atoms[k], k + 1);
+    auto as_tag = [&tag](CEA::PhysicalPredicate* atom) {
+      // NOLINTNEXTLINE(performance-no-int-to-ptr): a tag, never dereferenced
+      return reinterpret_cast<CEA::PhysicalPredicate*>(tag.at(atom));
+    };
+    for (FlatNode& node : tree.nodes) node.atom = as_tag(node.atom);
+    for (ImplicitSlot& slot : tree.slots) {
+      if (slot.atom != nullptr) slot.atom = as_tag(slot.atom);
+    }
+    return tree;
+  }
+
+  // Sets every internal node's atom_id to its atom's position in `ids`.
+  static void
+  assign_atom_ids(MintermTreeNode<z3::expr>& node,
+                  const std::unordered_map<const CEA::PhysicalPredicate*, uint32_t>& ids) {
+    if (node.isLeaf()) return;
+    node.atom_id = ids.at(node.split_atom);
+    assign_atom_ids(*node.left, ids);
+    assign_atom_ids(*node.right, ids);
+  }
+
   // Types whose tree was too deep for ArrayImplicit (type -> depth).
   std::map<Types::UniqueEventTypeId, size_t> implicit_fallbacks_;
 
-  // The array walk: returns the index (into leaf_bits) of the leaf `event`
-  // reaches. With kCountSteps (debug_path_length only) it also counts the
-  // decisions into *steps; the hot path instantiates it with false, so the
-  // timed walk contains no counting at all.
-  template <bool kCountSteps = false>
-  static size_t flat_leaf_index(const FlatTree& tree,
-                                Types::EventWrapper& event,
-                                size_t* steps = nullptr) {
+  // The array walk: returns the index (into leaf_bits) of the leaf reached.
+  // `outcome(atom, index)` gives the truth value of the node's atom, where
+  // index is the node's position in tree.nodes / tree.slots. The engine passes
+  // a lambda calling atom->eval(event) and ignoring index; the walk benchmark
+  // passes one that reads the atom's bit from a recorded mask instead. Both
+  // are inlined, so the engine's walk is exactly the code below with eval().
+  // With kCountSteps (debug and benchmark only) it also counts the decisions
+  // into *steps; the engine instantiates it with false, so its walk contains
+  // no counting at all.
+  template <bool kCountSteps, typename Outcome>
+  static size_t
+  flat_walk(const FlatTree& tree, Outcome&& outcome, size_t* steps = nullptr) {
     if (tree.implicit) {
       size_t i = 0;
       while (tree.slots[i].atom != nullptr) {
         if constexpr (kCountSteps) (*steps)++;
-        // true -> 2i+1, false -> 2i+2.
-        i = 2 * i + 2 - static_cast<size_t>(tree.slots[i].atom->eval(event));
+        // false -> 2i+1, true -> 2i+2: the outcome (0 or 1) is added, no if.
+        i = 2 * i + 1 + static_cast<size_t>(outcome(tree.slots[i].atom, i));
       }
       return static_cast<size_t>(tree.slots[i].leaf);
     }
     int32_t i = tree.root;
     while (i >= 0) {
       if constexpr (kCountSteps) (*steps)++;
-      const FlatNode& node = tree.nodes[static_cast<size_t>(i)];
-      i = node.child[static_cast<size_t>(node.atom->eval(event))];
+      const auto at = static_cast<size_t>(i);
+      const FlatNode& node = tree.nodes[at];
+      i = node.child[static_cast<size_t>(outcome(node.atom, at))];
     }
     return static_cast<size_t>(~i);
+  }
+
+  // The pointer tree's walk with the outcome supplied by `outcome(node)`, as
+  // flat_walk. Benchmark only (debug_walk_with_*): the engine's own pointer
+  // walk in operator() stays as it was. Returns the number of decisions.
+  template <typename Outcome>
+  static size_t
+  pointer_walk_steps(const MintermTreeNode<z3::expr>* node, Outcome&& outcome) {
+    size_t steps = 0;
+    while (!node->isLeaf()) {
+      steps++;
+      node = outcome(node) ? node->left.get() : node->right.get();
+    }
+    return steps;
   }
 
   // Copies a built (and reduced) pointer tree into the compact array, breadth
@@ -532,8 +701,8 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       return;
     }
     out.slots[slot].atom = node.split_atom;
-    place_implicit(*node.left, 2 * slot + 1, out);   // atom true
-    place_implicit(*node.right, 2 * slot + 2, out);  // atom false
+    place_implicit(*node.right, 2 * slot + 1, out);  // atom false
+    place_implicit(*node.left, 2 * slot + 2, out);   // atom true
   }
 
   size_t atom_count_ = 0;
@@ -705,6 +874,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   use_direct_evaluation(Types::UniqueEventTypeId event_type, const std::string& reason) {
     trees_.erase(event_type);
     flat_trees_.erase(event_type);
+    tagged_flat_trees_.erase(event_type);
     direct_event_types_[event_type] = reason;
   }
 
@@ -837,6 +1007,17 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     total_leaves_ += leaves.size();
     if (leaves.size() > max_leaves_) max_leaves_ = leaves.size();
 
+    // Walk benchmark bookkeeping (never read by the engine): number the atoms
+    // in refine order and label each internal node with its atom's number.
+    {
+      std::unordered_map<const CEA::PhysicalPredicate*, uint32_t> ids;
+      for (size_t k = 0; k < selected_atoms.size(); k++) {
+        ids.emplace(selected_atoms[k], static_cast<uint32_t>(k));
+      }
+      assign_atom_ids(*tree, ids);
+      atoms_per_type_[event_type] = selected_atoms;
+    }
+
     // Step 6 (array layouts only): copy the finished tree into the array the
     // walk will use. Done last, so the copy is of the tree exactly as reduced.
     if (tree_layout_ == TreeLayoutStrategy::ArrayCompact) {
@@ -849,6 +1030,9 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
         implicit_fallbacks_[event_type] = depth;
         flat_trees_.emplace(event_type, flatten_compact(*tree));
       }
+    }
+    if (auto flat = flat_trees_.find(event_type); flat != flat_trees_.end()) {
+      tagged_flat_trees_.emplace(event_type, tag_atoms(flat->second, selected_atoms));
     }
     trees_.emplace(event_type, std::move(tree));
   }

@@ -339,6 +339,12 @@ class BenchEvaluator {
 
   size_t matches() const { return handler_->matches(); }
 
+  // The query's optimized evaluator (null for the baseline), for the walk
+  // benchmark (core_bench --method walk / walk_eval). Needs keep_predicate_copy.
+  std::shared_ptr<Optimizations::OptimizedPredicateEvaluator> optimized_evaluator() {
+    return predicate_copy().optimized_evaluator;
+  }
+
  private:
   Evaluation::PredicateEvaluator& predicate_copy() {
     if (!predicate_copy_.has_value())

@@ -56,6 +56,7 @@
 
 #include "bench_common.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
@@ -184,8 +185,9 @@ int run(int argc, char** argv) {
   program.add_argument("--method")
     .default_value(std::string{"plain"})
     .help(
-      "plain, split (the old copy-and-subtract method), or a replay-decomposition "
-      "method: predicate, replay, replay_no_out, calib");
+      "plain, split (the old copy-and-subtract method), a replay-decomposition "
+      "method: predicate, replay, replay_no_out, calib, or a walk-benchmark method "
+      "(tree strategies only): walk, walk_eval");
   program.add_argument("--max-events")
     .default_value(std::size_t{0})
     .scan<'u', std::size_t>()
@@ -215,7 +217,12 @@ int run(int argc, char** argv) {
   const StrategyConfig config = strategy_from_name(strategy_name);
   const bool is_replay = method == "replay" || method == "replay_no_out"
                          || method == "calib";
-  if (method != "plain" && method != "split" && method != "predicate" && !is_replay) {
+  // The walk benchmark (backlog item 26's double check): the tree walk alone.
+  // walk: each atom's outcome read from a mask recorded beforehand (pure
+  // traversal); walk_eval: the same loop with the real atoms.
+  const bool is_walk = method == "walk" || method == "walk_eval";
+  if (method != "plain" && method != "split" && method != "predicate" && !is_replay
+      && !is_walk) {
     throw std::runtime_error("unknown --method " + method);
   }
   auto csv = kDatasetCsv.find(dataset);
@@ -299,6 +306,42 @@ int run(int argc, char** argv) {
   std::vector<CORE::Bitset> bitsets;
   if (is_replay) bitsets = engine.record_bitsets(events);
 
+  // Walk methods: everything but the walk is prepared outside the timing:
+  // events grouped by type (as wrappers), each event's atom outcomes as a mask
+  // (walk only), and the decision count the real walk takes (to check that
+  // the timed loop walks exactly the same paths).
+  std::map<CORE::Types::UniqueEventTypeId, std::vector<CORE::Types::EventWrapper>>
+    walk_events;
+  std::map<CORE::Types::UniqueEventTypeId, std::vector<uint64_t>> walk_masks;
+  size_t expected_decisions = 0;
+  std::shared_ptr<CORE::Internal::Optimizations::OptimizedPredicateEvaluator> walker;
+  if (is_walk) {
+    walker = engine.optimized_evaluator();
+    std::string unsupported;
+    if (walker == nullptr) unsupported = "the walk methods need a tree strategy";
+    for (size_t i = 0; walker != nullptr && i < events.size() && unsupported.empty();
+         i++) {
+      const CORE::Types::UniqueEventTypeId type = events[i]->get_event_type_id();
+      CORE::Types::EventWrapper wrapper(events[i]);
+      expected_decisions += walker->debug_path_length(wrapper);
+      if (method == "walk") {
+        std::optional<uint64_t> mask = walker->debug_atom_mask(wrapper);
+        if (!mask)
+          unsupported = "an event type has no tree or more than 64 atoms";
+        else
+          walk_masks[type].push_back(*mask);
+      }
+      walk_events[type].push_back(std::move(wrapper));
+    }
+    if (!unsupported.empty()) {
+      json << ",\"status\":\"unsupported\",\"reason\":\"" << json_escape(unsupported)
+           << "\",\"profile_level\":\"" << profile_level() << "\"}";
+      emit(json.str(), out_json);
+      return 3;
+    }
+  }
+  size_t walk_decisions = 0;
+
   const auto loop_start = std::chrono::steady_clock::now();
   std::optional<Bench::BenchEvaluator::SplitTiming> split;
   std::optional<uint64_t> checksum;
@@ -310,6 +353,14 @@ int run(int argc, char** argv) {
     checksum = engine.send_calibration(events, bitsets);
   } else if (method == "replay" || method == "replay_no_out") {
     engine.send_all_replay(events, bitsets, /*convert_output=*/method == "replay");
+  } else if (method == "walk") {
+    for (const auto& [type, masks] : walk_masks) {
+      walk_decisions += walker->debug_walk_with_masks(type, masks);
+    }
+  } else if (method == "walk_eval") {
+    for (auto& [type, wrappers] : walk_events) {
+      walk_decisions += walker->debug_walk_with_eval(type, wrappers);
+    }
   } else {
     engine.send_all(events);
   }
@@ -331,6 +382,10 @@ int run(int argc, char** argv) {
   json << ",\"compile_s\":" << compile_s << ",\"loop_s\":" << loop_s;
   if (checksum)
     json << ",\"bitset_checksum\":\"" << std::hex << *checksum << std::dec << "\"";
+  if (is_walk) {
+    json << ",\"walk_decisions\":" << walk_decisions
+         << ",\"walk_expected_decisions\":" << expected_decisions;
+  }
   if (split) {
     json << ",\"split_predicate_s\":" << split->predicate_s
          << ",\"split_process_s\":" << split->process_s;

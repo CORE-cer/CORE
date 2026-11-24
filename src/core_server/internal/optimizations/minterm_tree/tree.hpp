@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -39,6 +40,10 @@ class MintermTreeNode {
   Bitset satisfied_predicates;                   // Meaningful on leaves only.
   std::unique_ptr<MintermTreeNode<Predicate>> left;   // Region where the atom is true.
   std::unique_ptr<MintermTreeNode<Predicate>> right;  // Region where it is false.
+  // Internal nodes: a small number for split_atom, set after the tree is
+  // built. Only the walk benchmark reads it (MintermTreeEvaluator's
+  // debug_walk_with_masks); kept last so the walked fields keep their offsets.
+  uint32_t atom_id = 0;
 
   explicit MintermTreeNode(Predicate p) : phi(std::move(p)) {}
 

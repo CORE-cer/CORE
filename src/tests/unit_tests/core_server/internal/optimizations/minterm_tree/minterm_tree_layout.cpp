@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -244,6 +245,55 @@ TEST_CASE("The implicit array falls back to the compact one past its depth cap",
   REQUIRE(shallow.with(TLS::ArrayImplicit).debug_layout_in_use(0) == TLS::ArrayImplicit);
   REQUIRE(shallow.with(TLS::ArrayImplicit).describe().find("too deep")
           == std::string::npos);
+}
+
+TEST_CASE("The walk benchmark hooks walk exactly the real paths",
+          "[MintermTreeEvaluator][Optimizations][Layout]") {
+  // core_bench --method walk / walk_eval time the walk alone: the atoms'
+  // outcomes are either read from a recorded mask or come from eval(). Either
+  // way the walk must take the same path as the real one, so over the same
+  // events the decision counts must add up to the sum of debug_path_length,
+  // in every layout.
+  auto check = [](std::vector<Atom>&& predicates) {
+    LayoutParity parity(std::move(predicates));
+    for (size_t l = 0; l < kLayouts.size(); l++) {
+      INFO("layout: " << layout_name(kLayouts[l]));
+      MintermTreeEvaluator& evaluator = *parity.evaluators[l];
+      std::vector<uint64_t> masks;
+      std::vector<Types::EventWrapper> events;
+      size_t expected = 0;
+      for (int64_t integer1 = -3; integer1 <= 26; integer1++) {
+        for (const char* text : {"a", "b", "c", "z"}) {
+          auto event = make_event_type_1(text, integer1, integer1 % 3, 0.5, 1.5);
+          expected += evaluator.debug_path_length(event);
+          std::optional<uint64_t> mask = evaluator.debug_atom_mask(event);
+          REQUIRE(mask.has_value());
+          masks.push_back(*mask);
+          events.push_back(std::move(event));
+        }
+      }
+      REQUIRE(expected > 0);
+      REQUIRE(evaluator.debug_walk_with_masks(0, masks) == expected);
+      REQUIRE(evaluator.debug_walk_with_eval(0, events) == expected);
+    }
+  };
+
+  SECTION("a chain") { check(equality_chain(8)); }
+
+  SECTION("a full tree of opaque atoms") {
+    std::vector<Atom> predicates;
+    for (const char* pattern : {"^a", "^b", "^c"})
+      predicates.push_back(string_matches(pattern));
+    check(std::move(predicates));
+  }
+
+  SECTION("thresholds on two attributes") {
+    std::vector<Atom> predicates;
+    predicates.push_back(greater_at({0}, kInteger1, 3));
+    predicates.push_back(greater_at({0}, kInteger1, 10));
+    predicates.push_back(greater_at({0}, kInteger2, 0));
+    check(std::move(predicates));
+  }
 }
 
 TEST_CASE("describe() names the layout only when it is not the default",

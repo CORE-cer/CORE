@@ -22,8 +22,9 @@ namespace CORE::Internal::Optimizations {
 //                      atom's outcome. Calls eval() directly, so its
 //                      difference to PointerDirectEval is the layout alone.
 //   ArrayImplicit      the supervisor's literal proposal: a full binary-heap
-//                      array where the children of slot i are 2i+1 (atom true)
-//                      and 2i+2 (atom false), so no child indices are stored.
+//                      array where the children of slot i are 2i+1 (atom
+//                      false) and 2i+2 (atom true), so no child indices are
+//                      stored and the walk is `i = 2i + 1 + atom(event)`.
 //                      It needs 2^(depth+1) slots, so trees deeper than
 //                      kMaxImplicitTreeDepth use ArrayCompact instead.
 // This header is deliberately free of any dependency (e.g. Z3), like

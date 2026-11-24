@@ -43,7 +43,7 @@ EXPECTED_CACHE = REPO / "tests/benchmark/results/expected_counts"
 FIELDS = ["label", "dataset", "query", "query_dir", "strategy", "method", "repeat",
           "status", "reason", "dataset_events", "event_count", "matches",
           "expected_matches", "verified", "compile_s", "loop_s",
-          "split_predicate_s", "split_process_s", "bitset_checksum", "profile_level", "mode", "build_dir",
+          "split_predicate_s", "split_process_s", "bitset_checksum", "walk_decisions", "walk_expected_decisions", "profile_level", "mode", "build_dir",
           "trace", "process_wall_s", "attempts",
           "cpu_mhz", "cpu_mhz_min", "pkg_temp_c_start", "pkg_temp_c_max"]
 
@@ -237,8 +237,8 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--mode", choices=["tracy", "chrono"], default="tracy")
-    parser.add_argument("--method", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib"], default="plain")
-    parser.add_argument("--methods", nargs="+", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib"],
+    parser.add_argument("--method", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib", "walk", "walk_eval"], default="plain")
+    parser.add_argument("--methods", nargs="+", choices=["plain", "split", "predicate", "replay", "replay_no_out", "calib", "walk", "walk_eval"],
                         help="several methods per (query, strategy, repeat), in an order "
                              "rotated by repeat; overrides --method. The replay "
                              "decomposition uses: plain predicate replay replay_no_out calib")
