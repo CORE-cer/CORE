@@ -5,7 +5,7 @@
 # already recorded, so a crash or reboot only loses the run in progress.
 #
 #   tests/benchmark/run_overnight.sh [OUT_DIR] [--smoke] [--stages S0,S1,S2,S3,S4]
-#                                    [--compare EARLIER_OUT_DIR]
+#                                    [--compare EARLIER_OUT_DIR] [--no-aslr]
 #
 # OUT_DIR defaults to tests/benchmark/results/overnight/<YYYYMMDD>. --smoke runs a
 # tiny version of every stage (2 queries, 1 repeat, 20k events) to check the
@@ -54,11 +54,17 @@
 #     first and last, into probe_start/ and probe_end/: every night's own speed
 #     anchor, which decompose.py uses to tell machine drift from a code change.
 # tracy_runs.py also records each run's clock and package temperature.
+# --no-aslr runs every core_bench under 'setarch -R' (address-space layout
+# randomization off for that process only), so every run gets the same memory
+# layout. With ASLR on, timings were seen to jump between two levels from one
+# process to the next (backlog item 34); each run's manifest row says which
+# mode it used (aslr=on/off), and run_info.txt logs it too.
 
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 SMOKE=0
+NO_ASLR=0
 OUT=""
 COMPARE=""
 STAGES="S0,S1,S2,S3,S4"
@@ -68,6 +74,7 @@ while [ $# -gt 0 ]; do
     --smoke) SMOKE=1 ;;
     --stages) shift; STAGES="$1" ;;
     --compare) shift; COMPARE="$1" ;;
+    --no-aslr) NO_ASLR=1 ;;
     *) OUT="$1" ;;
   esac
   shift
@@ -85,6 +92,9 @@ fi
 
 PY=.venv/bin/python
 RUNS=tests/benchmark/tracy_runs.py
+# Every tracy_runs.py call is written `$PY $RUNS ...` (unquoted), so the flag
+# reaches all of them, the probe included.
+if [ "$NO_ASLR" = 1 ]; then RUNS="$RUNS --no-aslr"; fi
 CONV=tests/benchmark/tracy_to_csv.py
 PLAIN=build/Release-opt
 PROF=build/Release-opt-prof
@@ -131,7 +141,9 @@ env_info() {
     "ppd=$(powerprofilesctl get 2>/dev/null) epp: $epp" \
     "no_turbo=$(cat /sys/devices/system/cpu/intel_pstate/no_turbo 2>/dev/null)" \
     "ac: $ac pkg_temp=$(pkg_temp)C load=$(cut -d' ' -f1-3 /proc/loadavg)" \
-    "uptime_s=$(cut -d' ' -f1 /proc/uptime)"
+    "uptime_s=$(cut -d' ' -f1 /proc/uptime)" \
+    "randomize_va_space=$(cat /proc/sys/kernel/randomize_va_space 2>/dev/null)" \
+    "core_bench_aslr=$([ "$NO_ASLR" = 1 ] && echo off || echo on)"
 }
 
 # Wait until the package is below COOL_C, at most COOL_MAX_S seconds.

@@ -45,7 +45,7 @@ FIELDS = ["label", "dataset", "query", "query_dir", "strategy", "method", "repea
           "expected_matches", "verified", "compile_s", "loop_s",
           "split_predicate_s", "split_process_s", "bitset_checksum", "walk_decisions", "walk_expected_decisions", "profile_level", "mode", "build_dir",
           "trace", "process_wall_s", "attempts",
-          "cpu_mhz", "cpu_mhz_min", "pkg_temp_c_start", "pkg_temp_c_max"]
+          "cpu_mhz", "cpu_mhz_min", "pkg_temp_c_start", "pkg_temp_c_max", "aslr"]
 
 # Machine state per run (guides/benchmarking/09-replay-decomposition.md, "Drift
 # between nights"): on this laptop the clock follows the package temperature,
@@ -162,7 +162,11 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
     json_path = out_dir / f"{label}.json"
     trace_path = out_dir / f"{label}.tracy"
     json_path.unlink(missing_ok=True)
-    cmd = (["taskset", "-c", args.taskset] if args.taskset else []) + [
+    # --no-aslr: setarch -R turns address-space layout randomization off for
+    # this one process, so every run gets the same memory layout (backlog
+    # item 34: with ASLR, timings jump between two levels per process).
+    cmd = (["setarch", "-R"] if args.no_aslr else []) + (
+        ["taskset", "-c", args.taskset] if args.taskset else []) + [
         str(args.build_dir / "core_bench"), "--dataset", dataset, "--query", query,
         "--query-dir", args.query_dir, "--strategy", strategy, "--method", args.method,
         "--max-events", str(args.max_events), "--repeat", str(repeat),
@@ -212,6 +216,7 @@ def attempt(args, out_dir, dataset, query, strategy, repeat, label):
         return f"exit_{bench.returncode}", None
     summary = json.loads(json_path.read_text())
     summary["process_wall_s"] = round(time.monotonic() - start, 3)
+    summary["aslr"] = "off" if args.no_aslr else "on"
     if mhz:
         mhz.sort()
         summary["cpu_mhz"] = round(mhz[len(mhz) // 2])
@@ -259,6 +264,9 @@ def main() -> None:
     # they preempt the benchmark thread - measured 2026-11-18: +25-40% on plain
     # chrono runs and ~45 instead of ~14 ns per Tracy zone, with the stolen time
     # landing inside whichever zone happened to be open.
+    parser.add_argument("--no-aslr", action="store_true",
+                        help="run core_bench under 'setarch -R' (ASLR off): the same memory "
+                             "layout every run (backlog item 34); recorded as aslr=off")
     parser.add_argument("--taskset", default="2,4",
                         help="CPU list to pin core_bench to ('' disables pinning); "
                              "keep at least two physical cores")
