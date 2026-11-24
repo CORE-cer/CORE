@@ -66,7 +66,8 @@ class SimpleQuery : public GenericQuery {
       tuple_evaluator.emplace(std::move(predicates),
                               options.predicate_evaluation,
                               options.atom_ordering,
-                              options.string_equality);
+                              options.string_equality,
+                              options.tree_layout);
     }
 
     std::optional<Internal::CEA::CEA> nondet_cea;

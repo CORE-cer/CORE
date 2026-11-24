@@ -19,6 +19,7 @@
 // contain arithmetic, "wide" seeds use extreme ints (INT64_MIN/MAX, 2^53 and
 // its neighbours) but no arithmetic on them.
 
+#include <algorithm>
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
@@ -50,6 +51,11 @@
 #include "core_server/internal/evaluation/physical_predicate/not_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
+#include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
+#include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "test_support.hpp"
 #include "tests/unit_tests/core_server/internal/optimizations/predicate_builders.hpp"
@@ -493,6 +499,48 @@ TEST_CASE("Random predicates and events give the baseline's bitsets",
     REQUIRE(seeds_with_a_split_tree >= kSeeds / 2);
     REQUIRE(seeds_that_fell_back > 0);
     REQUIRE(seeds_that_fell_back < kSeeds);
+  }
+}
+
+TEST_CASE("Random predicates and events give the baseline's bitsets in every tree layout",
+          "[MintermTreeEvaluator][Optimizations][Fuzz][Layout]") {
+  // The same random workloads as above, walked through each TreeLayoutStrategy
+  // (backlog item 26). A layout may only change how the tree is walked: every
+  // one must give the baseline's bitset and take the pointer tree's number of
+  // decisions. A quarter of the seeds, so the four layouts together cost about
+  // as much as the test above.
+  const uint64_t kSeeds = std::max<uint64_t>(1, seeds_to_run() / 4);
+  const TreeLayoutStrategy kLayouts[] = {TreeLayoutStrategy::PointerDirectEval,
+                                         TreeLayoutStrategy::ArrayCompact,
+                                         TreeLayoutStrategy::ArrayImplicit};
+  for (uint64_t seed = 0; seed < kSeeds; seed++) {
+    bool wide = seed % 4 == 3;
+    RandomWorkload workload(seed, wide);
+    ParityChecker parity(workload.predicates(), kLeafCap);
+    std::vector<std::unique_ptr<MintermTreeEvaluator>> layouts;
+    for (TreeLayoutStrategy layout : kLayouts) {
+      layouts.push_back(
+        std::make_unique<MintermTreeEvaluator>(parity.baseline.predicates,
+                                               kLeafCap,
+                                               AtomOrderingStrategy::AsDiscovered,
+                                               StringEqualityStrategy::Opaque,
+                                               layout));
+    }
+
+    INFO("seed " << seed << (wide ? " (wide ints)" : " (narrow ints)"));
+    INFO("predicates:\n" << parity.baseline.to_string());
+    for (int i = 0; i < kEventsPerSeed; i++) {
+      auto event = workload.event();
+      INFO("random event #" << i);
+      Bitset expected = parity.baseline(event);
+      size_t pointer_steps = parity.minterm.debug_path_length(event);
+      REQUIRE(parity.minterm(event) == expected);
+      for (size_t l = 0; l < layouts.size(); l++) {
+        INFO("layout #" << l << ": " << layouts[l]->describe());
+        REQUIRE((*layouts[l])(event) == expected);
+        REQUIRE(layouts[l]->debug_path_length(event) == pointer_steps);
+      }
+    }
   }
 }
 

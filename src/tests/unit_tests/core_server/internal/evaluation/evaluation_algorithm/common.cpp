@@ -11,6 +11,7 @@
 #include "core_server/internal/interface/backend.hpp"
 #include "core_server/internal/interface/engine_options.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
@@ -31,6 +32,26 @@ Interface::EngineOptions test_engine_options() {
       "CORE_TEST_PREDICATE_EVALUATION must be 'default' or "
       "'minterm_tree', got '"
       + value + "'");
+  }
+
+  // With minterm_tree, CORE_TEST_TREE_LAYOUT picks how the trees are stored
+  // and walked (backlog item 26), so the whole suite can be rerun through each
+  // layout: pointer (the default), direct, array or array_implicit.
+  // NOLINTNEXTLINE(concurrency-mt-unsafe): read once, before any thread starts
+  const char* layout = std::getenv("CORE_TEST_TREE_LAYOUT");
+  const std::string layout_value = layout == nullptr ? "" : layout;
+  using TLS = Optimizations::TreeLayoutStrategy;
+  if (layout_value == "direct") {
+    options.tree_layout = TLS::PointerDirectEval;
+  } else if (layout_value == "array") {
+    options.tree_layout = TLS::ArrayCompact;
+  } else if (layout_value == "array_implicit") {
+    options.tree_layout = TLS::ArrayImplicit;
+  } else if (layout_value != "pointer" && !layout_value.empty()) {
+    throw std::runtime_error(
+      "CORE_TEST_TREE_LAYOUT must be 'pointer', 'direct', 'array' or "
+      "'array_implicit', got '"
+      + layout_value + "'");
   }
   return options;
 }

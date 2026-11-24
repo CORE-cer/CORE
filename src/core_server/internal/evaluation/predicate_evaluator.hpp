@@ -14,6 +14,7 @@
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -36,13 +37,15 @@ struct PredicateEvaluator {
     Optimizations::AtomOrderingStrategy atom_ordering =
       Optimizations::AtomOrderingStrategy::AsDiscovered,
     Optimizations::StringEqualityStrategy string_equality =
-      Optimizations::StringEqualityStrategy::Opaque) {
+      Optimizations::StringEqualityStrategy::Opaque,
+    Optimizations::TreeLayoutStrategy tree_layout =
+      Optimizations::TreeLayoutStrategy::Pointer) {
     predicates.reserve(unique_predicates.size());
     for (auto& unique_pred : unique_predicates) {
       predicates.push_back(std::move(unique_pred));
     }
     optimized_evaluator = Optimizations::make_optimized_predicate_evaluator(
-      strategy, predicates, atom_ordering, string_equality);
+      strategy, predicates, atom_ordering, string_equality, tree_layout);
   }
 
   Bitset operator()(Types::EventWrapper& event) {

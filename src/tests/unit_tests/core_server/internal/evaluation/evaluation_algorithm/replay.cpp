@@ -28,6 +28,7 @@
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/enumerator.hpp"
@@ -41,6 +42,7 @@ namespace {
 using Optimizations::AtomOrderingStrategy;
 using Optimizations::PredicateEvaluationStrategy;
 using Optimizations::StringEqualityStrategy;
+using Optimizations::TreeLayoutStrategy;
 namespace Bench = Benchmarking;
 
 // Enough events for the cases below to produce output, small enough for a
@@ -76,6 +78,7 @@ Prepared prepare(const Case& test_case, PredicateEvaluationStrategy strategy) {
                              strategy,
                              AtomOrderingStrategy::AsDiscovered,
                              StringEqualityStrategy::Opaque,
+                             TreeLayoutStrategy::Pointer,
                              /*keep_predicate_copy=*/true);
   for (auto& event :
        Bench::read_events_generic(base + "/" + test_case.csv, stream_info, kMaxEvents)) {

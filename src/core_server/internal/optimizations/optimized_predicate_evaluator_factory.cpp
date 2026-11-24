@@ -37,7 +37,8 @@ std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
   PredicateEvaluationStrategy strategy,
   const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
   AtomOrderingStrategy atom_ordering,
-  StringEqualityStrategy string_equality) {
+  StringEqualityStrategy string_equality,
+  TreeLayoutStrategy tree_layout) {
   switch (strategy) {
     case PredicateEvaluationStrategy::Default:
       return nullptr;
@@ -48,7 +49,8 @@ std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
         predicates,
         MintermTree::MintermTreeEvaluator::kMaxLeavesPerTree,
         atom_ordering,
-        string_equality);
+        string_equality,
+        tree_layout);
 
       // Make the run self-documenting so a benchmark can confirm the
       // optimization was really active. (There is no logger when no server

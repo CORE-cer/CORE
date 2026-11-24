@@ -2,7 +2,10 @@
 
 #include <z3++.h>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -27,6 +30,7 @@
 #include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -78,6 +82,9 @@ namespace CORE::Internal::Optimizations::MintermTree {
 //     2. Walk the event's type tree from the root, evaluating each node's atom
 //        natively to choose left (true) or right (false), down to a leaf.
 //     3. OR the leaf's precomputed bitmask into the result.
+//   How the tree is stored and walked is TreeLayoutStrategy (backlog item 26):
+//   today's pointer nodes by default, or a flat array copied from them after
+//   step 5 (build step 6). Every layout reaches the same leaf for an event.
 //
 // EVALUATION ORDER. The baseline is lazy (And/Or stop early), the tree is not:
 // it evaluates every atom on its path. That is only safe for atoms that cannot
@@ -97,22 +104,30 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // up to 2^n leaves), and their event type is evaluated directly instead.
   static constexpr size_t kMaxLeavesPerTree = 4096;
 
+  // TreeLayoutStrategy::ArrayImplicit stores every slot of a full binary tree
+  // of the tree's depth: 2^(depth+1) - 1 slots of 16 bytes. Past this depth
+  // (32 MB) the type's tree uses ArrayCompact instead, and describe() says so.
+  static constexpr size_t kMaxImplicitTreeDepth = 20;
+
   // `predicates` is the query's full predicate list; bit i of the result
   // corresponds to predicates[i]. The evaluator co-owns the predicates, so it
   // stays valid however the caller's copies come and go. `max_leaves_per_tree`
   // is only lowered by tests, to exercise the fallback cheaply. `atom_ordering`
   // and `string_equality` default to today's behaviour, unchanged; each comes
   // after the previous parameters so no existing call site that only passes
-  // some of them needs to change.
+  // some of them needs to change. `tree_layout` (backlog item 26) only changes
+  // how a built tree is stored and walked, never what it computes.
   explicit MintermTreeEvaluator(
     const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
     size_t max_leaves_per_tree = kMaxLeavesPerTree,
     AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
-    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
+    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer)
       : predicates_(predicates),
         max_leaves_per_tree_(max_leaves_per_tree),
         atom_ordering_(atom_ordering),
         string_equality_(string_equality),
+        tree_layout_(tree_layout),
         translator_(ctx_, string_equality),
         algebra_(ctx_) {
     build();
@@ -135,20 +150,39 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
 
     Types::UniqueEventTypeId event_type = event.get_unique_event_type_id();
 
-    auto tree = trees_.find(event_type);
-    if (tree != trees_.end()) {
-      CORE_ZONE_FINE("MintermTree::tree_walk");
-      // Walk down the tree: each internal node's atom decides left or right.
-
-      MintermTreeNode<z3::expr>* node = tree->second.get();
-
-      while (!node->isLeaf()) {
-        node = (*node->split_atom)(event) ? node->left.get() : node->right.get();
+    // The layout is fixed for the evaluator's life, so this branch always goes
+    // the same way and costs (next to) nothing; every layout pays it equally.
+    if (tree_layout_ == TreeLayoutStrategy::Pointer
+        || tree_layout_ == TreeLayoutStrategy::PointerDirectEval) {
+      auto tree = trees_.find(event_type);
+      if (tree != trees_.end()) {
+        CORE_ZONE_FINE("MintermTree::tree_walk");
+        // Walk down the tree: each internal node's atom decides left or right.
+        MintermTreeNode<z3::expr>* node = tree->second.get();
+        if (tree_layout_ == TreeLayoutStrategy::Pointer) {
+          // operator() re-checks that the atom admits this event type.
+          while (!node->isLeaf()) {
+            node = (*node->split_atom)(event) ? node->left.get() : node->right.get();
+          }
+        } else {
+          // eval() skips that check: every atom in this type's tree admits the
+          // type (build_tree_for_event_type selects only those), so the check
+          // could only ever pass.
+          while (!node->isLeaf()) {
+            node = node->split_atom->eval(event) ? node->left.get() : node->right.get();
+          }
+        }
+        // The leaf already knows which predicates hold in its region.
+        result |= node->satisfied_predicates;
+        return result;
       }
-
-      // The leaf already knows which predicates hold in its region.
-      result |= node->satisfied_predicates;
-      return result;
+    } else {
+      auto flat = flat_trees_.find(event_type);
+      if (flat != flat_trees_.end()) {
+        CORE_ZONE_FINE("MintermTree::tree_walk");
+        result |= flat->second.leaf_bits[flat_leaf_index(flat->second, event)];
+        return result;
+      }
     }
 
     if (direct_event_types_.contains(event_type)) {
@@ -174,8 +208,20 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // predicate admits it) - neither case arises for the queries this is
   // actually run on, but a tree-less event type has no decisions to count
   // either way.
+  //
+  // With an array layout it counts the decisions of the array walk instead
+  // (the same walk as flat_leaf_index, counted), so tests can check that every
+  // layout takes exactly the same number of decisions as the pointer tree.
   size_t debug_path_length(Types::EventWrapper& event) {
     Types::UniqueEventTypeId event_type = event.get_unique_event_type_id();
+    if (tree_layout_ == TreeLayoutStrategy::ArrayCompact
+        || tree_layout_ == TreeLayoutStrategy::ArrayImplicit) {
+      auto flat = flat_trees_.find(event_type);
+      if (flat == flat_trees_.end()) return 0;
+      size_t steps = 0;
+      flat_leaf_index</*kCountSteps=*/true>(flat->second, event, &steps);
+      return steps;
+    }
     auto tree = trees_.find(event_type);
     if (tree == trees_.end()) return 0;
     size_t steps = 0;
@@ -212,6 +258,18 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     return it == atom_order_per_type_.end() ? std::vector<std::string>{} : it->second;
   }
 
+  // The layout `event_type`'s tree is actually walked with: tree_layout_,
+  // except that ArrayImplicit falls back to ArrayCompact for a tree deeper
+  // than kMaxImplicitTreeDepth. Meaningless for a type without a tree.
+  TreeLayoutStrategy debug_layout_in_use(Types::UniqueEventTypeId event_type) const {
+    auto flat = flat_trees_.find(event_type);
+    if (flat != flat_trees_.end() && tree_layout_ == TreeLayoutStrategy::ArrayImplicit
+        && !flat->second.implicit) {
+      return TreeLayoutStrategy::ArrayCompact;
+    }
+    return tree_layout_;
+  }
+
   // True if `event_type` has no tree and is evaluated directly (SAFETY NET).
   bool uses_direct_evaluation(Types::UniqueEventTypeId event_type) const {
     return direct_event_types_.contains(event_type);
@@ -236,6 +294,24 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     // Same convention: only mentioned when non-default.
     if (string_equality_ == StringEqualityStrategy::InternedEquality) {
       out += "; string equality: interned";
+    }
+    // Same convention: only mentioned when non-default.
+    switch (tree_layout_) {
+      case TreeLayoutStrategy::Pointer:
+        break;
+      case TreeLayoutStrategy::PointerDirectEval:
+        out += "; tree layout: pointer, direct eval";
+        break;
+      case TreeLayoutStrategy::ArrayCompact:
+        out += "; tree layout: compact array";
+        break;
+      case TreeLayoutStrategy::ArrayImplicit:
+        out += "; tree layout: implicit array";
+        break;
+    }
+    for (const auto& [event_type, depth] : implicit_fallbacks_) {
+      out += "; event type " + std::to_string(event_type) + " too deep for the implicit "
+             "array (depth " + std::to_string(depth) + "), compact array used";
     }
     for (const auto& [event_type, reason] : direct_event_types_) {
       out += "; event type " + std::to_string(event_type) + " evaluated directly ("
@@ -317,6 +393,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   size_t max_leaves_per_tree_;
   AtomOrderingStrategy atom_ordering_;
   StringEqualityStrategy string_equality_;
+  TreeLayoutStrategy tree_layout_;
   z3::context ctx_;
   PhysicalPredicateZ3Translator translator_;
   PhysicalPredicateZ3Algebra algebra_;
@@ -332,6 +409,132 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
     trees_;
   // Event types without a tree, with the reason (for describe()).
   std::map<Types::UniqueEventTypeId, std::string> direct_event_types_;
+
+  // ---- Array layouts (TreeLayoutStrategy::ArrayCompact / ArrayImplicit) ----
+  //
+  // The same tree as trees_ (built, then reduced), copied into contiguous
+  // memory so the walk follows indices instead of unique_ptrs. trees_ keeps
+  // the pointer version, which printing and the debug_* methods read. Only
+  // filled when an array layout is selected.
+
+  // ArrayCompact: one entry per INTERNAL node, in breadth-first order (the
+  // root, if it is not a leaf, is nodes[0]). Leaves are not nodes: a child
+  // index >= 0 is the next internal node, a negative one is ~leaf_index into
+  // leaf_bits. child[1] is the "atom true" side (the pointer tree's left),
+  // child[0] the "atom false" side, so the atom's bool picks the child
+  // directly, with no if/else on its outcome.
+  struct FlatNode {
+    CEA::PhysicalPredicate* atom;
+    std::array<int32_t, 2> child;
+  };
+
+  // ArrayImplicit: slot i of a full binary tree; its children are 2i+1 (atom
+  // true) and 2i+2 (atom false), so no child index is stored. atom == nullptr
+  // marks a leaf, whose bits are leaf_bits[leaf]. Slots under a leaf are never
+  // reached and stay empty.
+  struct ImplicitSlot {
+    CEA::PhysicalPredicate* atom = nullptr;
+    int32_t leaf = -1;
+  };
+
+  struct FlatTree {
+    bool implicit = false;            // which of the two arrays below is used
+    std::vector<FlatNode> nodes;      // ArrayCompact
+    int32_t root = 0;                 // ArrayCompact: nodes index, or ~leaf
+    std::vector<ImplicitSlot> slots;  // ArrayImplicit
+    std::vector<Bitset> leaf_bits;    // both: leaf index -> satisfied predicates
+  };
+
+  std::unordered_map<Types::UniqueEventTypeId, FlatTree> flat_trees_;
+  // Types whose tree was too deep for ArrayImplicit (type -> depth).
+  std::map<Types::UniqueEventTypeId, size_t> implicit_fallbacks_;
+
+  // The array walk: returns the index (into leaf_bits) of the leaf `event`
+  // reaches. With kCountSteps (debug_path_length only) it also counts the
+  // decisions into *steps; the hot path instantiates it with false, so the
+  // timed walk contains no counting at all.
+  template <bool kCountSteps = false>
+  static size_t flat_leaf_index(const FlatTree& tree,
+                                Types::EventWrapper& event,
+                                size_t* steps = nullptr) {
+    if (tree.implicit) {
+      size_t i = 0;
+      while (tree.slots[i].atom != nullptr) {
+        if constexpr (kCountSteps) (*steps)++;
+        // true -> 2i+1, false -> 2i+2.
+        i = 2 * i + 2 - static_cast<size_t>(tree.slots[i].atom->eval(event));
+      }
+      return static_cast<size_t>(tree.slots[i].leaf);
+    }
+    int32_t i = tree.root;
+    while (i >= 0) {
+      if constexpr (kCountSteps) (*steps)++;
+      const FlatNode& node = tree.nodes[static_cast<size_t>(i)];
+      i = node.child[static_cast<size_t>(node.atom->eval(event))];
+    }
+    return static_cast<size_t>(~i);
+  }
+
+  // Copies a built (and reduced) pointer tree into the compact array, breadth
+  // first: `order` lists the internal nodes in the order they get their index,
+  // so nodes[k] always describes order[k].
+  static FlatTree flatten_compact(const MintermTreeNode<z3::expr>& root) {
+    FlatTree out;
+    if (root.isLeaf()) {
+      out.leaf_bits.push_back(root.satisfied_predicates);
+      out.root = ~int32_t{0};
+      return out;
+    }
+    std::vector<const MintermTreeNode<z3::expr>*> order{&root};
+    // A child's index: a new leaf_bits entry for a leaf, or its future place in
+    // `order`/nodes for an internal node.
+    auto index_of = [&](const MintermTreeNode<z3::expr>* child) -> int32_t {
+      if (child->isLeaf()) {
+        out.leaf_bits.push_back(child->satisfied_predicates);
+        return ~static_cast<int32_t>(out.leaf_bits.size() - 1);
+      }
+      order.push_back(child);
+      return static_cast<int32_t>(order.size() - 1);
+    };
+    for (size_t k = 0; k < order.size(); k++) {
+      const MintermTreeNode<z3::expr>* node = order[k];
+      FlatNode flat{node->split_atom, {0, 0}};
+      flat.child[1] = index_of(node->left.get());   // atom true
+      flat.child[0] = index_of(node->right.get());  // atom false
+      out.nodes.push_back(flat);
+    }
+    out.root = 0;
+    return out;
+  }
+
+  // Number of decisions on the longest root-to-leaf path (0 for a lone leaf).
+  static size_t tree_depth(const MintermTreeNode<z3::expr>& node) {
+    if (node.isLeaf()) return 0;
+    return 1 + std::max(tree_depth(*node.left), tree_depth(*node.right));
+  }
+
+  // Copies a built (and reduced) pointer tree into the implicit array. The
+  // caller has checked the depth, so the array (2^(depth+1) - 1 slots) is
+  // bounded.
+  static FlatTree flatten_implicit(const MintermTreeNode<z3::expr>& root, size_t depth) {
+    FlatTree out;
+    out.implicit = true;
+    out.slots.resize((size_t{1} << (depth + 1)) - 1);
+    place_implicit(root, 0, out);
+    return out;
+  }
+
+  static void
+  place_implicit(const MintermTreeNode<z3::expr>& node, size_t slot, FlatTree& out) {
+    if (node.isLeaf()) {
+      out.leaf_bits.push_back(node.satisfied_predicates);
+      out.slots[slot].leaf = static_cast<int32_t>(out.leaf_bits.size() - 1);
+      return;
+    }
+    out.slots[slot].atom = node.split_atom;
+    place_implicit(*node.left, 2 * slot + 1, out);   // atom true
+    place_implicit(*node.right, 2 * slot + 2, out);  // atom false
+  }
 
   size_t atom_count_ = 0;
   size_t total_leaves_ = 0;
@@ -501,10 +704,11 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   void
   use_direct_evaluation(Types::UniqueEventTypeId event_type, const std::string& reason) {
     trees_.erase(event_type);
+    flat_trees_.erase(event_type);
     direct_event_types_[event_type] = reason;
   }
 
-  // Steps 2-5b of the build phase for one event type.
+  // Steps 2-6 of the build phase for one event type.
   void build_tree_for_event_type(Types::UniqueEventTypeId event_type,
                                  const std::vector<CEA::PhysicalPredicate*>& atoms) {
     ZoneScopedN("MintermTree::build_type");
@@ -632,6 +836,20 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
 
     total_leaves_ += leaves.size();
     if (leaves.size() > max_leaves_) max_leaves_ = leaves.size();
+
+    // Step 6 (array layouts only): copy the finished tree into the array the
+    // walk will use. Done last, so the copy is of the tree exactly as reduced.
+    if (tree_layout_ == TreeLayoutStrategy::ArrayCompact) {
+      flat_trees_.emplace(event_type, flatten_compact(*tree));
+    } else if (tree_layout_ == TreeLayoutStrategy::ArrayImplicit) {
+      size_t depth = tree_depth(*tree);
+      if (depth <= kMaxImplicitTreeDepth) {
+        flat_trees_.emplace(event_type, flatten_implicit(*tree, depth));
+      } else {
+        implicit_fallbacks_[event_type] = depth;
+        flat_trees_.emplace(event_type, flatten_compact(*tree));
+      }
+    }
     trees_.emplace(event_type, std::move(tree));
   }
 };

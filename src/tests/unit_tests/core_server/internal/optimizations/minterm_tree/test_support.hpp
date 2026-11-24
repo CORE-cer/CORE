@@ -24,6 +24,7 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
@@ -100,9 +101,14 @@ class ParityChecker {
     std::vector<std::unique_ptr<CEA::PhysicalPredicate>>&& predicates,
     size_t max_leaves_per_tree = MintermTreeEvaluator::kMaxLeavesPerTree,
     AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
-    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
+    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer)
       : baseline(std::move(predicates)),
-        minterm(baseline.predicates, max_leaves_per_tree, atom_ordering, string_equality) {
+        minterm(baseline.predicates,
+                max_leaves_per_tree,
+                atom_ordering,
+                string_equality,
+                tree_layout) {
     // Debugging aid: CORE_PRINT_MINTERM_TREES=1 shows the trees every test builds.
     if (print_trees_requested()) {
       std::cout << "\n" << minterm.trees_to_string() << std::endl;

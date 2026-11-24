@@ -59,6 +59,7 @@
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/catalog/stream_info.hpp"
 #include "shared/datatypes/event.hpp"
@@ -69,6 +70,7 @@ namespace {
 using CORE::Internal::Optimizations::AtomOrderingStrategy;
 using CORE::Internal::Optimizations::PredicateEvaluationStrategy;
 using CORE::Internal::Optimizations::StringEqualityStrategy;
+using CORE::Internal::Optimizations::TreeLayoutStrategy;
 namespace Bench = CORE::Internal::Benchmarking;
 
 // Data file per dataset (same files as tests/e2e/conftest.py). unordered_stocks
@@ -83,15 +85,41 @@ struct StrategyConfig {
   PredicateEvaluationStrategy strategy;
   AtomOrderingStrategy atom_ordering;
   StringEqualityStrategy string_equality;
+  TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer;
 };
 
 // Strategy names, as used by tests/benchmark/tracy_runs.py --strategies.
-StrategyConfig strategy_from_name(const std::string& name) {
+//
+// Any minterm_tree* name can end in a tree-layout suffix (backlog item 26):
+// `_direct` (PointerDirectEval), `_array` (ArrayCompact) or `_array_implicit`
+// (ArrayImplicit), e.g. minterm_tree_array or minterm_tree_interned_array.
+// Without a suffix the layout is today's (Pointer).
+StrategyConfig strategy_from_name(const std::string& full_name) {
   using PES = PredicateEvaluationStrategy;
   using AOS = AtomOrderingStrategy;
   using SES = StringEqualityStrategy;
-  if (name == "baseline") return {PES::Default, AOS::AsDiscovered, SES::Opaque};
-  StrategyConfig tree{PES::MintermTree, AOS::AsDiscovered, SES::Opaque};
+  using TLS = TreeLayoutStrategy;
+  if (full_name == "baseline") return {PES::Default, AOS::AsDiscovered, SES::Opaque};
+
+  // Strip the layout suffix first; the rest is parsed as before. The longer
+  // suffix is checked first, since "_array_implicit" also ends a name that
+  // "_array" would not match, but "_array" must not swallow it.
+  std::string name = full_name;
+  TLS layout = TLS::Pointer;
+  const std::pair<std::string, TLS> suffixes[] = {
+    {"_array_implicit", TLS::ArrayImplicit},
+    {"_array", TLS::ArrayCompact},
+    {"_direct", TLS::PointerDirectEval},
+  };
+  for (const auto& [suffix, value] : suffixes) {
+    if (name.size() > suffix.size() && name.ends_with(suffix)) {
+      name.resize(name.size() - suffix.size());
+      layout = value;
+      break;
+    }
+  }
+
+  StrategyConfig tree{PES::MintermTree, AOS::AsDiscovered, SES::Opaque, layout};
   if (name == "minterm_tree") {
   } else if (name == "minterm_tree_ordered") {
     tree.atom_ordering = AOS::MostSharedAttributesFirst;
@@ -101,10 +129,10 @@ StrategyConfig strategy_from_name(const std::string& name) {
     tree.atom_ordering = AOS::MostSharedAttributesFirst;
     tree.string_equality = SES::InternedEquality;
   } else {
-    throw std::runtime_error("unknown --strategy " + name);
+    throw std::runtime_error("unknown --strategy " + full_name);
   }
   if (!CORE::Internal::Optimizations::is_minterm_tree_available()) {
-    throw std::runtime_error(name + " requested, but this build lacks -o");
+    throw std::runtime_error(full_name + " requested, but this build lacks -o");
   }
   return tree;
 }
@@ -151,7 +179,8 @@ int run(int argc, char** argv) {
     .required()
     .help(
       "baseline, minterm_tree, minterm_tree_ordered, minterm_tree_interned, "
-      "minterm_tree_interned_ordered");
+      "minterm_tree_interned_ordered; any minterm_tree* name may end in a tree-layout "
+      "suffix: _direct, _array or _array_implicit");
   program.add_argument("--method")
     .default_value(std::string{"plain"})
     .help(
@@ -217,6 +246,7 @@ int run(int argc, char** argv) {
                        config.strategy,
                        config.atom_ordering,
                        config.string_equality,
+                       config.tree_layout,
                        /*keep_predicate_copy=*/false);
     } catch (const Bench::UnsupportedQuery& error) {
       std::cerr << "core_bench: " << error.what() << std::endl;
@@ -248,6 +278,7 @@ int run(int argc, char** argv) {
                      config.strategy,
                      config.atom_ordering,
                      config.string_equality,
+                     config.tree_layout,
                      /*keep_predicate_copy=*/method != "plain");
   } catch (const Bench::UnsupportedQuery& error) {
     json << ",\"status\":\"unsupported\",\"reason\":\"" << json_escape(error.what())

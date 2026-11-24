@@ -3,6 +3,7 @@
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 
 namespace CORE::Internal::Interface {
 
@@ -25,6 +26,11 @@ struct EngineOptions {
   // MintermTree; inert otherwise.
   Optimizations::StringEqualityStrategy
     string_equality = Optimizations::StringEqualityStrategy::Opaque;
+
+  // How the minterm-tree optimization stores and walks a built tree (backlog
+  // item 26's proof of concept). Only meaningful when predicate_evaluation ==
+  // MintermTree; inert otherwise.
+  Optimizations::TreeLayoutStrategy tree_layout = Optimizations::TreeLayoutStrategy::Pointer;
 };
 
 }  // namespace CORE::Internal::Interface
