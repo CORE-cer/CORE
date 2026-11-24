@@ -6,6 +6,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
@@ -39,7 +40,8 @@ std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
   const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
   AtomOrderingStrategy atom_ordering,
   StringEqualityStrategy string_equality,
-  TreeLayoutStrategy tree_layout) {
+  TreeLayoutStrategy tree_layout,
+  OpaqueAtomMergingStrategy opaque_atom_merging) {
   switch (strategy) {
     case PredicateEvaluationStrategy::Default:
       return nullptr;
@@ -51,7 +53,8 @@ std::shared_ptr<OptimizedPredicateEvaluator> make_optimized_predicate_evaluator(
         MintermTree::MintermTreeEvaluator::kMaxLeavesPerTree,
         atom_ordering,
         string_equality,
-        tree_layout);
+        tree_layout,
+        opaque_atom_merging);
 
       // Make the run self-documenting so a benchmark can confirm the
       // optimization was really active. (There is no logger when no server

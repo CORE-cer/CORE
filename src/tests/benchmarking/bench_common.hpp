@@ -40,6 +40,7 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/interface/modules/query/evaluators/single_evaluator.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "core_server/internal/optimizations/tree_layout_strategy.hpp"
@@ -115,6 +116,7 @@ class BenchEvaluator {
                  Optimizations::AtomOrderingStrategy atom_ordering,
                  Optimizations::StringEqualityStrategy string_equality,
                  Optimizations::TreeLayoutStrategy tree_layout,
+                 Optimizations::OpaqueAtomMergingStrategy opaque_atom_merging,
                  bool keep_predicate_copy) {
     ZoneScopedN("Bench::add_query");
     std::optional<CEQL::Query> parsed_query;
@@ -146,7 +148,8 @@ class BenchEvaluator {
                               strategy,
                               atom_ordering,
                               string_equality,
-                              tree_layout);
+                              tree_layout,
+                              opaque_atom_merging);
     }
     if (keep_predicate_copy) {
       // A cheap copy (shared_ptrs) that send_all_split evaluates on its own.

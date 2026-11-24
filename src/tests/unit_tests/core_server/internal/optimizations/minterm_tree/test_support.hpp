@@ -24,6 +24,7 @@
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -102,13 +103,15 @@ class ParityChecker {
     size_t max_leaves_per_tree = MintermTreeEvaluator::kMaxLeavesPerTree,
     AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
     StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
-    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer)
+    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer,
+    OpaqueAtomMergingStrategy opaque_atom_merging = OpaqueAtomMergingStrategy::Off)
       : baseline(std::move(predicates)),
         minterm(baseline.predicates,
                 max_leaves_per_tree,
                 atom_ordering,
                 string_equality,
-                tree_layout) {
+                tree_layout,
+                opaque_atom_merging) {
     // Debugging aid: CORE_PRINT_MINTERM_TREES=1 shows the trees every test builds.
     if (print_trees_requested()) {
       std::cout << "\n" << minterm.trees_to_string() << std::endl;
@@ -139,12 +142,15 @@ class CeqlParityChecker {
   explicit CeqlParityChecker(
     const std::string& filter_clause,
     const CompiledFilter::CatalogSetup& setup = process_catalog,
-    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
+    OpaqueAtomMergingStrategy opaque_atom_merging = OpaqueAtomMergingStrategy::Off)
       : compiled_(filter_clause, setup),
         checker(std::move(compiled_.predicates),
                 MintermTreeEvaluator::kMaxLeavesPerTree,
                 AtomOrderingStrategy::AsDiscovered,
-                string_equality) {}
+                string_equality,
+                TreeLayoutStrategy::Pointer,
+                opaque_atom_merging) {}
 
   CeqlParityChecker(const CeqlParityChecker&) = delete;
   CeqlParityChecker& operator=(const CeqlParityChecker&) = delete;

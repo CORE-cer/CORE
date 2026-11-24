@@ -10,6 +10,7 @@
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/attribute_formula.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -56,6 +57,12 @@ class Attribute : public MathExpr<GlobalType> {
   std::optional<FormulaBuilder::Handle>
   translate(FormulaBuilder& builder, Types::UniqueEventTypeId event_type) const override {
     return attribute_formula<GlobalType, LocalType>(builder, event_type, pos);
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // The position; the class carries the stored and computed types.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this, {StructuralKey::field(pos)});
   }
 
   std::string to_string() const override {

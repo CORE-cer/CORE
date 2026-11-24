@@ -1,10 +1,12 @@
 #pragma once
 #include <cassert>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 
@@ -30,6 +32,12 @@ class Division : public MathExpr<Type> {
       throw std::logic_error("Division is only valid for arithmetic vals");
     } else
       return left->eval(event) / right->eval(event);
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // Both operands, in order.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this, {left->structural_key(), right->structural_key()});
   }
 
   std::string to_string() const override {

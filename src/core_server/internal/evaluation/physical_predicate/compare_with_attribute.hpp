@@ -14,6 +14,7 @@
 #include "cassert"
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -124,6 +125,14 @@ class CompareWithAttribute : public PhysicalPredicate {
     } else {
       return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // Both positions; the class carries the comparison and both value types.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this,
+                               {StructuralKey::field(first_pos),
+                                StructuralKey::field(second_pos)});
   }
 
   std::string to_string() const override {

@@ -26,5 +26,10 @@ class MathExpr {
   translate(FormulaBuilder& /*builder*/, Types::UniqueEventTypeId /*event_type*/) const {
     return std::nullopt;
   }
+
+  // An exact description of what eval() computes, or nullopt if this node has
+  // none (the default), which keeps any predicate containing it from being
+  // merged. See PhysicalPredicate::structural_key() and structural_key.hpp.
+  virtual std::optional<std::string> structural_key() const { return std::nullopt; }
 };
 }  // namespace CORE::Internal::CEA

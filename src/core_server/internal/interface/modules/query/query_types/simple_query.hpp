@@ -67,7 +67,8 @@ class SimpleQuery : public GenericQuery {
                               options.predicate_evaluation,
                               options.atom_ordering,
                               options.string_equality,
-                              options.tree_layout);
+                              options.tree_layout,
+                              options.opaque_atom_merging);
     }
 
     std::optional<Internal::CEA::CEA> nondet_cea;

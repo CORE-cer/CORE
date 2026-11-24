@@ -28,6 +28,7 @@
 #include "core_server/internal/optimizations/minterm_tree/speculation_safety.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree.hpp"
 #include "core_server/internal/optimizations/minterm_tree/tree_printing.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "core_server/internal/optimizations/tree_layout_strategy.hpp"
@@ -117,18 +118,23 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   // after the previous parameters so no existing call site that only passes
   // some of them needs to change. `tree_layout` (backlog item 26) only changes
   // how a built tree is stored and walked, never what it computes.
+  // `opaque_atom_merging` (backlog item 33) can only make a tree smaller: it
+  // tells the translator that structurally identical opaque atoms are one
+  // condition, never anything native evaluation could contradict.
   explicit MintermTreeEvaluator(
     const std::vector<std::shared_ptr<CEA::PhysicalPredicate>>& predicates,
     size_t max_leaves_per_tree = kMaxLeavesPerTree,
     AtomOrderingStrategy atom_ordering = AtomOrderingStrategy::AsDiscovered,
     StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
-    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer)
+    TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer,
+    OpaqueAtomMergingStrategy opaque_atom_merging = OpaqueAtomMergingStrategy::Off)
       : predicates_(predicates),
         max_leaves_per_tree_(max_leaves_per_tree),
         atom_ordering_(atom_ordering),
         string_equality_(string_equality),
         tree_layout_(tree_layout),
-        translator_(ctx_, string_equality),
+        opaque_atom_merging_(opaque_atom_merging),
+        translator_(ctx_, string_equality, opaque_atom_merging),
         algebra_(ctx_) {
     build();
   }
@@ -408,6 +414,11 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       out += "; string equality: interned";
     }
     // Same convention: only mentioned when non-default.
+    if (opaque_atom_merging_ == OpaqueAtomMergingStrategy::StructurallyIdentical) {
+      out += "; opaque atom merging: on ("
+             + std::to_string(translator_.merged_opaque_atom_count()) + " merged)";
+    }
+    // Same convention: only mentioned when non-default.
     switch (tree_layout_) {
       case TreeLayoutStrategy::Pointer:
         break;
@@ -506,6 +517,7 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
   AtomOrderingStrategy atom_ordering_;
   StringEqualityStrategy string_equality_;
   TreeLayoutStrategy tree_layout_;
+  OpaqueAtomMergingStrategy opaque_atom_merging_;
   z3::context ctx_;
   PhysicalPredicateZ3Translator translator_;
   PhysicalPredicateZ3Algebra algebra_;

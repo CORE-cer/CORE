@@ -9,6 +9,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/literal.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -56,6 +57,12 @@ class Multiplication : public MathExpr<Type> {
     } else {
       return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // Both operands, in order.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this, {left->structural_key(), right->structural_key()});
   }
 
   std::string to_string() const override {

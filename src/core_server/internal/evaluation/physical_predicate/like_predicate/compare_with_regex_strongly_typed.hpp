@@ -1,13 +1,14 @@
 #pragma once
-
 #include <re2/re2.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
 #include "shared/datatypes/value.hpp"
 
@@ -33,6 +34,14 @@ class CompareWithRegexStronglyTyped : public PhysicalPredicate {
     const Types::StringValue
       attribute_val = event.get_attribute_at_index<Types::StringValue>(pos_to_compare);
     return re2::RE2::PartialMatch(attribute_val.val, regex_compiled);
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // The position and the pattern (regex_compiled is built from it).
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this,
+                               {StructuralKey::field(pos_to_compare),
+                                StructuralKey::field(regex_string)});
   }
 
   std::string to_string() const override {

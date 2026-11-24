@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
@@ -20,6 +21,7 @@
 #include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 
@@ -72,8 +74,11 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
  public:
   explicit PhysicalPredicateZ3Translator(
     z3::context& ctx,
-    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque)
-      : ctx_(ctx), string_equality_(string_equality) {}
+    StringEqualityStrategy string_equality = StringEqualityStrategy::Opaque,
+    OpaqueAtomMergingStrategy opaque_atom_merging = OpaqueAtomMergingStrategy::Off)
+      : ctx_(ctx),
+        string_equality_(string_equality),
+        opaque_atom_merging_(opaque_atom_merging) {}
 
   // Translates one atom (a non-compound predicate) as seen by events of
   // `event_type`. Results are cached per (atom, event type).
@@ -103,6 +108,11 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
   bool is_opaque(const CEA::PhysicalPredicate* atom) const {
     return opaque_atoms_.contains(atom);
   }
+
+  // How many times an opaque (atom, event type) reused the boolean of an
+  // earlier, structurally identical one instead of getting a fresh one
+  // (OpaqueAtomMergingStrategy::StructurallyIdentical; always 0 when Off).
+  size_t merged_opaque_atom_count() const { return merged_opaque_count_; }
 
   // The attribute keys (event type, position) a translated formula reads, found
   // by walking its Z3 AST and recognizing the names this translator itself
@@ -350,9 +360,7 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
     }
 
     if (!translated.has_value()) opaque_atoms_.insert(&atom);
-    Handle result = translated.has_value()
-                      ? *translated
-                      : store(Term{fresh_opaque_bool(), std::nullopt});
+    Handle result = translated.has_value() ? *translated : opaque_term(atom, event_type);
     atom_cache_.emplace(key, result);
     return result;
   }
@@ -421,10 +429,45 @@ class PhysicalPredicateZ3Translator : public CEA::FormulaBuilder {
   std::unordered_map<std::string, int64_t> string_literal_ids_;
   uint64_t opaque_counter_ = 0;
   std::unordered_set<const CEA::PhysicalPredicate*> opaque_atoms_;
+  OpaqueAtomMergingStrategy opaque_atom_merging_;
+  // (structural key, event type) -> the shared boolean (see opaque_term()).
+  std::map<std::pair<std::string, Types::UniqueEventTypeId>, z3::expr> opaque_by_key_;
+  size_t merged_opaque_count_ = 0;
 
   Handle store(Term term) {
     terms_.push_back(std::move(term));
     return terms_.size() - 1;
+  }
+
+  // The term of an atom that could not be modeled for `event_type`.
+  //
+  // By default (OpaqueAtomMergingStrategy::Off) a brand-new boolean, related to
+  // nothing. With StructurallyIdentical, atoms with the same structural_key()
+  // (an exact description of what eval() computes) share ONE boolean per event
+  // type: the query wrote the same condition twice, so Z3 should see it once.
+  // That is exact - eval() is deterministic, so two structurally identical
+  // atoms always agree on an event, and equating them never claims anything
+  // native evaluation could contradict (the CORRECTNESS INVARIANT in
+  // minterm_tree_evaluator.hpp). In the tree, refine() then finds that every
+  // copy after the first no longer splits any region, so n copies give 2
+  // leaves instead of 2^n. Atoms whose class has no key (nullopt) are never
+  // merged. The key is per event type because the tree is: the same weakly
+  // typed atom can read different attribute positions in different types.
+  Handle
+  opaque_term(const CEA::PhysicalPredicate& atom, Types::UniqueEventTypeId event_type) {
+    if (opaque_atom_merging_ == OpaqueAtomMergingStrategy::StructurallyIdentical) {
+      if (std::optional<std::string> key = atom.structural_key()) {
+        auto [entry, inserted] = opaque_by_key_.try_emplace({std::move(*key), event_type},
+                                                            ctx_.bool_val(false));
+        if (inserted) {
+          entry->second = fresh_opaque_bool();
+        } else {
+          merged_opaque_count_++;
+        }
+        return store(Term{entry->second, std::nullopt});
+      }
+    }
+    return store(Term{fresh_opaque_bool(), std::nullopt});
   }
 
   // A brand-new boolean about which Z3 knows nothing (see "opaque" above).

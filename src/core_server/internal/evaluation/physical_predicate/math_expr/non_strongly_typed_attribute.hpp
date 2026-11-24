@@ -15,6 +15,7 @@
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/attribute_formula.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "math_expr.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/catalog/datatypes.hpp"
@@ -143,6 +144,16 @@ class NonStronglyTypedAttribute : public MathExpr<GlobalType> {
       default:
         return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // The name, resolved through the catalog per event type (so the catalog is
+  // part of the key; stored_string is only a scratch buffer, not an input).
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this,
+                               {StructuralKey::field(name),
+                                StructuralKey::field(
+                                  reinterpret_cast<std::uintptr_t>(&query_catalog))});
   }
 
   std::string to_string() const override { return name; }

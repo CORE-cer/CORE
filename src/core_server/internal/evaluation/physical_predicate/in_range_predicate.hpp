@@ -10,6 +10,7 @@
 #include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -77,6 +78,15 @@ class InRangePredicate : public PhysicalPredicate {
     } else {
       return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // The value and both bounds, in order.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this,
+                               {left->structural_key(),
+                                lower_bound->structural_key(),
+                                upper_bound->structural_key()});
   }
 
   std::string to_string() const override {

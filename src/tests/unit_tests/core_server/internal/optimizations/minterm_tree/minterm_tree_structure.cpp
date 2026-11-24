@@ -17,13 +17,17 @@
 #include <vector>
 
 #include "core_server/internal/evaluation/physical_predicate/and_predicate.hpp"
+#include "core_server/internal/evaluation/physical_predicate/compare_math_exprs.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_with_constant.hpp"
 #include "core_server/internal/evaluation/physical_predicate/comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/like_predicate/compare_with_regex_strongly_typed.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/addition.hpp"
+#include "core_server/internal/evaluation/physical_predicate/math_expr/multiplication.hpp"
 #include "core_server/internal/evaluation/physical_predicate/or_predicate.hpp"
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/evaluation/predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
 #include "shared/datatypes/event.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -189,6 +193,196 @@ TEST_CASE("The same condition written in several predicates is decided once",
   REQUIRE(parity.minterm.debug_leaf_count(0) == 5);
   REQUIRE(parity.minterm.debug_reduced_node_count(0) == 1);
   check_events(parity);
+}
+
+// ---------------------------------------------------------------------------
+// Merging structurally identical opaque atoms (backlog item 33)
+// ---------------------------------------------------------------------------
+
+namespace {
+
+constexpr auto kMergeOff = OpaqueAtomMergingStrategy::Off;
+constexpr auto kMergeOn = OpaqueAtomMergingStrategy::StructurallyIdentical;
+
+// A ParityChecker with only the merging option changed.
+std::unique_ptr<ParityChecker>
+checker_with(std::vector<Atom>&& predicates, OpaqueAtomMergingStrategy merging) {
+  return std::make_unique<ParityChecker>(std::move(predicates),
+                                         MintermTreeEvaluator::kMaxLeavesPerTree,
+                                         AtomOrderingStrategy::AsDiscovered,
+                                         StringEqualityStrategy::Opaque,
+                                         TreeLayoutStrategy::Pointer,
+                                         merging);
+}
+
+// `Double1 * factor + Integer1 > threshold` in double arithmetic: opaque (IEEE
+// rounding differs from Z3's reals), like the rep_arith_single family.
+Atom double_arith_above(double threshold, double factor = 3.0) {
+  Expr<double> scaled = node<CEA::Multiplication>(attribute<double>(kDouble1),
+                                                  literal(factor));
+  Expr<double> sum = node<CEA::Addition>(std::move(scaled),
+                                         attribute<double, int64_t>(kInteger1));
+  return std::make_unique<CEA::CompareMathExprs<Comparison::GREATER, double>>(
+    0, std::move(sum), literal(threshold));
+}
+
+// Parity on events spread around `double_arith_above`'s thresholds.
+void check_double_events(ParityChecker& parity) {
+  for (double double1 : {-1.0, 0.0, 0.33333333, 0.33333338, 0.5, 1.0, 1e6}) {
+    for (int64_t integer1 : {int64_t{-2}, int64_t{0}, int64_t{1}}) {
+      auto event = make_event_type_1("x", integer1, 0, double1, 0.0);
+      parity.check(event,
+                   "Double1 = " + std::to_string(double1)
+                     + ", Integer1 = " + std::to_string(integer1));
+    }
+  }
+}
+
+}  // namespace
+
+TEST_CASE("With merging, n copies of one opaque condition give 2 leaves, not 2^n",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge]") {
+  for (int n = 1; n <= 5; n++) {
+    INFO("n = " << n);
+    auto copies = [n] {
+      std::vector<Atom> predicates;
+      for (int i = 0; i < n; i++) predicates.push_back(regex_on_string("^a"));
+      return predicates;
+    };
+    // The default is unchanged: every copy is an independent boolean.
+    auto off = checker_with(copies(), kMergeOff);
+    REQUIRE(off->minterm.debug_leaf_count(0) == (size_t{1} << n));
+    REQUIRE(off->minterm.describe().find("merging") == std::string::npos);
+
+    // Merged: one boolean, so the tree splits once.
+    auto on = checker_with(copies(), kMergeOn);
+    REQUIRE(on->minterm.debug_leaf_count(0) == 2);
+    REQUIRE(on->minterm.describe().find("opaque atom merging: on ("
+                                        + std::to_string(n - 1) + " merged)")
+            != std::string::npos);
+
+    for (const char* text : {"", "a", "abc", "ba", "zzz"}) {
+      auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+      off->check(event, std::string("String = '") + text + "'");
+      on->check(event, std::string("String = '") + text + "'");
+    }
+  }
+}
+
+TEST_CASE("With merging, different opaque conditions stay independent",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge]") {
+  // Only IDENTICAL atoms are merged: `^a` and `^b` can never both match, but
+  // nothing models that, so they still give 2 x 2 regions.
+  std::vector<Atom> predicates;
+  predicates.push_back(regex_on_string("^a"));
+  predicates.push_back(regex_on_string("^b"));
+  predicates.push_back(regex_on_string("^a"));
+  auto parity = checker_with(std::move(predicates), kMergeOn);
+  REQUIRE(parity->minterm.debug_leaf_count(0) == 4);
+  for (const char* text : {"", "a", "b", "ab", "ba"}) {
+    auto event = make_event_type_1(text, 0, 0, 0.0, 0.0);
+    parity->check(event, std::string("String = '") + text + "'");
+  }
+}
+
+TEST_CASE("With merging, repeated double arithmetic gives 2 leaves",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge]") {
+  for (int n = 1; n <= 6; n++) {
+    INFO("n = " << n);
+    auto copies = [n] {
+      std::vector<Atom> predicates;
+      for (int i = 0; i < n; i++) predicates.push_back(double_arith_above(1.0));
+      return predicates;
+    };
+    auto off = checker_with(copies(), kMergeOff);
+    auto on = checker_with(copies(), kMergeOn);
+    REQUIRE(off->minterm.debug_leaf_count(0) == (size_t{1} << n));
+    REQUIRE(on->minterm.debug_leaf_count(0) == 2);
+    check_double_events(*off);
+    check_double_events(*on);
+  }
+}
+
+TEST_CASE("With merging, thresholds that print alike are still different conditions",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge]") {
+  // 1.0000001 and 1.0000002 have the same to_string() (6 decimals). Merging
+  // them would be WRONG: Double1 = 0.33333338 gives 3 * 0.33333338 = 1.00000014,
+  // above the first threshold and below the second. Parity on that event fails
+  // if the merge key ever loses precision.
+  std::vector<Atom> predicates;
+  predicates.push_back(double_arith_above(1.0000001));
+  predicates.push_back(double_arith_above(1.0000002));
+  predicates.push_back(double_arith_above(1.0000001));
+  auto parity = checker_with(std::move(predicates), kMergeOn);
+  REQUIRE(parity->minterm.debug_leaf_count(0) == 4);
+  REQUIRE(parity->minterm.describe().find("(1 merged)") != std::string::npos);
+  auto between = make_event_type_1("x", 0, 0, 0.33333338, 0.0);
+  Bitset bits = parity->baseline(between);
+  REQUIRE(bits.test(0));
+  REQUIRE(!bits.test(1));  // not REQUIRE_FALSE: see minterm_tree_layout.cpp
+  parity->check(between, "between the two thresholds");
+  check_double_events(*parity);
+}
+
+TEST_CASE("With merging, an opaque condition repeated inside compounds is decided once",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge]") {
+  // The opaque twin of "The same condition written in several predicates is
+  // decided once": `String LIKE ^a` alone, inside an And and inside an Or.
+  // Merged, it behaves exactly like the int atom there: 5 leaves.
+  auto build = [] {
+    std::vector<Atom> predicates;
+    predicates.push_back(regex_on_string("^a"));
+    predicates.push_back(
+      std::make_unique<CEA::AndPredicate>(0,
+                                          children_of(regex_on_string("^a"),
+                                                      greater_at({0}, kInteger2, 5))));
+    predicates.push_back(
+      std::make_unique<CEA::OrPredicate>(0,
+                                         children_of(regex_on_string("^a"),
+                                                     less_at({0}, kInteger2, 0))));
+    return predicates;
+  };
+  auto off = checker_with(build(), kMergeOff);
+  auto on = checker_with(build(), kMergeOn);
+  REQUIRE(on->minterm.debug_leaf_count(0) == 5);
+  REQUIRE(on->minterm.debug_leaf_count(0) < off->minterm.debug_leaf_count(0));
+  for (const char* text : {"", "a", "ba"}) {
+    for (int64_t integer2 : {int64_t{-3}, int64_t{0}, int64_t{7}}) {
+      auto event = make_event_type_1(text, 0, integer2, 0.0, 0.0);
+      std::string label = std::string("String = '") + text
+                          + "', Integer2 = " + std::to_string(integer2);
+      off->check(event, label);
+      on->check(event, label);
+    }
+  }
+}
+
+TEST_CASE("With merging, the rep_arith_single shape in weakly typed CEQL gives 2 leaves",
+          "[MintermTreeEvaluator][Optimizations][Structure][Merge][Weak]") {
+  // The same condition written 8 times, through the real compiler: 8 predicate
+  // objects, 8 opaque atoms (double arithmetic), one key.
+  std::string filter;
+  for (int i = 0; i < 8; i++) {
+    if (i > 0) filter += " AND ";
+    filter += "X[(Double1 * 3.0 + Integer1) * 2.0 - Integer2 > 100.0]";
+  }
+  CeqlParityChecker off(filter, process_catalog, StringEqualityStrategy::Opaque, kMergeOff);
+  CeqlParityChecker on(filter, process_catalog, StringEqualityStrategy::Opaque, kMergeOn);
+  REQUIRE(off.checker.minterm.debug_leaf_count(0) == 256);
+  REQUIRE(on.checker.minterm.debug_leaf_count(0) == 2);
+  REQUIRE(on.checker.minterm.describe().find("(7 merged)") != std::string::npos);
+  for (double double1 : {0.0, 16.0, 16.5, 17.0, 100.0}) {
+    for (int64_t integer2 : {int64_t{-5}, int64_t{0}, int64_t{5}}) {
+      auto event = make_event_type_1("x", 1, integer2, double1, 0.0);
+      std::string label = "Double1 = " + std::to_string(double1)
+                          + ", Integer2 = " + std::to_string(integer2);
+      off.check(event, label);
+      on.check(event, label);
+    }
+  }
+  auto other_type = make_event_type_2(1, 2);
+  off.check(other_type, "event2");
+  on.check(other_type, "event2");
 }
 
 // ---------------------------------------------------------------------------

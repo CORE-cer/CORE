@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "core_server/internal/optimizations/tree_layout_strategy.hpp"
@@ -31,6 +32,12 @@ struct EngineOptions {
   // item 26's proof of concept). Only meaningful when predicate_evaluation ==
   // MintermTree; inert otherwise.
   Optimizations::TreeLayoutStrategy tree_layout = Optimizations::TreeLayoutStrategy::Pointer;
+
+  // Whether the minterm-tree optimization gives structurally identical opaque
+  // atoms one shared boolean (backlog item 33). Only meaningful when
+  // predicate_evaluation == MintermTree; inert otherwise.
+  Optimizations::OpaqueAtomMergingStrategy
+    opaque_atom_merging = Optimizations::OpaqueAtomMergingStrategy::Off;
 };
 
 }  // namespace CORE::Internal::Interface

@@ -99,5 +99,17 @@ class PhysicalPredicate {
   }
 
   virtual std::string to_string() const = 0;
+
+  // An exact description of what eval() computes for an event of a type this
+  // predicate admits: two predicates with equal keys always give the same
+  // answer on the same event. Unlike to_string() (which is for people and
+  // loses precision, e.g. doubles printed with 6 decimals), it encodes every
+  // field eval() reads without loss; see structural_key.hpp.
+  //
+  // Used by the minterm tree to give structurally identical opaque atoms one
+  // shared Z3 boolean (backlog item 33, OpaqueAtomMergingStrategy). nullopt
+  // (the default) means "never merge this predicate with another": a class
+  // opts in by overriding this, and leaving it out is always safe.
+  virtual std::optional<std::string> structural_key() const { return std::nullopt; }
 };
 }  // namespace CORE::Internal::CEA

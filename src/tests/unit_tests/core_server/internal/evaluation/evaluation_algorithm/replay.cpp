@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
@@ -79,6 +80,7 @@ Prepared prepare(const Case& test_case, PredicateEvaluationStrategy strategy) {
                              AtomOrderingStrategy::AsDiscovered,
                              StringEqualityStrategy::Opaque,
                              TreeLayoutStrategy::Pointer,
+                             Optimizations::OpaqueAtomMergingStrategy::Off,
                              /*keep_predicate_copy=*/true);
   for (auto& event :
        Bench::read_events_generic(base + "/" + test_case.csv, stream_info, kMaxEvents)) {

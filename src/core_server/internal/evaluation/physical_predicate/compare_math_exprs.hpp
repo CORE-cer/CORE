@@ -11,6 +11,7 @@
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
 #include "core_server/internal/evaluation/physical_predicate/math_expr/math_expr.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -96,6 +97,12 @@ class CompareMathExprs : public PhysicalPredicate {
     } else {
       return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // Both sides, in order; the class carries the comparison and value type.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this, {left->structural_key(), right->structural_key()});
   }
 
   std::string to_string() const override {

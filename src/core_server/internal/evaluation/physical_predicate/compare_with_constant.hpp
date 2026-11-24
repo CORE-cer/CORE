@@ -13,6 +13,7 @@
 #include "comparison_type.hpp"
 #include "core_server/internal/evaluation/physical_predicate/compare_with_attribute.hpp"
 #include "core_server/internal/evaluation/physical_predicate/formula_builder.hpp"
+#include "core_server/internal/evaluation/physical_predicate/structural_key.hpp"
 #include "physical_predicate.hpp"
 #include "shared/datatypes/aliases/event_type_id.hpp"
 #include "shared/datatypes/eventWrapper.hpp"
@@ -103,6 +104,15 @@ class CompareWithConstant : public PhysicalPredicate {
     } else {
       return std::nullopt;
     }
+  }
+
+  // Exact identity for merging (see PhysicalPredicate::structural_key()):
+  // The position and the exact constant; the class carries the comparison
+  // and value type.
+  std::optional<std::string> structural_key() const override {
+    return StructuralKey::node(*this,
+                               {StructuralKey::field(pos_to_compare),
+                                StructuralKey::field(constant_val)});
   }
 
   std::string to_string() const override {

@@ -53,6 +53,7 @@
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
 #include "core_server/internal/optimizations/minterm_tree/minterm_tree_evaluator.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
 #include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 #include "shared/datatypes/bitset.hpp"
@@ -542,6 +543,64 @@ TEST_CASE("Random predicates and events give the baseline's bitsets in every tre
       }
     }
   }
+}
+
+TEST_CASE("Random predicates written twice give the baseline's bitsets with merging",
+          "[MintermTreeEvaluator][Optimizations][Fuzz][Merge]") {
+  // OpaqueAtomMergingStrategy::StructurallyIdentical (backlog item 33) on
+  // queries that repeat every predicate: two workloads with the same seed build
+  // the same predicates as separate objects, and the query lists both copies.
+  // Merging must keep the baseline's bitsets, and - since every copy is then
+  // already decided by the original - the tree must be exactly as large as the
+  // tree of the original predicates alone. Unmerged, each repeated opaque atom
+  // would double the tree instead.
+  const uint64_t kSeeds = std::max<uint64_t>(1, seeds_to_run() / 2);
+  constexpr auto kMerge = OpaqueAtomMergingStrategy::StructurallyIdentical;
+  size_t seeds_with_merges = 0;
+  for (uint64_t seed = 0; seed < kSeeds; seed++) {
+    bool wide = seed % 4 == 3;
+    RandomWorkload workload(seed, wide);
+    RandomWorkload twin(seed, wide);  // same draws, so the same predicates
+    std::vector<Atom> once = workload.predicates();
+    std::vector<Atom> twice = twin.predicates();
+
+    // The originals alone, merged (they may repeat an atom themselves).
+    MintermTreeEvaluator single(
+      Evaluation::PredicateEvaluator(RandomWorkload(seed, wide).predicates()).predicates,
+      kLeafCap,
+      AtomOrderingStrategy::AsDiscovered,
+      StringEqualityStrategy::Opaque,
+      TreeLayoutStrategy::Pointer,
+      kMerge);
+
+    for (Atom& copy : twice) once.push_back(std::move(copy));
+    ParityChecker parity(std::move(once),
+                         kLeafCap,
+                         AtomOrderingStrategy::AsDiscovered,
+                         StringEqualityStrategy::Opaque,
+                         TreeLayoutStrategy::Pointer,
+                         kMerge);
+
+    INFO("seed " << seed << (wide ? " (wide ints)" : " (narrow ints)"));
+    INFO("predicates:\n" << parity.baseline.to_string());
+    INFO("doubled: " << parity.minterm.describe());
+    INFO("single:  " << single.describe());
+    if (parity.minterm.describe().find("(0 merged)") == std::string::npos) {
+      seeds_with_merges++;
+    }
+    for (Types::UniqueEventTypeId type : {0, 1}) {
+      INFO("event type " << type);
+      REQUIRE(parity.minterm.uses_direct_evaluation(type)
+              == single.uses_direct_evaluation(type));
+      REQUIRE(parity.minterm.debug_leaf_count(type) == single.debug_leaf_count(type));
+    }
+    for (int i = 0; i < kEventsPerSeed; i++) {
+      auto event = workload.event();
+      parity.check(event, "random event #" + std::to_string(i));
+    }
+  }
+  INFO("seeds where an opaque atom was merged: " << seeds_with_merges);
+  if (kSeeds >= 25) REQUIRE(seeds_with_merges >= kSeeds / 4);
 }
 
 // ---------------------------------------------------------------------------

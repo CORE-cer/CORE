@@ -56,6 +56,7 @@
 
 #include "bench_common.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
@@ -69,6 +70,7 @@
 namespace {
 
 using CORE::Internal::Optimizations::AtomOrderingStrategy;
+using CORE::Internal::Optimizations::OpaqueAtomMergingStrategy;
 using CORE::Internal::Optimizations::PredicateEvaluationStrategy;
 using CORE::Internal::Optimizations::StringEqualityStrategy;
 using CORE::Internal::Optimizations::TreeLayoutStrategy;
@@ -87,6 +89,7 @@ struct StrategyConfig {
   AtomOrderingStrategy atom_ordering;
   StringEqualityStrategy string_equality;
   TreeLayoutStrategy tree_layout = TreeLayoutStrategy::Pointer;
+  OpaqueAtomMergingStrategy opaque_atom_merging = OpaqueAtomMergingStrategy::Off;
 };
 
 // Strategy names, as used by tests/benchmark/tracy_runs.py --strategies.
@@ -95,6 +98,10 @@ struct StrategyConfig {
 // `_direct` (PointerDirectEval), `_array` (ArrayCompact) or `_array_implicit`
 // (ArrayImplicit), e.g. minterm_tree_array or minterm_tree_interned_array.
 // Without a suffix the layout is today's (Pointer).
+//
+// Before the layout suffix, a minterm_tree* name can also end in `_merge`
+// (backlog item 33): structurally identical opaque atoms share one boolean,
+// e.g. minterm_tree_merge or minterm_tree_interned_merge_array.
 StrategyConfig strategy_from_name(const std::string& full_name) {
   using PES = PredicateEvaluationStrategy;
   using AOS = AtomOrderingStrategy;
@@ -119,8 +126,15 @@ StrategyConfig strategy_from_name(const std::string& full_name) {
       break;
     }
   }
+  // Then the opaque-atom merging suffix, which sits before the layout's.
+  auto merging = OpaqueAtomMergingStrategy::Off;
+  const std::string merge_suffix = "_merge";
+  if (name.size() > merge_suffix.size() && name.ends_with(merge_suffix)) {
+    name.resize(name.size() - merge_suffix.size());
+    merging = OpaqueAtomMergingStrategy::StructurallyIdentical;
+  }
 
-  StrategyConfig tree{PES::MintermTree, AOS::AsDiscovered, SES::Opaque, layout};
+  StrategyConfig tree{PES::MintermTree, AOS::AsDiscovered, SES::Opaque, layout, merging};
   if (name == "minterm_tree") {
   } else if (name == "minterm_tree_ordered") {
     tree.atom_ordering = AOS::MostSharedAttributesFirst;
@@ -180,8 +194,9 @@ int run(int argc, char** argv) {
     .required()
     .help(
       "baseline, minterm_tree, minterm_tree_ordered, minterm_tree_interned, "
-      "minterm_tree_interned_ordered; any minterm_tree* name may end in a tree-layout "
-      "suffix: _direct, _array or _array_implicit");
+      "minterm_tree_interned_ordered; any minterm_tree* name may end in _merge (merge "
+      "identical opaque atoms) and then in a tree-layout suffix: _direct, _array or "
+      "_array_implicit");
   program.add_argument("--method")
     .default_value(std::string{"plain"})
     .help(
@@ -254,6 +269,7 @@ int run(int argc, char** argv) {
                        config.atom_ordering,
                        config.string_equality,
                        config.tree_layout,
+                       config.opaque_atom_merging,
                        /*keep_predicate_copy=*/false);
     } catch (const Bench::UnsupportedQuery& error) {
       std::cerr << "core_bench: " << error.what() << std::endl;
@@ -286,6 +302,7 @@ int run(int argc, char** argv) {
                      config.atom_ordering,
                      config.string_equality,
                      config.tree_layout,
+                     config.opaque_atom_merging,
                      /*keep_predicate_copy=*/method != "plain");
   } catch (const Bench::UnsupportedQuery& error) {
     json << ",\"status\":\"unsupported\",\"reason\":\"" << json_escape(error.what())

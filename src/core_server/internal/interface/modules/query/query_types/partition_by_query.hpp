@@ -123,7 +123,8 @@ class PartitionByQuery : public GenericQuery {
       options.predicate_evaluation,
       options.atom_ordering,
       options.string_equality,
-      options.tree_layout);
+      options.tree_layout,
+      options.opaque_atom_merging);
 
     // Stage 3: Convert CEQL formula to logical CEA
     auto visitor = Internal::CEQL::FormulaToLogicalCEA(this->query_catalog);

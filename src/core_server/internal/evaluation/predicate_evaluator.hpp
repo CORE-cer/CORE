@@ -10,6 +10,7 @@
 
 #include "core_server/internal/evaluation/physical_predicate/physical_predicate.hpp"
 #include "core_server/internal/optimizations/atom_ordering_strategy.hpp"
+#include "core_server/internal/optimizations/opaque_atom_merging_strategy.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/optimized_predicate_evaluator_factory.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
@@ -39,13 +40,20 @@ struct PredicateEvaluator {
     Optimizations::StringEqualityStrategy string_equality =
       Optimizations::StringEqualityStrategy::Opaque,
     Optimizations::TreeLayoutStrategy tree_layout =
-      Optimizations::TreeLayoutStrategy::Pointer) {
+      Optimizations::TreeLayoutStrategy::Pointer,
+    Optimizations::OpaqueAtomMergingStrategy opaque_atom_merging =
+      Optimizations::OpaqueAtomMergingStrategy::Off) {
     predicates.reserve(unique_predicates.size());
     for (auto& unique_pred : unique_predicates) {
       predicates.push_back(std::move(unique_pred));
     }
     optimized_evaluator = Optimizations::make_optimized_predicate_evaluator(
-      strategy, predicates, atom_ordering, string_equality, tree_layout);
+      strategy,
+      predicates,
+      atom_ordering,
+      string_equality,
+      tree_layout,
+      opaque_atom_merging);
   }
 
   Bitset operator()(Types::EventWrapper& event) {
