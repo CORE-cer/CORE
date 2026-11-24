@@ -190,7 +190,9 @@ TEST_CASE("Every tree layout gives the baseline's bitsets along the same path",
       predicates.push_back(string_matches(pattern));
     LayoutParity parity(std::move(predicates), /*max_leaves=*/64);
     REQUIRE(parity.pointer().debug_leaf_count(0) == 64);
-    REQUIRE_FALSE(parity.pointer().uses_direct_evaluation(0));
+    // Not REQUIRE_FALSE: its flags (Normal | FalseTest = 5) are not themselves an
+    // enumerator, which clang-tidy's EnumCastOutOfRange reports inside Catch2.
+    REQUIRE(!parity.pointer().uses_direct_evaluation(0));
     parity.check_events();
   }
 
@@ -219,7 +221,7 @@ TEST_CASE("Every tree layout gives the baseline's bitsets along the same path",
     LayoutParity over_cap(std::move(capped), /*max_leaves=*/8);
     for (TLS layout : kLayouts) {
       REQUIRE(over_cap.with(layout).uses_direct_evaluation(0));
-      REQUIRE_FALSE(over_cap.with(layout).uses_direct_evaluation(1));
+      REQUIRE(!over_cap.with(layout).uses_direct_evaluation(1));  // see above: not _FALSE
     }
     over_cap.check_events();
   }

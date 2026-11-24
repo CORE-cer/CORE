@@ -9,6 +9,7 @@
 #include "core_server/internal/optimizations/optimized_predicate_evaluator.hpp"
 #include "core_server/internal/optimizations/predicate_evaluation_strategy.hpp"
 #include "core_server/internal/optimizations/string_equality_strategy.hpp"
+#include "core_server/internal/optimizations/tree_layout_strategy.hpp"
 
 // CORE_ENABLE_MINTERM_OPTIMIZATION is defined by CMake for THIS file only (see
 // set_source_files_properties in CMakeLists.txt), and never in a header: every

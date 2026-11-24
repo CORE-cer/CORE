@@ -627,7 +627,8 @@ class MintermTreeEvaluator : public OptimizedPredicateEvaluator {
       const FlatNode& node = tree.nodes[at];
       i = node.child[static_cast<size_t>(outcome(node.atom, at))];
     }
-    return static_cast<size_t>(~i);
+    const int32_t leaf = ~i;  // a leaf is stored as ~(its index), always >= 0 here
+    return static_cast<size_t>(leaf);
   }
 
   // The pointer tree's walk with the outcome supplied by `outcome(node)`, as

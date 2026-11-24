@@ -1,6 +1,9 @@
 #pragma once
 
-#include <tracy/Tracy.hpp>
+// Re-exported: files include this header for ZoneScopedN (and the other Tracy
+// macros) as well as for CORE_ZONE_FINE, so clang-tidy's include-cleaner must
+// treat Tracy's symbols as provided by this header.
+#include <tracy/Tracy.hpp>  // IWYU pragma: export
 
 // Two levels of Tracy zones (guides/benchmarking/08-tracy-profiling.md):
 //
